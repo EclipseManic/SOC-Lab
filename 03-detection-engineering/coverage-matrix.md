@@ -24,8 +24,8 @@ One row per attack stage. Update the status only after the stage has been execut
 | 06 | Reverse shell | T1059.004 | Process / network | TBD | TBD | Not tested | DG-06 | TBD |
 | 07 | Privilege escalation | T1068 | Auth / process / FIM | TBD | TBD | Not tested | DG-07 | TBD |
 | 08 | SSH persistence | T1098.004 | Auth / FIM | TBD | TBD | Not tested | DG-08 | TBD |
-| 09 | Internal discovery | T1018 | Network / process | TBD | TBD | Not tested | DG-09 | TBD |
-| 10 | Responder poisoning | T1557.001 | Network / auth | TBD | TBD | Not tested | DG-10 | TBD |
+| 09 | Internal discovery | T1018 | Host / process | TBD | TBD | Not tested | DG-09 | TBD |
+| 10 | Responder poisoning | T1557.001 | Host / auth | TBD | TBD | Not tested | DG-10 | TBD |
 | 11 | NTLMv2 cracking | T1110.002 | Offline (none) | TBD | TBD | Not tested | DG-11 | TBD |
 | 12 | BloodHound enumeration | T1087.002 | LDAP / directory service | TBD | TBD | Not tested | DG-12 | TBD |
 | 13 | Kerberoasting | T1558.003 | Kerberos / directory service | TBD | TBD | Not tested | DG-13 | TBD |
@@ -34,7 +34,7 @@ One row per attack stage. Update the status only after the stage has been execut
 | 16 | Golden Ticket | T1558.001 | Kerberos | TBD | TBD | Not tested | DG-16 | TBD |
 | 17 | DC persistence | T1136.002 | Directory service / Windows security | TBD | TBD | Not tested | DG-17 | TBD |
 | 18 | Collection | T1005 | File / process | TBD | TBD | Not tested | DG-18 | TBD |
-| 19 | Exfiltration | T1041 | Network / proxy | TBD | TBD | Not tested | DG-19 | TBD |
+| 19 | Exfiltration | T1041 | Network / gateway flow | TBD | TBD | Not tested | DG-19 | TBD |
 | 20 | Impact | T1491.001 | FIM / process / file | TBD | TBD | Not tested | DG-20 | TBD |
 
 ## Summary

@@ -26,10 +26,12 @@ There is no build step. The site is plain HTML, CSS, and JavaScript, so opening 
 | `assets/styles.css` | Dark SOC design system, responsive tables, and motion |
 | `assets/app.js` | Stage cards, phase filters, coverage matrix, and dialog behaviour |
 | `assets/stages.js` | The 20-stage data model used by the cards and coverage table |
-| `assets/preview.png` | Preview image used by the repository README |
+| `assets/preview.png` | Preview image for this folder and social sharing |
 | `../.github/workflows/pages.yml` | GitHub Pages deployment for this folder |
 
 ## Deploy with GitHub Pages
+
+Live site: <https://eclipsemanic.github.io/SOC-Lab/>
 
 1. Push the repository to `main`.
 2. In GitHub, open **Settings → Pages**.

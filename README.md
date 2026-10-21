@@ -1,78 +1,93 @@
-# SOC Lab — Attack Simulation, Detection & Incident Response
+# SOC Lab — Attack Simulation, Detection & Response
 
-A self-hosted SOC lab that emulates a full adversary campaign against an Active Directory environment, detects it with Suricata and Wazuh, routes alerts into TheHive, and documents the investigation end to end.
+A self-hosted SOC lab that emulates an Active Directory attack campaign, collects network and host telemetry through a Suricata gateway and Wazuh, routes alerts into TheHive, and documents the investigation end to end.
 
-> **Authorized lab only.** Every action in this repository was performed against systems I own in an isolated environment. See [DISCLAIMER.md](DISCLAIMER.md).
+> **Authorized lab only.** Everything here was performed against systems I own in an isolated environment. See [DISCLAIMER.md](DISCLAIMER.md).
 
-## Visual documentation
+## What this lab is
 
-[![SOC Lab documentation preview](site/assets/preview.png)](site/README.md)
+Three tiers, one story:
 
-The guided site turns the repository into one readable story: an animated attack path, a filterable 20-stage campaign board, a 20-row detection coverage matrix, three investigation cases, and the report package. It is plain HTML, CSS, and JavaScript with no build step.
+| Tier | What it is | Where it runs |
+|---|---|---|
+| Attack | Kali Linux on an isolated NAT segment | Local VMware |
+| Victim | Windows Server 2022 DC, Windows 10, DVWA — routed through the Suricata gateway | Local VMware |
+| SOC | Wazuh VM plus the TheHive/automation VM, joined by VNet peering and reached over WireGuard | Cloud (any provider) |
 
-- **Guided tour:** open `site/index.html` locally, or follow [site/README.md](site/README.md) for the one-command preview.
-- **Detailed record:** [INDEX.md](INDEX.md) remains the source of truth for stage, alert, rule, case, and evidence links.
-- **Deployment:** [.github/workflows/pages.yml](.github/workflows/pages.yml) publishes only `site/` after GitHub Pages is set to **GitHub Actions**.
-
-## What this lab demonstrates
-
-- Adversary emulation across the full MITRE ATT&CK kill chain
-- Network detection with Suricata deployed as an inline security gateway
-- Endpoint and log detection with Wazuh agents on Linux and Windows
-- Automated alert pipeline: Wazuh -> custom Python bridge -> TheHive
-- Case management, triage, observables, tasks, and timeline reconstruction
-- Endpoint forensics and response with Velociraptor and Caldera
-- Formal incident reporting aligned to NIST SP 800-61r3 and SANS PICERL
+The point of the design is not the tool list. It is that a single public port opens the lab, every hop is documented, and the places where visibility is incomplete are named rather than hidden.
 
 ## Architecture
 
-```text
-Kali Linux (attacker)
-  -> Security Gateway (Suricata, inline)
-     -> Victim network
-        - DVWA (Ubuntu)          + Wazuh agent
-        - Windows 10             + Wazuh agent
-        - Domain Controller      + Wazuh agent
-           ad.lab / PC-DC.ad.lab
-     -> WireGuard VPN
-        -> Cloud: Wazuh Manager / Indexer / Dashboard
-           -> thecustomhive (Python bridge)
-              -> TheHive alerts and cases
-                 -> Investigation
-                    -> Velociraptor / Caldera response
+```mermaid
+flowchart TB
+  subgraph LOCAL["Local lab — VMware"]
+    K["Kali Linux<br/>192.168.232.135/24<br/>VMnet8 NAT"]
+    SG["Suricata gateway<br/>eth0 192.168.232.162/24<br/>eth1 192.168.56.150/24<br/>wg0 10.8.0.2/32"]
+    V["Victim network 192.168.56.0/24<br/>DC 192.168.56.10 · Win10 .20 · DVWA .30<br/>default gateway 192.168.56.150"]
+    K -->|attack traffic| SG
+    SG --> V
+    V -->|Wazuh agent logs| SG
+  end
+  subgraph CLOUD["Cloud SOC — private 10.122.0.0/16"]
+    HUB["TheHive/automation VM<br/>VPN hub 10.8.0.1/24 · ingress router<br/>TheHive · thecustomhive · NPM<br/>Velociraptor · Caldera · WireGuard server"]
+    WZ["Wazuh VM<br/>manager · indexer · dashboard<br/>private only"]
+    HUB <-->|VNet peering| WZ
+  end
+  SG <-->|"WireGuard tunnel — 51820/UDP"| HUB
 ```
 
-A detailed diagram, IP table, and traffic flow live in [01-lab-setup/architecture.md](01-lab-setup/architecture.md) and [01-lab-setup/network-topology.md](01-lab-setup/network-topology.md).
+The tunnel terminates on the TheHive/automation VM, not on Wazuh. That VM is the cloud ingress point, the VPN hub, and the router that reaches the Wazuh VM across the peered VNets.
+
+Full detail: [01-lab-setup/architecture.md](01-lab-setup/architecture.md) · addresses and flows: [01-lab-setup/network-topology.md](01-lab-setup/network-topology.md).
+
+## Network at a glance
+
+| Group | What is reachable | Notes |
+|---|---|---|
+| **Public ingress** | `51820/UDP` on the TheHive/automation VM — nothing else | Default-deny for all other public inbound |
+| **VPN-only** | TheHive UI, Wazuh dashboard/API/agent ports, Velociraptor, Caldera, SSH, NPM admin | Reachable from `10.8.0.0/24` only |
+| **Private / peering** | TheHive VM ↔ Wazuh VM over the peered VNets in `10.122.0.0/16` | No public listener on the Wazuh VM |
+
+The VPN policy allows `10.8.0.0/24` to both `192.168.232.0/24` and `192.168.56.0/24`, so the gateway can be managed and the local hosts can be reached for troubleshooting. That also exposes the Kali/NAT segment to VPN clients; if only gateway management is needed, narrow it to `192.168.232.162`.
 
 ## Stack
 
-| Layer | Component | Role |
-|---|---|---|
-| Attack | Kali Linux | Adversary workstation and tooling |
-| Network detection | Suricata on a security gateway | Inspects all lab traffic inline |
-| Web target | DVWA on Ubuntu | Initial access and web attack surface |
-| Workstation | Windows 10 | Credential access and lateral movement target |
-| Identity | Windows Server / Active Directory | Domain Controller, `ad.lab` |
-| SIEM | Wazuh Manager, Indexer, Dashboard | Log collection, detection, alerting |
-| Case management | TheHive | Alert triage, cases, observables, tasks |
-| Automation | thecustomhive (Python) | Wazuh alert -> TheHive alert pipeline |
-| DFIR | Velociraptor | Endpoint forensic collection |
-| Adversary emulation | Caldera | Repeatable technique execution |
-| Connectivity | WireGuard | Encrypted local-to-cloud log transport |
-| Reverse proxy | Nginx Proxy Manager | Controlled access to cloud services |
+| Layer | Component | Where | Role |
+|---|---|---|---|
+| Attack | Kali Linux | Local, `192.168.232.0/24` | Adversary workstation and tooling |
+| Network detection | Suricata gateway | Local, `192.168.56.150` / `192.168.232.162` | Router between attack and victim segments; `eve.json` to Wazuh |
+| Web target | DVWA on Ubuntu | Local, `192.168.56.30` | Initial access and web attack surface |
+| Workstation | Windows 10 | Local, `192.168.56.20` | Credential access and lateral movement target |
+| Identity | Windows Server 2022 DC, `ad.lab` | Local, `192.168.56.10` | AD DS, DNS, Kerberos |
+| SIEM | Wazuh manager, indexer, dashboard | Wazuh VM, private only | Log collection, rules, alerting |
+| Case management | TheHive | TheHive/automation VM | Alerts, cases, observables, tasks, timelines |
+| Automation | thecustomhive (Python) | TheHive/automation VM | Wazuh API → TheHive alert pipeline |
+| DFIR | Velociraptor | TheHive/automation VM | Endpoint artifact collection |
+| Adversary emulation | Caldera | TheHive/automation VM | Repeatable technique execution |
+| Ingress | Nginx Proxy Manager | TheHive/automation VM | Internal TLS/reverse proxy for SOC services |
+| Connectivity | WireGuard | Both sides | VPN hub on `10.8.0.1/24`, Suricata client on `10.8.0.2/32` |
+
+## Design principles
+
+1. **One public port.** `51820/UDP` on the TheHive/automation VM is the only public inbound rule. Everything else is VPN, peering, or closed. The provider console is the break-glass path.
+2. **Vendor-neutral.** DigitalOcean, OVHcloud, Vultr, and Azure have all hosted this lab. The provider does not matter — the firewall, VPN, routing, peering, and segmentation do.
+3. **TheHive VM routes telemetry.** It is the ingress hub: it terminates the tunnel, forwards agent traffic to the Wazuh VM, and runs the pipeline that turns Wazuh alerts into TheHive alerts.
+4. **Fail closed.** If the tunnel or the hub is down, agents queue or fail; no service falls back to a public listener.
+5. **Document the blind spot.** Suricata sees attacker↔victim and victim↔cloud traffic. It does not see victim-to-victim traffic on `192.168.56.0/24`, which is same-subnet. Lateral-movement detection for those stages depends on Wazuh and host telemetry.
+6. **Honest evidence.** Unverified rules are marked unverified. Missing artifacts are marked missing. Nothing is presented as a result until it exists.
 
 ## Repository map
 
 | Section | Purpose |
 |---|---|
-| [site](site/README.md) | Guided visual tour: campaign board, coverage matrix, cases, and report |
-| [01-lab-setup](01-lab-setup/README.md) | Architecture, network, VMs, cloud stack, and thecustomhive pipeline |
+| [01-lab-setup](01-lab-setup/README.md) | Architecture, network, local VMs, cloud stack, thecustomhive pipeline |
 | [02-attack-simulation](02-attack-simulation/README.md) | 20-stage attack chain with commands and evidence |
 | [03-detection-engineering](03-detection-engineering/README.md) | Rule catalogue, ATT&CK coverage, false positives, detection gaps |
 | [04-investigation](04-investigation/README.md) | Stage-wise analyst notes and three TheHive cases |
 | [05-incident-report](05-incident-report/README.md) | Executive report, timeline, IOCs, ATT&CK mapping, response and lessons |
 | [INDEX.md](INDEX.md) | Master traceability matrix: stage, alert, rule, case, evidence |
-| [resources](resources/) | Source PDF and diagrams |
+| [resources](resources/README.md) | Reference material; diagrams are planned, not present |
+| [SECURITY.md](SECURITY.md) | Redaction and secret-handling policy |
 
 ## Attack chain at a glance
 
@@ -103,19 +118,25 @@ The ATT&CK mappings below are **suggested starting points** and must be verified
 
 Full detail: [02-attack-simulation/README.md](02-attack-simulation/README.md).
 
-## Project status
+## Known gaps
 
-This repository is being built from the evidence already collected. Scaffolding is complete; content and evidence are being added stage by stage.
+- **Cloud addressing is summarized, not published.** The plan is `10.122.0.0/16` split across two non-overlapping VNets joined by peering. Exact per-VNet/subnet CIDRs vary by provider build and are not documented here. Public cloud IPs are dynamic and are deliberately excluded.
+- **Intra-subnet lateral movement is invisible to Suricata.** Victim-to-victim traffic stays inside `192.168.56.0/24` and never crosses the gateway. Detection on those stages relies on Wazuh and host telemetry.
+- **Detection rules are not validated.** Rules are written against expected behavior; none are confirmed to fire on a real stage yet.
+- **Evidence is being collected.** Screenshots, alert IDs, and case IDs are pending.
+
+## Project status
 
 | Area | Status |
 |---|---|
-| Visual documentation | Complete — guided site in `site/` |
-| Lab setup documentation | Scaffolded — content in progress |
+| Lab setup documentation | Written — being reconciled with the final build |
 | Attack stage write-ups | Scaffolded — evidence in progress |
-| Detection coverage matrix | Scaffolded — rules pending |
+| Detection coverage matrix | Scaffolded — rules pending validation |
 | Stage-wise investigation | Scaffolded — analyst notes pending |
 | TheHive case summaries | Scaffolded — cases pending |
 | Incident report | Scaffolded — draft pending |
+
+No stage is marked **Detected**. The status vocabulary is defined in [INDEX.md](INDEX.md).
 
 ## Evidence convention
 
@@ -126,7 +147,7 @@ All attack and alert evidence screenshots live in two folders under `02-attack-s
 
 Files are embedded in the stage and investigation documents by relative link. Do not copy the same image into multiple folders. Use descriptive lowercase names, for example `stage-03-01-burp-request.png`. Compress images before committing; GitHub recommends keeping individual objects around 1 MB or less.
 
-The site preview image is the exception: it lives at `site/assets/preview.png` and is used only by the README.
+Never include cloud public IPs, provider hostnames, API keys, VPN keys, or real password hashes. See [SECURITY.md](SECURITY.md).
 
 ## Detection performance
 
@@ -134,27 +155,35 @@ Fill this after the investigation is complete. It is the summary a SOC reviewer 
 
 | Metric | Value |
 |---|---|
-| Stages executed | TBD |
-| Stages with at least one alert | TBD |
-| Logging gaps | TBD |
-| Detection gaps | TBD |
-| Rule failures | TBD |
-| Mean time to detect | TBD |
-| False positives reviewed | TBD |
+| Stages executed | Not tested |
+| Stages with at least one alert | Not tested |
+| Logging gaps | Not tested |
+| Detection gaps | Not tested |
+| Rule failures | Not tested |
+| Mean time to detect | Not tested |
+| False positives reviewed | Not tested |
+
+## Skills demonstrated
+
+Attack simulation, Active Directory attack paths, Suricata and Wazuh detection, detection engineering, alert triage, TheHive case management, IOC extraction, timeline reconstruction, Velociraptor forensics, network segmentation and VPN design, incident reporting, and technical documentation.
+
+## Visual tour (optional)
+
+The repository is the record; the site is a presentation layer over the same data. It is not required to read the lab.
+
+- **Open locally:** `python -m http.server 8000 --directory site`, then <http://localhost:8000/>
+- **Site notes and deployment:** [site/README.md](site/README.md)
+- **Pages workflow:** [.github/workflows/pages.yml](.github/workflows/pages.yml) publishes only `site/`
 
 ## Start here
 
-1. [Visual tour](site/README.md)
-2. [Architecture and network](01-lab-setup/architecture.md)
+1. [Architecture](01-lab-setup/architecture.md)
+2. [Network topology](01-lab-setup/network-topology.md)
 3. [Attack chain overview](02-attack-simulation/README.md)
 4. [Detection coverage](03-detection-engineering/coverage-matrix.md)
 5. [Investigation methodology](04-investigation/README.md)
 6. [Incident report](05-incident-report/incident-report.md)
 7. [Master index](INDEX.md)
-
-## Skills demonstrated
-
-Attack simulation, Active Directory attack paths, Suricata and Wazuh detection, detection engineering, alert triage, TheHive case management, IOC extraction, timeline reconstruction, Velociraptor forensics, incident reporting, and technical documentation.
 
 ## License
 

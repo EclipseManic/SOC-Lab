@@ -12,7 +12,7 @@ Map the internal network and identify domain hosts, services, and reachable targ
 ## Commands
 
 ```text
-TBD — add the discovery commands used from the pivot.
+TBD — add the discovery commands used from the DVWA pivot (192.168.56.30).
 ```
 
 ## What happened

@@ -24,7 +24,7 @@ TBD — describe the domain-wide compromise, persistence, collection, exfiltrati
 
 | Source | What it contributed |
 |---|---|
-| Suricata | SMB, Kerberos, and outbound transfer visibility |
+| Suricata | Outbound transfer only; victim-to-victim SMB and Kerberos stay on the local subnet |
 | Wazuh | Account creation, logon, and file integrity events |
 | TheHive | Case/task tracking |
 | Velociraptor | Artifact collection and timeline |
