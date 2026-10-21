@@ -23,7 +23,7 @@ Reason: TBD
 ## Investigation steps
 
 1. Identify the source host and discovery tool.
-2. Review the network flow volume and destination spread.
+2. Review host network telemetry and destination spread from the pivot; same-subnet scans are not visible to Suricata.
 3. Correlate with process execution on the pivot host.
 4. Identify which hosts and services were discovered.
 5. Record the detection assessment.
@@ -38,7 +38,7 @@ Reason: TBD
 
 | Type | Value | Context |
 |---|---|---|
-| IP | `192.168.232.135` | Kali attacker |
+| IP | `192.168.56.30` | DVWA pivot |
 | Host | `192.168.56.0/24` | Scanned victim range |
 
 ## Detection assessment

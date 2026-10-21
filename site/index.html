@@ -53,8 +53,8 @@
       <div class="container hero-grid">
         <div class="hero-copy">
           <p class="eyebrow"><span class="pulse" aria-hidden="true"></span> Active Directory attack simulation · Detection engineering · DFIR</p>
-          <h1>One attack.<br><span class="gradient-text">Twenty stages.</span><br>Every signal traced.</h1>
-          <p class="lede">A self-hosted SOC lab where a full adversary campaign runs against an isolated Active Directory network, every alert is investigated, and every detection gap is documented instead of hidden.</p>
+          <h1>One attack.<br><span class="gradient-text">Twenty stages.</span><br>Every gap tracked.</h1>
+          <p class="lede">A self-hosted SOC lab where a full adversary campaign runs against an isolated Active Directory network, alerts are triaged, and detection gaps are documented instead of hidden.</p>
           <div class="hero-actions">
             <a class="btn btn--primary" href="#campaign">
               Explore the campaign
@@ -170,7 +170,7 @@
               <g class="trace-annotation">
                 <rect x="394" y="378" width="146" height="32" rx="7"/>
                 <circle cx="408" cy="394" r="3"/>
-                <text x="418" y="397">signal captured</text>
+                <text x="418" y="397">signal mapped</text>
               </g>
             </svg>
             <div class="console-foot">
@@ -180,7 +180,7 @@
               <span class="console-count">20 / 20 stages mapped</span>
             </div>
           </div>
-          <div class="console-caption"><span class="pulse" aria-hidden="true"></span> Every stage maps to evidence, telemetry, and a case.</div>
+          <div class="console-caption"><span class="pulse" aria-hidden="true"></span> Each stage is mapped to evidence, telemetry, and a case.</div>
         </div>
       </div>
 
@@ -225,7 +225,7 @@
             </div>
             <span class="card-index">01</span>
             <h3>The lab</h3>
-            <p>A controlled Active Directory network with a web target, a workstation, and a domain controller. All traffic crosses an inline Suricata gateway.</p>
+            <p>A controlled Active Directory network with a web target, a workstation, and a domain controller. Cross-segment traffic crosses an inline Suricata gateway; same-subnet traffic does not.</p>
             <a class="text-link" href="#architecture">See the architecture <span aria-hidden="true">→</span></a>
           </article>
 
@@ -235,7 +235,7 @@
             </div>
             <span class="card-index">02</span>
             <h3>The campaign</h3>
-            <p>Twenty documented stages take an attacker from reconnaissance to domain compromise and visible impact, with the exact tools and evidence for each step.</p>
+            <p>Twenty documented stages take an attacker from reconnaissance to domain compromise and visible impact, with the tooling and evidence plan for each step.</p>
             <a class="text-link" href="#campaign">Open the campaign <span aria-hidden="true">→</span></a>
           </article>
 
@@ -258,11 +258,11 @@
           <div>
             <p class="eyebrow">02 / The lab</p>
             <h2>A small network with a real telemetry path.</h2>
-            <p class="lede">The attack is local. The detection stack is remote. Nothing reaches the cloud without crossing the gateway and the encrypted tunnel.</p>
+            <p class="lede">The attack is local. The detection stack is remote. Nothing from the local lab reaches the cloud without crossing the gateway and the encrypted tunnel.</p>
           </div>
           <div class="head-note">
             <span class="head-note-label">Design principle</span>
-            <p>Make the detection path unavoidable, then prove what it can and cannot see.</p>
+            <p>Make the cross-segment detection path unavoidable, then prove what it can and cannot see.</p>
           </div>
         </div>
 
@@ -282,7 +282,7 @@
               <span class="arch-node-title">Suricata gateway</span>
               <span class="arch-node-sub">inline inspection</span>
             </div>
-            <p class="arch-caption">Every packet is inspected. Network evidence is unavoidable.</p>
+            <p class="arch-caption">Cross-segment traffic is inspected. Same-subnet lateral movement stays invisible.</p>
           </div>
 
           <div class="arch-col arch-col--victims">
@@ -296,13 +296,13 @@
           </div>
 
           <div class="arch-col arch-col--soc">
-            <span class="arch-kicker">SOC pipeline</span>
+            <span class="arch-kicker">Cloud SOC · VPN</span>
             <div class="arch-stack">
-              <div class="arch-node arch-node--small"><span class="arch-node-title">Wazuh</span><span class="arch-node-sub">SIEM + alerts</span></div>
-              <div class="arch-node arch-node--small"><span class="arch-node-title">thecustomhive</span><span class="arch-node-sub">Python bridge</span></div>
-              <div class="arch-node arch-node--small arch-node--accent"><span class="arch-node-title">TheHive</span><span class="arch-node-sub">cases + tasks</span></div>
+              <div class="arch-node arch-node--small"><span class="arch-node-title">Wazuh</span><span class="arch-node-sub">private cloud VM</span></div>
+              <div class="arch-node arch-node--small"><span class="arch-node-title">thecustomhive</span><span class="arch-node-sub">hub bridge</span></div>
+              <div class="arch-node arch-node--small arch-node--accent"><span class="arch-node-title">TheHive</span><span class="arch-node-sub">VPN hub · cases</span></div>
             </div>
-            <p class="arch-caption">Alerts become cases with observables, tasks, and a timeline.</p>
+            <p class="arch-caption">Wazuh is private; TheHive/automation is the VPN hub and ingress. Alerts become cases with observables, tasks, and a timeline.</p>
           </div>
         </div>
 
@@ -333,7 +333,8 @@
                 </thead>
                 <tbody>
                   <tr><th scope="row">Attack</th><td>Kali Linux</td><td>Runs the adversary tooling.</td></tr>
-                  <tr><th scope="row">Network</th><td>Suricata</td><td>Watches every packet and raises network alerts.</td></tr>
+                  <tr><th scope="row">Network</th><td>Suricata</td><td>Inspects traffic crossing the gateway; same-subnet flows stay local.</td></tr>
+                  <tr><th scope="row">Ingress</th><td>WireGuard</td><td>Only <code>51820/UDP</code> is public; services are VPN or private.</td></tr>
                   <tr><th scope="row">Endpoint</th><td>Wazuh</td><td>Collects host logs and correlates activity.</td></tr>
                   <tr><th scope="row">Integration</th><td>thecustomhive</td><td>Moves alerts from Wazuh into TheHive.</td></tr>
                   <tr><th scope="row">Case work</th><td>TheHive</td><td>Holds the investigation, observables, and tasks.</td></tr>
@@ -383,7 +384,7 @@
         <div class="campaign-foot" data-reveal>
           <div>
             <span class="callout-label">How to read a stage</span>
-            <p>Every stage answers the same four questions: what happened, what should have been visible, what evidence did we collect, and what detection gap remains.</p>
+            <p>Every stage answers the same four questions: what happened, what should have been visible, what evidence is required, and what detection gap remains.</p>
           </div>
           <a class="btn btn--ghost btn--small" href="https://github.com/EclipseManic/SOC-Lab/blob/main/02-attack-simulation/README.md" target="_blank" rel="noreferrer">Read the full attack chain</a>
         </div>
@@ -660,7 +661,7 @@
           <div class="glossary-grid">
             <details>
               <summary>Suricata</summary>
-              <p>Network detection software. It watches traffic and raises an alert when it recognises a suspicious pattern.</p>
+              <p>Network detection software. It inspects traffic crossing the gateway and raises an alert when it recognises a suspicious pattern.</p>
             </details>
             <details>
               <summary>Wazuh</summary>

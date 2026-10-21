@@ -8,13 +8,25 @@ The Domain Controller is the identity center of the lab. It provides AD DS, DNS,
 
 | Item | Value |
 |---|---|
-| Operating system | Windows Server (`TBD` version) |
-| IP address | `192.168.56.10` |
+| OS | Windows Server 2022 |
+| Address | `192.168.56.10/24` |
+| Default gateway | `192.168.56.150` (Suricata `eth1`) |
+| NICs | Single NIC on `192.168.56.0/24` |
 | Hostname | `PC-DC.ad.lab` |
 | Domain | `ad.lab` |
 | Roles | AD DS, DNS |
-| Wazuh agent | Installed and enrolled |
+| Wazuh agent | Installed and enrolled; manager reached through the tunnel |
 | Resources | `TBD` vCPU / `TBD` GB RAM |
+
+## Network path
+
+| Destination | Path |
+|---|---|
+| Windows 10, DVWA (`192.168.56.0/24`) | Direct, same subnet — no router hop |
+| Kali (`192.168.232.0/24`) | Via `192.168.56.150` |
+| Wazuh manager (`10.122.0.0/16`) | Via `192.168.56.150` → `wg0` → hub → peering |
+
+The agent's configured manager address is the Wazuh VM's private VNet address, resolved through the gateway. `10.122.0.0/16` must never be reachable except through the hub; the DC has no route to it other than the default gateway.
 
 ## Domain objects used in the lab
 
@@ -39,13 +51,15 @@ Enable and document:
 - Process creation (if available)
 - PowerShell script block logging (if available)
 
+Audit policy is the primary detection source for stages 13–17. Suricata sees the LDAP, Kerberos, SMB, and DRSUAPI conversations between the DC and other hosts, but it cannot see the DC's own account changes, ticket requests handled locally, or directory replication internals.
+
 ## Telemetry
 
 - Windows Security event log
 - Directory Service log
 - DNS Server log
 - Wazuh agent alerts
-- Suricata LDAP, Kerberos, SMB, and DRSUAPI traffic
+- Suricata LDAP, Kerberos, SMB, and DRSUAPI traffic (network view only)
 
 ## Intentional weaknesses
 
@@ -60,7 +74,7 @@ Enable and document:
 - [ ] Domain and forest information
 - [ ] User and group inventory (redacted)
 - [ ] Audit policy configuration
-- [ ] Wazuh agent status
+- [ ] Wazuh agent status with manager address
 - [ ] Clean snapshot confirmation
 
 ## Related documents

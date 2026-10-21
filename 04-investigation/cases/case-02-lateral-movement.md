@@ -25,7 +25,7 @@ TBD — describe how the attacker moved from the web host into the domain, which
 
 | Source | What it contributed |
 |---|---|
-| Suricata | SMB, LDAP, Kerberos, DRSUAPI visibility |
+| Suricata | SSH only when it crosses the gateway; no visibility into victim-to-victim SMB, LDAP, Kerberos, or DRSUAPI |
 | Wazuh | Windows security events and Linux auth |
 | TheHive | Case/task tracking |
 | Velociraptor | Process, network, and persistence artifacts |
@@ -48,9 +48,9 @@ TBD — describe how the attacker moved from the web host into the domain, which
 
 ## Tasks
 
-- [ ] Identify Responder poisoning in network logs
-- [ ] Review SMB and authentication anomalies
-- [ ] Review LDAP query volume from BloodHound
+- [ ] Identify Responder poisoning in host and auth telemetry (same-subnet traffic is not visible to Suricata)
+- [ ] Review SMB and authentication anomalies in Windows event logs
+- [ ] Review directory-service logs for LDAP query volume from BloodHound
 - [ ] Confirm Kerberoasting from TGS requests
 - [ ] Verify DCSync via DRSUAPI traffic
 - [ ] Identify the accounts and hosts involved

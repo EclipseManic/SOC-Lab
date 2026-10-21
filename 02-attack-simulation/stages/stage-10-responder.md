@@ -12,7 +12,7 @@ Capture NTLMv2 challenge-response hashes by poisoning LLMNR, NBT-NS, or mDNS tra
 ## Commands
 
 ```text
-TBD — add the Responder interface and options.
+TBD — add the Responder interface and options used from the DVWA pivot (192.168.56.30). LLMNR/NBT-NS is link-local and does not cross the gateway.
 ```
 
 ## What happened

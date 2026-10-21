@@ -24,7 +24,7 @@ Reason: TBD
 
 1. Identify the poisoned protocol (LLMNR, NBT-NS, or mDNS).
 2. Find the victim host and captured username.
-3. Confirm the attacker host and interface.
+3. Confirm the pivot host and interface (DVWA, `192.168.56.30`); same-subnet poisoning is not visible to Suricata.
 4. Check for SMB relay or authentication attempts.
 5. Correlate with the NTLMv2 cracking stage.
 
@@ -38,7 +38,7 @@ Reason: TBD
 
 | Type | Value | Context |
 |---|---|---|
-| IP | `192.168.232.135` | Responder host |
+| IP | `192.168.56.30` | DVWA pivot / Responder host |
 | User | TBD | Victim account |
 | Hash type | NTLMv2 | Captured challenge-response |
 

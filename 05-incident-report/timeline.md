@@ -13,8 +13,8 @@ All times should use one timezone and one format. Record the source for every ro
 | TBD | 06 | Reverse shell established | Wazuh / network | TBD |
 | TBD | 07 | Privilege escalation | Host log | TBD |
 | TBD | 08 | SSH persistence | Auth log | TBD |
-| TBD | 09 | Internal discovery | Network flow | TBD |
-| TBD | 10 | Responder poisoning | Network / auth | TBD |
+| TBD | 09 | Internal discovery | Host / process | TBD |
+| TBD | 10 | Responder poisoning | Host / auth | TBD |
 | TBD | 11 | NTLMv2 hash cracked | Offline | TBD |
 | TBD | 12 | BloodHound enumeration | Directory service | TBD |
 | TBD | 13 | Kerberoasting | Kerberos | TBD |
@@ -23,7 +23,7 @@ All times should use one timezone and one format. Record the source for every ro
 | TBD | 16 | Golden Ticket | Kerberos | TBD |
 | TBD | 17 | Backdoor account created | Windows security | TBD |
 | TBD | 18 | Collection | File / process | TBD |
-| TBD | 19 | Exfiltration | Network | TBD |
+| TBD | 19 | Exfiltration | Gateway flow | TBD |
 | TBD | 20 | Impact artifacts created | FIM / file | TBD |
 
 ## Response timeline
