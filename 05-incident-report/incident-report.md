@@ -25,7 +25,7 @@ TBD — three to five sentences covering what happened, how it was detected, how
 | DVWA (`192.168.56.30`) | Web application | TBD | TBD |
 | Windows 10 (`192.168.56.20`) | Workstation | TBD | TBD |
 | Domain Controller (`192.168.56.10`) | AD DS / DNS | TBD | TBD |
-| Cloud SOC | Wazuh, TheHive, Velociraptor, Caldera | TBD | TBD |
+| Cloud SOC | Wazuh, TheHive, Velociraptor | TBD | TBD |
 
 ## 3. Detection and analysis
 

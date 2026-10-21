@@ -2,6 +2,8 @@
 
 A self-hosted SOC lab that emulates an Active Directory attack campaign, collects network and host telemetry through a Suricata gateway and Wazuh, routes alerts into TheHive, and documents the investigation end to end.
 
+**Live site:** <https://soc-lab.eclipsemanic.me/>
+
 > **Authorized lab only.** Everything here was performed against systems I own in an isolated environment. See [DISCLAIMER.md](DISCLAIMER.md).
 
 ## What this lab is
@@ -18,23 +20,9 @@ The point of the design is not the tool list. It is that a single public port op
 
 ## Architecture
 
-```mermaid
-flowchart TB
-  subgraph LOCAL["Local lab — VMware"]
-    K["Kali Linux<br/>192.168.232.135/24<br/>VMnet8 NAT"]
-    SG["Suricata gateway<br/>eth0 192.168.232.162/24<br/>eth1 192.168.56.150/24<br/>wg0 10.8.0.2/32"]
-    V["Victim network 192.168.56.0/24<br/>DC 192.168.56.10 · Win10 .20 · DVWA .30<br/>default gateway 192.168.56.150"]
-    K -->|attack traffic| SG
-    SG --> V
-    V -->|Wazuh agent logs| SG
-  end
-  subgraph CLOUD["Cloud SOC — private 10.122.0.0/16"]
-    HUB["TheHive/automation VM<br/>VPN hub 10.8.0.1/24 · ingress router<br/>TheHive · thecustomhive · NPM<br/>Velociraptor · Caldera · WireGuard server"]
-    WZ["Wazuh VM<br/>manager · indexer · dashboard<br/>private only"]
-    HUB <-->|VNet peering| WZ
-  end
-  SG <-->|"WireGuard tunnel — 51820/UDP"| HUB
-```
+![SOC lab architecture](resources/diagrams/soc-lab.png)
+
+*Latest high-level architecture. Detailed addresses, ports, and traffic flows are in [network-topology.md](01-lab-setup/network-topology.md); where the overview differs, the detailed tables take precedence. Suricata sees traffic crossing the gateway; victim-to-victim traffic stays on the same subnet.*
 
 The tunnel terminates on the TheHive/automation VM, not on Wazuh. That VM is the cloud ingress point, the VPN hub, and the router that reaches the Wazuh VM across the peered VNets.
 
@@ -45,7 +33,7 @@ Full detail: [01-lab-setup/architecture.md](01-lab-setup/architecture.md) · add
 | Group | What is reachable | Notes |
 |---|---|---|
 | **Public ingress** | `51820/UDP` on the TheHive/automation VM — nothing else | Default-deny for all other public inbound |
-| **VPN-only** | TheHive UI, Wazuh dashboard/API/agent ports, Velociraptor, Caldera, SSH, NPM admin | Reachable from `10.8.0.0/24` only |
+| **VPN-only** | TheHive UI, Wazuh dashboard/API/agent ports, Velociraptor, SSH, NPM admin | Reachable from `10.8.0.0/24` only |
 | **Private / peering** | TheHive VM ↔ Wazuh VM over the peered VNets in `10.122.0.0/16` | No public listener on the Wazuh VM |
 
 The VPN policy allows `10.8.0.0/24` to both `192.168.232.0/24` and `192.168.56.0/24`, so the gateway can be managed and the local hosts can be reached for troubleshooting. That also exposes the Kali/NAT segment to VPN clients; if only gateway management is needed, narrow it to `192.168.232.162`.
@@ -63,7 +51,6 @@ The VPN policy allows `10.8.0.0/24` to both `192.168.232.0/24` and `192.168.56.0
 | Case management | TheHive | TheHive/automation VM | Alerts, cases, observables, tasks, timelines |
 | Automation | thecustomhive (Python) | TheHive/automation VM | Wazuh API → TheHive alert pipeline |
 | DFIR | Velociraptor | TheHive/automation VM | Endpoint artifact collection |
-| Adversary emulation | Caldera | TheHive/automation VM | Repeatable technique execution |
 | Ingress | Nginx Proxy Manager | TheHive/automation VM | Internal TLS/reverse proxy for SOC services |
 | Connectivity | WireGuard | Both sides | VPN hub on `10.8.0.1/24`, Suricata client on `10.8.0.2/32` |
 
@@ -86,7 +73,7 @@ The VPN policy allows `10.8.0.0/24` to both `192.168.232.0/24` and `192.168.56.0
 | [04-investigation](04-investigation/README.md) | Stage-wise analyst notes and three TheHive cases |
 | [05-incident-report](05-incident-report/README.md) | Executive report, timeline, IOCs, ATT&CK mapping, response and lessons |
 | [INDEX.md](INDEX.md) | Master traceability matrix: stage, alert, rule, case, evidence |
-| [resources](resources/README.md) | Reference material; diagrams are planned, not present |
+| [resources](resources/README.md) | Reference material and the latest architecture diagram |
 | [SECURITY.md](SECURITY.md) | Redaction and secret-handling policy |
 
 ## Attack chain at a glance

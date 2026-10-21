@@ -52,7 +52,6 @@ Reachable from `10.8.0.0/24` after a successful handshake. Ports are the intende
 | Wazuh indexer | `9200/TCP` | Wazuh VM | Internal |
 | Velociraptor frontend | `8000/TCP` | TheHive/automation VM | Client-initiated |
 | Velociraptor GUI | `8889/TCP` | TheHive/automation VM | Internal |
-| Caldera | `8888/TCP` | TheHive/automation VM | Internal |
 
 ## WireGuard
 
@@ -84,7 +83,7 @@ AllowedIPs is routing; the firewall is authorization. Both are required for traf
 | Victim hosts | Wazuh VM | Agent events (`1514/TCP`) | `eth1` → `wg0` → hub → peering | Yes, until `wg0` |
 | thecustomhive | Wazuh API (`55000/TCP`) | Alert polling | Hub → peering | No |
 | thecustomhive | TheHive API | Alert creation | Local on hub | No |
-| Analyst | TheHive, Wazuh, Velociraptor, Caldera | Investigation | WireGuard | No |
+| Analyst | TheHive, Wazuh, Velociraptor | Investigation | WireGuard | No |
 | Victim host | Victim host | Lateral movement | Same subnet | **No** |
 
 ## Verification

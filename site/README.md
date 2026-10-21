@@ -31,7 +31,7 @@ There is no build step. The site is plain HTML, CSS, and JavaScript, so opening 
 
 ## Deploy with GitHub Pages
 
-Live site: <https://eclipsemanic.github.io/SOC-Lab/>
+Live site: <https://soc-lab.eclipsemanic.me/>
 
 1. Push the repository to `main`.
 2. In GitHub, open **Settings → Pages**.

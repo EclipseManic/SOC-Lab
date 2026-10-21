@@ -14,7 +14,7 @@ No SOC service is published to the internet. The tunnel is the transport, not a 
   10.8.0.2/32           WireGuard tunnel          10.8.0.1/24  (hub, public 51820/UDP)
   eth0 192.168.232.162                               |
   eth1 192.168.56.150                                +--> Wazuh VM (private VNet, peered)
-                                                     +--> TheHive, NPM, Velociraptor, Caldera
+                                                     +--> TheHive, NPM, Velociraptor
 ```
 
 The hub is the router. It forwards agent traffic to the Wazuh VM and routes analyst traffic into `192.168.56.0/24` and `192.168.232.0/24` through the Suricata client.

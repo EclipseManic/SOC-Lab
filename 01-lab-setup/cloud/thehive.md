@@ -12,7 +12,6 @@ This VM is the cloud edge of the lab. It runs more than a case-management UI:
 | Cloud router | Forwards agent traffic to the Wazuh VM over VNet peering |
 | Internal TLS / reverse proxy | Nginx Proxy Manager (NPM) on Docker |
 | Endpoint forensics | Velociraptor server |
-| Adversary emulation | Caldera |
 | Container runtime | Docker / Docker Compose |
 
 It is the only host in the lab with a public inbound port. Everything it serves to humans is VPN-only.
@@ -53,7 +52,6 @@ The public IP is dynamic. It is not recorded in this repository and should be re
 | NPM HTTP/HTTPS | `80`, `443/TCP` | VPN only — no public listener |
 | Velociraptor frontend | `8000/TCP` | VPN only, client-initiated |
 | Velociraptor GUI | `8889/TCP` | VPN only |
-| Caldera | `8888/TCP` | VPN only |
 | WireGuard | `51820/UDP` | **Public** |
 
 Confirm the live listeners with `sudo ss -ltnup`. A service listening on `0.0.0.0` is still unreachable from the internet if the cloud firewall denies it — but the intent is that only `51820/UDP` is ever permitted.
@@ -69,7 +67,7 @@ Confirm the live listeners with `sudo ss -ltnup`. A service listening on `0.0.0.
 
 1. Terminate the tunnel for the Suricata client (`10.8.0.2/32`).
 2. Accept Wazuh agent traffic arriving on `wg0` and forward it to the Wazuh VM at its private VNet address.
-3. Route analyst VPN sessions to TheHive, NPM, Velociraptor, and Caldera locally.
+3. Route analyst VPN sessions to TheHive, NPM, and Velociraptor locally.
 4. Keep return routes for `192.168.232.0/24` and `192.168.56.0/24` pointed at `wg0`.
 
 ```bash
@@ -84,14 +82,14 @@ ss -lunp | grep 51820
 This VM is the ingress, the VPN hub, the router, and the case management system. If it fails:
 
 - The tunnel drops and agents on the victim network cannot deliver events. Wazuh agents buffer locally and retry; the queue window depends on agent configuration.
-- The analyst loses the TheHive UI, Velociraptor, Caldera, and NPM at once.
+- The analyst loses the TheHive UI, Velociraptor, and NPM at once.
 - The Wazuh VM stays up but becomes unreachable from the lab until the hub returns.
 
 Mitigations used and still open:
 
 - [ ] Provider snapshot before changes
 - [ ] Monitoring: a heartbeat check on `51820/UDP` plus a VPN-side check of the TheHive UI
-- [ ] Documented rebuild order: Docker volumes → TheHive → NPM → Velociraptor → Caldera → WireGuard
+- [ ] Documented rebuild order: Docker volumes → TheHive → NPM → Velociraptor → WireGuard
 - [ ] Confirm agent buffer behaviour during an outage and record the retention window
 
 Monitoring must be configured from **outside** the VM, or it will not detect the VM being down. The provider console remains the break-glass path when SSH is closed and the tunnel is broken.

@@ -16,7 +16,7 @@ The cloud side hosts the SOC services separately from the victim network. It rec
 | VM | Services | Purpose | Public exposure |
 |---|---|---|---|
 | Wazuh VM | Wazuh Manager, Indexer, Dashboard | SIEM and detection | None |
-| TheHive/automation VM | TheHive, Docker, NPM, Velociraptor, Caldera, thecustomhive, WireGuard server | Ingress, VPN hub, router, case management, DFIR | `51820/UDP` only |
+| TheHive/automation VM | TheHive, Docker, NPM, Velociraptor, thecustomhive, WireGuard server | Ingress, VPN hub, router, case management, DFIR | `51820/UDP` only |
 
 ## Private addressing
 
@@ -57,7 +57,7 @@ If SSH is closed — which is the intended posture — the provider console is t
 | VM | vCPU | RAM | Disk | Notes |
 |---|---|---|---|---|
 | Wazuh VM | `TBD` | `TBD` | `TBD` | The indexer is memory-hungry; size for it first |
-| TheHive/automation VM | `TBD` | `TBD` | `TBD` | TheHive, NPM, Velociraptor, and Caldera share the host |
+| TheHive/automation VM | `TBD` | `TBD` | `TBD` | TheHive, NPM, and Velociraptor share the host |
 
 Record the actual sizes and any resource limits in the deployment notes. Do not treat these as recommendations; they are placeholders until measured.
 
@@ -66,7 +66,7 @@ Record the actual sizes and any resource limits in the deployment notes. Do not 
 - Use private/VPN addresses in all documentation.
 - Never publish public IP addresses, provider hostnames, or instance metadata.
 - Restrict inbound ports to the minimum required — one port.
-- Put TheHive, the Wazuh dashboard, Velociraptor, and Caldera behind the VPN, not behind a public proxy.
+- Put TheHive, the Wazuh dashboard, and Velociraptor behind the VPN, not behind a public proxy.
 - Enable the provider firewall **and** the host firewall.
 - Take snapshots before major changes.
 
@@ -95,6 +95,5 @@ Document:
 - [Wazuh](wazuh.md)
 - [TheHive/automation VM](thehive.md)
 - [Velociraptor](velociraptor.md)
-- [Caldera](caldera.md)
 - [WireGuard](wireguard.md)
 - [Network topology](../network-topology.md)
