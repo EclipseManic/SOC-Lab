@@ -1,0 +1,788 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#070b12">
+  <meta name="description" content="SOC Lab: a 20-stage Active Directory attack simulation, detection engineering program, and incident investigation documented end to end.">
+  <title>SOC Lab — Attack, Detection, Investigation</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <script>document.documentElement.classList.add("js");</script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="scroll-progress" aria-hidden="true"><span id="scroll-progress"></span></div>
+
+  <header class="site-header" id="site-header">
+    <nav class="nav container" aria-label="Primary navigation">
+      <a class="brand" href="#top" aria-label="SOC Lab home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none">
+            <path d="M16 3 27 8v8c0 7-5 11-11 13C10 27 5 23 5 16V8l11-5Z" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M11 16h4l2-4 3 8 2-4h-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <span class="brand-text">SOC<span>//</span>LAB</span>
+      </a>
+
+      <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu">
+        <span class="nav-toggle-lines" aria-hidden="true"><span></span><span></span></span>
+        <span class="sr-only">Open navigation</span>
+      </button>
+
+      <div class="nav-menu" id="nav-menu">
+        <a href="#overview">Overview</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#campaign">Campaign</a>
+        <a href="#detection">Detection</a>
+        <a href="#investigation">Investigation</a>
+        <a href="#report">Report</a>
+        <a href="#documents">Documents</a>
+        <a class="nav-github" href="https://github.com/EclipseManic/SOC-Lab" target="_blank" rel="noreferrer">
+          GitHub
+          <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M5 11 11 5M6 5h5v5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="hero-glow" aria-hidden="true"></div>
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="pulse" aria-hidden="true"></span> Active Directory attack simulation · Detection engineering · DFIR</p>
+          <h1>One attack.<br><span class="gradient-text">Twenty stages.</span><br>Every signal traced.</h1>
+          <p class="lede">A self-hosted SOC lab where a full adversary campaign runs against an isolated Active Directory network, every alert is investigated, and every detection gap is documented instead of hidden.</p>
+          <div class="hero-actions">
+            <a class="btn btn--primary" href="#campaign">
+              Explore the campaign
+              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+            <a class="btn btn--ghost" href="#report">See the incident report</a>
+          </div>
+          <ul class="hero-meta" aria-label="Project summary">
+            <li><strong>20</strong> attack stages</li>
+            <li><strong>3</strong> TheHive cases</li>
+            <li><strong>1</strong> evidence trail</li>
+          </ul>
+        </div>
+
+        <div class="hero-visual" aria-hidden="true">
+          <div class="console">
+            <div class="console-bar">
+              <span class="console-dots"><i></i><i></i><i></i></span>
+              <span class="console-title">campaign.trace</span>
+              <span class="console-state"><i></i> recording</span>
+            </div>
+            <svg class="trace-map" viewBox="0 0 560 430" role="img" aria-label="Attack traffic moves from Kali through a Suricata gateway to victim hosts, then telemetry flows into Wazuh and TheHive.">
+              <defs>
+                <pattern id="trace-grid" width="28" height="28" patternUnits="userSpaceOnUse">
+                  <path d="M28 0H0v28" fill="none" stroke="rgba(148,178,210,.09)" stroke-width="1"/>
+                </pattern>
+                <linearGradient id="trace-line" x1="0" y1="1" x2="1" y2="0">
+                  <stop offset="0" stop-color="#35e0c2"/>
+                  <stop offset=".55" stop-color="#57b8ff"/>
+                  <stop offset="1" stop-color="#f5b544"/>
+                </linearGradient>
+                <filter id="node-glow" x="-80%" y="-80%" width="260%" height="260%">
+                  <feGaussianBlur stdDeviation="4" result="blur"/>
+                  <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+              </defs>
+
+              <rect width="560" height="430" fill="url(#trace-grid)"/>
+              <g class="trace-zones">
+                <rect x="20" y="298" width="122" height="96" rx="12"/>
+                <text x="34" y="318">ATTACK</text>
+                <rect x="314" y="86" width="210" height="286" rx="12"/>
+                <text x="328" y="106">VICTIM NETWORK</text>
+                <rect x="74" y="30" width="268" height="128" rx="12"/>
+                <text x="88" y="50">SOC PIPELINE</text>
+              </g>
+
+              <g class="trace-lines">
+                <path class="trace-path" d="M112 342C158 342 166 292 202 282"/>
+                <path class="trace-path trace-path--branch" d="M264 278C310 278 312 320 352 320"/>
+                <path class="trace-path trace-path--branch" d="M264 278C326 278 350 238 414 226"/>
+                <path class="trace-path trace-path--branch" d="M264 278C316 256 328 178 360 164"/>
+                <path class="trace-path trace-path--telemetry" d="M386 152C352 158 326 150 312 128C300 110 292 104 280 102"/>
+                <path class="trace-path trace-path--telemetry" d="M228 102C196 100 166 96 152 92"/>
+              </g>
+
+              <g class="trace-node trace-node--attack" transform="translate(86 342)">
+                <circle class="node-halo" r="24"/>
+                <circle class="node-ring" r="13"/>
+                <circle class="node-dot" r="4"/>
+                <text class="node-label" y="42">KALI</text>
+                <text class="node-sub" y="54">attacker</text>
+              </g>
+
+              <g class="trace-node trace-node--network" transform="translate(232 277)">
+                <circle class="node-halo" r="28"/>
+                <circle class="node-ring" r="16"/>
+                <circle class="node-dot" r="5"/>
+                <text class="node-label" y="45">SURICATA</text>
+                <text class="node-sub" y="57">inline gateway</text>
+              </g>
+
+              <g class="trace-node trace-node--victim" transform="translate(386 320)">
+                <circle class="node-halo" r="21"/>
+                <circle class="node-ring" r="11"/>
+                <circle class="node-dot" r="4"/>
+                <text class="node-label" y="35">DVWA</text>
+                <text class="node-sub" y="47">web target</text>
+              </g>
+
+              <g class="trace-node trace-node--victim" transform="translate(446 224)">
+                <circle class="node-halo" r="21"/>
+                <circle class="node-ring" r="11"/>
+                <circle class="node-dot" r="4"/>
+                <text class="node-label" y="35">WIN 10</text>
+                <text class="node-sub" y="47">workstation</text>
+              </g>
+
+              <g class="trace-node trace-node--victim" transform="translate(386 150)">
+                <circle class="node-halo" r="23"/>
+                <circle class="node-ring" r="12"/>
+                <circle class="node-dot" r="4"/>
+                <text class="node-label" y="35">DC</text>
+                <text class="node-sub" y="47">ad.lab</text>
+              </g>
+
+              <g class="trace-node trace-node--soc" transform="translate(252 102)">
+                <circle class="node-halo" r="24"/>
+                <circle class="node-ring" r="13"/>
+                <circle class="node-dot" r="4"/>
+                <text class="node-label" y="37">WAZUH</text>
+                <text class="node-sub" y="49">SIEM</text>
+              </g>
+
+              <g class="trace-node trace-node--case" transform="translate(126 88)">
+                <circle class="node-halo" r="24"/>
+                <circle class="node-ring" r="13"/>
+                <circle class="node-dot" r="4"/>
+                <text class="node-label" y="37">THEHIVE</text>
+                <text class="node-sub" y="49">case</text>
+              </g>
+
+              <g class="trace-annotation">
+                <rect x="394" y="378" width="146" height="32" rx="7"/>
+                <circle cx="408" cy="394" r="3"/>
+                <text x="418" y="397">signal captured</text>
+              </g>
+            </svg>
+            <div class="console-foot">
+              <span><i class="dot dot--teal"></i> attacked</span>
+              <span><i class="dot dot--blue"></i> detected</span>
+              <span><i class="dot dot--amber"></i> investigated</span>
+              <span class="console-count">20 / 20 stages mapped</span>
+            </div>
+          </div>
+          <div class="console-caption"><span class="pulse" aria-hidden="true"></span> Every stage maps to evidence, telemetry, and a case.</div>
+        </div>
+      </div>
+
+      <div class="container">
+        <div class="stat-strip" aria-label="Project at a glance">
+          <div class="stat">
+            <span class="stat-value" data-count="20">20</span>
+            <span class="stat-label">attack stages</span>
+            <span class="stat-note">first scan to impact</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value" data-count="3">3</span>
+            <span class="stat-label">investigation cases</span>
+            <span class="stat-note">web, lateral, domain</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value" data-count="20">20</span>
+            <span class="stat-label">detection checks</span>
+            <span class="stat-note">each mapped to a gap ID</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value" data-count="5">5</span>
+            <span class="stat-label">documentation layers</span>
+            <span class="stat-note">lab to final report</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="overview">
+      <div class="container">
+        <div class="section-head" data-reveal>
+          <p class="eyebrow">01 / The short version</p>
+          <h2>Understand the whole project in one minute.</h2>
+          <p class="lede">This is not a folder of notes. It is one traceable story with three layers: the lab, the attack, and the defense.</p>
+        </div>
+
+        <div class="overview-grid">
+          <article class="info-card" data-reveal>
+            <div class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M4 8.5 12 4l8 4.5v7L12 20l-8-4.5v-7Z" stroke="currentColor" stroke-width="1.5"/><path d="M12 20v-7.5M4.5 8.8 12 12.5l7.5-3.7" stroke="currentColor" stroke-width="1.5"/></svg>
+            </div>
+            <span class="card-index">01</span>
+            <h3>The lab</h3>
+            <p>A controlled Active Directory network with a web target, a workstation, and a domain controller. All traffic crosses an inline Suricata gateway.</p>
+            <a class="text-link" href="#architecture">See the architecture <span aria-hidden="true">→</span></a>
+          </article>
+
+          <article class="info-card" data-reveal>
+            <div class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M5 7h14M5 12h9M5 17h11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="18" cy="12" r="2.5" stroke="currentColor" stroke-width="1.5"/></svg>
+            </div>
+            <span class="card-index">02</span>
+            <h3>The campaign</h3>
+            <p>Twenty documented stages take an attacker from reconnaissance to domain compromise and visible impact, with the exact tools and evidence for each step.</p>
+            <a class="text-link" href="#campaign">Open the campaign <span aria-hidden="true">→</span></a>
+          </article>
+
+          <article class="info-card" data-reveal>
+            <div class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M12 3 20 6.5v5.7c0 4.7-3.2 7.7-8 9.3-4.8-1.6-8-4.6-8-9.3V6.5L12 3Z" stroke="currentColor" stroke-width="1.5"/><path d="m8.5 12 2.2 2.2 4.8-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <span class="card-index">03</span>
+            <h3>The defense</h3>
+            <p>Suricata and Wazuh feed a Python bridge into TheHive. Each stage is checked for signal, triaged in a case, and recorded as detected, missed, or unobservable.</p>
+            <a class="text-link" href="#detection">Read the detection model <span aria-hidden="true">→</span></a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--raised" id="architecture">
+      <div class="container">
+        <div class="section-head split-head" data-reveal>
+          <div>
+            <p class="eyebrow">02 / The lab</p>
+            <h2>A small network with a real telemetry path.</h2>
+            <p class="lede">The attack is local. The detection stack is remote. Nothing reaches the cloud without crossing the gateway and the encrypted tunnel.</p>
+          </div>
+          <div class="head-note">
+            <span class="head-note-label">Design principle</span>
+            <p>Make the detection path unavoidable, then prove what it can and cannot see.</p>
+          </div>
+        </div>
+
+        <div class="arch-board" data-reveal>
+          <div class="arch-col arch-col--attack">
+            <span class="arch-kicker">Attack</span>
+            <div class="arch-node">
+              <span class="arch-node-title">Kali Linux</span>
+              <span class="arch-node-sub">192.168.232.135</span>
+            </div>
+            <p class="arch-caption">Adversary workstation and tooling.</p>
+          </div>
+
+          <div class="arch-col arch-col--network">
+            <span class="arch-kicker">Choke point</span>
+            <div class="arch-node arch-node--accent">
+              <span class="arch-node-title">Suricata gateway</span>
+              <span class="arch-node-sub">inline inspection</span>
+            </div>
+            <p class="arch-caption">Every packet is inspected. Network evidence is unavoidable.</p>
+          </div>
+
+          <div class="arch-col arch-col--victims">
+            <span class="arch-kicker">Victim network</span>
+            <div class="arch-stack">
+              <div class="arch-node arch-node--small"><span class="arch-node-title">DVWA</span><span class="arch-node-sub">192.168.56.30</span></div>
+              <div class="arch-node arch-node--small"><span class="arch-node-title">Windows 10</span><span class="arch-node-sub">192.168.56.20</span></div>
+              <div class="arch-node arch-node--small"><span class="arch-node-title">Domain Controller</span><span class="arch-node-sub">192.168.56.10</span></div>
+            </div>
+            <p class="arch-caption">Each host runs a Wazuh agent for endpoint and log telemetry.</p>
+          </div>
+
+          <div class="arch-col arch-col--soc">
+            <span class="arch-kicker">SOC pipeline</span>
+            <div class="arch-stack">
+              <div class="arch-node arch-node--small"><span class="arch-node-title">Wazuh</span><span class="arch-node-sub">SIEM + alerts</span></div>
+              <div class="arch-node arch-node--small"><span class="arch-node-title">thecustomhive</span><span class="arch-node-sub">Python bridge</span></div>
+              <div class="arch-node arch-node--small arch-node--accent"><span class="arch-node-title">TheHive</span><span class="arch-node-sub">cases + tasks</span></div>
+            </div>
+            <p class="arch-caption">Alerts become cases with observables, tasks, and a timeline.</p>
+          </div>
+        </div>
+
+        <div class="arch-lower">
+          <div class="flow-card" data-reveal>
+            <div class="flow-head">
+              <span class="card-index">Signal path</span>
+              <h3>How one event becomes a case</h3>
+            </div>
+            <ol class="signal-flow">
+              <li><span>01</span><div><strong>Traffic</strong><p>Kali sends attack traffic across the Suricata gateway.</p></div></li>
+              <li><span>02</span><div><strong>Telemetry</strong><p>Suricata writes alerts. Wazuh agents ship host and web logs.</p></div></li>
+              <li><span>03</span><div><strong>Automation</strong><p>thecustomhive forwards qualifying alerts into TheHive.</p></div></li>
+              <li><span>04</span><div><strong>Investigation</strong><p>The analyst scopes, collects evidence, and records a verdict.</p></div></li>
+            </ol>
+          </div>
+
+          <div class="table-card" data-reveal>
+            <div class="table-head">
+              <span class="card-index">Stack</span>
+              <h3>What each layer is for</h3>
+            </div>
+            <div class="table-scroll" tabindex="0" aria-label="Technology stack table">
+              <table class="data-table">
+                <caption class="sr-only">SOC lab components and their purpose</caption>
+                <thead>
+                  <tr><th scope="col">Layer</th><th scope="col">Component</th><th scope="col">Plain-English job</th></tr>
+                </thead>
+                <tbody>
+                  <tr><th scope="row">Attack</th><td>Kali Linux</td><td>Runs the adversary tooling.</td></tr>
+                  <tr><th scope="row">Network</th><td>Suricata</td><td>Watches every packet and raises network alerts.</td></tr>
+                  <tr><th scope="row">Endpoint</th><td>Wazuh</td><td>Collects host logs and correlates activity.</td></tr>
+                  <tr><th scope="row">Integration</th><td>thecustomhive</td><td>Moves alerts from Wazuh into TheHive.</td></tr>
+                  <tr><th scope="row">Case work</th><td>TheHive</td><td>Holds the investigation, observables, and tasks.</td></tr>
+                  <tr><th scope="row">DFIR</th><td>Velociraptor</td><td>Collects endpoint evidence when needed.</td></tr>
+                  <tr><th scope="row">Replay</th><td>Caldera</td><td>Repeats techniques so detections can be tested.</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="table-note">Detailed setup, IPs, and trust boundaries live in <a class="inline-link" href="https://github.com/EclipseManic/SOC-Lab/blob/main/01-lab-setup/architecture.md" target="_blank" rel="noreferrer">the architecture document</a>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="campaign">
+      <div class="container">
+        <div class="section-head split-head" data-reveal>
+          <div>
+            <p class="eyebrow">03 / The campaign</p>
+            <h2>Twenty stages. One connected attack story.</h2>
+            <p class="lede">Each card is a chapter. Open one to see what the attacker did, what the defender could see, and what evidence proves it.</p>
+          </div>
+          <div class="campaign-legend" aria-label="Campaign legend">
+            <span><i class="dot dot--teal"></i> Web foothold</span>
+            <span><i class="dot dot--blue"></i> Credential access</span>
+            <span><i class="dot dot--amber"></i> Domain takeover</span>
+            <span><i class="dot dot--red"></i> Collection and impact</span>
+          </div>
+        </div>
+
+        <div class="campaign-toolbar" data-reveal>
+          <div class="filter-group" role="group" aria-label="Filter attack stages by phase">
+            <button class="filter is-active" type="button" data-filter="all" aria-pressed="true">All stages <span>20</span></button>
+            <button class="filter" type="button" data-filter="web" aria-pressed="false">Web foothold <span>07</span></button>
+            <button class="filter" type="button" data-filter="cred" aria-pressed="false">Credential access <span>07</span></button>
+            <button class="filter" type="button" data-filter="domain" aria-pressed="false">Domain takeover <span>03</span></button>
+            <button class="filter" type="button" data-filter="impact" aria-pressed="false">Impact <span>03</span></button>
+          </div>
+          <p class="filter-count" id="filter-count" aria-live="polite">Showing 20 of 20 stages</p>
+        </div>
+
+        <div class="campaign-grid" id="stage-grid" aria-label="Attack stage cards"></div>
+        <noscript>
+          <p class="no-script">JavaScript is disabled. The full stage list is available in <a href="https://github.com/EclipseManic/SOC-Lab/blob/main/INDEX.md">INDEX.md</a>.</p>
+        </noscript>
+
+        <div class="campaign-foot" data-reveal>
+          <div>
+            <span class="callout-label">How to read a stage</span>
+            <p>Every stage answers the same four questions: what happened, what should have been visible, what evidence did we collect, and what detection gap remains.</p>
+          </div>
+          <a class="btn btn--ghost btn--small" href="https://github.com/EclipseManic/SOC-Lab/blob/main/02-attack-simulation/README.md" target="_blank" rel="noreferrer">Read the full attack chain</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--raised" id="detection">
+      <div class="container">
+        <div class="section-head split-head" data-reveal>
+          <div>
+            <p class="eyebrow">04 / The defense</p>
+            <h2>Coverage is measured, not claimed.</h2>
+            <p class="lede">A detection only counts when the right telemetry exists and a rule fires for the right reason. Until then, it is a documented gap.</p>
+          </div>
+          <div class="head-note head-note--warn">
+            <span class="head-note-label">Current status</span>
+            <p>All 20 checks are intentionally marked <strong>Not tested</strong>. Evidence is added stage by stage.</p>
+          </div>
+        </div>
+
+        <div class="detection-summary">
+          <div class="metric-card" data-reveal>
+            <span class="metric-value">20</span>
+            <span class="metric-label">checks tracked</span>
+            <p>One for every attack stage, from reconnaissance to impact.</p>
+          </div>
+          <div class="metric-card" data-reveal>
+            <span class="metric-value">20</span>
+            <span class="metric-label">gap IDs reserved</span>
+            <p>DG-01 to DG-20 give every miss a place to live.</p>
+          </div>
+          <div class="metric-card" data-reveal>
+            <span class="metric-value">3</span>
+            <span class="metric-label">telemetry layers</span>
+            <p>Network, endpoint, and identity evidence are checked together.</p>
+          </div>
+          <div class="metric-card metric-card--note" data-reveal>
+            <span class="metric-label">The rule</span>
+            <p>A rule that has never fired is a hypothesis, not coverage.</p>
+          </div>
+        </div>
+
+        <div class="table-card table-card--wide" data-reveal>
+          <div class="table-head table-head--row">
+            <div>
+              <span class="card-index">Coverage matrix</span>
+              <h3>What each stage needs, and what is still missing</h3>
+            </div>
+            <span class="table-hint">Scroll horizontally on small screens</span>
+          </div>
+          <div class="table-scroll" tabindex="0" aria-label="Detection coverage matrix">
+            <table class="data-table coverage-table" id="coverage-table">
+              <caption class="sr-only">Detection coverage by attack stage, including required telemetry, gap ID, and status</caption>
+              <thead>
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">Stage</th>
+                  <th scope="col">Required telemetry</th>
+                  <th scope="col">What to look for</th>
+                  <th scope="col">Gap</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody id="coverage-body"></tbody>
+            </table>
+          </div>
+          <div class="table-foot">
+            <p><strong>Reading the result:</strong> Not tested means the stage has not been validated yet. It is not a pass and it is not a failure.</p>
+            <a class="text-link" href="https://github.com/EclipseManic/SOC-Lab/blob/main/03-detection-engineering/gaps.md" target="_blank" rel="noreferrer">Open the gap register <span aria-hidden="true">→</span></a>
+          </div>
+        </div>
+
+        <div class="callout callout--wide" data-reveal>
+          <span class="callout-mark" aria-hidden="true">!</span>
+          <div>
+            <strong>Why document misses?</strong>
+            <p>A missed detection is the most useful artifact in the lab. It shows exactly which log source, rule, or field mapping needs work, and it becomes a retest item instead of an untracked weakness.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="investigation">
+      <div class="container">
+        <div class="section-head" data-reveal>
+          <p class="eyebrow">05 / The investigation</p>
+          <h2>Three cases, one continuous investigation.</h2>
+          <p class="lede">The campaign is split into three TheHive cases so the work stays scoped, but the evidence stays connected across all twenty stages.</p>
+        </div>
+
+        <div class="case-grid">
+          <article class="case-card" data-reveal>
+            <div class="case-top">
+              <span class="case-id">CASE 01</span>
+              <span class="case-scope">Stages 01–07</span>
+            </div>
+            <h3>Web application compromise</h3>
+            <p>How a scan became a foothold: brute force, SQL injection, hash cracking, a web shell, a reverse shell, and root.</p>
+            <ul class="case-questions">
+              <li>Which request first reached the database?</li>
+              <li>When did the web server start calling out?</li>
+              <li>What proved the attacker reached root?</li>
+            </ul>
+            <a class="text-link" href="https://github.com/EclipseManic/SOC-Lab/blob/main/04-investigation/cases/case-01-web-compromise.md" target="_blank" rel="noreferrer">Open the case <span aria-hidden="true">→</span></a>
+          </article>
+
+          <article class="case-card" data-reveal>
+            <div class="case-top">
+              <span class="case-id">CASE 02</span>
+              <span class="case-scope">Stages 08–14</span>
+            </div>
+            <h3>Credential access and lateral movement</h3>
+            <p>How the attacker stayed in, mapped the network, captured credentials, and moved toward the domain.</p>
+            <ul class="case-questions">
+              <li>Which persistence survived the first cleanup?</li>
+              <li>Who answered the victim's name-resolution request?</li>
+              <li>Which account unlocked the domain path?</li>
+            </ul>
+            <a class="text-link" href="https://github.com/EclipseManic/SOC-Lab/blob/main/04-investigation/cases/case-02-lateral-movement.md" target="_blank" rel="noreferrer">Open the case <span aria-hidden="true">→</span></a>
+          </article>
+
+          <article class="case-card" data-reveal>
+            <div class="case-top">
+              <span class="case-id">CASE 03</span>
+              <span class="case-scope">Stages 15–20</span>
+            </div>
+            <h3>Domain compromise and impact</h3>
+            <p>How stolen credentials became domain control, and how the attacker collected, moved, and staged data.</p>
+            <ul class="case-questions">
+              <li>When did the first forged ticket appear?</li>
+              <li>Which account was created for re-entry?</li>
+              <li>What left the network, and when?</li>
+            </ul>
+            <a class="text-link" href="https://github.com/EclipseManic/SOC-Lab/blob/main/04-investigation/cases/case-03-domain-compromise.md" target="_blank" rel="noreferrer">Open the case <span aria-hidden="true">→</span></a>
+          </article>
+        </div>
+
+        <div class="process-board" data-reveal>
+          <div class="process-head">
+            <span class="card-index">Analyst workflow</span>
+            <h3>The same six moves for every case</h3>
+          </div>
+          <ol class="process">
+            <li><span class="process-num">01</span><div><strong>Alert</strong><p>Identify the signal and its source.</p></div></li>
+            <li><span class="process-num">02</span><div><strong>Triage</strong><p>Decide what is real and how urgent it is.</p></div></li>
+            <li><span class="process-num">03</span><div><strong>Scope</strong><p>Find the first host, account, and timestamp.</p></div></li>
+            <li><span class="process-num">04</span><div><strong>Collect</strong><p>Preserve logs, processes, files, and network evidence.</p></div></li>
+            <li><span class="process-num">05</span><div><strong>Verdict</strong><p>State what happened and what is still unknown.</p></div></li>
+            <li><span class="process-num">06</span><div><strong>Report</strong><p>Turn the evidence into a defensible timeline.</p></div></li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--raised" id="report">
+      <div class="container">
+        <div class="section-head split-head" data-reveal>
+          <div>
+            <p class="eyebrow">06 / The report</p>
+            <h2>From raw alerts to a defensible narrative.</h2>
+            <p class="lede">The report package pulls the campaign, the case work, and the detection gaps into one reviewable incident record.</p>
+          </div>
+          <div class="report-stamp">
+            <span>Report status</span>
+            <strong>Draft</strong>
+            <small>Evidence in progress</small>
+          </div>
+        </div>
+
+        <div class="report-grid">
+          <div class="table-card" data-reveal>
+            <div class="table-head">
+              <span class="card-index">The questions</span>
+              <h3>What the report must answer</h3>
+            </div>
+            <div class="table-scroll" tabindex="0" aria-label="Incident report questions">
+              <table class="data-table report-table">
+                <caption class="sr-only">Questions the incident report answers</caption>
+                <thead><tr><th scope="col">Question</th><th scope="col">Where it is answered</th></tr></thead>
+                <tbody>
+                  <tr><td>What happened, in plain language?</td><td>Executive summary</td></tr>
+                  <tr><td>Which systems and accounts were affected?</td><td>Scope and impact</td></tr>
+                  <tr><td>How did the attacker get in and move?</td><td>Attack chain</td></tr>
+                  <tr><td>What did we detect, and what did we miss?</td><td>Detection performance</td></tr>
+                  <tr><td>What did we do about it?</td><td>Containment and recovery</td></tr>
+                  <tr><td>What changes next?</td><td>Lessons learned</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="report-package" data-reveal>
+            <div class="package-head">
+              <span class="card-index">Package</span>
+              <h3>Seven documents, one record</h3>
+            </div>
+            <ul class="package-list">
+              <li><span>01</span><div><strong>Incident report</strong><small>Summary, scope, analysis, impact</small></div></li>
+              <li><span>02</span><div><strong>Timeline</strong><small>Attack and response, one clock</small></div></li>
+              <li><span>03</span><div><strong>IOCs</strong><small>Indicators, confidence, source stage</small></div></li>
+              <li><span>04</span><div><strong>ATT&CK mapping</strong><small>Technique, status, evidence</small></div></li>
+              <li><span>05</span><div><strong>Response actions</strong><small>Contain, eradicate, recover</small></div></li>
+              <li><span>06</span><div><strong>Lessons learned</strong><small>Gaps, fixes, retest plan</small></div></li>
+              <li><span>07</span><div><strong>README</strong><small>How the package fits together</small></div></li>
+            </ul>
+            <a class="btn btn--primary btn--small btn--full" href="https://github.com/EclipseManic/SOC-Lab/blob/main/05-incident-report/incident-report.md" target="_blank" rel="noreferrer">Open the report package</a>
+          </div>
+        </div>
+
+        <div class="evidence-chain" data-reveal>
+          <div class="evidence-node"><span>01</span><strong>Attack screenshot</strong><small>What the attacker did</small></div>
+          <div class="evidence-arrow" aria-hidden="true">→</div>
+          <div class="evidence-node"><span>02</span><strong>Alert screenshot</strong><small>What the defender saw</small></div>
+          <div class="evidence-arrow" aria-hidden="true">→</div>
+          <div class="evidence-node"><span>03</span><strong>Case task</strong><small>What the analyst proved</small></div>
+          <div class="evidence-arrow" aria-hidden="true">→</div>
+          <div class="evidence-node"><span>04</span><strong>Report claim</strong><small>What the record states</small></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="documents">
+      <div class="container">
+        <div class="section-head" data-reveal>
+          <p class="eyebrow">07 / The documents</p>
+          <h2>Start anywhere. The index keeps it connected.</h2>
+          <p class="lede">The visual site is the guided tour. The Markdown files are the detailed record and the source of truth.</p>
+        </div>
+
+        <div class="doc-grid">
+          <a class="doc-card" data-reveal href="https://github.com/EclipseManic/SOC-Lab/blob/main/01-lab-setup/README.md" target="_blank" rel="noreferrer">
+            <span class="doc-num">01</span>
+            <h3>Lab setup</h3>
+            <p>Architecture, network, virtual machines, cloud stack, and the alert bridge.</p>
+            <span class="doc-link">15 documents <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="doc-card" data-reveal href="https://github.com/EclipseManic/SOC-Lab/blob/main/02-attack-simulation/README.md" target="_blank" rel="noreferrer">
+            <span class="doc-num">02</span>
+            <h3>Attack simulation</h3>
+            <p>Twenty stage write-ups with the attack path, tooling, and evidence convention.</p>
+            <span class="doc-link">20 stages <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="doc-card" data-reveal href="https://github.com/EclipseManic/SOC-Lab/blob/main/03-detection-engineering/README.md" target="_blank" rel="noreferrer">
+            <span class="doc-num">03</span>
+            <h3>Detection engineering</h3>
+            <p>Coverage matrix, Suricata and Wazuh rules, decoders, and false positives.</p>
+            <span class="doc-link">8 documents <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="doc-card" data-reveal href="https://github.com/EclipseManic/SOC-Lab/blob/main/04-investigation/README.md" target="_blank" rel="noreferrer">
+            <span class="doc-num">04</span>
+            <h3>Investigation</h3>
+            <p>Stage notes, analyst questions, evidence checklists, and three case summaries.</p>
+            <span class="doc-link">24 documents <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="doc-card" data-reveal href="https://github.com/EclipseManic/SOC-Lab/blob/main/05-incident-report/README.md" target="_blank" rel="noreferrer">
+            <span class="doc-num">05</span>
+            <h3>Incident report</h3>
+            <p>The formal report package: timeline, IOCs, ATT&CK, response, and lessons.</p>
+            <span class="doc-link">7 documents <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="doc-card doc-card--index" data-reveal href="https://github.com/EclipseManic/SOC-Lab/blob/main/INDEX.md" target="_blank" rel="noreferrer">
+            <span class="doc-num">IDX</span>
+            <h3>Master index</h3>
+            <p>One traceability table linking stage, alert, rule, case, and evidence.</p>
+            <span class="doc-link">Open the matrix <span aria-hidden="true">→</span></span>
+          </a>
+        </div>
+
+        <div class="glossary" data-reveal>
+          <div class="glossary-head">
+            <span class="card-index">Plain English</span>
+            <h3>The terms you need, without the jargon.</h3>
+          </div>
+          <div class="glossary-grid">
+            <details>
+              <summary>Suricata</summary>
+              <p>Network detection software. It watches traffic and raises an alert when it recognises a suspicious pattern.</p>
+            </details>
+            <details>
+              <summary>Wazuh</summary>
+              <p>The SIEM. It collects logs from hosts, correlates them, and makes alerts searchable in one place.</p>
+            </details>
+            <details>
+              <summary>TheHive</summary>
+              <p>Case management. It turns an alert into a structured investigation with tasks, observables, and a timeline.</p>
+            </details>
+            <details>
+              <summary>Kerberoasting</summary>
+              <p>An attack that requests encrypted service tickets, then cracks them offline to recover a service account password.</p>
+            </details>
+            <details>
+              <summary>DCSync</summary>
+              <p>An attack that impersonates a domain controller to copy password hashes from Active Directory.</p>
+            </details>
+            <details>
+              <summary>Pass-the-Hash</summary>
+              <p>Logging in with a stolen password hash instead of the plaintext password.</p>
+            </details>
+            <details>
+              <summary>Golden Ticket</summary>
+              <p>A forged Kerberos ticket that gives long-lived access to the domain, created with the KRBTGT key.</p>
+            </details>
+            <details>
+              <summary>Detection gap</summary>
+              <p>The telemetry exists, but no rule covers the behavior. A logging gap means the telemetry was never collected.</p>
+            </details>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <a class="brand brand--footer" href="#top">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32" fill="none"><path d="M16 3 27 8v8c0 7-5 11-11 13C10 27 5 23 5 16V8l11-5Z" stroke="currentColor" stroke-width="1.6"/><path d="M11 16h4l2-4 3 8 2-4h-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <span class="brand-text">SOC<span>//</span>LAB</span>
+        </a>
+        <p class="footer-note">An authorized, isolated lab. Every action was performed against systems owned by the author. No production data, live credentials, or public targets are included.</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <span class="footer-heading">Read</span>
+          <a href="#overview">Overview</a>
+          <a href="#campaign">Campaign</a>
+          <a href="#detection">Detection</a>
+          <a href="#report">Report</a>
+        </div>
+        <div>
+          <span class="footer-heading">Source</span>
+          <a href="https://github.com/EclipseManic/SOC-Lab" target="_blank" rel="noreferrer">GitHub repository</a>
+          <a href="https://github.com/EclipseManic/SOC-Lab/blob/main/INDEX.md" target="_blank" rel="noreferrer">Master index</a>
+          <a href="https://github.com/EclipseManic/SOC-Lab/blob/main/DISCLAIMER.md" target="_blank" rel="noreferrer">Disclaimer</a>
+          <a href="https://github.com/EclipseManic/SOC-Lab/blob/main/LICENSE" target="_blank" rel="noreferrer">MIT license</a>
+        </div>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <span>SOC Lab documentation</span>
+      <span class="footer-status"><i class="dot dot--teal"></i> Draft build · evidence in progress</span>
+      <a href="#top">Back to top <span aria-hidden="true">↑</span></a>
+    </div>
+  </footer>
+
+  <dialog class="stage-dialog" id="stage-dialog" aria-labelledby="dialog-title">
+    <div class="dialog-shell">
+      <div class="dialog-top">
+        <div>
+          <p class="dialog-kicker"><span id="dialog-number">01</span> / <span id="dialog-phase">Web foothold</span></p>
+          <h2 id="dialog-title">Reconnaissance</h2>
+        </div>
+        <button class="icon-button" type="button" data-close-dialog aria-label="Close stage details">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+
+      <div class="dialog-tags" id="dialog-tags"></div>
+      <p class="dialog-plain" id="dialog-plain"></p>
+
+      <div class="dialog-grid">
+        <section>
+          <h3>What the attacker does</h3>
+          <p id="dialog-attacker"></p>
+        </section>
+        <section>
+          <h3>What the defender sees</h3>
+          <p id="dialog-defender"></p>
+        </section>
+        <section>
+          <h3>Evidence to collect</h3>
+          <p id="dialog-evidence"></p>
+        </section>
+      </div>
+
+      <div class="dialog-callout">
+        <div>
+          <span class="callout-label">Detection check</span>
+          <p id="dialog-gap"></p>
+        </div>
+        <div>
+          <span class="callout-label">Required telemetry</span>
+          <p id="dialog-telemetry"></p>
+        </div>
+      </div>
+
+      <div class="dialog-links" id="dialog-links"></div>
+
+      <div class="dialog-footer">
+        <button class="btn btn--ghost btn--small" type="button" id="dialog-prev">Previous stage</button>
+        <span class="dialog-position" id="dialog-position"></span>
+        <button class="btn btn--ghost btn--small" type="button" id="dialog-next">Next stage</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="assets/stages.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>
