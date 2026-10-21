@@ -20,7 +20,6 @@ What was built and how: the three-tier model, the addressing plan, the local vic
 | [cloud/thehive.md](cloud/thehive.md) | Case management, ingress hub, VPN server, router |
 | [cloud/wazuh.md](cloud/wazuh.md) | SIEM stack, private only |
 | [cloud/velociraptor.md](cloud/velociraptor.md) | Endpoint forensics |
-| [cloud/caldera.md](cloud/caldera.md) | Adversary emulation |
 | [cloud/wireguard.md](cloud/wireguard.md) | VPN hub and tunnel policy |
 
 ## Design summary
@@ -31,7 +30,7 @@ The lab has three tiers:
 2. **Victim** — `192.168.56.0/24`: Windows Server 2022 DC (`.10`), Windows 10 (`.20`), DVWA (`.30`). Their default gateway is the gateway's `eth1` address, `192.168.56.150`.
 3. **Cloud SOC** — two VMs in a private `10.122.0.0/16` plan, split across two peered VNets:
    - **Wazuh VM** — manager, indexer, dashboard. No public listener.
-   - **TheHive/automation VM** — TheHive, Docker, Nginx Proxy Manager, Velociraptor, Caldera, thecustomhive, and the WireGuard server. It is the cloud ingress point, VPN hub, and router toward the Wazuh VM.
+   - **TheHive/automation VM** — TheHive, Docker, Nginx Proxy Manager, Velociraptor, thecustomhive, and the WireGuard server. It is the cloud ingress point, VPN hub, and router toward the Wazuh VM.
 
 The Suricata gateway is the middle tier of the local lab, not a passive tap: `eth0` faces Kali/NAT, `eth1` faces the victim network, and `wg0` (`10.8.0.2/32`) reaches the hub at `10.8.0.1/24` over `51820/UDP`.
 

@@ -31,14 +31,14 @@ flowchart LR
     DV -.->|Wazuh agent| SG
   end
   subgraph CLOUD["Cloud SOC — private 10.122.0.0/16"]
-    HUB["TheHive/automation VM<br/>10.8.0.1/24 hub<br/>TheHive · thecustomhive · NPM<br/>Velociraptor · Caldera · WireGuard"]
+    HUB["TheHive/automation VM<br/>10.8.0.1/24 hub<br/>TheHive · thecustomhive · NPM<br/>Velociraptor · WireGuard"]
     WZ["Wazuh VM<br/>manager · indexer · dashboard"]
     HUB <-->|"VNet peering"| WZ
   end
   SG <-->|"WireGuard 10.8.0.0/24<br/>51820/UDP"| HUB
 ```
 
-No exported image is referenced. If one is added later it must be vendor-neutral and have public IPs redacted; see [resources/README.md](../resources/README.md).
+Latest high-level export: [resources/diagrams/soc-lab.png](../resources/diagrams/soc-lab.png). It is an overview; the tables below and [network-topology.md](network-topology.md) are authoritative for addresses and flows.
 
 ## Traffic flow
 
@@ -48,8 +48,8 @@ No exported image is referenced. If one is added later it must be vendor-neutral
 4. The tunnel terminates on the TheHive/automation VM, which forwards `1514/TCP` (and the enrollment port) to the Wazuh VM across the peered VNets.
 5. Wazuh matches rules and writes alerts; thecustomhive pulls them from the Wazuh API at the private VNet address.
 6. thecustomhive posts to the TheHive API on the same VM (loopback/local address — no tunnel required).
-7. The analyst connects over the same WireGuard VPN and works in TheHive, the Wazuh dashboard, Velociraptor, and Caldera.
-8. Velociraptor clients on the victim hosts initiate connections to the server on the TheHive/automation VM; Caldera operates the same way.
+7. The analyst connects over the same WireGuard VPN and works in TheHive, the Wazuh dashboard, and Velociraptor.
+8. Velociraptor clients on the victim hosts initiate connections to the server on the TheHive/automation VM.
 
 ## Public ingress
 
@@ -59,7 +59,7 @@ Exactly one rule exists in the cloud firewall for inbound traffic:
 |---|---|---|---|
 | `51820` | UDP | TheHive/automation VM | WireGuard listener |
 
-Everything else is default-deny. That includes the TheHive UI, the Wazuh dashboard and API, Velociraptor, Caldera, SSH, and every agent/enrollment port. If SSH is closed and the tunnel is broken, the provider console is the break-glass path.
+Everything else is default-deny. That includes the TheHive UI, the Wazuh dashboard and API, Velociraptor, SSH, and every agent/enrollment port. If SSH is closed and the tunnel is broken, the provider console is the break-glass path.
 
 There is no public DNS record, reverse proxy listener, or dashboard URL to discover. Nginx Proxy Manager exists to terminate TLS for internal service names over the tunnel, not to publish them.
 
@@ -95,7 +95,6 @@ The two VMs sit in `10.122.0.0/16`, split across two non-overlapping VNets conne
 | TheHive | TheHive/automation VM | Case management | Structures triage, tasks, observables, timelines |
 | Nginx Proxy Manager | TheHive/automation VM | Internal TLS/reverse proxy | Names and certificates for VPN-reachable services |
 | Velociraptor | TheHive/automation VM | DFIR | Collects process, network, persistence, file artifacts |
-| Caldera | TheHive/automation VM | Adversary emulation | Repeatable technique execution |
 | WireGuard | Both sides | Encrypted transport and hub routing | Keeps telemetry off the public internet |
 | Docker | TheHive/automation VM | Container runtime | Runs TheHive and supporting services |
 

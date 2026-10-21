@@ -7,11 +7,10 @@ Supporting material that does not belong to a specific section.
 | Path | Status | Purpose |
 |---|---|---|
 | `attack-chain-full.pdf` | **Planned — not present** | Original attack-chain source document |
-| `diagrams/` | **Planned — not present** | Redacted architecture and network diagrams |
-| `diagrams/architecture.png` | **Planned — not present** | High-level architecture export |
+| `diagrams/soc-lab.png` | Present | Latest high-level architecture overview |
 | `diagrams/network-topology.png` | **Planned — not present** | Network diagram export |
 
-Nothing in this folder is currently linked as an image. The live architecture is expressed as Mermaid in [01-lab-setup/architecture.md](../01-lab-setup/architecture.md); do not add an image reference until the file exists.
+The latest high-level overview is linked from [README.md](../README.md) and [01-lab-setup/architecture.md](../01-lab-setup/architecture.md). The Mermaid diagram and detailed tables remain the source of truth for addresses and flows.
 
 ## Diagram rules
 
