@@ -243,8 +243,8 @@
     dialogLinks.replaceChildren();
     addDialogLink("Attack write-up", stage.attackPath);
     addDialogLink("Investigation notes", stage.investigationPath);
-    addDialogLink("Case summary", "Investigation/Cases/" + stage.caseSlug + ".md");
-    addDialogLink("Coverage matrix", "Detection-Engineering/coverage-matrix.md");
+    addDialogLink("Case summary", "04-Investigation/Cases/" + stage.caseSlug + ".md");
+    addDialogLink("Coverage matrix", "03-Detection-Engineering/coverage-matrix.md");
 
     dialogPrev.disabled = index === 0;
     dialogNext.disabled = index === stages.length - 1;

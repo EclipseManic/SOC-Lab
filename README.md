@@ -20,13 +20,13 @@ The point of the design is not the tool list. It is that a single public port op
 
 ## Architecture
 
-![SOC lab architecture](Resources/Diagrams/soc-lab.png)
+![SOC lab architecture](06-Resources/Diagrams/soc-lab.png)
 
-*Latest high-level architecture. Suricata's victim-side address is `192.168.56.150/24`. The `10.122.0.0/16` block is a summary range for two peered `/24` VNets, not a single Layer 2 subnet. Detailed addresses, ports, and flows are in [network-topology.md](Lab-Setup/network-topology.md); where the overview differs, the detailed tables take precedence. Suricata sees traffic crossing the gateway; victim-to-victim traffic stays on the same subnet.*
+*Latest high-level architecture. Suricata's victim-side address is `192.168.56.150/24`. The `10.122.0.0/16` block is a summary range for two peered `/24` VNets, not a single Layer 2 subnet. Detailed addresses, ports, and flows are in [network-topology.md](01-Lab-Setup/network-topology.md); where the overview differs, the detailed tables take precedence. Suricata sees traffic crossing the gateway; victim-to-victim traffic stays on the same subnet.*
 
 The tunnel terminates on the TheHive/automation VM, not on Wazuh. That VM is the cloud ingress point, the VPN hub, and the router that reaches the Wazuh VM across the peered VNets.
 
-Full detail: [Lab-Setup/architecture.md](Lab-Setup/architecture.md) · addresses and flows: [Lab-Setup/network-topology.md](Lab-Setup/network-topology.md).
+Full detail: [01-Lab-Setup/architecture.md](01-Lab-Setup/architecture.md) · addresses and flows: [01-Lab-Setup/network-topology.md](01-Lab-Setup/network-topology.md).
 
 ## Network at a glance
 
@@ -67,13 +67,13 @@ The VPN policy allows `10.8.0.0/24` to both `192.168.232.0/24` and `192.168.56.0
 
 | Section | Purpose |
 |---|---|
-| [Lab-Setup](Lab-Setup/README.md) | Architecture, network, local VMs, cloud stack, thecustomhive pipeline |
-| [Attack-Simulation](Attack-Simulation/README.md) | 20-stage attack chain with commands and evidence |
-| [Detection-Engineering](Detection-Engineering/README.md) | Rule catalogue, ATT&CK coverage, false positives, detection gaps |
-| [Investigation](Investigation/README.md) | Stage-wise analyst notes and three TheHive cases |
-| [Incident-Report](Incident-Report/README.md) | Executive report, timeline, IOCs, ATT&CK mapping, response and lessons |
+| [Lab-Setup](01-Lab-Setup/README.md) | Architecture, network, local VMs, cloud stack, thecustomhive pipeline |
+| [Attack-Simulation](02-Attack-Simulation/README.md) | 20-stage attack chain with commands and evidence |
+| [Detection-Engineering](03-Detection-Engineering/README.md) | Rule catalogue, ATT&CK coverage, false positives, detection gaps |
+| [Investigation](04-Investigation/README.md) | Stage-wise analyst notes and three TheHive cases |
+| [Incident-Report](05-Incident-Report/README.md) | Executive report, timeline, IOCs, ATT&CK mapping, response and lessons |
 | [INDEX.md](INDEX.md) | Master traceability matrix: stage, alert, rule, case, evidence |
-| [Resources](Resources/README.md) | Reference material and the latest architecture diagram |
+| [Resources](06-Resources/README.md) | Reference material and the latest architecture diagram |
 | [SECURITY.md](SECURITY.md) | Redaction and secret-handling policy |
 
 ## Attack chain at a glance
@@ -103,7 +103,7 @@ The ATT&CK mappings below are **suggested starting points** and must be verified
 | 19 | Exfiltration | Exfiltration | T1041 Exfiltration Over C2 Channel |
 | 20 | Impact | Impact | T1491.001 Internal Defacement |
 
-Full detail: [Attack-Simulation/README.md](Attack-Simulation/README.md).
+Full detail: [02-Attack-Simulation/README.md](02-Attack-Simulation/README.md).
 
 ## Known gaps
 
@@ -127,7 +127,7 @@ No stage is marked **Detected**. The status vocabulary is defined in [INDEX.md](
 
 ## Evidence convention
 
-All attack and alert evidence screenshots live in two folders under `Attack-Simulation/`:
+All attack and alert evidence screenshots live in two folders under `02-Attack-Simulation/`:
 
 - `Attack-Screenshots/stage-XX/` — attacker-side evidence
 - `alert-screenshots/stage-XX/` — TheHive, Wazuh, or Suricata alert evidence
@@ -164,12 +164,12 @@ The repository is the record; the site is a presentation layer over the same dat
 
 ## Start here
 
-1. [Architecture](Lab-Setup/architecture.md)
-2. [Network topology](Lab-Setup/network-topology.md)
-3. [Attack chain overview](Attack-Simulation/README.md)
-4. [Detection coverage](Detection-Engineering/coverage-matrix.md)
-5. [Investigation methodology](Investigation/README.md)
-6. [Incident report](Incident-Report/incident-report.md)
+1. [Architecture](01-Lab-Setup/architecture.md)
+2. [Network topology](01-Lab-Setup/network-topology.md)
+3. [Attack chain overview](02-Attack-Simulation/README.md)
+4. [Detection coverage](03-Detection-Engineering/coverage-matrix.md)
+5. [Investigation methodology](04-Investigation/README.md)
+6. [Incident report](05-Incident-Report/incident-report.md)
 7. [Master index](INDEX.md)
 
 ## License
