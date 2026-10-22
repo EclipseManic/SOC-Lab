@@ -1,0 +1,57 @@
+# Investigation — Stage 09 — Internal Discovery
+
+> **Status:** Draft
+> **Attack stage:** [Stage 09](../../Attack-Simulation/Stages/stage-09-internal-discovery.md)
+> **TheHive case:** [Case 02](../Cases/case-02-lateral-movement.md)
+
+## Alert details
+
+| Alert ID | Rule ID | Source | Severity | TLP / PAP |
+|---|---|---|---|---|
+| TBD | TBD | TBD | TBD | TBD |
+
+## What was detected
+
+TBD
+
+## Triage
+
+Verdict: TBD
+Confidence: TBD
+Reason: TBD
+
+## Investigation steps
+
+1. Identify the source host and discovery tool.
+2. Review host network telemetry and destination spread from the pivot; same-subnet scans are not visible to Suricata.
+3. Correlate with process execution on the pivot host.
+4. Identify which hosts and services were discovered.
+5. Record the detection assessment.
+
+## Evidence
+
+- Attack: `../../Attack-Simulation/Attack-Screenshots/stage-09/`
+- Alert: `../../Attack-Simulation/alert-screenshots/stage-09/`
+- Queries and logs: TBD
+
+## IOCs
+
+| Type | Value | Context |
+|---|---|---|
+| IP | `192.168.56.30` | DVWA pivot |
+| Host | `192.168.56.0/24` | Scanned victim range |
+
+## Detection assessment
+
+Status: Not tested
+Gap ID: DG-09
+Recommended rule: TBD
+
+## Verdict
+
+TBD
+
+## MITRE ATT&CK
+
+Tactic: Discovery
+Technique: Remote System Discovery (T1018)

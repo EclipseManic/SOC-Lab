@@ -14,19 +14,19 @@ Three tiers, one story:
 |---|---|---|
 | Attack | Kali Linux on an isolated NAT segment | Local VMware |
 | Victim | Windows Server 2022 DC, Windows 10, DVWA — routed through the Suricata gateway | Local VMware |
-| SOC | Wazuh VM plus the TheHive/automation VM, joined by VNet peering and reached over WireGuard | Cloud (any provider) |
+| SOC | Wazuh VM plus the TheHive/automation VM, each in a `/24` VNet joined by peering and reached over WireGuard | Cloud (any provider) |
 
 The point of the design is not the tool list. It is that a single public port opens the lab, every hop is documented, and the places where visibility is incomplete are named rather than hidden.
 
 ## Architecture
 
-![SOC lab architecture](resources/diagrams/soc-lab.png)
+![SOC lab architecture](Resources/Diagrams/soc-lab.png)
 
-*Latest high-level architecture. Detailed addresses, ports, and traffic flows are in [network-topology.md](01-lab-setup/network-topology.md); where the overview differs, the detailed tables take precedence. Suricata sees traffic crossing the gateway; victim-to-victim traffic stays on the same subnet.*
+*Latest high-level architecture. Suricata's victim-side address is `192.168.56.150/24`. The `10.122.0.0/16` block is a summary range for two peered `/24` VNets, not a single Layer 2 subnet. Detailed addresses, ports, and flows are in [network-topology.md](Lab-Setup/network-topology.md); where the overview differs, the detailed tables take precedence. Suricata sees traffic crossing the gateway; victim-to-victim traffic stays on the same subnet.*
 
 The tunnel terminates on the TheHive/automation VM, not on Wazuh. That VM is the cloud ingress point, the VPN hub, and the router that reaches the Wazuh VM across the peered VNets.
 
-Full detail: [01-lab-setup/architecture.md](01-lab-setup/architecture.md) · addresses and flows: [01-lab-setup/network-topology.md](01-lab-setup/network-topology.md).
+Full detail: [Lab-Setup/architecture.md](Lab-Setup/architecture.md) · addresses and flows: [Lab-Setup/network-topology.md](Lab-Setup/network-topology.md).
 
 ## Network at a glance
 
@@ -67,13 +67,13 @@ The VPN policy allows `10.8.0.0/24` to both `192.168.232.0/24` and `192.168.56.0
 
 | Section | Purpose |
 |---|---|
-| [01-lab-setup](01-lab-setup/README.md) | Architecture, network, local VMs, cloud stack, thecustomhive pipeline |
-| [02-attack-simulation](02-attack-simulation/README.md) | 20-stage attack chain with commands and evidence |
-| [03-detection-engineering](03-detection-engineering/README.md) | Rule catalogue, ATT&CK coverage, false positives, detection gaps |
-| [04-investigation](04-investigation/README.md) | Stage-wise analyst notes and three TheHive cases |
-| [05-incident-report](05-incident-report/README.md) | Executive report, timeline, IOCs, ATT&CK mapping, response and lessons |
+| [Lab-Setup](Lab-Setup/README.md) | Architecture, network, local VMs, cloud stack, thecustomhive pipeline |
+| [Attack-Simulation](Attack-Simulation/README.md) | 20-stage attack chain with commands and evidence |
+| [Detection-Engineering](Detection-Engineering/README.md) | Rule catalogue, ATT&CK coverage, false positives, detection gaps |
+| [Investigation](Investigation/README.md) | Stage-wise analyst notes and three TheHive cases |
+| [Incident-Report](Incident-Report/README.md) | Executive report, timeline, IOCs, ATT&CK mapping, response and lessons |
 | [INDEX.md](INDEX.md) | Master traceability matrix: stage, alert, rule, case, evidence |
-| [resources](resources/README.md) | Reference material and the latest architecture diagram |
+| [Resources](Resources/README.md) | Reference material and the latest architecture diagram |
 | [SECURITY.md](SECURITY.md) | Redaction and secret-handling policy |
 
 ## Attack chain at a glance
@@ -103,11 +103,11 @@ The ATT&CK mappings below are **suggested starting points** and must be verified
 | 19 | Exfiltration | Exfiltration | T1041 Exfiltration Over C2 Channel |
 | 20 | Impact | Impact | T1491.001 Internal Defacement |
 
-Full detail: [02-attack-simulation/README.md](02-attack-simulation/README.md).
+Full detail: [Attack-Simulation/README.md](Attack-Simulation/README.md).
 
 ## Known gaps
 
-- **Cloud addressing is summarized, not published.** The plan is `10.122.0.0/16` split across two non-overlapping VNets joined by peering. Exact per-VNet/subnet CIDRs vary by provider build and are not documented here. Public cloud IPs are dynamic and are deliberately excluded.
+- **Cloud addressing is summarized, not published.** The `10.122.0.0/16` summary covers two non-overlapping `/24` VNets joined by peering; it is not one flat subnet. Exact per-VNet/subnet CIDRs vary by provider build and are not documented here. Public cloud IPs are dynamic and are deliberately excluded.
 - **Intra-subnet lateral movement is invisible to Suricata.** Victim-to-victim traffic stays inside `192.168.56.0/24` and never crosses the gateway. Detection on those stages relies on Wazuh and host telemetry.
 - **Detection rules are not validated.** Rules are written against expected behavior; none are confirmed to fire on a real stage yet.
 - **Evidence is being collected.** Screenshots, alert IDs, and case IDs are pending.
@@ -127,9 +127,9 @@ No stage is marked **Detected**. The status vocabulary is defined in [INDEX.md](
 
 ## Evidence convention
 
-All attack and alert evidence screenshots live in two folders under `02-attack-simulation/`:
+All attack and alert evidence screenshots live in two folders under `Attack-Simulation/`:
 
-- `attack-screenshots/stage-XX/` — attacker-side evidence
+- `Attack-Screenshots/stage-XX/` — attacker-side evidence
 - `alert-screenshots/stage-XX/` — TheHive, Wazuh, or Suricata alert evidence
 
 Files are embedded in the stage and investigation documents by relative link. Do not copy the same image into multiple folders. Use descriptive lowercase names, for example `stage-03-01-burp-request.png`. Compress images before committing; GitHub recommends keeping individual objects around 1 MB or less.
@@ -158,18 +158,18 @@ Attack simulation, Active Directory attack paths, Suricata and Wazuh detection, 
 
 The repository is the record; the site is a presentation layer over the same data. It is not required to read the lab.
 
-- **Open locally:** `python -m http.server 8000 --directory site`, then <http://localhost:8000/>
-- **Site notes and deployment:** [site/README.md](site/README.md)
-- **Pages workflow:** [.github/workflows/pages.yml](.github/workflows/pages.yml) publishes only `site/`
+- **Open locally:** `python -m http.server 8000 --directory Site`, then <http://localhost:8000/>
+- **Site notes and deployment:** [Site/README.md](Site/README.md)
+- **Pages workflow:** [.github/workflows/pages.yml](.github/workflows/pages.yml) publishes only `Site/`
 
 ## Start here
 
-1. [Architecture](01-lab-setup/architecture.md)
-2. [Network topology](01-lab-setup/network-topology.md)
-3. [Attack chain overview](02-attack-simulation/README.md)
-4. [Detection coverage](03-detection-engineering/coverage-matrix.md)
-5. [Investigation methodology](04-investigation/README.md)
-6. [Incident report](05-incident-report/incident-report.md)
+1. [Architecture](Lab-Setup/architecture.md)
+2. [Network topology](Lab-Setup/network-topology.md)
+3. [Attack chain overview](Attack-Simulation/README.md)
+4. [Detection coverage](Detection-Engineering/coverage-matrix.md)
+5. [Investigation methodology](Investigation/README.md)
+6. [Incident report](Incident-Report/incident-report.md)
 7. [Master index](INDEX.md)
 
 ## License
