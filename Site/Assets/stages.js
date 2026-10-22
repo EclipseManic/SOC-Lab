@@ -18,8 +18,8 @@ window.SOC_DATA = {
       status: "Not tested",
       caseLabel: "Case 01",
       caseSlug: "case-01-web-compromise",
-      attackPath: "Attack-Simulation/Stages/stage-01-recon.md",
-      investigationPath: "Investigation/Stages/stage-01-recon.md"
+      attackPath: "02-Attack-Simulation/Stages/stage-01-recon.md",
+      investigationPath: "04-Investigation/Stages/stage-01-recon.md"
     },
     {
       id: "02",
@@ -38,8 +38,8 @@ window.SOC_DATA = {
       status: "Not tested",
       caseLabel: "Case 01",
       caseSlug: "case-01-web-compromise",
-      attackPath: "Attack-Simulation/Stages/stage-02-bruteforce.md",
-      investigationPath: "Investigation/Stages/stage-02-bruteforce.md"
+      attackPath: "02-Attack-Simulation/Stages/stage-02-bruteforce.md",
+      investigationPath: "04-Investigation/Stages/stage-02-bruteforce.md"
     },
     {
       id: "03",
@@ -58,8 +58,8 @@ window.SOC_DATA = {
       status: "Not tested",
       caseLabel: "Case 01",
       caseSlug: "case-01-web-compromise",
-      attackPath: "Attack-Simulation/Stages/stage-03-sqli.md",
-      investigationPath: "Investigation/Stages/stage-03-sqli.md"
+      attackPath: "02-Attack-Simulation/Stages/stage-03-sqli.md",
+      investigationPath: "04-Investigation/Stages/stage-03-sqli.md"
     },
     {
       id: "04",
@@ -78,8 +78,8 @@ window.SOC_DATA = {
       status: "Not tested",
       caseLabel: "Case 01",
       caseSlug: "case-01-web-compromise",
-      attackPath: "Attack-Simulation/Stages/stage-04-hash-crack.md",
-      investigationPath: "Investigation/Stages/stage-04-hash-crack.md"
+      attackPath: "02-Attack-Simulation/Stages/stage-04-hash-crack.md",
+      investigationPath: "04-Investigation/Stages/stage-04-hash-crack.md"
     },
     {
       id: "05",
@@ -98,8 +98,8 @@ window.SOC_DATA = {
       status: "Not tested",
       caseLabel: "Case 01",
       caseSlug: "case-01-web-compromise",
-      attackPath: "Attack-Simulation/Stages/stage-05-webshell.md",
-      investigationPath: "Investigation/Stages/stage-05-webshell.md"
+      attackPath: "02-Attack-Simulation/Stages/stage-05-webshell.md",
+      investigationPath: "04-Investigation/Stages/stage-05-webshell.md"
     },
     {
       id: "06",
@@ -118,8 +118,8 @@ window.SOC_DATA = {
       status: "Not tested",
       caseLabel: "Case 01",
       caseSlug: "case-01-web-compromise",
-      attackPath: "Attack-Simulation/Stages/stage-06-reverse-shell.md",
-      investigationPath: "Investigation/Stages/stage-06-reverse-shell.md"
+      attackPath: "02-Attack-Simulation/Stages/stage-06-reverse-shell.md",
+      investigationPath: "04-Investigation/Stages/stage-06-reverse-shell.md"
     },
     {
       id: "07",
@@ -138,8 +138,8 @@ window.SOC_DATA = {
       status: "Not tested",
       caseLabel: "Case 01",
       caseSlug: "case-01-web-compromise",
-      attackPath: "Attack-Simulation/Stages/stage-07-privesc.md",
-      investigationPath: "Investigation/Stages/stage-07-privesc.md"
+      attackPath: "02-Attack-Simulation/Stages/stage-07-privesc.md",
+      investigationPath: "04-Investigation/Stages/stage-07-privesc.md"
     },
     {
       id: "08",
@@ -158,8 +158,8 @@ window.SOC_DATA = {
       status: "Not tested",
       caseLabel: "Case 02",
       caseSlug: "case-02-lateral-movement",
-      attackPath: "Attack-Simulation/Stages/stage-08-ssh-persistence.md",
-      investigationPath: "Investigation/Stages/stage-08-ssh-persistence.md"
+      attackPath: "02-Attack-Simulation/Stages/stage-08-ssh-persistence.md",
+      investigationPath: "04-Investigation/Stages/stage-08-ssh-persistence.md"
     },
     {
       id: "09",
@@ -178,8 +178,8 @@ window.SOC_DATA = {
       status: "Not tested",
       caseLabel: "Case 02",
       caseSlug: "case-02-lateral-movement",
-      attackPath: "Attack-Simulation/Stages/stage-09-internal-discovery.md",
-      investigationPath: "Investigation/Stages/stage-09-internal-discovery.md"
+      attackPath: "02-Attack-Simulation/Stages/stage-09-internal-discovery.md",
+      investigationPath: "04-Investigation/Stages/stage-09-internal-discovery.md"
     },
     {
       id: "10",
@@ -198,8 +198,8 @@ window.SOC_DATA = {
       status: "Not tested",
       caseLabel: "Case 02",
       caseSlug: "case-02-lateral-movement",
-      attackPath: "Attack-Simulation/Stages/stage-10-responder.md",
-      investigationPath: "Investigation/Stages/stage-10-responder.md"
+      attackPath: "02-Attack-Simulation/Stages/stage-10-responder.md",
+      investigationPath: "04-Investigation/Stages/stage-10-responder.md"
     },
     {
       id: "11",
@@ -218,8 +218,8 @@ window.SOC_DATA = {
       status: "Not tested",
       caseLabel: "Case 02",
       caseSlug: "case-02-lateral-movement",
-      attackPath: "Attack-Simulation/Stages/stage-11-ntlmv2-crack.md",
-      investigationPath: "Investigation/Stages/stage-11-ntlmv2-crack.md"
+      attackPath: "02-Attack-Simulation/Stages/stage-11-ntlmv2-crack.md",
+      investigationPath: "04-Investigation/Stages/stage-11-ntlmv2-crack.md"
     },
     {
       id: "12",
@@ -238,8 +238,8 @@ window.SOC_DATA = {
       status: "Not tested",
       caseLabel: "Case 02",
       caseSlug: "case-02-lateral-movement",
-      attackPath: "Attack-Simulation/Stages/stage-12-bloodhound.md",
-      investigationPath: "Investigation/Stages/stage-12-bloodhound.md"
+      attackPath: "02-Attack-Simulation/Stages/stage-12-bloodhound.md",
+      investigationPath: "04-Investigation/Stages/stage-12-bloodhound.md"
     },
     {
       id: "13",
@@ -258,8 +258,8 @@ window.SOC_DATA = {
       status: "Not tested",
       caseLabel: "Case 02",
       caseSlug: "case-02-lateral-movement",
-      attackPath: "Attack-Simulation/Stages/stage-13-kerberoasting.md",
-      investigationPath: "Investigation/Stages/stage-13-kerberoasting.md"
+      attackPath: "02-Attack-Simulation/Stages/stage-13-kerberoasting.md",
+      investigationPath: "04-Investigation/Stages/stage-13-kerberoasting.md"
     },
     {
       id: "14",
@@ -278,8 +278,8 @@ window.SOC_DATA = {
       status: "Not tested",
       caseLabel: "Case 02",
       caseSlug: "case-02-lateral-movement",
-      attackPath: "Attack-Simulation/Stages/stage-14-dcsync.md",
-      investigationPath: "Investigation/Stages/stage-14-dcsync.md"
+      attackPath: "02-Attack-Simulation/Stages/stage-14-dcsync.md",
+      investigationPath: "04-Investigation/Stages/stage-14-dcsync.md"
     },
     {
       id: "15",
@@ -298,8 +298,8 @@ window.SOC_DATA = {
       status: "Not tested",
       caseLabel: "Case 03",
       caseSlug: "case-03-domain-compromise",
-      attackPath: "Attack-Simulation/Stages/stage-15-pass-the-hash.md",
-      investigationPath: "Investigation/Stages/stage-15-pass-the-hash.md"
+      attackPath: "02-Attack-Simulation/Stages/stage-15-pass-the-hash.md",
+      investigationPath: "04-Investigation/Stages/stage-15-pass-the-hash.md"
     },
     {
       id: "16",
@@ -318,8 +318,8 @@ window.SOC_DATA = {
       status: "Not tested",
       caseLabel: "Case 03",
       caseSlug: "case-03-domain-compromise",
-      attackPath: "Attack-Simulation/Stages/stage-16-golden-ticket.md",
-      investigationPath: "Investigation/Stages/stage-16-golden-ticket.md"
+      attackPath: "02-Attack-Simulation/Stages/stage-16-golden-ticket.md",
+      investigationPath: "04-Investigation/Stages/stage-16-golden-ticket.md"
     },
     {
       id: "17",
@@ -338,8 +338,8 @@ window.SOC_DATA = {
       status: "Not tested",
       caseLabel: "Case 03",
       caseSlug: "case-03-domain-compromise",
-      attackPath: "Attack-Simulation/Stages/stage-17-dc-persistence.md",
-      investigationPath: "Investigation/Stages/stage-17-dc-persistence.md"
+      attackPath: "02-Attack-Simulation/Stages/stage-17-dc-persistence.md",
+      investigationPath: "04-Investigation/Stages/stage-17-dc-persistence.md"
     },
     {
       id: "18",
@@ -358,8 +358,8 @@ window.SOC_DATA = {
       status: "Not tested",
       caseLabel: "Case 03",
       caseSlug: "case-03-domain-compromise",
-      attackPath: "Attack-Simulation/Stages/stage-18-collection.md",
-      investigationPath: "Investigation/Stages/stage-18-collection.md"
+      attackPath: "02-Attack-Simulation/Stages/stage-18-collection.md",
+      investigationPath: "04-Investigation/Stages/stage-18-collection.md"
     },
     {
       id: "19",
@@ -378,8 +378,8 @@ window.SOC_DATA = {
       status: "Not tested",
       caseLabel: "Case 03",
       caseSlug: "case-03-domain-compromise",
-      attackPath: "Attack-Simulation/Stages/stage-19-exfiltration.md",
-      investigationPath: "Investigation/Stages/stage-19-exfiltration.md"
+      attackPath: "02-Attack-Simulation/Stages/stage-19-exfiltration.md",
+      investigationPath: "04-Investigation/Stages/stage-19-exfiltration.md"
     },
     {
       id: "20",
@@ -398,8 +398,8 @@ window.SOC_DATA = {
       status: "Not tested",
       caseLabel: "Case 03",
       caseSlug: "case-03-domain-compromise",
-      attackPath: "Attack-Simulation/Stages/stage-20-impact.md",
-      investigationPath: "Investigation/Stages/stage-20-impact.md"
+      attackPath: "02-Attack-Simulation/Stages/stage-20-impact.md",
+      investigationPath: "04-Investigation/Stages/stage-20-impact.md"
     }
   ]
 };
