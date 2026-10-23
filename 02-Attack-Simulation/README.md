@@ -57,12 +57,12 @@ The 20 attack simulation stages are grouped into three distinct investigative ca
 
 ## Evidence Repositories
 
-The evidence sets below are published in the public repository. Attack screenshots and the master PDF are redacted where they contained credential material; unredacted originals remain local-only and are ignored via `.gitignore`. The inline image links resolve to the redacted copies.
+The evidence sets below are published in the public repository. The attack screenshots are the original captures from the isolated lab; the master PDF is currently the redacted copy. The unredacted PDF original remains local-only and is ignored via `.gitignore`. The inline image links resolve to the original screenshots.
 
 | Evidence Set | Location | Details |
 |---|---|---|
 | **Master Blueprint Document** | [`06-Resources/attack-chain-full.pdf`](../06-Resources/attack-chain-full.pdf) (redacted) | Redacted copy of the single-source PDF describing the full attack chain and threat model. |
-| **Attacker-Side Screenshots** | [`02-Attack-Simulation/Attack-Screenshots/`](Attack-Screenshots/) (redacted) | 62 high-resolution screenshots (`1.png` through `60.png`, plus `58.5.png` and `59.5.png`) showing terminal commands, tool executions, browser actions, and GUI validations. |
+| **Attacker-Side Screenshots** | [`02-Attack-Simulation/Attack-Screenshots/`](Attack-Screenshots/) (original) | 62 high-resolution screenshots (`1.png` through `60.png`, plus `58.5.png` and `59.5.png`) showing terminal commands, tool executions, browser actions, and GUI validations. |
 | **SOC & Alert Screenshots** | [`03-Detection-Engineering/TheHive_Alert-ScreenShot/`](../03-Detection-Engineering/TheHive_Alert-ScreenShot/) | 60 screenshots showing fired alerts, triage views, rule classifications, and event telemetry in TheHive, Wazuh, and Suricata. |
 | **Incident Response Screenshots** | `05-Incident-Report/Response_Action-Screenshot/` | No screenshot files are present in this folder. |
 
