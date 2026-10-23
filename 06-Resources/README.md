@@ -6,7 +6,7 @@ Supporting material that does not belong to a specific section.
 
 | Path | Status | Purpose |
 |---|---|---|
-| `attack-chain-full.pdf` | **Planned — not present** | Original attack-chain source document |
+| `attack-chain-full.pdf` | **Local only — excluded pending redaction** | Master attack-chain blueprint & original campaign reference document |
 | `Diagrams/soc-lab.png` | Present | Latest high-level architecture overview |
 | `Diagrams/network-topology.png` | **Planned — not present** | Network diagram export |
 
@@ -31,7 +31,6 @@ The original PDF is a reference, not the report. The repository documents stand 
 
 Reusable templates live next to the content they support:
 
-- `02-Attack-Simulation/_template-stage.md`
 - `04-Investigation/_template-stage.md`
 
 Copy a template, rename it, and replace the placeholders. Do not edit the template itself for a specific stage.
