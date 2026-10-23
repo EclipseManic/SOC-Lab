@@ -9,6 +9,7 @@ id_rsa*
 id_ed25519*
 secrets/
 credentials/
+_unredacted/
 
 # Virtual machines and disk images
 *.vdi
