@@ -6,7 +6,7 @@ Supporting material that does not belong to a specific section.
 
 | Path | Status | Purpose |
 |---|---|---|
-| `attack-chain-full.pdf` | **Local only — excluded pending redaction** | Master attack-chain blueprint & original campaign reference document |
+| [attack-chain-full.pdf](attack-chain-full.pdf) | **Present — redacted** | Master attack-chain blueprint & campaign reference document |
 | `Diagrams/soc-lab.png` | Present | Latest high-level architecture overview |
 | `Diagrams/network-topology.png` | **Planned — not present** | Network diagram export |
 
@@ -25,7 +25,7 @@ Any diagram added here must:
 
 ## Source document
 
-The original PDF is a reference, not the report. The repository documents stand alone and should not require the reader to open the PDF first.
+The redacted PDF is a reference, not the report. The repository documents stand alone and should not require the reader to open the PDF first. The unredacted original remains local-only.
 
 ## Templates
 

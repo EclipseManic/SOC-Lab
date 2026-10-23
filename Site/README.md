@@ -53,7 +53,7 @@ npm run preview
 - Keep all 20 stages at `Not tested` until a rule fires for the right reason and the alert is actionable.
 - Keep `verifiedCount` derived from stage status; do not hardcode a detection count.
 - Treat a missing artifact as a documented gap, not as proof.
-- Do not publish attack or alert screenshots until redaction review is complete.
+- Publish attack and alert screenshots only in redacted form; keep unredacted originals out of the repository.
 - Do not silently rewrite the architecture PNG. Its gateway label is `.1`; the authoritative network record says `.150`.
 - Record placeholders (`DG-01` through `DG-20`) stay reserved until validated evidence exists.
 - The report package is a draft. Confirmed facts, hypotheses, and recommended actions remain separate.

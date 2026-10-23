@@ -9,7 +9,7 @@ This section documents the 20-stage adversary campaign executed against the lab 
 > [!IMPORTANT]
 > The primary blueprint and single source of truth for this entire adversary campaign is the comprehensive attack chain document:
 > 
-> 📄 **`attack-chain-full.pdf` (local only; excluded pending redaction)** *(located in [06-Resources](../06-Resources/README.md))*
+> 📄 **[`attack-chain-full.pdf`](../06-Resources/attack-chain-full.pdf) (redacted public copy)** *(the unredacted original is retained locally)*
 >
 > This reference document details the complete end-to-end attack narrative, threat actor profiling, operational steps, and intended progression from external reconnaissance through domain compromise and ransomware/defacement impact. The stage write-ups in this directory document the live execution, telemetry, and evidence generated while carrying out that blueprint in the isolated lab.
 
@@ -57,14 +57,14 @@ The 20 attack simulation stages are grouped into three distinct investigative ca
 
 ## Evidence Repositories
 
-The evidence sets below are retained locally and are excluded from the public repository pending redaction review. The inline image links document what was captured; they will not resolve until sanitized copies are published.
+The evidence sets below are published in the public repository. Attack screenshots and the master PDF are redacted where they contained credential material; unredacted originals remain local-only and are ignored via `.gitignore`. The inline image links resolve to the redacted copies.
 
 | Evidence Set | Location | Details |
 |---|---|---|
-| **Master Blueprint Document** | `06-Resources/attack-chain-full.pdf` (local only) | Original single-source PDF describing the full attack chain and threat model. |
-| **Attacker-Side Screenshots** | `02-Attack-Simulation/Attack-Screenshots/` (local only) | 62 high-resolution screenshots (`1.png` through `60.png`, plus `58.5.png` and `59.5.png`) showing terminal commands, tool executions, browser actions, and GUI validations. |
-| **SOC & Alert Screenshots** | `03-Detection-Engineering/TheHive_Alert-ScreenShot/` (local only) | 50+ screenshots showing fired alerts, triage views, rule classifications, and event telemetry in TheHive, Wazuh, and Suricata. |
-| **Incident Response Screenshots** | `05-Incident-Report/Response_Action-Screenshot/` (local only) | Screenshots capturing containment actions, host isolations, and remediation measures. |
+| **Master Blueprint Document** | [`06-Resources/attack-chain-full.pdf`](../06-Resources/attack-chain-full.pdf) (redacted) | Redacted copy of the single-source PDF describing the full attack chain and threat model. |
+| **Attacker-Side Screenshots** | [`02-Attack-Simulation/Attack-Screenshots/`](Attack-Screenshots/) (redacted) | 62 high-resolution screenshots (`1.png` through `60.png`, plus `58.5.png` and `59.5.png`) showing terminal commands, tool executions, browser actions, and GUI validations. |
+| **SOC & Alert Screenshots** | [`03-Detection-Engineering/TheHive_Alert-ScreenShot/`](../03-Detection-Engineering/TheHive_Alert-ScreenShot/) | 60 screenshots showing fired alerts, triage views, rule classifications, and event telemetry in TheHive, Wazuh, and Suricata. |
+| **Incident Response Screenshots** | `05-Incident-Report/Response_Action-Screenshot/` | No screenshot files are present in this folder. |
 
 ---
 
