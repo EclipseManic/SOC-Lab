@@ -1,48 +1,67 @@
-# SOC Lab visual documentation
+# SOC Lab reading layer
 
-A dependency-free presentation layer for the SOC Lab repository. It turns the attack stages, detection checks, investigation cases, and report package into one guided reading experience.
+The site at <https://soc-lab.eclipsemanic.me/> is a narrative front door to the repository. It is a six-act story: the lab, the build, the attack, the signal, the case, and the record.
 
-The Markdown documents remain the source of truth. The site is built from the same stage and coverage data and links back to the detailed records.
+The site now covers all six acts: the lab, the build, the attack, the signal, the case, and the record. The attack ledger uses the 20 documented stages; the detection chapter shows telemetry capability without claiming validated coverage; the case and report chapters stay explicitly draft or scaffolded.
 
-![SOC Lab preview](Assets/preview.png)
+The Markdown, logs, cases, and report files are authoritative. This app is a reading layer over them.
 
-## Preview locally
+![SOC Lab preview](public/preview.png)
 
-From the repository root:
+## Stack
+
+- React 19 and TypeScript
+- Vite 8
+- Tailwind CSS 4 with a small set of semantic design tokens
+- shadcn/ui-style Radix primitives
+- Motion for scroll-driven scenes, entrances, and dialog animation
+- Lucide icons
+
+## Local development
 
 ```powershell
-python -m http.server 8000 --directory Site
+cd Site
+npm ci
+npm run dev
 ```
 
-Open [http://localhost:8000/](http://localhost:8000/).
+Useful checks:
 
-There is no build step. The site is plain HTML, CSS, and JavaScript, so opening `Site/index.html` directly also works.
+```powershell
+npm run check:data
+npm run build
+npm run preview
+```
 
-## What is here
+`check:data` verifies the content invariants: 20 stages, 20 gap IDs, and 6 report documents. `build` runs the TypeScript project build before the Vite production build.
+
+## Source map
 
 | Path | Purpose |
 |---|---|
-| `index.html` | Page structure, narrative sections, and the stage dialog |
-| `Assets/styles.css` | Dark SOC design system, responsive tables, and motion |
-| `Assets/app.js` | Stage cards, phase filters, coverage matrix, and dialog behaviour |
-| `Assets/stages.js` | The 20-stage data model used by the cards and coverage table |
-| `Assets/preview.png` | Preview image for this folder and social sharing |
-| `../.github/workflows/pages.yml` | GitHub Pages deployment for this folder |
+| `src/data.ts` | Stage, chapter, case, report, evidence, and status data |
+| `src/components/` | Page sections, navigation, handoffs, and UI primitives |
+| `src/components/story/` | Cold open, all six acts, boundary interlude, and story shell |
+| `src/context/lens-context.tsx` | Executive / Technical / Talent reading lens (legacy chapters) |
+| `src/index.css` | Tailwind theme tokens, base styles, and shared utilities |
+| `scripts/check-data.mjs` | Content integrity checks |
+| `public/` | CNAME, robots.txt, preview image, and architecture asset |
+| `dist/` | Generated production output; do not edit by hand |
 
-## Deploy with GitHub Pages
+## Content rules
+
+- Keep all 20 stages at `Not tested` until a rule fires for the right reason and the alert is actionable.
+- Keep `verifiedCount` derived from stage status; do not hardcode a detection count.
+- Treat a missing artifact as a documented gap, not as proof.
+- Do not publish attack or alert screenshots until redaction review is complete.
+- Do not silently rewrite the architecture PNG. Its gateway label is `.1`; the authoritative network record says `.150`.
+- Record placeholders (`DG-01` through `DG-20`) stay reserved until validated evidence exists.
+- The report package is a draft. Confirmed facts, hypotheses, and recommended actions remain separate.
+
+## Deployment
+
+The workflow at `../.github/workflows/pages.yml` sets up Node 22, runs `npm ci`, `npm run check:data`, and `npm run build`, then uploads `Site/dist` to GitHub Pages.
+
+In GitHub, set **Settings → Pages → Build and deployment → Source** to **GitHub Actions**. The custom domain is carried by `public/CNAME`.
 
 Live site: <https://soc-lab.eclipsemanic.me/>
-
-1. Push the repository to `main`.
-2. In GitHub, open **Settings → Pages**.
-3. Under **Build and deployment**, set **Source** to **GitHub Actions**.
-4. Run the `Deploy documentation site` workflow, or push another commit to `main`.
-
-The workflow uploads only the `Site/` folder. Detailed document links point to the repository on `main`, so they keep working after deployment.
-
-## Editing
-
-- Update stage titles, plain-language summaries, telemetry, gap IDs, and case labels in `Assets/stages.js`.
-- Update section copy and the dialog shell in `index.html`.
-- Update layout, colours, tables, and animation in `Assets/styles.css`.
-- Keep every stage marked `Not tested` until evidence and a validated detection result exist.

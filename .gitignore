@@ -35,6 +35,7 @@ venv/
 # Node
 node_modules/
 npm-debug.log*
+Site/dist/
 
 # Editors and OS
 .idea/
