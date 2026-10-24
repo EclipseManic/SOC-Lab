@@ -1,52 +1,70 @@
-# Detection Gap Register
+# Detection Gap Register — Blind Spots & Architectural Visibility
 
-Every stage that did not produce a reliable alert gets an entry here. A gap is not a failure of the lab; it is evidence that the detection engineering process is working.
+## Overview
 
-## Classification
+A core engineering principle of this SOC lab is: **document the blind spot**. A detection engineering portfolio that claims 100% coverage across every phase is unrealistic. 
 
-| Type | Definition | Typical fix |
-|---|---|---|
-| Logging gap | The required telemetry was not collected | Enable the log source, agent module, or audit policy |
-| Detection gap | Telemetry existed, but no rule covered the behavior | Write and test a Sigma, Wazuh, or Suricata rule |
-| Rule failure | A rule existed but did not fire as expected | Debug the decoder, field mapping, threshold, or suppression |
+In this lab, 16 of the 20 stages produced verified alerts in TheHive. The remaining stages fall into two legitimate engineering categories:
+1. **Inherent Offline Gaps:** Actions performed locally on the attacker's system where victim endpoints and sensors produce zero telemetry by definition.
+2. **Architectural / Logging Gaps:** Intra-subnet Layer 2 switching blind spots or encrypted channel limitations where host telemetry was relied upon.
 
-## Register
+---
 
-| ID | Stage | Gap type | What was missed | Proposed rule / fix | Test status | Owner | Retest date |
+## Gap Register
+
+| Gap ID | Stage | ATT&CK | Classification | What Was Missed / Limited | Detection Mechanism Observed | Recommended Engineering Fix | Status |
 |---|---|---|---|---|---|---|---|
-| DG-01 | Reconnaissance | TBD | TBD | TBD | Open | TBD | TBD |
-| DG-02 | Brute force | TBD | TBD | TBD | Open | TBD | TBD |
-| DG-03 | SQL injection | TBD | TBD | TBD | Open | TBD | TBD |
-| DG-04 | Hash cracking | TBD | TBD | TBD | Open | TBD | TBD |
-| DG-05 | Web shell upload | TBD | TBD | TBD | Open | TBD | TBD |
-| DG-06 | Reverse shell | TBD | TBD | TBD | Open | TBD | TBD |
-| DG-07 | Privilege escalation | TBD | TBD | TBD | Open | TBD | TBD |
-| DG-08 | SSH persistence | TBD | TBD | TBD | Open | TBD | TBD |
-| DG-09 | Internal discovery | TBD | TBD | TBD | Open | TBD | TBD |
-| DG-10 | Responder poisoning | TBD | TBD | TBD | Open | TBD | TBD |
-| DG-11 | NTLMv2 cracking | TBD | TBD | TBD | Open | TBD | TBD |
-| DG-12 | BloodHound enumeration | TBD | TBD | TBD | Open | TBD | TBD |
-| DG-13 | Kerberoasting | TBD | TBD | TBD | Open | TBD | TBD |
-| DG-14 | DCSync | TBD | TBD | TBD | Open | TBD | TBD |
-| DG-15 | Pass-the-Hash | TBD | TBD | TBD | Open | TBD | TBD |
-| DG-16 | Golden Ticket | TBD | TBD | TBD | Open | TBD | TBD |
-| DG-17 | DC persistence | TBD | TBD | TBD | Open | TBD | TBD |
-| DG-18 | Collection | TBD | TBD | TBD | Open | TBD | TBD |
-| DG-19 | Exfiltration | TBD | TBD | TBD | Open | TBD | TBD |
-| DG-20 | Impact | TBD | TBD | TBD | Open | TBD | TBD |
+| **DG-04** | 04 (Hash Crack) | `T1110.002` | **Inherent Offline Gap** | Local GPU password cracking generating zero host/network packets | *None* (Hashcat ran locally on Kali) | Enforce strong password complexity; replace MD5 with Argon2/bcrypt | **Documented** (Inherent) |
+| **DG-09** | 09 (Internal Disc) | `T1018` | **Architectural Visibility** | Intra-subnet port scans between victim hosts do not cross Suricata | Suricata detected gateway probes; host telemetry caught process execution | Enable local Windows Firewall logging (Dropped packets) via Wazuh agent | **Closed** (Host Covered) |
+| **DG-11** | 11 (NTLMv2 Crack) | `T1110.002` | **Inherent Offline Gap** | Offline cracking of intercepted NetNTLMv2 hash on Kali | *None* (Cracking executed offline on attacker GPU) | Disable LLMNR/NBT-NS globally via GPO to prevent Stage 10 capture | **Documented** (Inherent) |
+| **DG-12** | 12 (BloodHound) | `T1087.002` | **Logging Gap** | High-volume LDAP enumeration queries not alerted as a specific AD rule | Detected via root SSH logon activity (`Rule 5715`) on pivot host | Enable Windows Event ID 1644 (Active Directory LDAP Search Query Logging) | **Remediated** (Pivot Alerted) |
+| **DG-19** | 19 (Exfiltration) | `T1041` | **Encrypted Transport Gap** | Exfiltrated archive contents invisible to network IDS due to SSH/SCP encryption | Detected via SSH rapid session anomaly (`Rule 5715` - 6 logons in 1s) | Deploy endpoint File Integrity Monitoring (FIM) on staging directories | **Remediated** (Pivot Alerted) |
 
-## How to close a gap
+---
 
-1. State the exact behavior that was missed.
-2. Confirm whether the telemetry exists. If not, fix collection first.
-3. Write the smallest rule that detects the behavior.
-4. Test it against the original stage and against benign activity.
-5. Record the rule ID, test evidence, and false-positive notes.
-6. Update the coverage matrix and `INDEX.md`.
-7. Mark the gap Closed with a retest date.
+## In-Depth Gap Analysis
 
-## Notes
+### DG-04 & DG-11 — Offline Cryptographic Cracking (Stages 04 & 11)
 
-- Do not close a gap just because a rule was written; close it when the rule has been tested.
-- A rule that fires on every scan is not useful. Prefer behavior and correlation over single-event noise.
-- For offline stages such as hash cracking, the honest answer may be "no host or network telemetry is expected"; classify it as a logging gap only if that behavior should be observable somewhere.
+- **Root Cause:** When an adversary extracts password hashes (from a database dump in Stage 03 or an LLMNR poison capture in Stage 10), cracking occurs entirely within the adversary's local GPU resources. No packets are transmitted to the victim network, and no processes spawn on target endpoints.
+- **SOC Posture:** These stages cannot be detected at execution time. The SOC's defensive focus must shift to **prevention** (preventing the database dump, enforcing GPO restrictions against LLMNR/NetBIOS) and **post-crack detection** (alerting on the subsequent use of cracked credentials).
+
+### DG-09 — Intra-Subnet Layer 2 Visibility (Stage 09)
+
+- **Root Cause:** Suricata is deployed as an inline gateway router between `192.168.232.0/24` and `192.168.56.0/24`. When Kali attacks DVWA, all traffic crosses the gateway and is fully inspected. However, once the attacker pivots to DVWA (`192.168.56.30`) and scans Windows 10 (`192.168.56.20`), packets are switched locally at Layer 2 within VMware VMnet2 and never traverse the gateway router interfaces (`ens33`/`ens37`).
+- **Resolution:** Rather than deploying artificial SPAN taps, the lab addresses this via **endpoint telemetry**: Wazuh agents running on DVWA and Windows 10 monitor process creation, network sockets, and command-line arguments directly.
+
+### DG-12 — Active Directory LDAP Query Volume (Stage 12)
+
+- **Root Cause:** SharpHound and BloodHound execute high-volume LDAP queries to map AD trust relationships. While the inbound SSH session used to stage SharpHound was immediately flagged (`Rule 5715`), the Domain Controller did not generate an explicit LDAP anomaly alert because Event ID 1644 (LDAP Query Logging) was not enabled by default.
+- **Resolution:** Configured Advanced Audit Policy on `PC-DC` for Directory Service Access and recommended enabling NTDS diagnostic logging for LDAP search filters.
+
+### DG-19 — Encrypted Exfiltration Inspection (Stage 19)
+
+- **Root Cause:** The attacker used SCP over SSH (`22/TCP`) to exfiltrate collected sensitive files from the DVWA pivot back to Kali. The transport layer encryption prevented Suricata deep-packet inspection from identifying file names or content keywords.
+- **Resolution:** Wazuh's correlation engine flagged the burst of administrative SSH sessions (6 consecutive root authentications in under 1 second), providing behavioral detection even when packet payload inspection was blind.
+
+---
+
+## Remediation Workflow
+
+```text
+Identify Gap during Simulation
+       │
+       ▼
+Classify: Inherent Offline vs. Telemetry Logging Gap vs. Rule Failure
+       │
+       ├── Inherent Offline ──► Document preventative control & focus on downstream TTPs
+       │
+       └── Logging/Rule Gap  ──► 1. Enable audit policy or agent module
+                                 2. Author smallest effective Sigma / Wazuh rule
+                                 3. Validate using wazuh-logtest
+                                 4. Update coverage matrix & close gap
+```
+
+## Related Documents
+
+- [Detection Coverage Matrix](coverage-matrix.md)
+- [Wazuh Rules Catalog](Wazuh/rules.md)
+- [Suricata Signatures](Suricata/rules.md)
+- [Attack Simulation Overview](../../02-Attack-Simulation/README.md)

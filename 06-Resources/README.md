@@ -1,36 +1,26 @@
 # Resources
 
-Supporting material that does not belong to a specific section.
+Supporting reference material and campaign artifacts for the SOC Lab.
 
 ## Contents
 
 | Path | Status | Purpose |
 |---|---|---|
-| [attack-chain-full.pdf](attack-chain-full.pdf) | **Present — redacted** | Master attack-chain blueprint & campaign reference document |
-| `Diagrams/soc-lab.png` | Present | Latest high-level architecture overview |
-| `Diagrams/network-topology.png` | **Planned — not present** | Network diagram export |
+| [attack-chain-full.pdf](attack-chain-full.pdf) | **Present** | Master attack-chain blueprint & 20-stage campaign reference document |
+| [Diagrams/soc-lab.png](Diagrams/soc-lab.png) | **Present** | Authoritative high-level architecture overview diagram |
 
-The latest high-level overview is linked from [README.md](../README.md) and [01-Lab-Setup/architecture.md](../01-Lab-Setup/architecture.md). The Mermaid diagram and detailed tables remain the source of truth for addresses and flows.
+The latest high-level overview diagram is linked from [README.md](../README.md) and [01-Lab-Setup/architecture.md](../01-Lab-Setup/architecture.md). The Mermaid diagrams and detailed configuration tables in [01-Lab-Setup/architecture.md](../01-Lab-Setup/architecture.md) remain the authoritative reference for network addressing, routing, and traffic flows.
 
-## Diagram rules
+## Diagram Rules
 
 Any diagram added here must:
 
-- Be **vendor-neutral** — no provider logos presented as a requirement, no implication of sponsorship.
-- Show roles and subnets, not cloud host addresses. The accepted ranges are `192.168.232.0/24`, `192.168.56.0/24`, `10.8.0.0/24`, and `10.122.0.0/16` as the summary plan for two `/24` VNets.
-- Have all public IPs, provider hostnames, API keys, and VPN details redacted or absent.
-- Mark the Suricata blind spot for victim-to-victim traffic, or state it in the caption.
-- Be PNG or SVG at a reasonable resolution, compressed before committing.
-- Be linked from `01-Lab-Setup/` rather than duplicated in multiple sections.
+- Be **vendor-neutral** — no cloud provider logos presented as a rigid requirement.
+- Show functional roles and private subnets (`192.168.232.0/24`, `192.168.56.0/24`, `10.8.0.0/24`, and `10.122.0.0/16`).
+- Have all public IPs, provider hostnames, API keys, and VPN credentials redacted or omitted.
+- Mark or document the Suricata blind spot for intra-subnet Layer 2 victim-to-victim traffic.
+- Be linked from [01-Lab-Setup/architecture.md](../01-Lab-Setup/architecture.md) rather than duplicated across multiple sections.
 
-## Source document
+## Source Document
 
-The redacted PDF is a reference, not the report. The repository documents stand alone and should not require the reader to open the PDF first. The unredacted original remains local-only.
-
-## Templates
-
-Reusable templates live next to the content they support:
-
-- `04-Investigation/_template-stage.md`
-
-Copy a template, rename it, and replace the placeholders. Do not edit the template itself for a specific stage.
+The master campaign blueprint (`attack-chain-full.pdf`) serves as the definitive reference document for the entire 20-stage simulation, detailing all tooling, attack parameters, and detection observations.

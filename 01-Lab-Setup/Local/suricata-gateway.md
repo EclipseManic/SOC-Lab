@@ -1,179 +1,186 @@
 # Suricata Gateway — Router, Sensor, VPN Client
 
+| Property | Value |
+|----------|-------|
+| **OS** | Ubuntu 24.04 |
+| **Role** | Router · IDS sensor · WireGuard VPN client |
+| **Resources** | 2–3 vCPU · 3 GB RAM |
+| **Suricata** | 8.0.6 (IDS mode) |
+| **SSH key** | `manichand gupta@ManicLenovo` |
+
 ## Role
 
-The gateway is an inline Linux router running Suricata. It sits between the attack segment and the victim segment, forwards traffic between them, and ships network events to Wazuh over the VPN.
+This host is the **single chokepoint** between the attacker (Kali) on the NAT segment and every victim on the internal subnet.
+It performs three jobs simultaneously:
 
-| Interface | Address | Faces |
-|---|---|---|
-| `eth0` | `192.168.232.162/24` | Kali and the VMnet8 NAT segment |
-| `eth1` | `192.168.56.150/24` | Victim network — also the victims' default gateway |
-| `wg0` | `10.8.0.2/32` | Cloud SOC via WireGuard (`10.8.0.1` hub) |
+1. **Router** — forwards packets between `192.168.232.0/24` and `192.168.56.0/24`.
+2. **IDS sensor** — Suricata inspects every frame on `ens37` (victim-side NIC).
+3. **VPN client** — WireGuard tunnel (`wg0`) connects the local lab to the cloud Wazuh manager.
 
-It is not a passive tap. If the gateway is down, the victim network has no path out, which is the intended fail-closed behaviour for an isolated lab.
+## Interfaces
 
-## Why inline instead of a SPAN port
+| Interface | Address | Subnet | Purpose |
+|-----------|---------|--------|---------|
+| `ens33` | `192.168.232.162/24` | VMnet8 (NAT) | Uplink to Kali and internet |
+| `ens37` | `192.168.56.150/24` | VirtualBox Host-Only | Victim network |
+| `wg0` | `10.8.0.2/32` | WireGuard tunnel | Cloud connectivity to Wazuh manager |
 
-A SPAN port or TAP is passive and easy to bypass if traffic takes another path. An inline router is a choke point for traffic entering the victim network from the attack segment: that traffic has to cross it. It is not a choke point for victim-to-victim traffic on the same subnet. The trade-off is availability, which is acceptable here.
+## Why Inline
+
+Placing Suricata on the gateway rather than as a passive tap guarantees that **every packet between Kali and the victims crosses the sensor**.
+There is no alternate path — if the gateway is down, the attack cannot proceed.
 
 ## Configuration
 
-| Item | Value |
-|---|---|
-| OS | Linux (`TBD` distribution/version) |
-| Interfaces | `eth0` `192.168.232.162/24`, `eth1` `192.168.56.150/24`, `wg0` `10.8.0.2/32` |
-| Forwarding | `net.ipv4.ip_forward=1`, forward rules for `eth0↔eth1` and `wg0↔eth0/eth1` |
-| IDS/IPS mode | `TBD` — IDS for the first campaign, IPS only after rules are tuned |
-| Rule sources | `TBD` — ET Open plus custom rules |
-| Output | `eve.json` |
-| Log shipping | Wazuh agent reading `eve.json` |
-| Resources | `TBD` vCPU / `TBD` GB RAM |
+### Netplan — Dual-NIC Static Addressing
 
-## Routing
-
-```bash
-# Forwarding
-sysctl net.ipv4.ip_forward
-
-# Local delivery
-ip route show
-# 192.168.232.0/24 dev eth0
-# 192.168.56.0/24  dev eth1
-# 10.8.0.0/24      dev wg0
-
-# Path checks
-ip route get 192.168.56.10    # dev eth1
-ip route get 10.8.0.1         # dev wg0
+```yaml
+network:
+  version: 2
+  ethernets:
+    ens33:
+      addresses: [192.168.232.162/24]
+      routes:
+        - to: default
+          via: 192.168.232.2
+    ens37:
+      addresses: [192.168.56.150/24]
 ```
 
-Victims point their default gateway at `192.168.56.150`. Kali points at `192.168.232.162` for the victim range. Without those two facts, traffic either bypasses the sensor or does not flow at all.
+### Routing
 
-## Suricata basics
+```bash
+# Enable IP forwarding (persistent in /etc/sysctl.conf)
+sysctl net.ipv4.ip_forward
+# net.ipv4.ip_forward = 1
+
+# Allow forwarding between interfaces
+iptables -P FORWARD ACCEPT
+
+# Verify forwarding path
+ip route show
+# default via 192.168.232.2 dev ens33 proto static
+# 10.8.0.0/24 dev wg0 proto kernel scope link src 10.8.0.2
+# 192.168.56.0/24 dev ens37 proto kernel scope link src 192.168.56.150
+# 192.168.232.0/24 dev ens33 proto kernel scope link src 192.168.232.162
+```
+
+## Suricata Configuration
+
+### `suricata.yaml` (excerpt)
 
 ```yaml
 vars:
   address-groups:
     HOME_NET: "[192.168.56.0/24]"
-    # Cloud/VPN peers are external to the victim network, so the sensor can
-    # match on tunnel-origin traffic as well as NAT-origin traffic.
     EXTERNAL_NET: "[192.168.232.0/24,10.8.0.0/24]"
 
 default-rule-path: /etc/suricata/rules
 rule-files:
   - suricata.rules
-  - custom.rules
-```
 
-`EXTERNAL_NET` must include `10.8.0.0/24`. A VPN client reaching into `192.168.56.0/24` arrives on `wg0`; if the tunnel subnet is not classified as external, direction-sensitive rules will silently miss it.
-
-## Capture interfaces
-
-```yaml
 af-packet:
-  - interface: eth1      # victim side — sees attack-in and victim-out
+  - interface: ens37
     cluster-id: 99
     cluster-type: cluster_flow
     defrag: yes
-  - interface: wg0       # tunnel — sees agent traffic and VPN access
-    cluster-id: 98
-    cluster-type: cluster_flow
-    defrag: yes
 ```
 
-| Interface | Seen traffic | Notes |
-|---|---|---|
-| `eth1` | Attack → victim (ingress), victim → attack (return) | Primary vantage; one copy per flow |
-| `wg0` | Victim → cloud, analyst → victim | Needed for tunnel traffic |
-| `eth0` | Same forwarded flows, mirrored | Optional; produces duplicate alerts if captured alongside `eth1` |
+### Rule Sources
 
-Capturing both `eth0` and `eth1` on a router duplicates every forwarded flow. Use `eth1` + `wg0` as the default and add `eth0` only if traffic targeted at the gateway itself must be inspected.
+| Source | Description |
+|--------|-------------|
+| `et/open` | Emerging Threats open ruleset — broad coverage |
+| `aleksibovellan/nmap` | Custom Nmap detection ruleset for scan fingerprinting |
 
-Disable NIC offload before relying on packet capture:
+### Tuning Files
 
-```bash
-sudo ethtool -K eth0 gro off lro off gso off tso off
-sudo ethtool -K eth1 gro off lro off gso off tso off
+| File | Purpose |
+|------|---------|
+| `threshold.config` | Rate-limiting noisy signatures |
+| `disable.conf` | Disabling false-positive-heavy rules |
+| `modify.conf` | Adjusting rule actions or metadata |
+
+For full rule details, see [Detection Engineering — Suricata Rules](../../03-Detection-Engineering/Suricata/rules.md).
+
+### Capture Interface
+
+Suricata listens on **`ens37`** (the victim-facing NIC) using `af-packet`.
+This captures all traffic entering or leaving `192.168.56.0/24` through the gateway.
+
+### Output Files
+
+| File | Content | Consumer |
+|------|---------|----------|
+| `eve.json` | Full EVE log (all event types) | Local analysis |
+| `eve-alert.json` | Filtered alerts only | Wazuh agent |
+
+## WireGuard Client
+
+```ini
+[Interface]
+Address    = 10.8.0.2/32
+PrivateKey = <REDACTED>
+MTU        = 1420
+
+[Peer]
+PublicKey           = <REDACTED>
+Endpoint            = <hub-public-ip>:51820
+AllowedIPs          = 10.8.0.0/24, 10.122.0.0/16
+PersistentKeepalive = 25
 ```
 
-## Firewall and forwarding
+The tunnel carries Wazuh agent traffic from local hosts to the cloud manager (`10.122.0.4`) and allows Velociraptor clients to reach the cloud frontend.
+
+## Wazuh Integration
+
+The Wazuh agent on this host reads **`eve-alert.json`** and ships Suricata alerts to the Wazuh manager through the WireGuard tunnel.
+This gives the SOC a unified view — Suricata network alerts appear alongside host-based detections in the Wazuh dashboard.
+
+## What This Sensor Cannot See
+
+| Blind Spot | Reason |
+|------------|--------|
+| Host-to-host traffic within `192.168.56.0/24` | Traffic stays on the local switch; never crosses the gateway |
+| Lateral movement Win10 ↔ DC | Both hosts share the same subnet segment |
+| Post-exploitation commands from a reverse shell on DVWA to other victims | Originates inside the victim subnet |
+| Encrypted WireGuard payload | Suricata sees the outer UDP envelope, not the inner cleartext |
+| Localhost activity on any host | Loopback traffic never hits a physical NIC |
+
+> [!IMPORTANT]
+> Detection for intra-subnet activity relies entirely on **Wazuh agents + Sysmon** running on each endpoint.
+
+## Verification Commands
 
 ```bash
-# Example nftables posture: drop by default, allow established, forward explicitly
-sudo nft list ruleset
-sudo iptables -S FORWARD
-```
+# Suricata service status
+systemctl status suricata
+# ● suricata.service - Suricata IDS/IPS
 
-The gateway firewall should:
-
-- accept `51820/UDP` outbound to the hub (client side),
-- accept forwarded traffic `eth0 → eth1` for the victim range,
-- accept forwarded traffic `eth1 → wg0` for the Wazuh manager,
-- drop forwarding to anything else.
-
-No inbound rule is needed on the gateway. It is a client, not a listener.
-
-## Detection output
-
-Suricata writes JSON events to `eve.json`. Fields used most often in this lab:
-
-| Field | Meaning |
-|---|---|
-| `timestamp` | Event time |
-| `event_type` | `alert`, `flow`, `dns`, `http`, `tls` |
-| `src_ip`, `dest_ip` | Network endpoints |
-| `alert.signature` | Rule message |
-| `alert.signature_id` | Suricata signature ID |
-| `alert.severity` | Suricata severity |
-| `http` | HTTP request metadata |
-| `payload` | Packet payload when captured |
-
-## Wazuh integration
-
-The gateway ships `eve.json` to the Wazuh Manager through the tunnel and the hub. Document:
-
-- The Wazuh decoder used for `eve.json`
-- The rule IDs that consume Suricata events
-- The alert threshold that reaches TheHive
-- Any dropped or filtered signatures
-
-## What this sensor cannot see
-
-| Blind spot | Why | Where the evidence comes from instead |
-|---|---|---|
-| Victim ↔ victim on `192.168.56.0/24` | Same subnet, switched locally, no router hop | Wazuh agents, Windows Security log, Sysmon (if deployed) |
-| Cloud VM ↔ cloud VM in `10.122.0.0/16` | Peered VNet traffic, never reaches the gateway | Wazuh manager logs, host telemetry |
-| Traffic inside a host (`localhost`, process-to-process) | Never touches a NIC | Endpoint telemetry, Velociraptor |
-| Encrypted payloads (TLS, SMB3, Kerberos) | Content is encrypted | Metadata only; host logs carry the semantics |
-| Traffic blocked before routing completes | Seen at the NIC but not forwarded | Firewall counters |
-
-Lateral movement stages (09–17) mostly run host-to-host inside `192.168.56.0/24`. The lab does not claim network coverage for them. Report them as host-telemetry detections or as gaps — never as network detections.
-
-## Verification
-
-```bash
-suricata -T -c /etc/suricata/suricata.yaml
-sudo suricata --build-info | head
-sudo tail -f /var/log/suricata/eve.json
+# Interface check
 ip -br addr show
+# ens33  UP  192.168.232.162/24
+# ens37  UP  192.168.56.150/24
+# wg0    UNKNOWN  10.8.0.2/32
+
+# IP forwarding
 sysctl net.ipv4.ip_forward
+# net.ipv4.ip_forward = 1
+
+# WireGuard tunnel status
+wg show
+# interface: wg0
+#   peer: <REDACTED>
+#     endpoint: <hub-public-ip>:51820
+#     allowed ips: 10.8.0.0/24, 10.122.0.0/16
+#     latest handshake: ...
+
+# Wazuh agent status
+systemctl status wazuh-agent
 ```
 
-- [ ] `suricata -T` passes
-- [ ] A Kali → DVWA request appears in `eve.json`
-- [ ] A test signature fires
-- [ ] Wazuh receives the event through `wg0`
-- [ ] The event reaches TheHive through thecustomhive
-- [ ] Forwarding between `eth0`, `eth1`, and `wg0` is confirmed
+## Related Documentation
 
-## Evidence
-
-- [ ] Redacted interface, route, and forwarding configuration
-- [ ] Suricata test output
-- [ ] Sample `eve.json` alert
-- [ ] Wazuh alert screenshot
-
-## Related documents
-
-- [Network topology](../network-topology.md)
-- [WireGuard](../Cloud/wireguard.md)
-- [Detection engineering: Suricata](../../03-Detection-Engineering/Suricata/rules.md)
+- [Kali Attacker Workstation](kali.md)
+- [Lab Architecture](../architecture.md)
+- [Detection Engineering — Suricata Rules](../../03-Detection-Engineering/Suricata/rules.md)

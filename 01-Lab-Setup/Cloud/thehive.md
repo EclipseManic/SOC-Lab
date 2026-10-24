@@ -1,145 +1,238 @@
-# TheHive/automation VM — Case Management, Ingress, and Routing
+# TheHive / Automation VM
 
-## Role
+> Central hub for case management, DFIR tooling, VPN gateway, reverse proxy, and alert ingestion.  
+> This single VM consolidates six roles to keep the lab lean while remaining functionally segmented.
 
-This VM is the cloud edge of the lab. It runs more than a case-management UI:
+---
 
-| Function | Component |
-|---|---|
-| Case management | TheHive |
-| SIEM → case pipeline | thecustomhive (Python) |
-| VPN hub and server | WireGuard on `wg0` (`10.8.0.1/24`), listener `51820/UDP` |
-| Cloud router | Forwards agent traffic to the Wazuh VM over VNet peering |
-| Internal TLS / reverse proxy | Nginx Proxy Manager (NPM) on Docker |
-| Endpoint forensics | Velociraptor server |
-| Container runtime | Docker / Docker Compose |
+## Role Summary
 
-It is the only host in the lab with a public inbound port. Everything it serves to humans is VPN-only.
+| # | Service | Purpose | Listening Port(s) |
+|---|---------|---------|-------------------|
+| 1 | **TheHive 5.7.5-1** | Case & alert management | `9000/TCP` |
+| 2 | **Velociraptor 0.77.3** | Endpoint forensics & live response | `8000/TCP` (frontend), `8889/TCP` (GUI) |
+| 3 | **WireGuard** | Encrypted tunnel — only public entry point | `51820/UDP` |
+| 4 | **Nginx Proxy Manager** | Internal reverse proxy (VPN-only domains) | `80`, `81`, `443/TCP` |
+| 5 | **IP Forwarding / Cloud Router** | Routes agent traffic to Wazuh VM via VNet peering | — |
+| 6 | **thecustomhive** | Alert pipeline bridge (Wazuh → TheHive) | — |
 
-## Placement
+---
 
-| Item | Value |
-|---|---|
-| Cloud private plan | `10.122.0.0/16` summary; this VM is in one of two peered `/24` VNets |
-| Private address | Provider-assigned inside `10.122.0.0/16` — not published |
-| VPN address | `10.8.0.1/24` |
-| Public exposure | `51820/UDP` only |
-| Peering | Private route to the Wazuh VM |
+## VM Specifications
 
-The public IP is dynamic. It is not recorded in this repository and should be re-read from the provider console when a client config needs updating.
+| Property | Value |
+|----------|-------|
+| **OS** | Ubuntu 24.04.4 LTS |
+| **RAM** | 16 GB |
+| **vCPU** | 4 |
+| **Disk** | 123 GB |
+| **Cloud network** | `10.122.0.0/16` (one of two peered `/24` VNets) |
+| **VPN address** | `10.8.0.1/24` |
+| **Public exposure** | `51820/UDP` only |
+| **Public IP** | Dynamic (not published) |
+| **SSH key** | `manichand gupta@ManicLenovo` |
 
-## Configuration
+---
 
-| Item | Value |
-|---|---|
-| OS | Ubuntu (`TBD` version) |
-| TheHive version | `TBD` (TheHive 5.x — verify) |
-| Deployment | Docker Compose (`TBD` file names) |
-| Organisation | `TBD` |
-| Analyst account | `TBD` |
-| API key | `<REDACTED>` |
-| Case templates | `TBD` |
-| Observable types | IP, domain, file, hash, user, URL |
-| Data path | `TBD` — container volume for TheHive/Cassandra/Elasticsearch data |
-| Backups | `TBD` |
+## 1 — TheHive 5.7.5-1 (Case Management)
 
-## Services and ports
+Native install (not Docker). Backend powered by Cassandra and Elasticsearch.
 
-| Service | Port | Exposure |
-|---|---|---|
-| TheHive UI | `9000/TCP` | VPN only |
-| NPM admin | `81/TCP` | VPN only |
-| NPM HTTP/HTTPS | `80`, `443/TCP` | VPN only — no public listener |
-| Velociraptor frontend | `8000/TCP` | VPN only, client-initiated |
-| Velociraptor GUI | `8889/TCP` | VPN only |
-| WireGuard | `51820/UDP` | **Public** |
+| Component | Version |
+|-----------|---------|
+| TheHive | 5.7.5-1 |
+| Cassandra | 4.1.12 |
+| Elasticsearch | 8.19.23 |
 
-Confirm the live listeners with `sudo ss -ltnup`. A service listening on `0.0.0.0` is still unreachable from the internet if the cloud firewall denies it — but the intent is that only `51820/UDP` is ever permitted.
+- **Listen:** `9000/TCP` — reachable only over the WireGuard VPN
+- **Organisation:** `SOC-Lab`
+- **API key:** `<REDACTED>` (exported as env var `THEHIVE_API_KEY`)
+- **Observable types:** IP, domain, file, hash, user, URL
 
-## Why these roles share one VM
+### Case Structure
 
-- One public host means one firewall rule and one thing to patch at the edge.
-- TheHive, NPM, and WireGuard already need to talk to each other; co-locating removes a hop.
-- thecustomhive posts to TheHive over loopback, which removes an API-key-bearing flow from the network entirely.
-- The Wazuh VM then needs no public address, no proxy, and no VPN listener.
+| Case | Title | Attack Stages |
+|------|-------|---------------|
+| Case 01 | Web compromise | Stages 01 – 07 |
+| Case 02 | Lateral movement | Stages 08 – 14 |
+| Case 03 | Domain compromise | Stages 15 – 20 |
 
-## Routing duties
+---
 
-1. Terminate the tunnel for the Suricata client (`10.8.0.2/32`).
-2. Accept Wazuh agent traffic arriving on `wg0` and forward it to the Wazuh VM at its private VNet address.
-3. Route analyst VPN sessions to TheHive, NPM, and Velociraptor locally.
-4. Keep return routes for `192.168.232.0/24` and `192.168.56.0/24` pointed at `wg0`.
+## 2 — Velociraptor 0.77.3 (DFIR)
 
-```bash
-# Forwarding must be enabled for the hub role
-sysctl net.ipv4.ip_forward
-ip route get <wazuh-vm-private-address>   # expect a route in the peered VNet
-ss -lunp | grep 51820
+Native systemd service providing endpoint forensics and live-response capabilities.
+
+| Parameter | Value |
+|-----------|-------|
+| **Frontend (client connections)** | `8000/TCP` |
+| **GUI (analyst access)** | `8889/TCP` (VPN only) |
+| **Connection model** | Client-initiated — victim hosts dial the server |
+
+### Enrolled Clients
+
+| Host | OS | Velociraptor Client Version |
+|------|----|-----------------------------|
+| DVWA (Ubuntu) | Ubuntu 24.04 | 0.77.1 |
+| Windows 10 | Windows 10 Pro N | 0.77.1 |
+| Domain Controller | Windows Server 2022 | 0.77.1 |
+
+### Collected Artifacts
+
+- Process listing
+- Network connections
+- Persistence checks
+- File collection
+- User accounts
+
+---
+
+## 3 — WireGuard VPN Server
+
+The **only publicly exposed service** in the entire lab. All analyst and agent traffic enters through this tunnel.
+
+| Parameter | Value |
+|-----------|-------|
+| **Interface** | `wg0` |
+| **Address** | `10.8.0.1/24` |
+| **Listen port** | `51820/UDP` |
+| **MTU** | 1420 |
+| **NAT** | Masquerade on `eth0` |
+
+### Peers
+
+| Peer | Tunnel Address | Role |
+|------|----------------|------|
+| Suricata gateway | `10.8.0.2/32` | VPN client carrying agent logs + SOC access |
+| Host laptop | `10.8.0.3/32` | Analyst direct access |
+
+### Server Configuration — `/etc/wireguard/wg0.conf`
+
+```ini
+[Interface]
+Address    = 10.8.0.1/24
+ListenPort = 51820
+PrivateKey = <REDACTED>
+MTU        = 1420
+PostUp     = iptables -A FORWARD -i wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+PostDown   = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
+
+[Peer]
+# Suricata gateway
+PublicKey    = <REDACTED>
+AllowedIPs   = 10.8.0.2/32, 192.168.232.0/24, 192.168.56.0/24
+PersistentKeepalive = 25
+
+[Peer]
+# Host laptop
+PublicKey    = <REDACTED>
+AllowedIPs   = 10.8.0.3/32
+PersistentKeepalive = 25
 ```
 
-## Single point of failure
+The Suricata peer's `AllowedIPs` include both on-prem subnets (`192.168.232.0/24` and `192.168.56.0/24`) so that return traffic for Wazuh agent enrollment and event shipping can route back through the tunnel.
 
-This VM is the ingress, the VPN hub, the router, and the case management system. If it fails:
+---
 
-- The tunnel drops and agents on the victim network cannot deliver events. Wazuh agents buffer locally and retry; the queue window depends on agent configuration.
-- The analyst loses the TheHive UI, Velociraptor, and NPM at once.
-- The Wazuh VM stays up but becomes unreachable from the lab until the hub returns.
+## 4 — Nginx Proxy Manager (Internal Reverse Proxy)
 
-Mitigations used and still open:
+Runs as a Docker container. Provides friendly domain names for internal services, accessible **only over WireGuard** — no public DNS record, no public listener.
 
-- [ ] Provider snapshot before changes
-- [ ] Monitoring: a heartbeat check on `51820/UDP` plus a VPN-side check of the TheHive UI
-- [ ] Documented rebuild order: Docker volumes → TheHive → NPM → Velociraptor → WireGuard
-- [ ] Confirm agent buffer behaviour during an outage and record the retention window
+| Internal Domain | Backend | Proxy Port |
+|-----------------|---------|------------|
+| `thehive.lab` | `localhost:9000` | `443` |
+| `wazuh.lab` | `<wazuh-vm-private>:443` | `443` |
+| `velo.lab` | `localhost:8889` | `443` |
+| `npm.lab` | `localhost:81` | `443` |
 
-Monitoring must be configured from **outside** the VM, or it will not detect the VM being down. The provider console remains the break-glass path when SSH is closed and the tunnel is broken.
+Container ports: `80`, `81`, `443/TCP`.
 
-## Case model used in this lab
+---
 
-| Case | Scope | Stages |
-|---|---|---|
-| Case 01 | Web application compromise | 01–07 |
-| Case 02 | Lateral movement and credential access | 08–14 |
-| Case 03 | Domain compromise and impact | 15–20 |
+## 5 — Cloud Router (IP Forwarding)
 
-An incident is a case, not a stage. Each stage becomes a task or a set of tasks inside the relevant case. Detailed stage notes live in `04-Investigation/Stages/`; case summaries live in `04-Investigation/Cases/`.
+This VM doubles as a software router, forwarding Wazuh agent traffic arriving on `wg0` to the Wazuh VM over VNet peering.
 
-## Triage workflow
+```bash
+# Kernel forwarding
+net.ipv4.ip_forward = 1
+```
 
-1. Review the incoming alert and confirm the rule and source.
-2. Decide true positive, false positive, or benign.
-3. Set severity, TLP, and PAP.
-4. Create a case or add the alert to an existing case.
-5. Add observables (IP, user, file, hash, URL).
-6. Add tasks for each investigation step.
-7. Record findings and evidence links.
-8. Write the case summary and close the case.
+### Return Routes
 
-## Fields to capture
+| Destination | Next Hop |
+|-------------|----------|
+| `192.168.56.0/24` | via `wg0` |
+| `192.168.232.0/24` | via `wg0` |
 
-| Field | Why |
-|---|---|
-| Alert ID | Traceability back to Wazuh |
-| Rule ID | Detection content reference |
-| Source IP | Attacker or affected host |
-| Destination IP | Target |
-| User | Account involved |
-| File / hash | Malware or tooling evidence |
-| ATT&CK technique | Coverage and reporting |
-| Timeline | Reconstruction |
+Traffic flow: on-prem agents → Suricata gateway → WireGuard tunnel → this VM (`10.8.0.1`) → VNet peering → Wazuh VM `1514/TCP`.
 
-## Evidence
+---
 
-- [ ] Redacted alert queue
-- [ ] Case 01 overview
-- [ ] Observable list
-- [ ] Task list and completed findings
-- [ ] Case report export
-- [ ] Redacted `docker ps` output
+## 6 — thecustomhive (Alert Pipeline)
 
-## Related documents
+A Python bridge that polls the Wazuh API for new alerts and posts them to the TheHive API on `localhost:9000`.
 
-- [WireGuard](wireguard.md)
-- [thecustomhive pipeline](../pipeline-thecustomhive.md)
-- [Investigation methodology](../../04-Investigation/README.md)
-- [Case 01](../../04-Investigation/Cases/case-01-web-compromise.md)
+- **Systemd service:** `thehive-flush.service`
+- **Full details:** [pipeline-thecustomhive.md](../../03-Detection-Engineering/pipeline-thecustomhive.md)
+
+---
+
+## Consolidated Services & Ports
+
+| Port | Protocol | Service | Exposure |
+|------|----------|---------|----------|
+| `51820` | UDP | WireGuard | **Public** (only public port) |
+| `9000` | TCP | TheHive | VPN only |
+| `8889` | TCP | Velociraptor GUI | VPN only |
+| `8000` | TCP | Velociraptor frontend | VPN only (client-initiated) |
+| `443` | TCP | Nginx Proxy Manager (HTTPS) | VPN only |
+| `81` | TCP | Nginx Proxy Manager (admin) | VPN only |
+| `80` | TCP | Nginx Proxy Manager (HTTP redirect) | VPN only |
+
+---
+
+## Why These Roles Share One VM
+
+Six roles on a single host is a deliberate trade-off for a lab environment:
+
+- **Cost** — one 16 GB VM is cheaper than three smaller ones.
+- **Routing simplicity** — a single WireGuard endpoint avoids split-tunnel complexity.
+- **Low throughput** — lab traffic volumes never stress the shared resources.
+
+### Single Point of Failure
+
+If this VM goes down, **every** service is affected: VPN connectivity, case management, forensics, reverse proxy, and alert ingestion. In a production environment each role would be isolated; here the consolidation is acceptable because the lab has no SLA and can be rebuilt from configuration.
+
+---
+
+## Verification Commands
+
+```bash
+# Check all listening sockets
+sudo ss -ltnup
+
+# WireGuard tunnel status
+sudo wg show
+
+# Service health
+systemctl status thehive
+systemctl status velociraptor_server
+systemctl status wg-quick@wg0
+systemctl status thehive-flush.service
+docker ps                              # NPM container
+
+# Connectivity to Wazuh VM over VNet peering
+nc -vz <wazuh-vm-private> 1514
+nc -vz <wazuh-vm-private> 443
+```
+
+---
+
+## Related Documents
+
+| Document | Description |
+|----------|-------------|
+| [wazuh.md](wazuh.md) | Wazuh SIEM VM — rules, agents, indexer |
+| [pipeline-thecustomhive.md](../../03-Detection-Engineering/pipeline-thecustomhive.md) | Alert pipeline (Wazuh → TheHive) |
+| [rules.md](../../03-Detection-Engineering/Wazuh/rules.md) | Custom Wazuh detection rules |

@@ -14,7 +14,7 @@ Three tiers, one story:
 |---|---|---|
 | Attack | Kali Linux on an isolated NAT segment | Local VMware |
 | Victim | Windows Server 2022 DC, Windows 10, DVWA — routed through the Suricata gateway | Local VMware |
-| SOC | Wazuh VM plus the TheHive/automation VM, each in a `/24` VNet joined by peering and reached over WireGuard | Cloud (any provider) |
+| SOC | Wazuh SIEM VM plus TheHive/automation VM, each in a `/24` VNet joined by peering and reached over WireGuard | Cloud (vendor-neutral) |
 
 The point of the design is not the tool list. It is that a single public port opens the lab, every hop is documented, and the places where visibility is incomplete are named rather than hidden.
 
@@ -22,11 +22,11 @@ The point of the design is not the tool list. It is that a single public port op
 
 ![SOC lab architecture](06-Resources/Diagrams/soc-lab.png)
 
-*Latest high-level architecture. Suricata's victim-side address is `192.168.56.150/24`. The `10.122.0.0/16` block is a summary range for two peered `/24` VNets, not a single Layer 2 subnet. Detailed addresses, ports, and flows are in [network-topology.md](01-Lab-Setup/network-topology.md); where the overview differs, the detailed tables take precedence. Suricata sees traffic crossing the gateway; victim-to-victim traffic stays on the same subnet.*
+*Latest high-level architecture. Suricata's victim-side address is `192.168.56.150/24`. The `10.122.0.0/16` block is a summary range for two peered `/24` VNets, not a single Layer 2 subnet. Detailed addresses, ports, and flows are documented in [01-Lab-Setup/architecture.md](01-Lab-Setup/architecture.md). Suricata sees traffic crossing the gateway; victim-to-victim traffic stays on the same subnet.*
 
 The tunnel terminates on the TheHive/automation VM, not on Wazuh. That VM is the cloud ingress point, the VPN hub, and the router that reaches the Wazuh VM across the peered VNets.
 
-Full detail: [01-Lab-Setup/architecture.md](01-Lab-Setup/architecture.md) · addresses and flows: [01-Lab-Setup/network-topology.md](01-Lab-Setup/network-topology.md).
+Full detail: [01-Lab-Setup/architecture.md](01-Lab-Setup/architecture.md).
 
 ## Network at a glance
 
@@ -43,13 +43,13 @@ The VPN policy allows `10.8.0.0/24` to both `192.168.232.0/24` and `192.168.56.0
 | Layer | Component | Where | Role |
 |---|---|---|---|
 | Attack | Kali Linux | Local, `192.168.232.0/24` | Adversary workstation and tooling |
-| Network detection | Suricata gateway | Local, `192.168.56.150` / `192.168.232.162` | Router between attack and victim segments; `eve.json` to Wazuh |
+| Network detection | Suricata gateway | Local, `192.168.56.150` / `192.168.232.162` | Router between attack and victim segments; `eve-alert.json` to Wazuh |
 | Web target | DVWA on Ubuntu | Local, `192.168.56.30` | Initial access and web attack surface |
 | Workstation | Windows 10 | Local, `192.168.56.20` | Credential access and lateral movement target |
 | Identity | Windows Server 2022 DC, `ad.lab` | Local, `192.168.56.10` | AD DS, DNS, Kerberos |
 | SIEM | Wazuh manager, indexer, dashboard | Wazuh VM, private only | Log collection, rules, alerting |
 | Case management | TheHive | TheHive/automation VM | Alerts, cases, observables, tasks, timelines |
-| Automation | thecustomhive (Python) | TheHive/automation VM | Wazuh API → TheHive alert pipeline |
+| Automation | [thecustomhive](03-Detection-Engineering/pipeline-thecustomhive.md) (Python) | TheHive/automation VM | Wazuh API → TheHive alert pipeline |
 | DFIR | Velociraptor | TheHive/automation VM | Endpoint artifact collection |
 | Ingress | Nginx Proxy Manager | TheHive/automation VM | Internal TLS/reverse proxy for SOC services |
 | Connectivity | WireGuard | Both sides | VPN hub on `10.8.0.1/24`, Suricata client on `10.8.0.2/32` |
@@ -57,7 +57,7 @@ The VPN policy allows `10.8.0.0/24` to both `192.168.232.0/24` and `192.168.56.0
 ## Design principles
 
 1. **One public port.** `51820/UDP` on the TheHive/automation VM is the only public inbound rule. Everything else is VPN, peering, or closed. The provider console is the break-glass path.
-2. **Vendor-neutral.** DigitalOcean, OVHcloud, Vultr, and Azure have all hosted this lab. The provider does not matter — the firewall, VPN, routing, peering, and segmentation do.
+2. **Vendor-neutral.** DigitalOcean, OVHcloud, Vultr, Azure, and AWS can host this architecture. The provider does not matter — the firewall, VPN, routing, peering, and segmentation do.
 3. **TheHive VM routes telemetry.** It is the ingress hub: it terminates the tunnel, forwards agent traffic to the Wazuh VM, and runs the pipeline that turns Wazuh alerts into TheHive alerts.
 4. **Fail closed.** If the tunnel or the hub is down, agents queue or fail; no service falls back to a public listener.
 5. **Document the blind spot.** Suricata sees attacker↔victim and victim↔cloud traffic. It does not see victim-to-victim traffic on `192.168.56.0/24`, which is same-subnet. Lateral-movement detection for those stages depends on Wazuh and host telemetry.
@@ -67,41 +67,39 @@ The VPN policy allows `10.8.0.0/24` to both `192.168.232.0/24` and `192.168.56.0
 
 | Section | Purpose |
 |---|---|
-| [Lab-Setup](01-Lab-Setup/README.md) | Architecture, network, local VMs, cloud stack, thecustomhive pipeline |
-| [Attack-Simulation](02-Attack-Simulation/README.md) | 20-stage attack chain with commands and evidence |
-| [Detection-Engineering](03-Detection-Engineering/README.md) | Rule catalogue, ATT&CK coverage, false positives, detection gaps |
+| [Lab-Setup](01-Lab-Setup/README.md) | Architecture, unified network, local VMs, and cloud stack documentation |
+| [Attack-Simulation](02-Attack-Simulation/README.md) | 20-stage attack chain with commands, artifacts, and evidence |
+| [Detection-Engineering](03-Detection-Engineering/README.md) | Rule catalog, ATT&CK coverage matrix, false positives, gaps, and thecustomhive pipeline |
 | [Investigation](04-Investigation/README.md) | Stage-wise analyst notes and three TheHive cases |
 | [Incident-Report](05-Incident-Report/README.md) | Executive report, timeline, IOCs, ATT&CK mapping, response and lessons |
 | [INDEX.md](INDEX.md) | Master traceability matrix: stage, alert, rule, case, evidence |
-| [Resources](06-Resources/README.md) | Reference material and the latest architecture diagram |
+| [Resources](06-Resources/README.md) | Reference material, master attack chain blueprint PDF, and architecture diagram |
 | [SECURITY.md](SECURITY.md) | Redaction and secret-handling policy |
 
 ## Attack chain at a glance
 
-The ATT&CK mappings below are **suggested starting points** and must be verified against the actual commands and alerts for each stage.
-
-| # | Stage | Tactic | Suggested ATT&CK |
-|---|---|---|---|
-| 01 | Reconnaissance | Reconnaissance | T1595 Active Scanning |
-| 02 | Brute force | Credential Access | T1110 Brute Force |
-| 03 | SQL injection | Initial Access | T1190 Exploit Public-Facing Application |
-| 04 | Hash cracking | Credential Access | T1110.002 Password Cracking |
-| 05 | Web shell upload | Persistence | T1505.003 Server Web Shell |
-| 06 | Reverse shell | Execution | T1059.004 Unix Shell |
-| 07 | Privilege escalation | Privilege Escalation | T1068 Exploitation for Privilege Escalation |
-| 08 | SSH persistence | Persistence | T1098.004 SSH Authorized Keys |
-| 09 | Internal discovery | Discovery | T1018 Remote System Discovery |
-| 10 | Responder poisoning | Credential Access | T1557.001 LLMNR/NBT-NS Poisoning and SMB Relay |
-| 11 | NTLMv2 cracking | Credential Access | T1110.002 Password Cracking |
-| 12 | BloodHound enumeration | Discovery | T1087.002 Domain Account |
-| 13 | Kerberoasting | Credential Access | T1558.003 Kerberoasting |
-| 14 | DCSync | Credential Access | T1003.006 DCSync |
-| 15 | Pass-the-Hash | Lateral Movement | T1550.002 Pass the Hash |
-| 16 | Golden Ticket | Credential Access / Persistence | T1558.001 Golden Ticket |
-| 17 | DC persistence | Persistence | T1136.002 Domain Account |
-| 18 | Collection | Collection | T1005 Data from Local System |
-| 19 | Exfiltration | Exfiltration | T1041 Exfiltration Over C2 Channel |
-| 20 | Impact | Impact | T1491.001 Internal Defacement |
+| # | Stage | Tactic | Suggested ATT&CK | Detection Status |
+|---|---|---|---|---|
+| 01 | Reconnaissance | Reconnaissance | T1595.001 Active Scanning | **Detected** |
+| 02 | Brute force | Credential Access | T1110.001 Password Guessing | **Detected** |
+| 03 | SQL injection | Initial Access | T1190 Exploit Public-Facing Application | **Detected** |
+| 04 | Hash cracking | Credential Access | T1110.002 Password Cracking | **Not Detected** (Offline) |
+| 05 | Web shell upload | Persistence | T1505.003 Server Web Shell | **Detected** |
+| 06 | Reverse shell | Execution | T1059.004 Unix Shell | **Detected** |
+| 07 | Privilege escalation | Privilege Escalation | T1548.003 Sudo and Sudo Caching | **Detected** |
+| 08 | SSH persistence | Persistence | T1098.004 SSH Authorized Keys | **Detected** |
+| 09 | Internal discovery | Discovery | T1018 Remote System Discovery | **Detected** |
+| 10 | Responder poisoning | Credential Access | T1557.001 LLMNR/NBT-NS Poisoning and Relay | **Detected** |
+| 11 | NTLMv2 cracking | Credential Access | T1110.002 Password Cracking | **Not Detected** (Offline) |
+| 12 | BloodHound enumeration | Discovery | T1087.002 Domain Account | **Detected** (Pivot) |
+| 13 | Kerberoasting | Credential Access | T1558.003 Kerberoasting | **Detected** |
+| 14 | DCSync | Credential Access | T1003.006 DCSync | **Detected** |
+| 15 | Pass-the-Hash | Lateral Movement | T1550.002 Pass the Hash | **Detected** |
+| 16 | Golden Ticket | Credential Access / Persistence | T1558.001 Golden Ticket | **Detected** |
+| 17 | DC persistence | Persistence | T1136.002 Domain Account | **Detected** |
+| 18 | Collection | Collection | T1005 Data from Local System | **Detected** |
+| 19 | Exfiltration | Exfiltration | T1041 Exfiltration Over C2 Channel | **Detected** (Pivot) |
+| 20 | Impact | Impact | T1491.001 Internal Defacement | **Detected** |
 
 Full detail: [02-Attack-Simulation/README.md](02-Attack-Simulation/README.md).
 
@@ -109,46 +107,41 @@ Full detail: [02-Attack-Simulation/README.md](02-Attack-Simulation/README.md).
 
 - **Cloud addressing is summarized, not published.** The `10.122.0.0/16` summary covers two non-overlapping `/24` VNets joined by peering; it is not one flat subnet. Exact per-VNet/subnet CIDRs vary by provider build and are not documented here. Public cloud IPs are dynamic and are deliberately excluded.
 - **Intra-subnet lateral movement is invisible to Suricata.** Victim-to-victim traffic stays inside `192.168.56.0/24` and never crosses the gateway. Detection on those stages relies on Wazuh and host telemetry.
-- **Detection rules are not validated.** Rules are written against expected behavior; none are confirmed to fire on a real stage yet.
-- **Evidence is being collected.** Screenshots, alert IDs, and case IDs are pending.
+- **Offline stages generate zero victim telemetry.** Hash cracking (Stage 04) and NTLMv2 cracking (Stage 11) occur on the attacker GPU and produce no network or host telemetry by definition.
 
 ## Project status
 
 | Area | Status |
 |---|---|
-| Lab setup documentation | Written — being reconciled with the final build |
-| Attack stage write-ups | Scaffolded — evidence in progress |
-| Detection coverage matrix | Scaffolded — rules pending validation |
-| Stage-wise investigation | Scaffolded — analyst notes pending |
-| TheHive case summaries | Scaffolded — cases pending |
-| Incident report | Scaffolded — draft pending |
-
-No stage is marked **Detected**. The status vocabulary is defined in [INDEX.md](INDEX.md).
+| Lab setup documentation | **Complete** — reconciled with live configuration |
+| Attack stage write-ups | **Complete** — all 20 stages documented with commands and screenshots |
+| Detection coverage matrix | **Complete** — 16 detected, 4 documented gaps |
+| Stage-wise investigation | **In progress** — analyst triage pending |
+| TheHive case summaries | **Scaffolded** — 3 cases defined |
+| Incident report | **Scaffolded** — draft pending |
 
 ## Evidence convention
 
-All attack and alert evidence screenshots live in two folders under `02-Attack-Simulation/`:
+All attack and alert evidence screenshots live in dedicated evidence folders:
 
-- `Attack-Screenshots/stage-XX/` — attacker-side evidence
-- `alert-screenshots/stage-XX/` — TheHive, Wazuh, or Suricata alert evidence
-
-Files are embedded in the stage and investigation documents by relative link. Do not copy the same image into multiple folders. Use descriptive lowercase names, for example `stage-03-01-burp-request.png`. Compress images before committing; GitHub recommends keeping individual objects around 1 MB or less.
+- `02-Attack-Simulation/Attack-Screenshots/` — attacker-side terminal outputs and tools (`1.png` – `60.png`)
+- `03-Detection-Engineering/TheHive_Alert-ScreenShot/` — TheHive and Wazuh alert evidence (`1.png` – `22.4.png`)
+- `06-Resources/attack-chain-full.pdf` — unredacted campaign master blueprint reference
 
 Never include cloud public IPs, provider hostnames, API keys, VPN keys, or real password hashes. See [SECURITY.md](SECURITY.md).
 
 ## Detection performance
 
-Fill this after the investigation is complete. It is the summary a SOC reviewer will look for first.
+Empirical results across the 20-stage attack simulation:
 
 | Metric | Value |
 |---|---|
-| Stages executed | Not tested |
-| Stages with at least one alert | Not tested |
-| Logging gaps | Not tested |
-| Detection gaps | Not tested |
-| Rule failures | Not tested |
-| Mean time to detect | Not tested |
-| False positives reviewed | Not tested |
+| Stages executed | 20 |
+| Stages with verified detection | 16 (80.0%) |
+| Inherent offline gaps | 2 (DG-04, DG-11) |
+| Logging / visibility gaps | 2 (DG-09, DG-12) |
+| Rule failures | 0 |
+| False positives reviewed | 3 |
 
 ## Skills demonstrated
 
@@ -164,10 +157,10 @@ The repository is the record; the site is a presentation layer over the same dat
 
 ## Start here
 
-1. [Architecture](01-Lab-Setup/architecture.md)
-2. [Network topology](01-Lab-Setup/network-topology.md)
-3. [Attack chain overview](02-Attack-Simulation/README.md)
-4. [Detection coverage](03-Detection-Engineering/coverage-matrix.md)
+1. [Architecture & Network](01-Lab-Setup/architecture.md)
+2. [Attack chain overview](02-Attack-Simulation/README.md)
+3. [Detection coverage matrix](03-Detection-Engineering/coverage-matrix.md)
+4. [Pipeline & Automation bridge](03-Detection-Engineering/pipeline-thecustomhive.md)
 5. [Investigation methodology](04-Investigation/README.md)
 6. [Incident report](05-Incident-Report/incident-report.md)
 7. [Master index](INDEX.md)

@@ -1,72 +1,70 @@
 # Kali Linux — Attacker Workstation
 
-## Role
+| Property | Value |
+|----------|-------|
+| **OS** | Kali Linux (rolling) |
+| **Role** | Primary attack platform |
+| **Address** | `192.168.232.135/24` (VMware VMnet8 — NAT) |
+| **Resources** | 6 vCPU · 6 GB RAM |
+| **Default gateway** | `192.168.232.2` (VMnet8 NAT gateway) |
+| **SSH key** | `manichand gupta@ManicLenovo` |
 
-Kali is the adversary workstation. It runs reconnaissance, exploitation, credential access, lateral movement, and collection tooling against the victim network.
+## Network Position
 
-## Configuration
+Kali sits on the **NAT segment** (`192.168.232.0/24`), *not* on the victim subnet.
+It reaches `192.168.56.0/24` **only** through the [Suricata gateway](suricata-gateway.md), which means every packet crosses the IDS sensor before touching a target.
 
-| Item | Value |
-|---|---|
-| OS | Kali Linux (`TBD` version) |
-| Address | `192.168.232.135/24` |
-| Network | VMware VMnet8 (NAT) |
-| Route to victims | `192.168.232.162` (Suricata `eth0`) |
-| Route to cloud | No working path — the VMnet8 NAT gateway has no route to `10.122.0.0/16` |
-| Resources | `TBD` vCPU / `TBD` GB RAM / `TBD` GB disk |
-| Snapshot | Clean baseline before each campaign |
+Direct access to the cloud private range (`10.122.0.0/16`) is **blocked by design** — the WireGuard tunnel terminates on the gateway, not on Kali.
 
-## Addressing
+### Static Route to Victims
 
-Kali is deliberately **not** on the victim subnet. It lives on the NAT segment and reaches `192.168.56.0/24` only through the gateway:
-
-```bash
-ip -br addr show
-ip route show
-# default via <vmnet8-nat-gateway> dev eth0
-# 192.168.56.0/24 via 192.168.232.162 dev eth0
-ip route get 192.168.56.30   # expect: via 192.168.232.162
-ping -c 1 -W 1 <cloud-private-address>   # expect: timeout / unreachable
+```
+auto eth0
+iface eth0 inet dhcp
+  post-up ip route add 192.168.56.0/24 via 192.168.232.162 dev eth0
 ```
 
-That last check matters. If Kali can reach the cloud private range directly, the lab is misconfigured and the sensor's view of the campaign is no longer trustworthy.
+The `post-up` directive ensures the route survives reboots without manual intervention.
 
-Add the route explicitly if the OS does not derive it:
-
-```bash
-sudo ip route add 192.168.56.0/24 via 192.168.232.162 dev eth0
-```
-
-## Tooling
+## Installed Tooling
 
 | Category | Tools |
-|---|---|
-| Reconnaissance | `nmap`, `nikto`, `gobuster` |
-| Web exploitation | `sqlmap`, Burp Suite |
-| Credential attacks | `hydra`, `hashcat`, Responder |
-| Active Directory | BloodHound, Impacket, NetExec/CrackMapExec |
-| C2 / shells | `netcat`, `msfvenom`, custom listeners |
-| Exfiltration | `scp`, `curl`, SMB |
+|----------|-------|
+| Reconnaissance | nmap, nikto, gobuster, WhatWeb |
+| Web exploitation | sqlmap, Burp Suite |
+| Credential attacks | hydra, hashcat, Responder, john |
+| Active Directory | BloodHound Legacy 4.x, Impacket (secretsdump, wmiexec, getTGT, getST, psexec, smbexec), NetExec/CrackMapExec |
+| C2 / shells | netcat, msfvenom, custom python listeners |
+| Exfiltration | scp, curl, SMB |
 
-Record the exact tool versions used for the campaign; they belong in the attack stage notes.
+### BloodHound Legacy 4.x
 
-## Setup notes
+The `bloodhound-start` wrapper launches the Neo4j graph database on `localhost:7474` and opens the BloodHound GUI.
+BloodHound is used during AD enumeration (Stage 12) to map attack paths through the `ad.lab` domain.
 
-- Take a clean snapshot before the campaign.
-- Keep tool output in per-stage folders so evidence maps cleanly to `02-Attack-Simulation/`.
-- Do not store real credentials, public IPs, or API keys in this repository.
-- Keep the attack host off the internet during the campaign.
-- LLMNR/NBT-NS poisoning is link-local and does not cross a router. Stage 10 (Responder) therefore runs from the DVWA pivot inside `192.168.56.0/24`, not from Kali. Traffic it generates stays on the victim subnet and is not visible to Suricata; Stage 10 is documented as a host-telemetry stage.
+## Verification Commands
 
-## Evidence
+```bash
+# Confirm IP address
+ip -br addr show
+# eth0  UP  192.168.232.135/24
 
-- [ ] Redacted network configuration screenshot
-- [ ] `ip route get` output for a victim and a ping to a cloud private address (expect timeout)
-- [ ] Tool version output
-- [ ] Clean snapshot confirmation
+# Full routing table
+ip route show
+# default via 192.168.232.2 dev eth0
+# 192.168.56.0/24 via 192.168.232.162 dev eth0
 
-## Related documents
+# Trace path to a victim host (should route through the gateway)
+ip route get 192.168.56.30
+# 192.168.56.30 via 192.168.232.162 dev eth0
 
-- [Suricata gateway](suricata-gateway.md)
-- [Network topology](../network-topology.md)
-- [Attack chain overview](../../02-Attack-Simulation/README.md)
+# Confirm cloud range is unreachable (expected timeout)
+ping -c 1 10.122.0.4
+# PING 10.122.0.4 (10.122.0.4) ... 100% packet loss
+```
+
+## Related Documentation
+
+- [Suricata Gateway](suricata-gateway.md) — the router/IDS that bridges Kali to the victim subnet
+- [Lab Architecture](../architecture.md) — full network topology
+- [Attack Simulation](../../02-Attack-Simulation/README.md) — attack stages executed from this host
