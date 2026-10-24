@@ -162,10 +162,9 @@ PersistentKeepalive  = 25
 |---|--------|-------------|---------|------|------------------|
 | 1 | Kali `192.168.232.135` | DC / Win10 / DVWA | Attack traffic | Kali → eth0 → Suricata → eth1 → victim | ✅ Yes |
 | 2 | Victims (`.10`, `.20`, `.30`) | Wazuh VM (cloud) | Agent events (`1514`) | Agent → eth1 → Suricata → wg0 → WireGuard → Wazuh | ✅ Yes |
-| 3 | thecustomhive (cloud) | Wazuh API (cloud) | Alert pull / active-response | TheHive VM → VNet peering → Wazuh `55000` | ❌ No (cloud ↔ cloud) |
-| 4 | thecustomhive (cloud) | TheHive API (cloud) | Case creation | Localhost or `10.8.0.1:9000` | ❌ No (loopback / cloud) |
-| 5 | Analyst laptop | Any VPN-only service | Management & investigation | Laptop `10.8.0.3` → WireGuard → cloud VMs | ❌ No (enters at hub) |
-| 6 | Victim → Victim | Lateral movement | e.g. DC → Win10 | Direct on `192.168.56.0/24` | ❌ No (same segment) |
+| 3 | thecustomhive (Wazuh VM) | TheHive API (TheHive VM) | Correlated alert push (`9000`) | Wazuh VM → VNet peering → TheHive `10.122.0.4:9000` | ❌ No (cloud ↔ cloud) |
+| 4 | Analyst laptop | Any VPN-only service | Management & investigation | Laptop `10.8.0.3` → WireGuard → cloud VMs | ❌ No (enters at hub) |
+| 5 | Victim → Victim | Lateral movement | e.g. DC → Win10 | Direct on `192.168.56.0/24` | ❌ No (same segment) |
 
 ---
 
@@ -198,7 +197,7 @@ PersistentKeepalive  = 25
 |-----------|------|---------|
 | Suricata 8.0.6 | Suricata gateway | Inline IDS — inspects all routed traffic |
 | Wazuh 4.x | Wazuh VM | SIEM: manager, indexer, dashboard |
-| thecustomhive | TheHive VM | Python automation — pulls Wazuh alerts, creates TheHive cases |
+| thecustomhive | Wazuh VM | Python automation (custom-thehive & thehive-flush.service) — 2-tier correlation & push to TheHive |
 | TheHive 5.x | TheHive VM | Case management and analyst workspace |
 | Nginx Proxy Manager | TheHive VM | Reverse proxy with TLS for web UIs |
 | Velociraptor | TheHive VM | Endpoint forensics and live response |

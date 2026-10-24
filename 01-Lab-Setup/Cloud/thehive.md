@@ -1,7 +1,7 @@
 # TheHive / Automation VM
 
-> Central hub for case management, DFIR tooling, VPN gateway, reverse proxy, and alert ingestion.  
-> This single VM consolidates six roles to keep the lab lean while remaining functionally segmented.
+> Central hub for case management, DFIR tooling, VPN gateway, and internal reverse proxy.  
+> This VM consolidates five core roles to keep the cloud footprint lean while remaining functionally segmented.
 
 ---
 
@@ -14,7 +14,6 @@
 | 3 | **WireGuard** | Encrypted tunnel — only public entry point | `51820/UDP` |
 | 4 | **Nginx Proxy Manager** | Internal reverse proxy (VPN-only domains) | `80`, `81`, `443/TCP` |
 | 5 | **IP Forwarding / Cloud Router** | Routes agent traffic to Wazuh VM via VNet peering | — |
-| 6 | **thecustomhive** | Alert pipeline bridge (Wazuh → TheHive) | — |
 
 ---
 
@@ -169,12 +168,13 @@ Traffic flow: on-prem agents → Suricata gateway → WireGuard tunnel → this 
 
 ---
 
-## 6 — thecustomhive (Alert Pipeline)
+## 6 — Alert Ingestion (TheHive Endpoint)
 
-A Python bridge that polls the Wazuh API for new alerts and posts them to the TheHive API on `localhost:9000`.
+TheHive receives incoming alerts pushed directly from the Wazuh Manager VM over private VNet peering.
 
-- **Systemd service:** `thehive-flush.service`
-- **Full details:** [pipeline-thecustomhive.md](../../03-Detection-Engineering/pipeline-thecustomhive.md)
+- **Ingestion Hook:** Wazuh Manager pushes correlated batches to `http://10.122.0.4:9000/api/v1`
+- **Automation Engine:** Powered by `thecustomhive` (running on the Wazuh VM via `thehive-flush.service`)
+- **Full Architecture & Source Code:** See [pipeline-thecustomhive.md](../../03-Detection-Engineering/pipeline-thecustomhive.md) and [`03-Detection-Engineering/Wazuh/`](../../03-Detection-Engineering/Wazuh/)
 
 ---
 
@@ -183,7 +183,7 @@ A Python bridge that polls the Wazuh API for new alerts and posts them to the Th
 | Port | Protocol | Service | Exposure |
 |------|----------|---------|----------|
 | `51820` | UDP | WireGuard | **Public** (only public port) |
-| `9000` | TCP | TheHive | VPN only |
+| `9000` | TCP | TheHive | VPN / Peered VNet (`10.122.0.4`) |
 | `8889` | TCP | Velociraptor GUI | VPN only |
 | `8000` | TCP | Velociraptor frontend | VPN only (client-initiated) |
 | `443` | TCP | Nginx Proxy Manager (HTTPS) | VPN only |
@@ -194,15 +194,15 @@ A Python bridge that polls the Wazuh API for new alerts and posts them to the Th
 
 ## Why These Roles Share One VM
 
-Six roles on a single host is a deliberate trade-off for a lab environment:
+Consolidating these services on a single host is a deliberate engineering trade-off for a lean lab environment:
 
-- **Cost** — one 16 GB VM is cheaper than three smaller ones.
-- **Routing simplicity** — a single WireGuard endpoint avoids split-tunnel complexity.
-- **Low throughput** — lab traffic volumes never stress the shared resources.
+- **Cost efficiency** — one 16 GB VM avoids multi-node cloud overhead.
+- **Routing simplicity** — a single WireGuard endpoint avoids split-tunnel routing complexity.
+- **Low throughput** — lab traffic volumes never stress shared system resources.
 
 ### Single Point of Failure
 
-If this VM goes down, **every** service is affected: VPN connectivity, case management, forensics, reverse proxy, and alert ingestion. In a production environment each role would be isolated; here the consolidation is acceptable because the lab has no SLA and can be rebuilt from configuration.
+If this VM goes down, gateway connectivity, case management, and forensics are interrupted. The Wazuh VM continues ingesting telemetry and buffering alerts locally in SQLite WAL until TheHive becomes reachable again.
 
 ---
 
@@ -219,7 +219,6 @@ sudo wg show
 systemctl status thehive
 systemctl status velociraptor_server
 systemctl status wg-quick@wg0
-systemctl status thehive-flush.service
 docker ps                              # NPM container
 
 # Connectivity to Wazuh VM over VNet peering
