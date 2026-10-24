@@ -13,6 +13,17 @@ import { cn } from "@/lib/utils";
 type BuildTone = "teal" | "amber";
 type NodeState = "idle" | "visited" | "active";
 
+const palette = {
+  teal: "#35e0c2",
+  blue: "#6aa8ff",
+  amber: "#f2b84b",
+  ink: "#e7eef7",
+  muted: "#9fb0c4",
+  faint: "#7f8fa6",
+  line: "#233044",
+  panel: "#0b1220",
+};
+
 interface BuildStep {
   n: string;
   label: string;
@@ -27,40 +38,40 @@ const buildSteps: BuildStep[] = [
     n: "01",
     label: "Attack plane",
     title: "Start outside.",
-    body: "Kali sits on an isolated NAT segment with the tools and the intent. It can reach the lab; it cannot see the SOC.",
-    meta: "Kali · 192.168.232.135",
+    body: "Kali sits on an isolated NAT segment with the tools and the intent. It can route toward the lab; it cannot reach the SOC directly.",
+    meta: "Kali · 192.168.232.135/24 · gw .232.2",
     tone: "teal",
   },
   {
     n: "02",
     label: "Boundary",
     title: "Cross the gateway.",
-    body: "Suricata routes the path from attack to victim and writes the flow record. One public port opens the tunnel; everything else stays private.",
-    meta: "Suricata · .232.162 → .56.150",
+    body: "A dual-NIC Suricata VM routes attack traffic from ens33 to ens37 and writes the flow record. One public port opens the tunnel; everything else stays private.",
+    meta: "Suricata 8.0.6 · ens33 .232.162 → ens37 .56.150",
     tone: "teal",
   },
   {
     n: "03",
     label: "Victim plane",
     title: "Enter the range.",
-    body: "The domain controller, the Windows workstation, and DVWA share one subnet. The attacker only needs one way in.",
-    meta: "192.168.56.0/24",
+    body: "The domain controller, Windows workstation, and DVWA share one L2 segment behind gateway .150. One way in; three places to move.",
+    meta: ".56.0/24 · DC .10 · Win10 .20 · DVWA .30",
     tone: "teal",
   },
   {
     n: "04",
     label: "SOC plane",
     title: "Follow the signal inward.",
-    body: "Wazuh collects host telemetry; thecustomhive runs a 2-tier correlation daemon to deliver alerts into TheHive. The path is private, reached over WireGuard.",
-    meta: "Wazuh → thecustomhive → TheHive · 10.122.0.0/16",
+    body: "Agents ship host telemetry through the gateway and WireGuard to Wazuh. thecustomhive correlates the queue on the Wazuh VM, then pushes alerts to TheHive over VNet peering.",
+    meta: "Wazuh + thecustomhive → TheHive · 10.122.0.0/16",
     tone: "teal",
   },
   {
     n: "05",
-    label: "Blind spot",
-    title: "Name what the wire cannot see.",
-    body: "Traffic between victims never crosses Suricata. If the story stays inside 192.168.56.0/24, host telemetry has to carry it.",
-    meta: "Visibility boundary · documented",
+    label: "Visibility",
+    title: "Name the edge of the record.",
+    body: "The raw exports show Suricata alerting on routed attack traffic and on same-subnet moves observed on ens37. What the wire still cannot explain — process context, encrypted payload, offline action — has to come from host telemetry.",
+    meta: "Observed visibility · raw alert exports",
     tone: "amber",
   },
 ];
@@ -142,73 +153,241 @@ function nodeState(step: number, nodeStep: number): NodeState {
   return "idle";
 }
 
-function MapNode({
+function SvgNode({
   x,
   y,
+  w,
+  h,
   label,
-  meta,
+  lines,
   state,
-  placement = "bottom",
   tone = "teal",
+  compact = false,
 }: {
   x: number;
   y: number;
+  w: number;
+  h: number;
   label: string;
-  meta: string;
+  lines: string[];
   state: NodeState;
-  placement?: "bottom" | "right";
   tone?: BuildTone;
+  compact?: boolean;
 }) {
-  const amber = tone === "amber";
+  const accent = tone === "amber" ? palette.amber : palette.teal;
   const lit = state !== "idle";
-  const current = state === "active";
-  const rightAligned = placement === "right";
+  const active = state === "active";
+  const titleSize = compact ? 14 : 17;
+  const lineSize = compact ? 10 : 11.5;
 
   return (
-    <div
-      className="absolute -translate-x-1/2 -translate-y-1/2"
-      style={{ left: `${x}%`, top: `${y}%` }}
-    >
-      <span
-        className={cn(
-          "block h-2.5 w-2.5 rounded-full border transition-all duration-500",
-          lit
-            ? amber
-              ? "border-amber/80 bg-amber/75"
-              : "border-teal/80 bg-teal/75"
-            : "border-line bg-canvas",
-          current &&
-            (amber
-              ? "shadow-[0_0_18px_rgba(242,184,75,0.75)]"
-              : "shadow-[0_0_18px_rgba(53,224,194,0.75)]"),
-        )}
-        aria-hidden="true"
+    <g>
+      {active && (
+        <rect
+          x={x - 2}
+          y={y - 2}
+          width={w + 4}
+          height={h + 4}
+          rx={16}
+          fill="none"
+          stroke={accent}
+          strokeOpacity="0.5"
+          filter="url(#node-glow)"
+        />
+      )}
+      <rect
+        x={x}
+        y={y}
+        width={w}
+        height={h}
+        rx={14}
+        fill={active ? "rgba(53,224,194,0.07)" : "rgba(11,18,32,0.9)"}
+        stroke={lit ? accent : palette.line}
+        strokeOpacity={active ? 0.9 : lit ? 0.45 : 0.8}
+        strokeWidth={active ? 1.7 : 1}
       />
-      <div
-        className={cn(
-          "absolute transition-opacity duration-500",
-          rightAligned
-            ? "left-3 top-1/2 w-[104px] -translate-y-1/2 bg-gradient-to-r from-canvas via-canvas/85 to-transparent py-0.5 pl-1 pr-2 text-left"
-            : "left-1/2 top-4 w-32 -translate-x-1/2 px-1 text-center",
-          current ? "opacity-100" : lit ? "opacity-80" : "opacity-50",
-        )}
+      <circle
+        cx={x + 18}
+        cy={y + (compact ? 18 : 22)}
+        r={3.4}
+        fill={lit ? accent : palette.line}
+        opacity={lit ? 1 : 0.9}
+      />
+      <text
+        x={x + 30}
+        y={y + (compact ? 23 : 28)}
+        fill={lit ? palette.ink : palette.muted}
+        fontFamily="var(--font-sans)"
+        fontSize={titleSize}
+        fontWeight="600"
+        letterSpacing="-0.2"
       >
-        <p
-          className={cn(
-            "font-mono uppercase tracking-[0.13em] text-ink",
-            rightAligned ? "text-[9px]" : "text-[10px]",
-          )}
+        {label}
+      </text>
+      {lines.map((line, index) => (
+        <text
+          key={line}
+          x={x + 16}
+          y={y + (compact ? 43 : 52) + index * 18}
+          fill={active ? palette.muted : palette.faint}
+          fontFamily="var(--font-mono)"
+          fontSize={lineSize}
+          letterSpacing="0.1"
         >
-          {label}
-        </p>
-        <p
-          className={cn(
-            "mt-0.5 font-mono leading-4 text-faint",
-            rightAligned ? "text-[8px]" : "text-[9px]",
-          )}
-        >
-          {meta}
-        </p>
+          {line}
+        </text>
+      ))}
+    </g>
+  );
+}
+
+function Trace({
+  d,
+  progress,
+  input,
+  color,
+  width = 2.6,
+  dashed = false,
+}: {
+  d: string;
+  progress: MotionValue<number>;
+  input: [number, number];
+  color: string;
+  width?: number;
+  dashed?: boolean;
+}) {
+  const reveal = useTransform(progress, input, [0, 1]);
+
+  return (
+    <motion.path
+      d={d}
+      stroke={color}
+      strokeWidth={width}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeDasharray={dashed ? "6 8" : undefined}
+      style={dashed ? { opacity: reveal } : { pathLength: reveal }}
+    />
+  );
+}
+
+function TravelPulse({
+  progress,
+  input,
+  x,
+  y,
+  color,
+  radius = 4.5,
+}: {
+  progress: MotionValue<number>;
+  input: number[];
+  x: number[];
+  y: number[];
+  color: string;
+  radius?: number;
+}) {
+  const cx = useTransform(progress, input, x);
+  const cy = useTransform(progress, input, y);
+  const opacity = useTransform(
+    progress,
+    [input[0], input[0] + 0.01, input[input.length - 2], input[input.length - 1]],
+    [0, 1, 1, 0],
+  );
+
+  return (
+    <g>
+      <motion.circle
+        r={radius + 6}
+        fill="none"
+        stroke={color}
+        strokeOpacity="0.3"
+        cx={cx}
+        cy={cy}
+        style={{ opacity }}
+      />
+      <motion.circle
+        r={radius}
+        fill={color}
+        cx={cx}
+        cy={cy}
+        style={{ opacity }}
+      />
+    </g>
+  );
+}
+
+function BuildStepStrip({
+  step,
+  activeStep,
+}: {
+  step: BuildStep;
+  activeStep: number;
+}) {
+  const amber = step.tone === "amber";
+
+  return (
+    <div className="border-t border-line/60 bg-canvas/25 px-4 py-3 sm:px-5">
+      <div className="grid gap-3 lg:grid-cols-[92px_minmax(0,1fr)_auto] lg:items-start lg:gap-6">
+        <div className="flex items-baseline gap-2 lg:block">
+          <span
+            className={cn(
+              "font-mono text-[10px]",
+              amber ? "text-amber" : "text-teal",
+            )}
+          >
+            {step.n}
+          </span>
+          <span className="ml-2 font-mono text-[9px] uppercase tracking-[0.16em] text-faint lg:ml-0 lg:mt-1 lg:block">
+            {step.label}
+          </span>
+        </div>
+
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={step.n}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.2 }}
+          >
+            <h3 className="text-xl font-semibold leading-tight tracking-[-0.035em] text-ink">
+              {step.title}
+            </h3>
+            <p className="mt-1 max-w-3xl text-sm leading-6 text-muted">
+              {step.body}
+            </p>
+          </motion.div>
+        </AnimatePresence>
+
+        <div className="flex flex-col items-start gap-2 lg:items-end">
+          <p
+            className={cn(
+              "font-mono text-[9px] tracking-[0.04em]",
+              amber ? "text-amber" : "text-teal",
+            )}
+          >
+            {step.meta}
+          </p>
+          <div className="flex gap-1.5" aria-hidden="true">
+            {buildSteps.map((item, index) => (
+              <span
+                key={item.n}
+                className={cn(
+                  "h-1 rounded-full transition-all duration-300",
+                  index === activeStep
+                    ? amber
+                      ? "w-10 bg-amber"
+                      : "w-10 bg-teal"
+                    : index < activeStep
+                      ? amber
+                        ? "w-5 bg-amber/40"
+                        : "w-5 bg-teal/40"
+                      : "w-5 bg-line",
+                )}
+              />
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -217,266 +396,415 @@ function MapNode({
 function SignalMap({
   progress,
   activeStep,
+  step,
 }: {
   progress: MotionValue<number>;
   activeStep: number;
+  step: BuildStep;
 }) {
-  const lineProgress = useTransform(
-    progress,
-    [0.02, 0.2, 0.4, 0.6, 0.8],
-    [0.02, 0.3, 0.57, 0.9, 1],
-  );
-  const pulseX = useTransform(
-    progress,
-    [0, 0.18, 0.38, 0.58, 0.74, 0.9],
-    [115, 290, 430, 540, 540, 540],
-  );
-  const pulseY = useTransform(
-    progress,
-    [0, 0.18, 0.38, 0.58, 0.74, 0.9],
-    [240, 240, 240, 240, 240, 240],
-  );
-  const pulseOpacity = useTransform(progress, [0.52, 0.62], [1, 0]);
-  const blindOpacity = useTransform(progress, [0.78, 0.88], [0, 1]);
+  const observedOpacity = useTransform(progress, [0.9, 0.97], [0, 1]);
 
   return (
-    <div className="relative overflow-hidden rounded-[2rem] border border-line/70 bg-panel/35">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-[2rem] border border-line/70 bg-panel/35">
       <div
         className="hero-grid pointer-events-none absolute inset-0 opacity-30"
         aria-hidden="true"
       />
-      <div className="relative p-3 sm:p-4">
-        <div
-          className="relative aspect-[1000/480] w-full"
+      <div className="relative min-h-0 flex-1 p-2 sm:p-3">
+        <svg
+          viewBox="0 0 1600 720"
+          preserveAspectRatio="xMidYMid meet"
+          className="h-full w-full"
           role="img"
-          aria-label="Full lab topology: Kali on the attack network, the Suricata gateway, the victim subnet with the domain controller, Windows 10 and DVWA, a WireGuard tunnel to the TheHive automation VM, VNet peering to the Wazuh VM, and a single public WireGuard ingress."
+          aria-labelledby="build-map-title build-map-desc"
         >
-          <div
-            className="pointer-events-none absolute inset-y-[12%] left-[20%] w-px bg-line/35"
-            aria-hidden="true"
-          />
-          <div
-            className="pointer-events-none absolute inset-y-[12%] left-[41.5%] w-px bg-line/35"
-            aria-hidden="true"
-          />
-          <div
-            className="pointer-events-none absolute inset-y-[12%] left-[67%] w-px bg-line/35"
-            aria-hidden="true"
-          />
+          <title id="build-map-title">SOC lab topology</title>
+          <desc id="build-map-desc">
+            Kali on 192.168.232.135 routes through the Suricata gateway at
+            192.168.232.162 and 192.168.56.150 into the victim L2 segment
+            192.168.56.0/24, containing the domain controller at .10, Windows
+            10 at .20, and DVWA at .30. Wazuh agents and the Suricata gateway
+            reach the cloud SOC over WireGuard at 10.8.0.0/24. On the Wazuh VM,
+            thecustomhive sends alerts to TheHive at 10.122.0.4:9000 over VNet
+            peering. Only 51820/UDP is public.
+          </desc>
+          <defs>
+            <filter
+              id="node-glow"
+              x="-50%"
+              y="-50%"
+              width="200%"
+              height="200%"
+            >
+              <feGaussianBlur stdDeviation="5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
 
-          <div className="absolute left-[11.5%] top-[5%] -translate-x-1/2 whitespace-nowrap font-mono text-[9px] uppercase tracking-[0.15em] text-faint">
-            Attack
-          </div>
-          <div className="absolute left-[29%] top-[5%] -translate-x-1/2 whitespace-nowrap font-mono text-[9px] uppercase tracking-[0.15em] text-faint">
-            Boundary
-          </div>
-          <div className="absolute left-[54%] top-[5%] -translate-x-1/2 whitespace-nowrap font-mono text-[9px] uppercase tracking-[0.15em] text-faint">
-            Victim · .56.0/24
-          </div>
-          <div className="absolute left-[80%] top-[5%] -translate-x-1/2 whitespace-nowrap font-mono text-[9px] uppercase tracking-[0.15em] text-faint">
-            Cloud SOC · 10.122/16
-          </div>
+          <text
+            x="1568"
+            y="36"
+            textAnchor="end"
+            fill="#4c5c72"
+            fontFamily="var(--font-mono)"
+            fontSize="9"
+            letterSpacing="1.8"
+          >
+            FULL LAB TOPOLOGY · SOC-LAB-001
+          </text>
 
-          <svg
-            viewBox="0 0 1000 480"
-            className="absolute inset-0 h-full w-full"
+          <g>
+            <rect
+              x="32"
+              y="64"
+              width="260"
+              height="590"
+              rx="24"
+              fill="rgba(11,18,32,0.28)"
+              stroke="rgba(35,48,68,0.55)"
+            />
+            <rect
+              x="312"
+              y="64"
+              width="310"
+              height="590"
+              rx="24"
+              fill="rgba(11,18,32,0.28)"
+              stroke="rgba(35,48,68,0.55)"
+            />
+            <rect
+              x="642"
+              y="64"
+              width="570"
+              height="590"
+              rx="24"
+              fill="rgba(11,18,32,0.28)"
+              stroke="rgba(35,48,68,0.55)"
+            />
+            <rect
+              x="1232"
+              y="64"
+              width="336"
+              height="590"
+              rx="24"
+              fill="rgba(11,18,32,0.28)"
+              stroke="rgba(35,48,68,0.55)"
+            />
+          </g>
+
+          <g
+            fill={palette.faint}
+            fontFamily="var(--font-mono)"
+            fontSize="10.5"
+            letterSpacing="1.8"
+          >
+            <text x="50" y="94">
+              ATTACK PLANE
+            </text>
+            <text x="330" y="94">
+              BOUNDARY
+            </text>
+            <text x="660" y="94">
+              VICTIM PLANE · .56.0/24
+            </text>
+            <text x="1250" y="94">
+              CLOUD SOC · 10.122/16
+            </text>
+          </g>
+
+          <g
+            stroke="rgba(159,176,196,0.22)"
+            strokeWidth="1.6"
+            strokeLinecap="round"
             fill="none"
-            aria-hidden="true"
           >
-            <defs>
-              <linearGradient
-                id="signal-line"
-                x1="0"
-                y1="0"
-                x2="1000"
-                y2="0"
-                gradientUnits="userSpaceOnUse"
-              >
-                <stop offset="0%" stopColor="#35e0c2" />
-                <stop offset="100%" stopColor="#6aa8ff" />
-              </linearGradient>
-            </defs>
-
+            <path d="M 242 354 H 360" />
+            <path d="M 580 354 H 700" />
+            <path d="M 844 354 H 878 M 878 202 V 518 M 878 202 H 912 M 878 360 H 912 M 878 518 H 912" />
             <path
-              d="M 115 240 L 290 240 L 430 240"
-              stroke="rgba(159,176,196,0.38)"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+              d="M 580 320 C 800 140 1048 140 1264 295"
+              strokeDasharray="6 8"
+            />
+            <path d="M 1400 168 V 230" strokeDasharray="5 7" />
+            <path d="M 1470 360 V 450" strokeDasharray="4 6" />
+            <path
+              d="M 1536 634 H 1556 V 295 H 1536"
+              strokeDasharray="5 7"
             />
             <path
-              d="M 430 140 L 430 340 M 430 140 L 540 140 M 430 240 L 540 240 M 430 340 L 540 340"
-              stroke="rgba(159,176,196,0.34)"
-              strokeWidth="1.5"
-              strokeLinecap="round"
+              d="M 1112 518 C 1160 470 1160 250 1112 202"
+              stroke={palette.amber}
+              strokeOpacity="0.26"
+              strokeDasharray="5 7"
             />
-            <path
-              d="M 800 180 L 800 340"
-              stroke="rgba(106,168,255,0.42)"
-              strokeWidth="1.5"
-              strokeDasharray="5 6"
-            />
-            <path
-              d="M 290 240 C 360 30 640 30 800 180"
-              stroke="rgba(106,168,255,0.42)"
-              strokeWidth="1.5"
-              strokeDasharray="5 6"
-            />
-            <path
-              d="M 915 100 L 800 180"
-              stroke="rgba(106,168,255,0.42)"
-              strokeWidth="1.5"
-              strokeDasharray="2 5"
-            />
+          </g>
 
-            <motion.path
-              d="M 115 240 L 290 240 L 430 240 L 540 240"
-              stroke="url(#signal-line)"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{ pathLength: lineProgress }}
-            />
-            <motion.path
-              d="M 430 240 L 430 140 L 540 140"
-              stroke="url(#signal-line)"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{ pathLength: lineProgress }}
-            />
-            <motion.path
-              d="M 430 240 L 430 340 L 540 340"
-              stroke="url(#signal-line)"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{ pathLength: lineProgress }}
-            />
+          <Trace
+            d="M 242 354 H 878 V 518 H 912"
+            progress={progress}
+            input={[0.02, 0.3]}
+            color={palette.teal}
+            width={3}
+          />
+          <Trace
+            d="M 1112 518 C 1160 470 1160 250 1112 202"
+            progress={progress}
+            input={[0.32, 0.52]}
+            color={palette.amber}
+            width={2.2}
+            dashed
+          />
+          <Trace
+            d="M 844 362 H 580 C 800 150 1048 150 1264 300 M 1400 360 V 450"
+            progress={progress}
+            input={[0.54, 0.88]}
+            color={palette.blue}
+            width={2.4}
+          />
+          <Trace
+            d="M 1320 450 V 360"
+            progress={progress}
+            input={[0.88, 0.94]}
+            color={palette.teal}
+            width={2.4}
+          />
+          <Trace
+            d="M 1400 168 V 230"
+            progress={progress}
+            input={[0.94, 1]}
+            color={palette.blue}
+            width={2.2}
+            dashed
+          />
+          <Trace
+            d="M 1536 634 H 1556 V 295 H 1536"
+            progress={progress}
+            input={[0.9, 1]}
+            color={palette.blue}
+            width={1.8}
+            dashed
+          />
 
-            <motion.path
-              d="M 430 372 L 430 390 L 540 390 L 540 372"
-              stroke="#f2b84b"
-              strokeWidth="1.5"
-              strokeDasharray="4 5"
-              style={{ opacity: blindOpacity }}
-            />
-
-            <circle
-              cx="915"
-              cy="100"
-              r="3.5"
-              fill="#070b10"
-              stroke="#6aa8ff"
-              strokeWidth="1.5"
-            />
-
-            <motion.circle
-              r="5"
-              fill="#35e0c2"
-              cx={pulseX}
-              cy={pulseY}
-              style={{ opacity: pulseOpacity }}
-            />
-          </svg>
-
-          <div className="absolute left-[55%] top-[13%] w-40 -translate-x-1/2 rounded-full border border-blue/20 bg-canvas/90 px-2 py-1 text-center">
-            <p className="font-mono text-[7px] uppercase tracking-[0.13em] text-blue">
-              WireGuard · 10.8.0.0/24
-            </p>
-          </div>
-          <div className="absolute left-[80%] top-[54%] -translate-x-1/2 -translate-y-1/2 rotate-90 whitespace-nowrap bg-canvas/90 px-1 font-mono text-[6px] uppercase tracking-[0.14em] text-blue/70">
-            VNet peering
-          </div>
-          <div className="absolute left-[90.5%] top-[8.5%] w-24 -translate-x-1/2 text-center">
-            <p className="font-mono text-[8px] uppercase tracking-[0.13em] text-blue">
-              Internet
-            </p>
-            <p className="mt-0.5 font-mono text-[6px] uppercase tracking-[0.1em] text-faint">
-              51820/UDP only
-            </p>
-          </div>
-          <motion.div
-            style={{ opacity: blindOpacity }}
-            className="absolute left-[48.5%] top-[82.5%] -translate-x-1/2 font-mono text-[7px] uppercase tracking-[0.13em] text-amber"
-          >
-            host ↔ host
-          </motion.div>
-
-          <MapNode
-            x={11.5}
-            y={50}
+          <SvgNode
+            x={82}
+            y={308}
+            w={160}
+            h={92}
             label="Kali"
-            meta="192.168.232.135 / VMnet8 NAT"
+            lines={[".232.135 /24", "VMnet8 NAT"]}
             state={nodeState(activeStep, 0)}
           />
-          <MapNode
-            x={29}
-            y={50}
+          <SvgNode
+            x={360}
+            y={246}
+            w={220}
+            h={210}
             label="Suricata gateway"
-            meta="eth0 .232.162 · eth1 .56.150 · wg0 10.8.0.2"
+            lines={[
+              "ens33 · .232.162",
+              "ens37 · .56.150",
+              "wg0 · 10.8.0.2",
+              "inline IDS · 8.0.6",
+            ]}
             state={nodeState(activeStep, 1)}
           />
-          <MapNode
-            x={54}
-            y={29}
+          <SvgNode
+            x={700}
+            y={318}
+            w={144}
+            h={72}
+            label="L2 segment"
+            lines={[".56.0/24 · gw .150"]}
+            state={nodeState(activeStep, 2)}
+          />
+          <SvgNode
+            x={912}
+            y={160}
+            w={200}
+            h={84}
             label="Domain controller"
-            meta="192.168.56.10 · ad.lab"
-            placement="right"
+            lines={[".10 · ad.lab", "Wazuh agent"]}
             state={nodeState(activeStep, 2)}
           />
-          <MapNode
-            x={54}
-            y={50}
+          <SvgNode
+            x={912}
+            y={318}
+            w={200}
+            h={84}
             label="Windows 10"
-            meta="192.168.56.20"
-            placement="right"
+            lines={[".20 · workstation", "Wazuh agent"]}
             state={nodeState(activeStep, 2)}
           />
-          <MapNode
-            x={54}
-            y={71}
+          <SvgNode
+            x={912}
+            y={476}
+            w={200}
+            h={84}
             label="DVWA"
-            meta="192.168.56.30"
-            placement="right"
+            lines={[".30 · pivot", "Wazuh agent"]}
             state={nodeState(activeStep, 2)}
           />
-          <MapNode
-            x={80}
-            y={37.5}
-            label="TheHive / automation"
-            meta="10.8.0.1 hub · TheHive · NPM · Velociraptor · thecustomhive · analyst VPN"
-            placement="right"
+          <SvgNode
+            x={1264}
+            y={230}
+            w={272}
+            h={130}
+            label="TheHive hub"
+            lines={[
+              "TheHive · NPM · Velociraptor",
+              "WireGuard hub · 10.8.0.1",
+              "analyst · 10.8.0.3",
+            ]}
             state={nodeState(activeStep, 3)}
           />
-          <MapNode
-            x={80}
-            y={71}
+          <SvgNode
+            x={1264}
+            y={450}
+            w={272}
+            h={130}
             label="Wazuh"
-            meta="manager · indexer · dashboard · private VNet only"
-            placement="right"
+            lines={[
+              "manager · indexer · dashboard",
+              "thecustomhive · 1514 / 9000",
+              "private VNet only",
+            ]}
             state={nodeState(activeStep, 3)}
           />
-        </div>
+          <SvgNode
+            x={1264}
+            y={110}
+            w={272}
+            h={58}
+            label="Internet"
+            lines={["one public port · 51820/UDP"]}
+            state={nodeState(activeStep, 1)}
+            compact
+          />
+          <SvgNode
+            x={1264}
+            y={612}
+            w={272}
+            h={44}
+            label="Analyst VPN"
+            lines={["10.8.0.3 · management only"]}
+            state={nodeState(activeStep, 3)}
+            compact
+          />
 
-        <div className="mt-1 flex justify-center">
-          <motion.span
-            style={{ opacity: blindOpacity }}
-            className="rounded-full border border-amber/25 bg-amber/10 px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.14em] text-amber"
+          <g
+            fill={palette.faint}
+            fontFamily="var(--font-mono)"
+            fontSize="9.5"
+            letterSpacing="1"
           >
-            Same-subnet / not on the wire
-          </motion.span>
-        </div>
+            <text x="286" y="342">
+              ens33
+            </text>
+            <text x="626" y="342">
+              ens37
+            </text>
+            <text x="900" y="128" fill={palette.blue}>
+              wg0 · WireGuard · 10.8.0.0/24
+            </text>
+            <text x="1416" y="200" fill={palette.blue}>
+              51820/UDP
+            </text>
+            <text x="1292" y="404" fill={palette.teal}>
+              9000 / alerts
+            </text>
+            <text x="1416" y="404" fill={palette.blue}>
+              VNet peering
+            </text>
+            <text x="1120" y="354" fill={palette.amber}>
+              L2 pivot
+            </text>
+            <text x="1120" y="368" fill={palette.amber}>
+              observed
+            </text>
+          </g>
 
-        <div className="mt-2 flex items-center justify-between border-t border-line/60 pt-3">
-          <span className="font-mono text-[8px] uppercase tracking-[0.14em] text-faint">
-            Full lab topology
-          </span>
-          <span className="font-mono text-[8px] uppercase tracking-[0.14em] text-faint">
-            Case file / SOC-LAB-001
-          </span>
-        </div>
+          <g
+            fill={palette.faint}
+            fontFamily="var(--font-mono)"
+            fontSize="9"
+            letterSpacing="1.4"
+          >
+            <text x="48" y="620">
+              NO DIRECT SOC PATH
+            </text>
+            <text x="328" y="620">
+              INLINE IDS · AF_PACKET
+            </text>
+          </g>
+
+          <motion.g style={{ opacity: observedOpacity }}>
+            <rect
+              x="662"
+              y="596"
+              width="356"
+              height="34"
+              rx="17"
+              fill="rgba(242,184,75,0.08)"
+              stroke="rgba(242,184,75,0.28)"
+            />
+            <circle cx="682" cy="613" r="3" fill={palette.amber} />
+            <text
+              x="694"
+              y="617"
+              fill={palette.amber}
+              fontFamily="var(--font-mono)"
+              fontSize="9.5"
+              letterSpacing="0.9"
+            >
+              SAME-SUBNET ALERTS OBSERVED ON ENS37
+            </text>
+          </motion.g>
+
+          <TravelPulse
+            progress={progress}
+            input={[0.02, 0.08, 0.16, 0.24, 0.3]}
+            x={[200, 410, 700, 878, 912]}
+            y={[354, 354, 354, 518, 518]}
+            color={palette.teal}
+          />
+          <TravelPulse
+            progress={progress}
+            input={[0.32, 0.36, 0.42, 0.52]}
+            x={[1112, 1160, 1160, 1112]}
+            y={[518, 470, 250, 202]}
+            color={palette.amber}
+            radius={3.8}
+          />
+          <TravelPulse
+            progress={progress}
+            input={[0.54, 0.6, 0.68, 0.76, 0.84, 0.88]}
+            x={[912, 878, 580, 900, 1264, 1400]}
+            y={[360, 362, 362, 160, 300, 450]}
+            color={palette.blue}
+          />
+          <TravelPulse
+            progress={progress}
+            input={[0.88, 0.94]}
+            x={[1320, 1320]}
+            y={[450, 360]}
+            color={palette.teal}
+            radius={3.8}
+          />
+          <TravelPulse
+            progress={progress}
+            input={[0.94, 1]}
+            x={[1400, 1400]}
+            y={[168, 230]}
+            color={palette.blue}
+            radius={3.8}
+          />
+        </svg>
       </div>
+
+      <BuildStepStrip step={step} activeStep={activeStep} />
     </div>
   );
 }
@@ -498,7 +826,6 @@ function ScrollBuild() {
   });
 
   const step = buildSteps[activeStep];
-  const amber = step.tone === "amber";
 
   return (
     <section
@@ -509,8 +836,8 @@ function ScrollBuild() {
     >
       <div className="hidden lg:block lg:h-[460vh]">
         <div className="sticky top-[72px] flex h-[calc(100svh-72px)] flex-col overflow-hidden">
-          <div className="container-page flex h-full flex-col py-8">
-            <div className="flex items-start justify-between gap-6">
+          <div className="container-page flex h-full flex-col gap-3 py-4 xl:py-5">
+            <div className="flex shrink-0 items-start justify-between gap-6">
               <div>
                 <div className="flex items-center gap-3">
                   <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-teal">
@@ -518,7 +845,7 @@ function ScrollBuild() {
                   </span>
                   <span className="h-px w-10 bg-line" aria-hidden="true" />
                 </div>
-                <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-ink">
+                <h2 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-ink">
                   Follow the signal.
                 </h2>
               </div>
@@ -527,77 +854,20 @@ function ScrollBuild() {
                   Scroll to trace
                 </p>
                 <p className="mt-1 font-mono text-[9px] tracking-[0.01em] text-teal">
-                  {step.n} / 05
+                  {step.n} / {String(buildSteps.length).padStart(2, "0")}
                 </p>
               </div>
             </div>
 
-            <div className="grid flex-1 gap-6 lg:grid-cols-[minmax(0,0.62fr)_minmax(0,1.38fr)] lg:items-center xl:grid-cols-[minmax(0,0.56fr)_minmax(0,1.44fr)] xl:gap-10">
-              <div className="order-2 lg:order-1">
-                <div className="flex items-center gap-3">
-                  <span
-                    className={cn(
-                      "font-mono text-[10px]",
-                      amber ? "text-amber" : "text-teal",
-                    )}
-                  >
-                    {step.n}
-                  </span>
-                  <span className="h-px w-8 bg-line" aria-hidden="true" />
-                  <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-faint">
-                    {step.label}
-                  </span>
-                </div>
-
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={step.n}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -6 }}
-                    transition={{ duration: 0.22 }}
-                    className="mt-4"
-                  >
-                    <h3 className="max-w-md text-4xl font-semibold leading-[0.98] tracking-[-0.045em] text-ink xl:text-5xl">
-                      {step.title}
-                    </h3>
-                    <p className="mt-4 max-w-md text-sm leading-6 text-muted xl:text-base xl:leading-7">
-                      {step.body}
-                    </p>
-                    <p
-                      className={cn(
-                        "mt-5 font-mono text-[10px] tracking-[0.04em]",
-                        amber ? "text-amber" : "text-teal",
-                      )}
-                    >
-                      {step.meta}
-                    </p>
-                  </motion.div>
-                </AnimatePresence>
-
-                <div className="mt-8 flex gap-1.5" aria-hidden="true">
-                  {buildSteps.map((item, index) => (
-                    <span
-                      key={item.n}
-                      className={cn(
-                        "h-1 rounded-full transition-all duration-300",
-                        index === activeStep
-                          ? "w-10 bg-teal"
-                          : index < activeStep
-                            ? "w-5 bg-teal/40"
-                            : "w-5 bg-line",
-                      )}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <div className="order-1 lg:order-2">
-                <SignalMap progress={scrollYProgress} activeStep={activeStep} />
-              </div>
+            <div className="min-h-0 flex-1">
+              <SignalMap
+                progress={scrollYProgress}
+                activeStep={activeStep}
+                step={step}
+              />
             </div>
 
-            <div className="flex items-center justify-between border-t border-line/60 pt-4">
+            <div className="flex shrink-0 items-center justify-between border-t border-line/60 pt-3">
               <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-faint">
                 The wire is not the whole record
               </span>
