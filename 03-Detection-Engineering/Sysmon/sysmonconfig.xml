@@ -1,0 +1,105 @@
+<!--
+  sysmonconfig.xml — Olaf Hartong sysmon-modular baseline adapted for SOC Lab
+  Deployed on: Windows Server 2022 DC (PC-DC) & Windows 10 Pro N (DomainWin10)
+  Version: Sysmon v15.20 (64-bit service)
+-->
+<Sysmon schemaversion="4.90">
+  <HashAlgorithms>md5,sha256</HashAlgorithms>
+  <CheckRevocation>False</CheckRevocation>
+
+  <EventFiltering>
+
+    <!-- ================================================================= -->
+    <!-- EVENT ID 1: PROCESS CREATION (CommandLine, ParentProcess)         -->
+    <!-- ================================================================= -->
+    <RuleGroup name="ProcessCreate_Include" groupRelation="or">
+      <ProcessCreate onmatch="include">
+        <!-- Suspicious parent-child: WMI spawning cmd or powershell -->
+        <ParentImage condition="image">WmiPrvSE.exe</ParentImage>
+        <!-- Administrative CLI execution -->
+        <Image condition="image">cmd.exe</Image>
+        <Image condition="image">powershell.exe</Image>
+        <Image condition="image">pwsh.exe</Image>
+        <!-- Discovery & recon utilities -->
+        <Image condition="image">whoami.exe</Image>
+        <Image condition="image">net.exe</Image>
+        <Image condition="image">net1.exe</Image>
+        <Image condition="image">nltest.exe</Image>
+        <Image condition="image">dsquery.exe</Image>
+        <Image condition="image">klist.exe</Image>
+        <!-- Staging & persistence utilities -->
+        <Image condition="image">reg.exe</Image>
+        <Image condition="image">schtasks.exe</Image>
+        <Image condition="image">certutil.exe</Image>
+        <Image condition="image">rundll32.exe</Image>
+        <!-- Parent command line matching Impacket wmiexec output redirection -->
+        <ParentCommandLine condition="contains">\ADMIN$\__</ParentCommandLine>
+      </ProcessCreate>
+    </RuleGroup>
+
+    <!-- Exclude routine noise to reduce log volume -->
+    <RuleGroup name="ProcessCreate_Exclude" groupRelation="or">
+      <ProcessCreate onmatch="exclude">
+        <Image condition="is">C:\Windows\System32\conhost.exe</Image>
+        <Image condition="is">C:\Windows\System32\BackgroundTransferHost.exe</Image>
+      </ProcessCreate>
+    </RuleGroup>
+
+    <!-- ================================================================= -->
+    <!-- EVENT ID 3: NETWORK CONNECT (Outbound/Inbound Sockets)            -->
+    <!-- ================================================================= -->
+    <RuleGroup name="NetworkConnect_Include" groupRelation="or">
+      <NetworkConnect onmatch="include">
+        <!-- Monitor SMB, RPC, LDAP, and WinRM cross-segment connections -->
+        <DestinationPort condition="is">445</DestinationPort>
+        <DestinationPort condition="is">135</DestinationPort>
+        <DestinationPort condition="is">389</DestinationPort>
+        <DestinationPort condition="is">636</DestinationPort>
+        <DestinationPort condition="is">5985</DestinationPort>
+        <DestinationPort condition="is">5986</DestinationPort>
+        <DestinationPort condition="is">88</DestinationPort>
+      </NetworkConnect>
+    </RuleGroup>
+
+    <!-- ================================================================= -->
+    <!-- EVENT ID 11: FILE CREATE (Staging & Backdoor Files)               -->
+    <!-- ================================================================= -->
+    <RuleGroup name="FileCreate_Include" groupRelation="or">
+      <FileCreate onmatch="include">
+        <TargetFilename condition="contains">C:\Users\Public\</TargetFilename>
+        <TargetFilename condition="contains">\Temp\</TargetFilename>
+        <TargetFilename condition="end with">.bmp</TargetFilename>
+        <TargetFilename condition="end with">.exe</TargetFilename>
+        <TargetFilename condition="end with">.ps1</TargetFilename>
+        <TargetFilename condition="end with">.vbs</TargetFilename>
+      </FileCreate>
+    </RuleGroup>
+
+    <!-- ================================================================= -->
+    <!-- EVENT ID 13: REGISTRY VALUE SET (Autostart Persistence)           -->
+    <!-- ================================================================= -->
+    <RuleGroup name="RegistryEvent_Include" groupRelation="or">
+      <RegistryEvent onmatch="include">
+        <!-- Run and RunOnce autostart keys -->
+        <TargetObject condition="contains">\CurrentVersion\Run</TargetObject>
+        <TargetObject condition="contains">\CurrentVersion\RunOnce</TargetObject>
+        <!-- Winlogon persistence -->
+        <TargetObject condition="contains">\Microsoft\Windows NT\CurrentVersion\Winlogon</TargetObject>
+        <!-- Service image path modifications -->
+        <TargetObject condition="contains">\System\CurrentControlSet\Services\</TargetObject>
+      </RegistryEvent>
+    </RuleGroup>
+
+    <!-- ================================================================= -->
+    <!-- EVENT ID 17/18: PIPE CREATION (WMI & SMB Named Pipes)             -->
+    <!-- ================================================================= -->
+    <RuleGroup name="PipeEvent_Include" groupRelation="or">
+      <PipeEvent onmatch="include">
+        <PipeName condition="contains">spoolss</PipeName>
+        <PipeName condition="contains">atsvc</PipeName>
+        <PipeName condition="contains">svcctl</PipeName>
+      </PipeEvent>
+    </RuleGroup>
+
+  </EventFiltering>
+</Sysmon>

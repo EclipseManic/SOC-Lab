@@ -1,0 +1,33 @@
+[Unit]
+Description=thecustomhive - Wazuh to TheHive Alert Ingestion Pipeline
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/thecustomhive
+ExecStart=/usr/bin/python3 /opt/thecustomhive/custom-thehive.py
+Restart=always
+RestartSec=15
+
+# Environment Configuration
+Environment="WAZUH_API_URL=https://10.122.1.4:55000"
+Environment="WAZUH_API_USER=wazuh-wui"
+Environment="WAZUH_API_PASSWORD=<REDACTED>"
+Environment="THEHIVE_API_URL=http://127.0.0.1:9000"
+Environment="THEHIVE_API_KEY=<REDACTED>"
+Environment="MIN_RULE_LEVEL=8"
+Environment="CURSOR_FILE=/var/lib/thecustomhive/alert.cursor"
+Environment="POLL_INTERVAL=15"
+Environment="BATCH_SIZE=50"
+
+# Process hardening
+ProtectSystem=full
+ProtectHome=true
+NoNewPrivileges=true
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

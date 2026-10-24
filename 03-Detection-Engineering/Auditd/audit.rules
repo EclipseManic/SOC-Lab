@@ -1,0 +1,61 @@
+# =========================================================================
+# audit.rules — Linux auditd ruleset adapted from Nextron Systems Best-Practice
+# Deployed on: DVWA Pivot Host (Ubuntu 24.04, 192.168.56.30)
+# Path: /etc/audit/rules.d/audit.rules
+# Loaded via: augenrules --load
+# =========================================================================
+
+# Remove any existing rules
+-D
+
+# Buffer Size
+-b 8192
+
+# Failure mode: 1 = printk, 2 = panic
+-f 1
+
+# Rate limit
+-r 500
+
+# --- 1. SYSTEM CALL MONITORING (EXECVE / PROCESS EXECUTION) ---
+# Monitor 64-bit and 32-bit execution system calls
+-a always,exit -F arch=b64 -S execve -k process_execution
+-a always,exit -F arch=b32 -S execve -k process_execution
+-a always,exit -F arch=b64 -S execveat -k process_execution
+-a always,exit -F arch=b32 -S execveat -k process_execution
+
+# --- 2. PRIVILEGE ESCALATION & SUID/SGID MONITORING ---
+# Monitor setuid / setgid changes
+-a always,exit -F arch=b64 -S setuid,setgid,setreuid,setregid -k priv_escalation
+-a always,exit -F arch=b32 -S setuid,setgid,setreuid,setregid -k priv_escalation
+
+# Monitor chmod / chown on binaries (e.g., chmod +s /tmp/bash)
+-a always,exit -F arch=b64 -S chmod,fchmod,fchmodat -F a2&04000 -k setuid_creation
+-a always,exit -F arch=b32 -S chmod,fchmod,fchmodat -F a2&04000 -k setuid_creation
+
+# --- 3. PERSISTENCE & CRITICAL FILE MODIFICATIONS ---
+# Monitor SSH authorized_keys modifications for root and users
+-w /root/.ssh -p wa -k ssh_root_persistence
+-w /home -p wa -k ssh_user_persistence
+
+# Monitor user account databases (/etc/passwd, /etc/shadow, /etc/sudoers)
+-w /etc/passwd -p wa -k user_account_modification
+-w /etc/shadow -p wa -k user_account_modification
+-w /etc/group -p wa -k user_account_modification
+-w /etc/gshadow -p wa -k user_account_modification
+-w /etc/sudoers -p wa -k sudoers_modification
+-w /etc/sudoers.d/ -p wa -k sudoers_modification
+
+# Monitor web directory file creation (Webshell upload)
+-w /var/www/html -p wa -k web_directory_write
+
+# --- 4. SUSPICIOUS BINARY & SCRIPT EXECUTION ---
+# Monitor execution of Python, Perl, Bash, Netcat
+-w /usr/bin/python3 -p x -k python_execution
+-w /usr/bin/nc -p x -k netcat_execution
+-w /bin/nc.traditional -p x -k netcat_execution
+-w /tmp -p x -k tmp_execution
+
+# --- 5. MAKE CONFIGURATION IMMUTABLE ---
+# Lock audit configuration until reboot
+-e 2

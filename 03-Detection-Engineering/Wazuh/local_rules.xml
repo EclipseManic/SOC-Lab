@@ -1,0 +1,161 @@
+<!--
+  local_rules.xml — Custom Wazuh Ruleset for SOC Lab
+  Path: /var/ossec/etc/rules/local_rules.xml
+  Manager: Wazuh 4.14.8 (Ubuntu 24.04.4 LTS, Cloud VM 2)
+  Rules range: 100000 - 100999
+-->
+
+<group name="soc-lab,">
+
+  <!-- ===================================================================== -->
+  <!-- 1. LATERAL MOVEMENT & EXECUTION DETECTION (Sysmon Event ID 1)         -->
+  <!-- ===================================================================== -->
+  <group name="windows,sysmon,execution,">
+    <!-- Rule 100613: Impacket wmiexec execution via WMI with ADMIN$ staging -->
+    <rule id="100613" level="12">
+      <if_sid>61603</if_sid>
+      <field name="win.eventdata.parentCommandLine" type="pcre2">cmd\.exe\s+/Q\s+/c\s+.*\\\\ADMIN\$\\\\__\d+</field>
+      <description>Impacket wmiexec detected: command execution via WMI service with output staged in ADMIN$ share</description>
+      <mitre>
+        <id>T1047</id>
+        <id>T1059.003</id>
+      </mitre>
+      <info type="text">Matches Stage 17, 18, and 20 lateral movement and persistence commands</info>
+    </rule>
+
+    <!-- Rule 100614: Suspicious process spawning from web server (DVWA) -->
+    <rule id="100614" level="12">
+      <if_sid>5402</if_sid>
+      <field name="command" type="pcre2">python3?\s+-c\s+.*pty\.spawn|nc\s+-e|bash\s+-i</field>
+      <description>DVWA Pivot: Interactive reverse shell spawned by web service account</description>
+      <mitre>
+        <id>T1059.004</id>
+      </mitre>
+    </rule>
+  </group>
+
+  <!-- ===================================================================== -->
+  <!-- 2. PRIVILEGE ESCALATION & TOKEN MANIPULATION (Security EID 4672)      -->
+  <!-- ===================================================================== -->
+  <group name="windows,privilege_escalation,">
+    <!-- Rule 100603: High-risk administrative privileges assigned during logon -->
+    <rule id="100603" level="10">
+      <if_sid>60103</if_sid>
+      <field name="win.eventdata.privilegeList" type="pcre2">SeDebugPrivilege|SeTakeOwnershipPrivilege|SeLoadDriverPrivilege|SeImpersonatePrivilege</field>
+      <description>Windows: High-risk administrative privilege assigned to logon session</description>
+      <mitre>
+        <id>T1134</id>
+        <id>T1078.002</id>
+      </mitre>
+    </rule>
+  </group>
+
+  <!-- ===================================================================== -->
+  <!-- 3. NETWORK ANOMALY & SCAN AGGREGATION (Suricata Correlation)         -->
+  <!-- ===================================================================== -->
+  <group name="suricata,recon,">
+    <!-- Rule 100410: Anomaly burst of Suricata alerts from single IP -->
+    <rule id="100410" level="8" frequency="100" timeframe="60">
+      <if_matched_sid>86601</if_matched_sid>
+      <same_source_ip />
+      <description>Suricata: Anomaly burst of network alerts from single source (>100 alerts in 60s)</description>
+      <mitre>
+        <id>T1595.001</id>
+      </mitre>
+    </rule>
+  </group>
+
+  <!-- ===================================================================== -->
+  <!-- 4. WEB APPLICATION EXPLOITATION (Apache Access & Suricata Correlation)-->
+  <!-- ===================================================================== -->
+  <group name="web,sqli,exploit,">
+    <!-- Rule 100201: SQL Injection keyword patterns in URI parameter -->
+    <rule id="100201" level="10">
+      <if_sid>31101</if_sid>
+      <url type="pcre2">(?i)(?:UNION(?:\s+ALL)?\s+SELECT|OR\s+1=1|AND\s+1=1|SLEEP\s*\(|BENCHMARK\s*\(|ORDER\s+BY\s+\d+)</url>
+      <description>Web application attack: SQL injection payload detected in URI query string</description>
+      <mitre>
+        <id>T1190</id>
+      </mitre>
+    </rule>
+
+    <!-- Rule 100600: Web server PHP command execution / upload exploit -->
+    <rule id="100600" level="10">
+      <if_sid>86601</if_sid>
+      <field name="data.alert.signature" type="pcre2">(?i)PHP\s+System\s+Command|Exploit\s+Suspected\s+PHP\s+Injection</field>
+      <description>Suricata: PHP web shell upload or command execution attempt detected</description>
+      <mitre>
+        <id>T1505.003</id>
+      </mitre>
+    </rule>
+  </group>
+
+  <!-- ===================================================================== -->
+  <!-- 5. WINDOWS PERSISTENCE VIA REGISTRY (Sysmon Event ID 13)              -->
+  <!-- ===================================================================== -->
+  <group name="windows,sysmon,persistence,">
+    <!-- Rule 100100: Registry Run/RunOnce autostart entry created/modified -->
+    <rule id="100100" level="12">
+      <if_sid>61603</if_sid>
+      <field name="win.eventdata.targetObject" type="pcre2">(?i)\\\\CurrentVersion\\\\Run(?:Once)?\\\\[^\\]+$</field>
+      <description>Persistence: Registry autostart Run or RunOnce key created or modified</description>
+      <mitre>
+        <id>T1547.001</id>
+      </mitre>
+    </rule>
+
+    <!-- Rule 100101: Winlogon shell/userinit persistence modification -->
+    <rule id="100101" level="12">
+      <if_sid>61603</if_sid>
+      <field name="win.eventdata.targetObject" type="pcre2">(?i)\\\\Microsoft\\\\Windows\s+NT\\\\CurrentVersion\\\\Winlogon\\\\(Shell|Userinit)</field>
+      <description>Persistence: Winlogon Shell or Userinit value altered</description>
+      <mitre>
+        <id>T1547.004</id>
+      </mitre>
+    </rule>
+  </group>
+
+  <!-- ===================================================================== -->
+  <!-- 6. PIVOT HOST COMMAND AUDITING (Parsed from /var/log/bashcmd.log)     -->
+  <!-- ===================================================================== -->
+  <group name="linux,auditd,pivot,">
+    <!-- Rule 100615: Credential dumping tooling executed on Linux pivot -->
+    <rule id="100615" level="12">
+      <decoded_as>bashcmd</decoded_as>
+      <field name="command" type="pcre2">(?i)(?:secretsdump|GetUserSPNs|responder|mimikatz|bloodhound|sharphound)</field>
+      <description>DVWA Pivot: Adversary credential access or enumeration tool executed via bash</description>
+      <mitre>
+        <id>T1003.006</id>
+        <id>T1558.003</id>
+        <id>T1087.002</id>
+      </mitre>
+    </rule>
+  </group>
+
+  <!-- ===================================================================== -->
+  <!-- 7. NOISE SUPPRESSION & TUNING RULES (Level 0 = Ignored)               -->
+  <!-- ===================================================================== -->
+  <group name="tuning,">
+    <!-- Rule 100901: Suppress routine Windows Defender service events in lab -->
+    <rule id="100901" level="0">
+      <if_sid>60100</if_sid>
+      <field name="win.system.providerName">Microsoft-Antimalware</field>
+      <description>Tuning: Suppress benign Windows Defender status changes in lab environment</description>
+    </rule>
+
+    <!-- Rule 100902: Suppress routine Windows Update background client polling -->
+    <rule id="100902" level="0">
+      <if_sid>60100</if_sid>
+      <field name="win.system.providerName">Microsoft-Windows-WindowsUpdateClient</field>
+      <description>Tuning: Suppress scheduled Windows Update polling noise</description>
+    </rule>
+
+    <!-- Rule 100903: Suppress routine domain controller machine account logon noise -->
+    <rule id="100903" level="0">
+      <if_sid>60103</if_sid>
+      <field name="win.eventdata.targetUserName" type="pcre2">^PC-DC\$$</field>
+      <description>Tuning: Suppress internal machine account ticket requests on DC</description>
+    </rule>
+  </group>
+
+</group>

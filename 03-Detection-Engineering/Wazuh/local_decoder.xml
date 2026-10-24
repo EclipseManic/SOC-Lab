@@ -1,0 +1,39 @@
+<!--
+  local_decoder.xml — Custom Wazuh Decoders for SOC Lab
+  Path: /var/ossec/etc/decoders/local_decoder.xml
+  Manager: Wazuh 4.14.8 (Ubuntu 24.04.4 LTS, Cloud VM 2)
+-->
+
+<!-- ===================================================================== -->
+<!-- 1. BASHCMD DECODER — Linux Shell Command Logging (/var/log/bashcmd.log) -->
+<!-- Example: bashcmd uid=0 user=root pwd=/root command=whoami            -->
+<!-- ===================================================================== -->
+
+<decoder name="bashcmd">
+  <prematch>^bashcmd </prematch>
+</decoder>
+
+<decoder name="bashcmd-fields">
+  <parent>bashcmd</parent>
+  <regex>uid=(\d+)\s+user=(\S+)\s+pwd=(\S+)\s+command=(.+)$</regex>
+  <order>uid, user, pwd, command</order>
+</decoder>
+
+<!-- Fallback pattern if pwd contains spaces -->
+<decoder name="bashcmd-fields-alt">
+  <parent>bashcmd</parent>
+  <regex>uid=(\d+)\s+user=(\S+)\s+pwd=(.+)\s+command=(.+)$</regex>
+  <order>uid, user, pwd, command</order>
+</decoder>
+
+<!-- ===================================================================== -->
+<!-- 2. SURICATA EVE-ALERT JSON DECODER EXTENSION                          -->
+<!-- Ensures custom category and rev fields are indexed for correlation    -->
+<!-- ===================================================================== -->
+
+<decoder name="suricata-eve-extended">
+  <parent>json</parent>
+  <plugin_decoder>JSON_Decoder</plugin_decoder>
+  <var name="data.alert.signature_id">(\d+)</var>
+  <var name="data.alert.category">(.+)</var>
+</decoder>

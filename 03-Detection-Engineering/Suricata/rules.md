@@ -1,5 +1,11 @@
 # Suricata Rules — Network IDS Signature Catalog & Tuning
 
+> **Production Configuration & Signatures:**
+> - Custom Rules: [`custom.rules`](custom.rules)
+> - Rate Limiting: [`threshold.config`](threshold.config)
+> - Disabled Signatures: [`disable.conf`](disable.conf)
+> - Severity Tuning: [`modify.conf`](modify.conf)
+
 ## Overview
 
 The Suricata Network Intrusion Detection System (v8.0.6) operates as an inline router on the Suricata Gateway (`192.168.232.162` / `192.168.56.150`). It inspects all traffic traversing between the Kali attacker subnet (`192.168.232.0/24`) and the victim network (`192.168.56.0/24`).

@@ -1,5 +1,9 @@
 # thecustomhive — Wazuh to TheHive Alert Pipeline
 
+> **Source Artifacts:**
+> - Production Python Script: [`custom-thehive.py`](custom-thehive.py)
+> - Systemd Daemon Service: [`thehive-flush.service`](thehive-flush.service)
+
 ## Overview
 
 `thecustomhive` is a custom Python-based detection engineering pipeline that automates the ingestion, filtering, enrichment, and escalation of high-severity Wazuh alerts into TheHive case management platform.
