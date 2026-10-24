@@ -1,5 +1,7 @@
 # Wazuh Rules — Custom & Built-in Rule Catalog
 
+> **Production Ruleset:** The complete XML definition ready for Wazuh Manager deployment is located in [`local_rules.xml`](local_rules.xml).
+
 ## Overview
 
 This catalog inventories the Wazuh rules responsible for detecting the 20-stage attack campaign across both Linux and Windows endpoints, as well as the ingested Suricata network events. 

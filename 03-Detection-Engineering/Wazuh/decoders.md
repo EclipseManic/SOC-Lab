@@ -1,5 +1,7 @@
 # Wazuh Decoders — Custom & Built-in Log Parsing
 
+> **Production Decoders:** The complete XML definition ready for Wazuh Manager deployment is located in [`local_decoder.xml`](local_decoder.xml).
+
 ## Overview
 
 Wazuh decoders extract structured fields from raw textual and JSON log sources prior to evaluation by the rules engine. This document details the custom decoders developed for the lab—most notably the **`bashcmd`** decoder—as well as built-in parsers for Suricata and Windows event channels.

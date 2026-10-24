@@ -1,0 +1,45 @@
+# =========================================================================
+# custom.rules — Lab-Specific & ET Open Signatures for Suricata 8.0.6
+# Path: /etc/suricata/rules/custom.rules
+# Tested on: Suricata Gateway (Ubuntu 24.04, ens33 / ens37 / wg0)
+# =========================================================================
+
+# --- STAGE 01: RECONNAISSANCE & PORT SCANNING ---
+# Detects Nmap OS fingerprint probes utilizing invalid TCP flag combinations (SYN+FIN+PSH+URG)
+alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SCAN NMAP OS Detection Probe"; flags:SFPU; reference:url,doc.emergingthreats.net/2000537; classtype:attempted-recon; sid:3400002; rev:1;)
+
+# Detects rapid TCP SYN scan attempts from external attacker
+alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"POSSBL PORT SCAN (NMAP -sS)"; flags:S; threshold:type both, track by_src, count 25, seconds 5; classtype:attempted-recon; sid:2000537; rev:3;)
+
+# Detects multi-port reconnaissance targeting database and administrative services
+alert tcp $EXTERNAL_NET any -> $HOME_NET [22,3306,5432,1433,3389,5900] (msg:"ET SCAN Suspicious inbound to MySQL/MSSQL/PostgreSQL/SSH/VNC/RDP"; flags:S; threshold:type both, track by_src, count 5, seconds 30; classtype:attempted-recon; sid:2010937; rev:2;)
+
+# --- STAGE 03: SQL INJECTION EXPLOITATION ---
+# Detects SELECT USER / UNION SELECT SQL injection attempts in URI parameters
+alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER SELECT USER SQL Injection Attempt in URI"; flow:established,to_server; http.uri; content:"UNION"; nocase; content:"SELECT"; nocase; pcre:"/(?:user|password|schema|table_name)/i"; classtype:web-application-attack; sid:2010938; rev:4;)
+
+# Detects WhatWeb web application fingerprinting tool default User-Agent
+alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET SCAN WhatWeb Web Application Fingerprint Scanner Default User-Agent Detected"; flow:established,to_server; http.user_agent; content:"WhatWeb"; depth:7; classtype:attempted-recon; sid:2001569; rev:2;)
+
+# --- STAGE 05: WEB SHELL BACKDOOR UPLOAD ---
+# Detects PHP system execution functions submitted within HTTP POST body
+alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER PHP System Command in HTTP POST"; flow:established,to_server; http.method; content:"POST"; http.request_body; content:"system("; nocase; classtype:web-application-attack; sid:2014726; rev:2;)
+
+# Detects execution parameter for uploaded web shell (e.g., shell.php?cmd=id)
+alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Exploit Suspected PHP Injection Attack (cmd=)"; flow:established,to_server; http.uri; content:"cmd="; nocase; classtype:web-application-attack; sid:2014727; rev:1;)
+
+# --- STAGE 06: OUTBOUND REVERSE SHELL ---
+# Detects outbound interactive bash/sh reverse shell connections originating from web server
+alert tcp $HOME_NET any -> $EXTERNAL_NET 4444 (msg:"ET POLICY Outbound Interactive Shell Spawned / Reverse Shell TCP"; flow:established,to_server; classtype:trojan-activity; sid:2002752; rev:3;)
+
+# --- STAGE 09: INTERNAL NETWORK RECONNAISSANCE ---
+# Detects intra-subnet or routed reconnaissance sweeps from compromised pivot host
+alert tcp $HOME_NET any -> $HOME_NET any (msg:"ET SCAN Potential Internal Port Scan / Reconnaissance Sweep"; flags:S; threshold:type both, track by_src, count 20, seconds 10; classtype:attempted-recon; sid:2000545; rev:1;)
+
+# --- STAGE 10: RESPONDER POISONING & LLMNR SPOOFING ---
+# Detects rogue LLMNR / NBT-NS multicast response frames (UDP 5355 / 137)
+alert udp $HOME_NET 5355 -> any any (msg:"ET SCAN Potential LLMNR / NBT-NS Poisoning Response"; content:"|00 00 80 00|"; offset:2; depth:4; classtype:bad-unknown; sid:2013028; rev:2;)
+
+# --- STAGE 15: LATERAL MOVEMENT / GOLDENPAC PRIVILEGE ESCALATION ---
+# Detects GoldenPac / MS14-068 Kerberos ticket forgery and elevation over SMB
+alert tcp $HOME_NET any -> $HOME_NET 88 (msg:"ET EXPLOIT Possible GoldenPac Privilege Escalation in-use"; flow:to_server,established; content:"|05|"; offset:0; depth:1; content:"|0a|"; offset:2; depth:1; classtype:attempted-admin; sid:2015862; rev:1;)
