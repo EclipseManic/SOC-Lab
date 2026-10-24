@@ -335,7 +335,7 @@ export const stages: Stage[] = [
     plain:
       "The intercepted NetNTLMv2 challenge-response hash is cracked offline on Kali using Hashcat mode 5600 to recover the Windows user password.",
     attacker:
-      "Cracks the captured NetNTLMv2 hash on Kali GPU using Hashcat, recovering the plaintext credentials (`win10:Secur3Lab!`).",
+      "Cracks the captured NetNTLMv2 hash on Kali GPU using Hashcat, recovering the plaintext credentials (`win10:<REDACTED>`).",
     defender:
       "Inherent offline architectural gap (DG-11). Cracking occurs entirely on the attacker GPU; zero victim telemetry is generated.",
     evidence:

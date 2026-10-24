@@ -35,7 +35,7 @@
   </rule>
 
   <!-- 100603: Sensitive attack privileges assigned - SeDebug/SeImpersonate/SeTcb -->
-  <rule id="100603" level="6" ignore="2">
+  <rule id="100603" level="8" ignore="2">
     <if_sid>67028</if_sid>
     <field name="win.eventdata.privilegeList" type="pcre2">SeDebugPrivilege|SeImpersonatePrivilege|SeTcbPrivilege|SeTakeOwnershipPrivilege</field>
     <field name="win.eventdata.subjectUserName" type="pcre2" negate="yes">^SYSTEM$|^LOCAL SERVICE$|^NETWORK SERVICE$|\$$</field>

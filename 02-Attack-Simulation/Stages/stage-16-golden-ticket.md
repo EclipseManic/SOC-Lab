@@ -59,8 +59,8 @@ To validate the ticket, the attacker exported the environment variable `KRB5CCNA
 
 | Source | Rule / Event Description | Rule ID | TheHive Alert Title | Severity | Status |
 |---|---|---|---|---|---|
-| Wazuh / Linux SSH | sshd: authentication success | 5715 | `[2x] [DVWA] Logon activity: ROOT @ 192.168.232.135` | Medium (2) | Detected |
-| Active Directory / Kerberos | Kerberos TGS request without matching AS-REQ / RC4 encryption | Event ID 4769 | Anomalous Kerberos ticket activity on PC-DC | Medium | Detected (Host & Pivot correlation) |
+| Wazuh (Pivot Host) | sshd: authentication success (Pivot Session Alert) | 5715 (Level 8) | `[2x] [DVWA] Logon activity: ROOT @ 192.168.232.135` (`14.png`) | Medium (2) | Detected (Pivot Alerted) |
+| Active Directory / Kerberos | Kerberos TGS request without matching AS-REQ / RC4 encryption | Event ID 4769 | Local DC Security Log (Unforwarded due to level filter) | Medium | Detected (Local DC Log) |
 
 > [!NOTE]
 > The generation of a Golden Ticket occurs completely offline on the adversary's machine using `ticketer.py`, generating zero telemetry on the Domain Controller during ticket creation. However, detection occurred upon ticket presentation: the DC recorded Kerberos TGS requests (Event ID 4769) requesting service access with anomalous ticket lifetimes, legacy encryption types (RC4-HMAC instead of AES), and no corresponding prior TGT request (Event ID 4768) within the domain controller's authentication logs.

@@ -1,0 +1,21 @@
+{
+  "tools": {
+    "Hydra": ["hydra"],
+    "sqlmap": ["sqlmap"],
+    "Nikto": ["nikto"],
+    "wfuzz": ["wfuzz"],
+    "ffuf": ["ffuf", "fuzz faster u fool"],
+    "gobuster": ["gobuster"],
+    "dirbuster": ["dirbuster"],
+    "masscan": ["masscan"],
+    "Nmap": ["nmap"],
+    "Nuclei": ["nuclei"],
+    "WPScan": ["wpscan", "wp-scan"]
+  },
+  "umbrellas": [
+    "et scan",
+    "et policy",
+    "et web_specific_apps",
+    "generic protocol command decode"
+  ]
+}

@@ -77,12 +77,12 @@ The extraction of the `Administrator` NTLM hash (`cc814***9fb`) immediately enab
 
 | Source | Rule | Rule ID | TheHive Alert | Severity | Status |
 |---|---|---|---|---|---|
-| Wazuh / Windows Security | sshd: authentication success / DRSUAPI Directory Replication | Rule 5715 / Event 4662 | `[2x] [DVWA] Logon activity: ROOT @ 192.168.232.135` | Medium | DETECTED |
+| Wazuh (Pivot Host) | sshd: authentication success (Interactive Pivot Session) | Rule 5715 (Level 8) | `[2x] [DVWA] Logon activity: ROOT @ 192.168.232.135` (`14.png`) | Medium | DETECTED (Pivot Alerted) |
 
 ### Detection Analysis
 
-- **Pivot Telemetry:** Wazuh Rule 5715 logged the administrative SSH session on `192.168.56.30` used to initiate `secretsdump.py` and transfer the 240KB NTDS dump to Kali.
-- **Domain Controller Telemetry:** Domain Controller `PC-DC.ad.lab` logged **Windows Security Event ID 4662** ("An operation was performed on an object") recording the replication rights invocation:
+- **Pivot Telemetry (TheHive Alert):** Wazuh Rule 5715 logged the administrative SSH session on `192.168.56.30` used to initiate `secretsdump.py` and transfer the 240KB NTDS dump to Kali. This generated the alert displayed in Figure 14.4 (`14.png`).
+- **Domain Controller Telemetry (Local Audit):** Domain Controller `PC-DC.ad.lab` logged **Windows Security Event ID 4662** ("An operation was performed on an object") in `Security.evtx` recording the replication rights invocation. Note that while EID 4662 was captured in local DC event logs, it did not trigger an alert $\ge 8$ in Wazuh, so the alert routed to TheHive was the pivot SSH session:
   - **Account Name:** `HANK_SHERMAN`
   - **Object Server:** `DS`
   - **Access Mask:** `0x100` (Control Access)

@@ -16,7 +16,7 @@
 DVWA serves a **dual role** in the attack chain:
 
 1. **Initial access target** — Kali reaches DVWA through the Suricata gateway, so every inbound exploit attempt generates network-level alerts on the sensor.
-2. **Internal pivot** — After obtaining a reverse shell, tools run **from** DVWA inside `192.168.56.0/24`, where Suricata is blind. Detection shifts entirely to Wazuh agent telemetry, auditd, and bash command logging.
+2. **Internal pivot** — After obtaining a reverse shell, tools run **from** DVWA inside `192.168.56.0/24`, where direct victim-to-victim traffic is primarily captured by endpoint telemetry (Wazuh agent, auditd, and bash command logging) and promiscuous gateway sniffing.
 
 ## Services
 
@@ -29,7 +29,7 @@ DVWA serves a **dual role** in the attack chain:
 ### Web Stack
 
 - **Apache 2.4.58** with PHP
-- **MySQL** — database user `dvwa` / password `p@ssw0rd`
+- **MySQL** — database user `dvwa` / password `<REDACTED>`
 - **DVWA security level:** `low`
 
 ## Intentional Weaknesses (Deliberate Attack Surface)
@@ -37,8 +37,8 @@ DVWA serves a **dual role** in the attack chain:
 | Weakness | Purpose |
 |----------|---------|
 | DVWA security level `low` | No input validation — enables SQLi, XSS, command injection |
-| MySQL credentials `dvwa:p@ssw0rd` | Weak database credentials |
-| File upload with no restrictions | Allows webshell upload (Stage 06) |
+| MySQL credentials `dvwa:<REDACTED>` | Weak database credentials |
+| File upload with no restrictions | Allows webshell upload (Stage 05) |
 | SUID bash at `/tmp/bash` | Privilege escalation path (Stage 07) |
 | `www-data` has `sudo python3 NOPASSWD` | Alternative privilege escalation |
 | `/etc/passwd` chmod 666 | Writable by any user — allows account creation |
@@ -49,23 +49,27 @@ DVWA serves a **dual role** in the attack chain:
 
 ## Auditd Configuration
 
-Nextron auditd rules provide comprehensive syscall auditing across the host.
-The full ruleset is loaded from `/etc/audit/rules.d/`:
+Nextron-adapted auditd rules provide comprehensive syscall auditing across the host.
+The ruleset is loaded from `/etc/audit/rules.d/audit.rules` and includes watches for identity files (`/etc/passwd`, `/etc/shadow`), execution from `/tmp` and `/opt`, and SUID creation (`chmod +s`).
 
 ```bash
-# Nextron auditd rules (loaded via /etc/audit/rules.d/)
-auditctl -l   # Shows full ruleset
+# Check loaded audit rules
+sudo auditctl -l
 ```
 
 Custom web-specific rules monitor Apache and PHP process activity, capturing file access patterns and command execution by the `www-data` user.
 
 ## Custom Bash Command Logging
 
-All bash commands executed by `root` and `www-data` are captured to `/var/log/bashcmd.log`.
-This provides a plain-text audit trail of every interactive and scripted shell command on the host.
+All bash commands executed by `root` and `www-data` are captured to `/var/log/bashcmd.log` using a shell prompt hook (`PROMPT_COMMAND`):
+```bash
+# Format in /var/log/bashcmd.log:
+# uid:<uid> user:<user> pwd:<dir> cmd:<command>
+```
+This provides a structured audit trail of every interactive and scripted shell command on the host.
 
 A custom Wazuh decoder (`bashcmd`) parses these log entries into structured alerts.
-See [Detection Engineering — Decoders](../../03-Detection-Engineering/Wazuh/README.md#3-decoders-catalog-local_decoderxml) for the decoder configuration.
+See [Detection Engineering — Wazuh README](../../03-Detection-Engineering/Wazuh/README.md#3-decoders-catalog-local_decoderxml) for the decoder configuration.
 
 ## Telemetry Sources
 
@@ -74,19 +78,18 @@ See [Detection Engineering — Decoders](../../03-Detection-Engineering/Wazuh/RE
 | Apache access/error logs | HTTP requests, errors, webshell activity |
 | `/var/log/auth.log` | SSH logins, sudo usage, PAM events |
 | `/var/log/bashcmd.log` | All bash commands (root, www-data) |
+| `/var/log/audit/audit.log` | Syscall events: execve, SUID creation, file watches |
 | Wazuh agent (`DVWA`) | Aggregated host-based alerts shipped to manager |
 | Velociraptor client | On-demand forensic collection |
 | Suricata HTTP events | Gateway-crossing traffic only (inbound from Kali) |
 
-> [!NOTE]
-> Suricata sees traffic **to** DVWA from Kali (crosses the gateway), but **not** traffic **from** DVWA to other victims on `192.168.56.0/24` (stays on the local switch).
-
 ## Related Documentation
 
-- [Stage 05 — SQL Injection](../../02-Attack-Simulation/stage-05/README.md)
-- [Stage 06 — Webshell Upload](../../02-Attack-Simulation/stage-06/README.md)
-- [Stage 07 — Privilege Escalation](../../02-Attack-Simulation/stage-07/README.md)
-- [Stage 08 — Reverse Shell](../../02-Attack-Simulation/stage-08/README.md)
-- [Stage 10 — Responder](../../02-Attack-Simulation/stage-10/README.md)
+- [Stage 03 — SQL Injection](../../02-Attack-Simulation/Stages/stage-03-sqli.md)
+- [Stage 05 — Webshell Upload](../../02-Attack-Simulation/Stages/stage-05-webshell.md)
+- [Stage 06 — Reverse Shell](../../02-Attack-Simulation/Stages/stage-06-reverse-shell.md)
+- [Stage 07 — Privilege Escalation](../../02-Attack-Simulation/Stages/stage-07-privesc.md)
+- [Stage 08 — SSH Persistence](../../02-Attack-Simulation/Stages/stage-08-ssh-persistence.md)
+- [Stage 10 — Responder](../../02-Attack-Simulation/Stages/stage-10-responder.md)
 - [Detection Engineering — Auditd Baseline](../../03-Detection-Engineering/Auditd/README.md)
-- [Detection Engineering — Decoders](../../03-Detection-Engineering/Wazuh/README.md#3-decoders-catalog-local_decoderxml)
+- [Detection Engineering — Wazuh README](../../03-Detection-Engineering/Wazuh/README.md#3-decoders-catalog-local_decoderxml)

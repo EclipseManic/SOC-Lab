@@ -1,58 +1,82 @@
 # Investigation — Stage 07 — Privilege Escalation
 
-> **Status:** Draft
-> **Attack stage:** [Stage 07](../../02-Attack-Simulation/Stages/stage-07-privesc.md)
-> **TheHive case:** [Case 01](../Cases/case-01-web-compromise.md)
+> **Status:** Completed  
+> **Attack stage:** [Stage 07](../../02-Attack-Simulation/Stages/stage-07-privesc.md)  
+> **TheHive case:** [Web Application Compromise](../Cases/case-01-web-compromise.md)  
+
+---
 
 ## Alert details
 
-| Alert ID | Rule ID | Source | Severity | TLP / PAP |
-|---|---|---|---|---|
-| TBD | TBD | TBD | TBD | TBD |
+| Field | Value |
+|---|---|
+| **Alert ID** | `wzb-2c0ebdf596` |
+| **Rule ID** | `Wazuh 100603 (Level 8)` |
+| **Source** | Wazuh Linux Auditd on DVWA |
+| **Severity** | High |
+| **TLP / PAP** | `TLP:AMBER / PAP:AMBER` |
+
+---
 
 ## What was detected
 
-TBD
+Wazuh Rule 100603 triggered on SUID privilege escalation: www-data executed /usr/bin/find with -exec /bin/sh to obtain effective root privileges and read /etc/shadow.
+
+---
 
 ## Triage
 
-Verdict: TBD
-Confidence: TBD
-Reason: TBD
+| Question | Answer |
+|---|---|
+| **Verdict** | True Positive |
+| **Confidence** | High |
+| **Rationale** | Abuse of SUID misconfiguration on find binary allowing unprivileged www-data user to spawn a root shell and access sensitive system files. |
+
+---
 
 ## Investigation steps
 
-1. Identify the vulnerable component and exploit path.
-2. Confirm the before and after user context.
-3. Check sudo, SUID, cron, and service changes.
-4. Review authentication and process logs.
-5. Collect the exploit artifacts and file hashes.
+1. Verified Auditd execve events for /usr/bin/find with euid=0.
+2. Analyzed command line arguments: find . -exec /bin/sh -p \;.
+3. Confirmed subsequent file access event on /etc/shadow with key cat_sensitive_file.
+4. Correlated with Wazuh Rule 100603 elevated alert in TheHive.
+5. Marked Case 01 scope as fully escalated to local root.
+
+---
 
 ## Evidence
 
-- Attack: `../../02-Attack-Simulation/Attack-Screenshots/stage-07/`
-- Alert: `../../02-Attack-Simulation/alert-screenshots/stage-07/`
-- Queries and logs: TBD
+- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/23.png`](../../02-Attack-Simulation/Attack-Screenshots/23.png)
+- **Alert Evidence:** [`../../03-Detection-Engineering/TheHive_Alert-ScreenShot/6.png`](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/6.png)
+- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv) and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
 
-## IOCs
+---
+
+## Indicators of Compromise (IOCs)
 
 | Type | Value | Context |
 |---|---|---|
-| User | `www-data` | Initial web user (verify) |
-| User | `root` | Escalated context (verify) |
-| File | TBD | Exploit or modified file |
+| Binary | `/usr/bin/find` | SUID binary abused for escalation |
+| File | `/etc/shadow` | Sensitive credential store accessed |
+| EUID | `0 (root)` | Escalated effective user ID |
+
+---
 
 ## Detection assessment
 
-Status: Not tested
-Gap ID: DG-07
-Recommended rule: TBD
+- **Status:** Detected
+- **Gap ID:** None
+- **Engineering Assessment:** Rule 100603 elevated to Level 8 ensured immediate transmission to TheHive 5 queue.
+
+---
 
 ## Verdict
 
-TBD
+Confirmed True Positive local root privilege escalation via SUID find abuse.
+
+---
 
 ## MITRE ATT&CK
 
-Tactic: Privilege Escalation
-Technique: Exploitation for Privilege Escalation (T1068)
+- **Tactic:** Privilege Escalation
+- **Technique:** Abuse Elevation Control Mechanism: Setuid and Setgid (T1548.001)

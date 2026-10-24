@@ -1,58 +1,82 @@
-# Investigation — Stage 18 — Collection
+# Investigation — Stage 18 — Data Collection
 
-> **Status:** Draft
-> **Attack stage:** [Stage 18](../../02-Attack-Simulation/Stages/stage-18-collection.md)
-> **TheHive case:** [Case 03](../Cases/case-03-domain-compromise.md)
+> **Status:** Completed  
+> **Attack stage:** [Stage 18](../../02-Attack-Simulation/Stages/stage-18-collection.md)  
+> **TheHive case:** [Domain Compromise and Impact](../Cases/case-03-domain-compromise.md)  
+
+---
 
 ## Alert details
 
-| Alert ID | Rule ID | Source | Severity | TLP / PAP |
-|---|---|---|---|---|
-| TBD | TBD | TBD | TBD | TBD |
+| Field | Value |
+|---|---|
+| **Alert ID** | `wzb-aa66cb916a / wzb-ed666653f7` |
+| **Rule ID** | `Wazuh 100613 / Wazuh 100602` |
+| **Source** | Wazuh Windows Agent & Linux Auditd |
+| **Severity** | High |
+| **TLP / PAP** | `TLP:AMBER / PAP:AMBER` |
+
+---
 
 ## What was detected
 
-TBD
+Wazuh process fan-out rule 100613 alerted on rapid reconnaissance commands via wmiexec on Windows hosts (whoami, net user, systeminfo), while Auditd on DVWA detected tar archive staging (/tmp/data.tar.gz).
+
+---
 
 ## Triage
 
-Verdict: TBD
-Confidence: TBD
-Reason: TBD
+| Question | Answer |
+|---|---|
+| **Verdict** | True Positive |
+| **Confidence** | High |
+| **Rationale** | Systematic collection of host configuration and staging of compressed archive in temporary directory. |
+
+---
 
 ## Investigation steps
 
-1. Identify the files and directories accessed.
-2. Check for archive creation or staging directories.
-3. Review process execution and file integrity events.
-4. Record file names, sizes, and hashes.
-5. Correlate with exfiltration.
+1. Inspected Sysmon Event ID 1 events on DomainWin10 and PC-DC for data harvesting commands.
+2. Verified Auditd execve events on DVWA for tar -czf /tmp/data.tar.gz.
+3. Confirmed Wazuh process fan-out correlation grouping in TheHive.
+4. Identified staged archive path and file size.
+5. Prepared network perimeter monitoring for exfiltration attempt.
+
+---
 
 ## Evidence
 
-- Attack: `../../02-Attack-Simulation/Attack-Screenshots/stage-18/`
-- Alert: `../../02-Attack-Simulation/alert-screenshots/stage-18/`
-- Queries and logs: TBD
+- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/62.png`](../../02-Attack-Simulation/Attack-Screenshots/62.png)
+- **Alert Evidence:** [`../../03-Detection-Engineering/TheHive_Alert-ScreenShot/16.png`](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/16.png)
+- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv) and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
 
-## IOCs
+---
+
+## Indicators of Compromise (IOCs)
 
 | Type | Value | Context |
 |---|---|---|
-| File | TBD | Collected or staged file |
-| Hash | TBD | SHA-256 |
-| Host | TBD | Source host |
+| Staged File | `/tmp/data.tar.gz` | Compressed staging archive |
+| Commands | `whoami /all, net user, ipconfig /all` | Reconnaissance commands |
+| Host | `DVWA & DomainWin10` | Collection targets |
+
+---
 
 ## Detection assessment
 
-Status: Not tested
-Gap ID: DG-18
-Recommended rule: TBD
+- **Status:** Detected
+- **Gap ID:** None
+- **Engineering Assessment:** Wazuh process fan-out correlation compressed dozens of collection commands into a single high-fidelity incident alert.
+
+---
 
 ## Verdict
 
-TBD
+Confirmed True Positive automated data collection and staging.
+
+---
 
 ## MITRE ATT&CK
 
-Tactic: Collection
-Technique: Data from Local System (T1005)
+- **Tactic:** Collection
+- **Technique:** Data from Local System (T1005)

@@ -1,56 +1,82 @@
 # Investigation — Stage 11 — NTLMv2 Cracking
 
-> **Status:** Draft
-> **Attack stage:** [Stage 11](../../02-Attack-Simulation/Stages/stage-11-ntlmv2-crack.md)
-> **TheHive case:** [Case 02](../Cases/case-02-lateral-movement.md)
+> **Status:** Completed  
+> **Attack stage:** [Stage 11](../../02-Attack-Simulation/Stages/stage-11-ntlmv2-crack.md)  
+> **TheHive case:** [Lateral Movement and Credential Access](../Cases/case-02-lateral-movement.md)  
+
+---
 
 ## Alert details
 
-| Alert ID | Rule ID | Source | Severity | TLP / PAP |
-|---|---|---|---|---|
-| TBD | TBD | TBD | TBD | TBD |
+| Field | Value |
+|---|---|
+| **Alert ID** | `None (Offline Activity)` |
+| **Rule ID** | `N/A` |
+| **Source** | Offline computation on Kali Linux |
+| **Severity** | Informational |
+| **TLP / PAP** | `TLP:WHITE` |
+
+---
 
 ## What was detected
 
-TBD
+Zero host or network alerts generated. Hashcat mode 5600 was executed offline on the attacker workstation against the captured NetNTLMv2 hash.
+
+---
 
 ## Triage
 
-Verdict: TBD
-Confidence: TBD
-Reason: TBD
+| Question | Answer |
+|---|---|
+| **Verdict** | Inherent Offline Architectural Gap |
+| **Confidence** | High |
+| **Rationale** | Offline cryptographic computation produces zero network traffic and zero target endpoint process executions. |
+
+---
 
 ## Investigation steps
 
-1. Confirm the captured hash type and source host.
-2. Check whether the recovered credential was used.
-3. Identify the account and its privileges.
-4. Record whether cracking is observable in the lab telemetry.
+1. Documented extraction of NetNTLMv2 hash from Stage 10 Responder output.
+2. Verified zero network packets transmitted between Kali and victim subnets during cracking.
+3. Verified no event logs generated on DomainWin10 or DC during cracking interval.
+4. Confirmed plaintext password recovery via subsequent BloodHound authentication in Stage 12.
+5. Recorded DG-11 in Detection Gap Register.
+
+---
 
 ## Evidence
 
-- Attack: `../../02-Attack-Simulation/Attack-Screenshots/stage-11/`
-- Alert: `../../02-Attack-Simulation/alert-screenshots/stage-11/`
-- Queries and logs: TBD
+- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/36.png`](../../02-Attack-Simulation/Attack-Screenshots/36.png)
+- **Alert Evidence:** [`None (Inherent offline gap)`](None (Inherent offline gap))
+- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv) and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
 
-## IOCs
+---
+
+## Indicators of Compromise (IOCs)
 
 | Type | Value | Context |
 |---|---|---|
-| User | TBD | Cracked account |
-| Hash | TBD | NTLMv2 hash (redact value) |
+| Account | `ad.lab\win10` | Targeted user account |
+| Hash Format | `NetNTLMv2 (Hashcat mode 5600)` | Cryptographic material |
+| Plaintext | `<REDACTED>` | Cracked domain credential |
+
+---
 
 ## Detection assessment
 
-Status: Not tested
-Gap ID: DG-11
-Recommended rule: TBD
+- **Status:** Detection gap
+- **Gap ID:** DG-11
+- **Engineering Assessment:** Inherent offline gap. Mitigation requires GPO enforcement to disable LLMNR and NBT-NS across all domain endpoints.
+
+---
 
 ## Verdict
 
-TBD
+Confirmed Inherent Offline Gap (DG-11). Cracking executed offline on attacker GPU.
+
+---
 
 ## MITRE ATT&CK
 
-Tactic: Credential Access
-Technique: Password Cracking (T1110.002)
+- **Tactic:** Credential Access
+- **Technique:** Password Cracking (T1110.002)
