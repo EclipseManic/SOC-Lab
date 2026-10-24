@@ -1,141 +1,174 @@
-# thecustomhive — Wazuh to TheHive Alert Pipeline
+# thecustomhive — Batched Wazuh to TheHive Alert Pipeline
 
-> **Source Artifacts:**
-> - Production Python Script: [`custom-thehive.py`](custom-thehive.py)
-> - Systemd Daemon Service: [`thehive-flush.service`](thehive-flush.service)
+> **Source Code & Artifacts:**
+> - Ingestion Wrapper: [`custom-thehive`](custom-thehive)
+> - Core Correlation & Flush Engine: [`custom-thehive.py`](custom-thehive.py)
+> - Flush Daemon Service: [`thehive-flush.service`](thehive-flush.service)
+> - Wazuh Integration Configuration: [`Wazuh/ossec.conf`](Wazuh/ossec.conf)
 
-## Overview
+---
 
-`thecustomhive` is a custom Python-based detection engineering pipeline that automates the ingestion, filtering, enrichment, and escalation of high-severity Wazuh alerts into TheHive case management platform.
+## 1. Overview & Problem Statement
 
-Initially, generic SOAR workflows (such as Shuffle) were evaluated. However, Shuffle proved rigid, overly hardcoded for custom event schemas, and added unnecessary operational overhead. A purpose-built Python bridge (`custom-thehive.py`) and companion systemd service (`thehive-flush.service`) were developed to provide granular control over event parsing, regex extraction, alert deduplication, and observable creation.
+In standard SOC deployments, sending raw SIEM alerts 1:1 to a case management platform like TheHive causes immediate **alert fatigue** and database degradation. A single port scan or web fuzzing burst generates thousands of individual events in seconds. Furthermore, performing synchronous HTTP requests during Wazuh's per-alert fork/exec cycle introduces latency and risks dropping telemetry if the case management server is slow or restarting.
 
-## Architecture and Data Flow
+`thecustomhive` implements an asynchronous, batched, correlation-driven pipeline between Wazuh and TheHive 5.
 
 ```text
-┌──────────────────────────────────────────────────────────────┐
-│ Wazuh VM (10.122.1.4 - Private VNet)                         │
-│                                                              │
-│  Endpoint & Network Telemetry                                │
-│  (DVWA, Win10, DC, Suricata)                                │
-│       │                                                      │
-│       ▼                                                      │
-│  Wazuh Manager (v4.14.8)                                     │
-│  Rules Engine -> Match Level ≥ 8                             │
-│       │                                                      │
-│       ▼                                                      │
-│  Wazuh REST API (55000/TCP)                                  │
-└───────┬──────────────────────────────────────────────────────┘
-        │
-        │ HTTPS over Provider Private VNet Peering
-        ▼
-┌──────────────────────────────────────────────────────────────┐
-│ TheHive / Automation VM (10.122.0.4 / 10.8.0.1)              │
-│                                                              │
-│  thecustomhive / thehive-flush.service                       │
-│  ┌────────────────────────────────────────────────────────┐  │
-│  │ 1. Polls Wazuh API (/alerts or disk cursor)            │  │
-│  │ 2. Filters rule.level ≥ 8                              │  │
-│  │ 3. Normalizes fields (rule, agent, src/dst IP, hashes) │  │
-│  │ 4. Extracts observables & MITRE ATT&CK IDs             │  │
-│  │ 5. Deduplicates against sliding window cache           │  │
-│  │ 6. Advances disk cursor only AFTER successful delivery │  │
-│  └────────────────────────┬───────────────────────────────┘  │
-│                           │                                  │
-│                           │ HTTP POST (Loopback: 9000/TCP)   │
-│                           ▼                                  │
-│  TheHive 5.7.5 API (/api/v1/alert)                           │
-│  (Native Cassandra + Elasticsearch Backend)                  │
-│       │                                                      │
-│       ▼                                                      │
-│  SOC Analyst Triage Queue & Automated Case Creation          │
-└──────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                             WAZUH MANAGER HOST                                   │
+│                                                                                  │
+│   Incoming Telemetry (Agents & Suricata)                                         │
+│          │                                                                       │
+│          ▼                                                                       │
+│   Wazuh Analysis Engine (Ruleset Level >= 8)                                     │
+│          │                                                                       │
+│          ▼                                                                       │
+│   /var/ossec/integrations/custom-thehive <alert_file>                            │
+│          │                                                                       │
+│          ▼  (Tier 1: O(1) Local Ingestion - ZERO HTTP)                          │
+│   SQLite WAL Queue (/var/ossec/logs/correlation_state.db)                        │
+│          │                                                                       │
+│          │  (Tier 2: Async Correlated Sync - 5s Cadence)                         │
+│          ▼                                                                       │
+│   thehive-flush.service (custom-thehive.py --flush-daemon)                       │
+│          │                                                                       │
+│          │  • Tool Fingerprint Matching (Nmap, sqlmap, Nikto, ffuf, Hydra)       │
+│          │  • Correlation (Process Chains, Fan-outs, Logon Groups, Bursts)       │
+│          │  • Deduplication & Aggregate Markdown Rendering                       │
+│          │                                                                       │
+│          ▼  (HTTP POST/PATCH - api/v1/alert)                                     │
+│ ┌──────────────────────────────────────────────────────────────────────────────┐ │
+│ │ TheHive 5 Host (http://10.122.0.4:9000/api/v1)                               │ │
+│ │ • Cases / Alerts Triage Queue                                                │ │
+│ └──────────────────────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-The bridge runs directly on the TheHive host. It reaches Wazuh over the cloud provider's private VNet peering, and delivers alerts to TheHive over the local loopback (`127.0.0.1:9000`). Case data, API keys, and sensitive alert payloads never traverse public networks.
+---
 
-## Pipeline Logic & Cursor Management
+## 2. Two-Tier Architecture
 
-1. **Query & Cursor Tracking:** The script maintains a persistent cursor on disk storing the timestamp/ID of the last processed alert. On restart, it resumes from the cursor, guaranteeing zero duplicate case floods and zero dropped alerts during service maintenance.
-2. **Severity Thresholding:** Only alerts with `rule.level >= 8` are ingested into TheHive. Lower-severity informational events (such as routine Windows logins or single 404s) remain searchable in the Wazuh Indexer without fatiguing the SOC triage queue.
-3. **Fail-Closed Queueing:** If TheHive is down or undergoing updates, alerts buffer in a local queue and retry using exponential backoff with jitter. The cursor advances **only after** receiving an HTTP `201 Created` from TheHive.
+### Tier 1: Fast Durable Ingestion (Zero HTTP)
+Whenever Wazuh matches a rule with level $\ge 8$, it executes `/var/ossec/integrations/custom-thehive` (a POSIX wrapper calling `/var/ossec/framework/python/bin/python3 custom-thehive.py "$@"`).
+- **Zero Network Blocking:** No HTTP requests are made during ingest.
+- **Atomic Deduplication:** Alerts are checked against `seen_alerts` in SQLite using `INSERT OR IGNORE`.
+- **Precomputed Stages:** CPU-heavy rendering and extraction occur before acquiring the SQLite write lock.
+- **O(1) Stage Sequencing:** Stages append into `group_stages` and mark the group dirty in `pending_groups`.
+- **Lossless Spooling:** If the SQLite database is locked or under maintenance, raw alerts are spooled to `/var/ossec/logs/thehive_spool/` for automatic replay.
 
-## Field Mapping Matrix
+### Tier 2: Async Correlation & Flush Daemon
+Running as `thehive-flush.service`, the daemon wakes on a 5-second interval (`THEHIVE_FLUSH_INTERVAL=5.0`) to drain queued stages:
+- **Atomic Lease Claims:** Batches of groups are claimed atomically (`state='flushing'`, `lease_until=now + 90s`), allowing multiple worker processes to safely operate without race conditions.
+- **Dynamic Group Correlation:** Alerts are aggregated into structured groups rather than isolated tickets:
+  - `tool_campaign`: Reconnaissance and vulnerability scanning tools identified by user-agent and signatures.
+  - `process_chain`: Related parent-child process executions linked by PID/PPID trees.
+  - `process_fanout`: Sibling commands executed by untracked parent processes.
+  - `logon_group`: Repeated authentication events (successes and failures) grouped by user and source IP.
+  - `activity_burst`: High-frequency alert floods from a single rule/agent.
+  - `watchlist_group`: High-risk commands matching sensitive keywords (`/etc/shadow`, `authorized_keys`, `chmod +s`, etc.).
+  - `standalone_outbox`: Critical bypass events (agent disconnection, event log clearance) escalated immediately.
+- **Idempotent Reconciliation:** Uses stable `sourceRef` values. If TheHive reports an alert already exists (`HTTP 400/409`), the engine automatically queries TheHive API (`/api/v1/query`), recovers the existing `_id`, and patches the current aggregate.
 
-| Wazuh JSON Field | TheHive Alert Field | Transformation / Logic |
-|---|---|---|
-| `rule.id` | `sourceRef` / Tag | Original Wazuh rule ID (e.g., `100613`, `86601`, `5715`) |
-| `rule.description` | `title` | Prefixed with agent name: `[{agent.name}] {rule.description}` |
-| `rule.level` | `severity` | Level 8–9 $\rightarrow$ **Medium (2)**<br>Level 10–11 $\rightarrow$ **High (3)**<br>Level 12+ $\rightarrow$ **Critical (4)** |
-| `rule.mitre.id` | `tags` / TTPs | Formatted as `attack:{mitre.id}` (e.g., `attack:T1047`, `attack:T1059.003`) |
-| `agent.name` | `tags` | Target identifier tag (`DVWA`, `DomainWin10`, `Win10User`, `Suricata`) |
-| `data.srcip` | Observable: `ip` | Direction: Outbound/Inbound; tagged `src-ip` |
-| `data.dstip` | Observable: `ip` | Target IP; tagged `dst-ip` |
-| `data.url` / `http.url` | Observable: `uri_path` | Extracted for web attacks (SQLi, webshell access) |
-| `data.win.eventdata.targetFilename` | Observable: `filename` | File paths from Sysmon Event 11 or FIM |
-| `syscheck.sha256_after` | Observable: `hash` | Extracted on file creation/modification alerts |
+---
 
-## Systemd Service Configuration
+## 3. Recon Tool Fingerprinting
 
-The pipeline runs as a resilient daemon under systemd on the TheHive VM:
+The integration includes built-in signature matching to group repetitive automated scans into single comprehensive campaign alerts:
+
+```python
+_BUILTIN_FINGERPRINTS = {
+    "tools": {
+        "Hydra": ["hydra"],
+        "sqlmap": ["sqlmap"],
+        "Nikto": ["nikto"],
+        "wfuzz": ["wfuzz"],
+        "ffuf": ["ffuf", "fuzz faster u fool"],
+        "gobuster": ["gobuster"],
+        "dirbuster": ["dirbuster"],
+        "masscan": ["masscan"],
+        "Nmap": ["nmap"],
+        "Nuclei": ["nuclei"],
+        "WPScan": ["wpscan", "wp-scan"]
+    },
+    "umbrellas": [
+        "et scan",
+        "et policy",
+        "et web_specific_apps",
+        "generic protocol command decode"
+    ]
+}
+```
+
+When a tool campaign is active:
+- It aggregates all target ports, visited URLs, and matched signatures into one summary alert.
+- It displays the first 5 and last 5 raw alert samples to avoid exceeding TheHive description size limits.
+- It keeps the alert open across a 30-minute idle window (`TOOL_CAMPAIGN_IDLE_TIMEOUT_SECONDS=1800`).
+
+---
+
+## 4. Configuration & Deployment
+
+### `ossec.conf` Integration Block
+In `/var/ossec/etc/ossec.conf`:
+
+```xml
+<integration>
+  <name>custom-thehive</name>
+  <hook_url>http://10.122.0.4:9000/api/v1</hook_url>
+  <api_key><REDACTED></api_key>
+  <level>8</level>
+  <alert_format>json</alert_format>
+</integration>
+```
+
+### Systemd Service Unit (`thehive-flush.service`)
+In `/etc/systemd/system/thehive-flush.service`:
 
 ```ini
-# /etc/systemd/system/thehive-flush.service
 [Unit]
-Description=thecustomhive - Wazuh to TheHive Alert Pipeline Bridge
-After=network.target cassandra.service elasticsearch.service thehive.service
-Wants=thehive.service
+Description=thecustomhive - Wazuh to TheHive Batched Alert Flush Daemon
+After=network.target wazuh-manager.service
+Wants=network-online.target
 
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/opt/thecustomhive
-ExecStart=/usr/bin/python3 /opt/thecustomhive/custom-thehive.py
+WorkingDirectory=/var/ossec/integrations
+ExecStart=/var/ossec/framework/python/bin/python3 /var/ossec/integrations/custom-thehive.py --flush-daemon
 Restart=always
-RestartSec=15
-Environment="WAZUH_API_URL=https://10.122.1.4:55000"
-Environment="WAZUH_API_USER=<REDACTED>"
-Environment="WAZUH_API_PASSWORD=<REDACTED>"
-Environment="THEHIVE_API_URL=http://127.0.0.1:9000"
-Environment="THEHIVE_API_KEY=<REDACTED>"
-Environment="MIN_RULE_LEVEL=8"
-Environment="CURSOR_FILE=/var/lib/thecustomhive/alert.cursor"
+RestartSec=10
 
-# Security sandboxing
+Environment="THEHIVE_URL=http://10.122.0.4:9000/api/v1"
+Environment="THEHIVE_API_TOKEN=<REDACTED>"
+Environment="THEHIVE_CORRELATION_DB=/var/ossec/logs/correlation_state.db"
+Environment="THEHIVE_FLUSH_INTERVAL=5.0"
+Environment="THEHIVE_FLUSH_BATCH=50"
+Environment="THEHIVE_VERIFY_SSL=0"
+
 ProtectSystem=full
 NoNewPrivileges=true
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-## Verification & Operational Health
+---
 
-Check service status on the TheHive host:
-
-```bash
-sudo systemctl status thehive-flush.service
-```
-
-Inspect live ingestion logs:
+## 5. Operational Verification Commands
 
 ```bash
-sudo journalctl -u thehive-flush.service -f --no-tail
+# Verify flush daemon status
+systemctl status thehive-flush.service
+
+# View live daemon flush logs
+journalctl -u thehive-flush.service -f
+
+# Inspect active correlation database queue
+sqlite3 /var/ossec/logs/correlation_state.db "SELECT group_type, thehive_alert_id, total_stages, dirty FROM pending_groups;"
+
+# View real-time JSON metrics snapshot
+cat /var/ossec/logs/thehive_flush_metrics.json | jq .
 ```
-
-Sample successful flush entry:
-
-```text
-2026-10-24 10:14:22 [INFO] Connected to Wazuh API at 10.122.1.4:55000
-2026-10-24 10:14:23 [INFO] Retrieved 3 alerts (level >= 8) since cursor 1729764800
-2026-10-24 10:14:23 [INFO] [Rule 100613] Transformed: Impacket wmiexec execution on DomainWin10
-2026-10-24 10:14:24 [INFO] [HTTP 201] Forwarded alert to TheHive -> ID: wzb-3a8045a03c
-2026-10-24 10:14:24 [INFO] Advanced cursor to 1729764864
-```
-
-## Related Documents
-
-- [Wazuh Custom & Built-in Rules](Wazuh/rules.md)
-- [Detection Coverage Matrix](coverage-matrix.md)
-- [TheHive / Automation Host Setup](../01-Lab-Setup/Cloud/thehive.md)
-- [Wazuh SIEM Host Setup](../01-Lab-Setup/Cloud/wazuh.md)

@@ -10,27 +10,27 @@ This section details the detection logic, rules, parsers, and pipeline automatio
 |---|---|
 | [coverage-matrix.md](coverage-matrix.md) | Stage-by-stage mapping of ATT&CK techniques, data sources, rule IDs, and validation status |
 | [gaps.md](gaps.md) | Detection gap register, root cause classifications, and remediation strategies |
-| [pipeline-thecustomhive.md](pipeline-thecustomhive.md) | Custom Wazuh-to-TheHive automation bridge, field mapping, and systemd service |
-| [Wazuh/rules.md](Wazuh/rules.md) | Custom XML rules (wmiexec, SQLi, registry persistence) and core rule catalog |
+| [pipeline-thecustomhive.md](pipeline-thecustomhive.md) | Custom Wazuh-to-TheHive automation bridge, batched correlation engine, and systemd daemon |
+| [Wazuh/rules.md](Wazuh/rules.md) | Detailed documentation of custom rules (`local_rules.xml`), LOLBins, suppressions, and overrides |
 | [Wazuh/decoders.md](Wazuh/decoders.md) | Custom `bashcmd` shell decoder and Suricata JSON parser definitions |
 | [Wazuh/false-positives.md](Wazuh/false-positives.md) | Tuning decisions, noise suppression rules, and triage metrics |
-| [Suricata/rules.md](Suricata/rules.md) | Network IDS signatures (`et/open` + Nmap rules) and `threshold.config` tuning |
+| [Suricata/rules.md](Suricata/rules.md) | Network IDS signatures (`et/open` + custom Nmap rules) and `threshold.config` tuning |
 | [Suricata/log-samples.md](Suricata/log-samples.md) | Real, redacted `eve-alert.json` event captures across attack stages |
 
 ### 2. Deployed Rule Files & Scripts (Codebase Artifacts)
 
 | File | Type | Host / Location | Purpose |
 |---|---|---|---|
-| [custom-thehive.py](custom-thehive.py) | Python 3 Script | TheHive VM (`/opt/thecustomhive/`) | Production polling bridge: Wazuh API $\rightarrow$ TheHive v1 API with cursor tracking |
-| [thehive-flush.service](thehive-flush.service) | Systemd Unit | TheHive VM (`/etc/systemd/system/`) | Background daemon managing `custom-thehive.py` lifecycle |
-| [Wazuh/local_rules.xml](Wazuh/local_rules.xml) | Wazuh Rules XML | Wazuh SIEM (`/var/ossec/etc/rules/`) | Custom XML rules: 100613 (`wmiexec`), 100603, 100410, 100201 (SQLi), 100100 (Reg) |
-| [Wazuh/local_decoder.xml](Wazuh/local_decoder.xml) | Wazuh Decoder XML | Wazuh SIEM (`/var/ossec/etc/decoders/`) | Custom regex parser for `/var/log/bashcmd.log` command tracking |
-| [Suricata/custom.rules](Suricata/custom.rules) | Suricata Rules | Gateway (`/etc/suricata/rules/`) | Raw signature definitions (SIDs 3400002, 2010937, 2014726, 2002752, 2015862) |
+| [custom-thehive](custom-thehive) | Shell Script | Wazuh Manager (`/var/ossec/integrations/`) | POSIX wrapper invoked by Wazuh per alert |
+| [custom-thehive.py](custom-thehive.py) | Python 3 Script | Wazuh Manager (`/var/ossec/integrations/`) | Production correlation & batched flush engine: zero-HTTP ingest, recon tool fingerprinting, TheHive 5 sync |
+| [thehive-flush.service](thehive-flush.service) | Systemd Unit | Wazuh Manager (`/etc/systemd/system/`) | Background daemon managing `custom-thehive.py --flush-daemon` |
+| [Wazuh/local_rules.xml](Wazuh/local_rules.xml) | Wazuh Rules XML | Wazuh SIEM (`/var/ossec/etc/rules/`) | Complete authentic local ruleset: LOLBins, wmiexec, privilege escalation, suppressions |
+| [Wazuh/local_decoder.xml](Wazuh/local_decoder.xml) | Wazuh Decoder XML | Wazuh SIEM (`/var/ossec/etc/decoders/`) | Custom regex parser extracting `uid, user, pwd, command` from `/var/log/bashcmd.log` |
+| [Wazuh/ossec.conf](Wazuh/ossec.conf) | Wazuh Config XML | Wazuh SIEM (`/var/ossec/etc/`) | Wazuh manager configuration defining the `custom-thehive` integration block |
+| [Suricata/custom.rules](Suricata/custom.rules) | Suricata Rules | Gateway (`/etc/suricata/rules/`) | Custom signatures (Nmap OS detection probes, SQL injection, LLMNR, GoldenPac) |
 | [Suricata/threshold.config](Suricata/threshold.config) | Tuning Config | Gateway (`/etc/suricata/`) | Rate-limiting rules for Nmap OS probes and multi-port scans |
-| [Suricata/disable.conf](Suricata/disable.conf) | Tuning Config | Gateway (`/etc/suricata/`) | Disabled noisy informational ICMP/NTP/TLS signatures |
-| [Suricata/modify.conf](Suricata/modify.conf) | Tuning Config | Gateway (`/etc/suricata/`) | Severity modifications upgrading webshell & privilege escalation rules to High |
-| [Sysmon/sysmonconfig.xml](Sysmon/sysmonconfig.xml) | Sysmon XML Config | Windows 10 & DC (`C:\Windows\`) | Olaf Hartong modular baseline for process creation, WMI, and registry tracking |
-| [Auditd/audit.rules](Auditd/audit.rules) | Linux Auditd Rules | DVWA (`/etc/audit/rules.d/`) | Nextron-based syscall monitoring for SUID bash, execve, and file persistence |
+| [Sysmon/sysmonconfig.xml](Sysmon/sysmonconfig.xml) | Sysmon XML Config | Windows 10 & DC (`C:\Windows\`) | Modular telemetry baseline for process creation, named pipes, and registry tracking |
+| [Auditd/audit.rules](Auditd/audit.rules) | Linux Auditd Rules | DVWA (`/etc/audit/rules.d/`) | Syscall monitoring for SUID bash, execve execution, and identity file access |
 
 ---
 
@@ -40,20 +40,23 @@ Detection engineering directly interfaces with the underlying lab infrastructure
 
 ```text
 Local Infrastructure (01-Lab-Setup)         Detection Engineering (03-Detection-Engineering)
-───────────────────────────────────         ────────────────────────────────────────────────
-Suricata Gateway (Dual-NIC Router)   ───►   Suricata Rules & Threshold Tuning (Suricata/custom.rules)
-                                            Suricata JSON Decoders (Wazuh/local_decoder.xml)
+===================================         ================================================
+Suricata Gateway (Dual-NIC Router)   ----->  Custom Suricata Signatures (Suricata/custom.rules)
+                                             Rate-limiting & Suppression (Suricata/threshold.config)
+                                             Suricata JSON Decoder (Wazuh/local_decoder.xml)
 
-DVWA Target (/var/log/bashcmd.log)   ───►   Custom bashcmd Decoder (Wazuh/local_decoder.xml)
-                                            Auditd Syscall Rules (Auditd/audit.rules)
+DVWA Target (/var/log/bashcmd.log)   ----->  Custom bashcmd Decoder (Wazuh/local_decoder.xml)
+                                             Auditd Syscall Rules (Auditd/audit.rules)
 
-Windows 10 / DC (Sysmon & Auditpol) ───►   Sysmon Modular Configuration (Sysmon/sysmonconfig.xml)
-                                            Wazuh Custom Rules: wmiexec & Reg (Wazuh/local_rules.xml)
+Windows 10 / DC (Sysmon & Auditpol)  ----->  Sysmon Modular Configuration (Sysmon/sysmonconfig.xml)
+                                             Wazuh Rules: wmiexec, Sysmon, Registry (Wazuh/local_rules.xml)
 
-Private Wazuh SIEM (Cloud VM 2)      ───►   Wazuh Rules Engine & Decoders (Wazuh/local_rules.xml)
+Private Wazuh SIEM (Cloud VM 2)      ----->  Wazuh Engine & Local Rules (Wazuh/local_rules.xml)
+                                             Manager Integration Block (Wazuh/ossec.conf)
+                                             thecustomhive Ingest & Queue (custom-thehive, custom-thehive.py)
 
-Cloud Ingress / TheHive (Cloud VM 1) ───►   thecustomhive SOAR Pipeline (custom-thehive.py)
-                                            Systemd Flush Daemon (thehive-flush.service)
+TheHive Case Management (Cloud VM 1) ----->  thecustomhive Flush Daemon (thehive-flush.service)
+                                             Correlated Case & Alert Creation (TheHive 5 API)
 ```
 
 ---

@@ -1,39 +1,39 @@
+<!-- Local Decoders -->
+
+<!-- Modify it at your will. -->
+<!-- Copyright (C) 2015, Wazuh Inc. -->
+
 <!--
-  local_decoder.xml — Custom Wazuh Decoders for SOC Lab
-  Path: /var/ossec/etc/decoders/local_decoder.xml
-  Manager: Wazuh 4.14.8 (Ubuntu 24.04.4 LTS, Cloud VM 2)
+  - Allowed static fields:
+  - location   - where the log came from (only on FTS)
+  - srcuser    - extracts the source username
+  - dstuser    - extracts the destination (target) username
+  - user       - an alias to dstuser (only one of the two can be used)
+  - srcip      - source ip
+  - dstip      - dst ip
+  - srcport    - source port
+  - dstport    - destination port
+  - protocol   - protocol
+  - id         - event id
+  - url        - url of the event
+  - action     - event action (deny, drop, accept, etc)
+  - status     - event status (success, failure, etc)
+  - extra_data - Any extra data
 -->
 
-<!-- ===================================================================== -->
-<!-- 1. BASHCMD DECODER — Linux Shell Command Logging (/var/log/bashcmd.log) -->
-<!-- Example: bashcmd uid=0 user=root pwd=/root command=whoami            -->
-<!-- ===================================================================== -->
+<decoder name="local_decoder_example">
+    <program_name>local_decoder_example</program_name>
+</decoder>
+
 
 <decoder name="bashcmd">
-  <prematch>^bashcmd </prematch>
+  <program_name>^bashcmd$</program_name>
 </decoder>
 
 <decoder name="bashcmd-fields">
   <parent>bashcmd</parent>
-  <regex>uid=(\d+)\s+user=(\S+)\s+pwd=(\S+)\s+command=(.+)$</regex>
+  <use_own_name>yes</use_own_name>
+   <prematch>uid:\d+ user:</prematch>
+   <regex type="pcre2">uid:(\d+) user:(\S+) pwd:(\S+) cmd:(.+)$</regex>
   <order>uid, user, pwd, command</order>
-</decoder>
-
-<!-- Fallback pattern if pwd contains spaces -->
-<decoder name="bashcmd-fields-alt">
-  <parent>bashcmd</parent>
-  <regex>uid=(\d+)\s+user=(\S+)\s+pwd=(.+)\s+command=(.+)$</regex>
-  <order>uid, user, pwd, command</order>
-</decoder>
-
-<!-- ===================================================================== -->
-<!-- 2. SURICATA EVE-ALERT JSON DECODER EXTENSION                          -->
-<!-- Ensures custom category and rev fields are indexed for correlation    -->
-<!-- ===================================================================== -->
-
-<decoder name="suricata-eve-extended">
-  <parent>json</parent>
-  <plugin_decoder>JSON_Decoder</plugin_decoder>
-  <var name="data.alert.signature_id">(\d+)</var>
-  <var name="data.alert.category">(.+)</var>
 </decoder>
