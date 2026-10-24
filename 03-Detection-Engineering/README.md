@@ -27,8 +27,10 @@ This section details the detection engineering architecture, custom rule definit
 | **Suricata NIDS** | [`Suricata/README.md`](Suricata/README.md) | Suricata Gateway | Inline network IDS signatures, AF-PACKET capture, and threshold configuration |
 | **Suricata Rules** | [`Suricata/custom.rules`](Suricata/custom.rules) | `/etc/suricata/rules/` | Custom signatures (Nmap probes, SQLi, webshells, reverse shells, GoldenPac) |
 | **Suricata Tuning** | [`Suricata/threshold.config`](Suricata/threshold.config) | `/etc/suricata/` | Rate-limiting rules for Nmap OS probes and multi-port scans |
-| **Sysmon Baseline** | [`Sysmon/sysmonconfig.xml`](Sysmon/sysmonconfig.xml) | Windows 10 & DC (`C:\Windows\`) | Modular telemetry configuration for process creation, named pipes, and registry |
-| **Linux Auditd** | [`Auditd/audit.rules`](Auditd/audit.rules) | DVWA (`/etc/audit/rules.d/`) | Syscall monitoring for SUID bash, execve execution, and identity file access |
+| **Linux Auditd** | [`Auditd/README.md`](Auditd/README.md) | DVWA (`192.168.56.30`) | Kernel syscall auditing guide: process exec, SUID creation, file watches |
+| **Auditd Rules** | [`Auditd/audit.rules`](Auditd/audit.rules) | `/etc/audit/rules.d/` | Nextron-adapted Linux auditing ruleset with immutable flag |
+| **Sysmon Baseline** | [`Sysmon/README.md`](Sysmon/README.md) | Windows 10 & DC | Endpoint telemetry guide: process trees, named pipes, registry persistence |
+| **Sysmon Config** | [`Sysmon/sysmonconfig.xml`](Sysmon/sysmonconfig.xml) | `C:\Windows\` | Olaf Hartong sysmon-modular XML schema configuration |
 | **Visual Evidence** | [`TheHive_Alert-ScreenShot/`](TheHive_Alert-ScreenShot/) | Repo Asset | Authentic visual alert captures across all detected campaign stages |
 | **Empirical Alerts** | [`06-Resources/Alerts/`](../06-Resources/Alerts/) | Repo Asset | Raw JSON export of 46 TheHive 5 alerts and 808 Wazuh alert CSV records |
 
