@@ -101,7 +101,7 @@ af-packet:
 | `disable.conf` | Disabling false-positive-heavy rules |
 | `modify.conf` | Adjusting rule actions or metadata |
 
-For full rule details, see [Detection Engineering — Suricata Rules](../../03-Detection-Engineering/Suricata/rules.md).
+For full rule details, see [Detection Engineering — Suricata Rules](../../03-Detection-Engineering/Suricata/README.md).
 
 ### Capture Interface
 
@@ -183,4 +183,4 @@ systemctl status wazuh-agent
 
 - [Kali Attacker Workstation](kali.md)
 - [Lab Architecture](../architecture.md)
-- [Detection Engineering — Suricata Rules](../../03-Detection-Engineering/Suricata/rules.md)
+- [Detection Engineering — Suricata Rules](../../03-Detection-Engineering/Suricata/README.md)

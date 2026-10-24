@@ -65,7 +65,7 @@ All bash commands executed by `root` and `www-data` are captured to `/var/log/ba
 This provides a plain-text audit trail of every interactive and scripted shell command on the host.
 
 A custom Wazuh decoder (`bashcmd`) parses these log entries into structured alerts.
-See [Detection Engineering — Decoders](../../03-Detection-Engineering/Wazuh/decoders.md) for the decoder configuration.
+See [Detection Engineering — Decoders](../../03-Detection-Engineering/Wazuh/README.md#3-decoders-catalog-local_decoderxml) for the decoder configuration.
 
 ## Telemetry Sources
 
@@ -88,4 +88,4 @@ See [Detection Engineering — Decoders](../../03-Detection-Engineering/Wazuh/de
 - [Stage 07 — Privilege Escalation](../../02-Attack-Simulation/stage-07/README.md)
 - [Stage 08 — Reverse Shell](../../02-Attack-Simulation/stage-08/README.md)
 - [Stage 10 — Responder](../../02-Attack-Simulation/stage-10/README.md)
-- [Detection Engineering — Decoders](../../03-Detection-Engineering/Wazuh/decoders.md)
+- [Detection Engineering — Decoders](../../03-Detection-Engineering/Wazuh/README.md#3-decoders-catalog-local_decoderxml)

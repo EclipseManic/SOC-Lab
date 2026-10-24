@@ -91,4 +91,4 @@ reg query "HKLM\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLoggin
 - [Stage 10 — Responder](../../02-Attack-Simulation/stage-10/README.md)
 - [Stage 15 — Lateral Movement](../../02-Attack-Simulation/stage-15/README.md)
 - [Stage 18 — Exfiltration](../../02-Attack-Simulation/stage-18/README.md)
-- [Detection Engineering — Wazuh Rules](../../03-Detection-Engineering/Wazuh/rules.md)
+- [Detection Engineering — Wazuh Rules](../../03-Detection-Engineering/Wazuh/README.md)

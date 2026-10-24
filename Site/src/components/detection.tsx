@@ -161,7 +161,7 @@ export function Detection() {
               </h3>
             </div>
             <a
-              href={`${repoBlob}/03-Detection-Engineering/coverage-matrix.md`}
+              href={`${repoBlob}/03-Detection-Engineering/README.md`}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-faint transition hover:text-teal"

@@ -70,11 +70,11 @@ The evidence sets below are published in the public repository. The attack scree
 
 ## Detection Engineering & Gap Analysis
 
-- **Detection Coverage:** The stage notes currently record 18 of 20 stages as detected, but [03-Detection-Engineering/coverage-matrix.md](../03-Detection-Engineering/coverage-matrix.md) and [gaps.md](../03-Detection-Engineering/gaps.md) still mark DG-04 and DG-11 as untested. No aggregate detection rate is claimed until those records are reconciled.
+- **Detection Coverage:** The stage notes currently record 18 of 20 stages as detected, but [03-Detection-Engineering/README.md#3-20-stage-detection-coverage-matrix](../03-Detection-Engineering/README.md#3-20-stage-detection-coverage-matrix) and [README.md#4-detection-gap-register--blind-spot-analysis](../03-Detection-Engineering/README.md#4-detection-gap-register--blind-spot-analysis) still mark DG-04 and DG-11 as untested. No aggregate detection rate is claimed until those records are reconciled.
 - **Offline Detection Gaps:** 
   - **Stage 04 (Hash Cracking):** Recovering plaintext credentials from extracted MD5 database hashes occurs entirely offline on the attacker's workstation (Kali). No network traffic or host-level telemetry is emitted on victim systems.
   - **Stage 11 (NTLMv2 Cracking):** Cracking captured NetNTLMv2 hashes occurs offline via Hashcat dictionary attacks on the attacker's GPU/CPU.
-  - *Mitigation & Upstream Detection:* While offline cracking itself cannot be detected directly at the endpoint, upstream actions (SQL injection in Stage 03, LLMNR poisoning in Stage 10) and downstream use of cracked credentials (SSH in Stage 08, BloodHound in Stage 12) are reliably detected. Full gap analyses are documented in [03-Detection-Engineering/gaps.md](../03-Detection-Engineering/gaps.md).
+  - *Mitigation & Upstream Detection:* While offline cracking itself cannot be detected directly at the endpoint, upstream actions (SQL injection in Stage 03, LLMNR poisoning in Stage 10) and downstream use of cracked credentials (SSH in Stage 08, BloodHound in Stage 12) are reliably detected. Full gap analyses are documented in [03-Detection-Engineering/README.md#4-detection-gap-register--blind-spot-analysis](../03-Detection-Engineering/README.md#4-detection-gap-register--blind-spot-analysis).
 
 ---
 

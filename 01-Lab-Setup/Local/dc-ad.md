@@ -91,4 +91,4 @@ auditpol /get /category:*
 - [Stage 14 — DCSync](../../02-Attack-Simulation/stage-14/README.md)
 - [Stage 16 — Golden Ticket](../../02-Attack-Simulation/stage-16/README.md)
 - [Stage 17 — DC Persistence](../../02-Attack-Simulation/stage-17/README.md)
-- [Detection Engineering — Wazuh Rules](../../03-Detection-Engineering/Wazuh/rules.md)
+- [Detection Engineering — Wazuh Rules](../../03-Detection-Engineering/Wazuh/README.md)

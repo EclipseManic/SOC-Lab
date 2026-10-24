@@ -633,7 +633,7 @@ export const chapters = [
       hiring:
         "Detection engineering is treated as a testable discipline: define the signal, execute the stage, verify the alert, record the gap.",
     },
-    proof: "03-Detection-Engineering/coverage-matrix.md · 03-Detection-Engineering/README.md",
+    proof: "03-Detection-Engineering/README.md",
   },
   {
     n: "04",
@@ -803,8 +803,8 @@ export const evidenceItems = [
     label: "Detection Coverage",
     value: "Verified (16/20)",
     tone: "teal",
-    note: "16 detected, 2 offline gaps, 2 visibility gaps documented in coverage-matrix.md.",
-    path: "03-Detection-Engineering/coverage-matrix.md",
+    note: "16 detected, 2 offline gaps, 2 visibility gaps documented in README.md#3-20-stage-detection-coverage-matrix.",
+    path: "03-Detection-Engineering/README.md",
   },
   {
     label: "Investigation cases",
