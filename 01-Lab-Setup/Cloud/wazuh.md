@@ -96,7 +96,7 @@ Agent / Suricata Event
               → Analyst Triage Queue
 ```
 
-For full pipeline details, see [pipeline-thecustomhive.md](../../03-Detection-Engineering/pipeline-thecustomhive.md).
+For full pipeline details, see [README.md#5-thecustomhive-alert-pipeline](../../03-Detection-Engineering/README.md#5-thecustomhive-alert-pipeline).
 
 ---
 
@@ -118,14 +118,14 @@ Custom rules, decoders, and integration scripts are deployed directly on this Wa
 
 | Document | Content |
 |----------|---------|
-| [rules.md](../../03-Detection-Engineering/Wazuh/rules.md) | Custom rules in `local_rules.xml` |
-| [decoders.md](../../03-Detection-Engineering/Wazuh/decoders.md) | Custom decoders in `local_decoder.xml` |
+| [rules.md](../../03-Detection-Engineering/Wazuh/README.md) | Custom rules in `local_rules.xml` |
+| [decoders.md](../../03-Detection-Engineering/Wazuh/README.md#3-decoders-catalog-local_decoderxml) | Custom decoders in `local_decoder.xml` |
 | [ossec.conf](../../06-Resources/Configs/ossec.conf) | Wazuh Manager integration configuration |
 | [custom-thehive](../../06-Resources/Scripts/custom-thehive) | POSIX integration wrapper script |
 | [custom-thehive.py](../../06-Resources/Scripts/custom-thehive.py) | Production correlation & flush engine |
 | [thehive-flush.service](../../06-Resources/Scripts/thehive-flush.service) | Systemd unit file for the flush daemon |
-| [false-positives.md](../../03-Detection-Engineering/Wazuh/false-positives.md) | False-positive tuning and exclusions |
-| [pipeline-thecustomhive.md](../../03-Detection-Engineering/pipeline-thecustomhive.md) | Alert pipeline architecture documentation |
+| [false-positives.md](../../03-Detection-Engineering/Wazuh/README.md#4-tuning-false-positives--noise-suppression) | False-positive tuning and exclusions |
+| [README.md#5-thecustomhive-alert-pipeline](../../03-Detection-Engineering/README.md#5-thecustomhive-alert-pipeline) | Alert pipeline architecture documentation |
 
 ---
 
@@ -174,7 +174,7 @@ nc -vz 10.122.0.4 9000
 | Document | Description |
 |----------|-------------|
 | [thehive.md](thehive.md) | TheHive VM — VPN, routing, case management |
-| [rules.md](../../03-Detection-Engineering/Wazuh/rules.md) | Custom Wazuh detection rules |
-| [decoders.md](../../03-Detection-Engineering/Wazuh/decoders.md) | Custom Wazuh decoders |
-| [false-positives.md](../../03-Detection-Engineering/Wazuh/false-positives.md) | False-positive tuning |
-| [pipeline-thecustomhive.md](../../03-Detection-Engineering/pipeline-thecustomhive.md) | Alert pipeline (Wazuh → TheHive) |
+| [rules.md](../../03-Detection-Engineering/Wazuh/README.md) | Custom Wazuh detection rules |
+| [decoders.md](../../03-Detection-Engineering/Wazuh/README.md#3-decoders-catalog-local_decoderxml) | Custom Wazuh decoders |
+| [false-positives.md](../../03-Detection-Engineering/Wazuh/README.md#4-tuning-false-positives--noise-suppression) | False-positive tuning |
+| [README.md#5-thecustomhive-alert-pipeline](../../03-Detection-Engineering/README.md#5-thecustomhive-alert-pipeline) | Alert pipeline (Wazuh → TheHive) |

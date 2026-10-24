@@ -49,7 +49,7 @@ The VPN policy allows `10.8.0.0/24` to both `192.168.232.0/24` and `192.168.56.0
 | Identity | Windows Server 2022 DC, `ad.lab` | Local, `192.168.56.10` | AD DS, DNS, Kerberos |
 | SIEM | Wazuh manager, indexer, dashboard | Wazuh VM, private only | Log collection, rules, alerting |
 | Case management | TheHive | TheHive/automation VM | Alerts, cases, observables, tasks, timelines |
-| Automation | [thecustomhive](03-Detection-Engineering/pipeline-thecustomhive.md) (Python) | Wazuh VM | 2-tier correlation & flush daemon to TheHive |
+| Automation | [thecustomhive](03-Detection-Engineering/README.md#5-thecustomhive-alert-pipeline) (Python) | Wazuh VM | 2-tier correlation & flush daemon to TheHive |
 | DFIR | Velociraptor | TheHive/automation VM | Endpoint artifact collection |
 | Ingress | Nginx Proxy Manager | TheHive/automation VM | Internal TLS/reverse proxy for SOC services |
 | Connectivity | WireGuard | Both sides | VPN hub on `10.8.0.1/24`, Suricata client on `10.8.0.2/32` |
@@ -159,8 +159,8 @@ The repository is the record; the site is a presentation layer over the same dat
 
 1. [Architecture & Network](01-Lab-Setup/architecture.md)
 2. [Attack chain overview](02-Attack-Simulation/README.md)
-3. [Detection coverage matrix](03-Detection-Engineering/coverage-matrix.md)
-4. [Pipeline & Automation bridge](03-Detection-Engineering/pipeline-thecustomhive.md)
+3. [Detection coverage matrix](03-Detection-Engineering/README.md#3-20-stage-detection-coverage-matrix)
+4. [Pipeline & Automation bridge](03-Detection-Engineering/README.md#5-thecustomhive-alert-pipeline)
 5. [Investigation methodology](04-Investigation/README.md)
 6. [Incident report](05-Incident-Report/incident-report.md)
 7. [Master index](INDEX.md)

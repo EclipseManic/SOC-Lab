@@ -76,4 +76,4 @@ hashcat -m 0 -a 0 /tmp/dvwa_hashes.txt /usr/share/wordlists/rockyou.txt
 ## Notes
 
 - All four extracted hashes were identified and cracked almost instantaneously due to the use of unsalted MD5 hashing and trivial passwords.
-- This activity confirms **Detection Gap DG-04** in [gaps.md](../../03-Detection-Engineering/gaps.md).
+- This activity confirms **Detection Gap DG-04** in [README.md#4-detection-gap-register--blind-spot-analysis](../../03-Detection-Engineering/README.md#4-detection-gap-register--blind-spot-analysis).

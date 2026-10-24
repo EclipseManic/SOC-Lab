@@ -174,7 +174,7 @@ TheHive receives incoming alerts pushed directly from the Wazuh Manager VM over 
 
 - **Ingestion Hook:** Wazuh Manager pushes correlated batches to `http://10.122.0.4:9000/api/v1`
 - **Automation Engine:** Powered by `thecustomhive` (running on the Wazuh VM via `thehive-flush.service`)
-- **Full Architecture & Source Code:** See [pipeline-thecustomhive.md](../../03-Detection-Engineering/pipeline-thecustomhive.md) and [`03-Detection-Engineering/Wazuh/`](../../03-Detection-Engineering/Wazuh/)
+- **Full Architecture & Source Code:** See [README.md#5-thecustomhive-alert-pipeline](../../03-Detection-Engineering/README.md#5-thecustomhive-alert-pipeline) and [`03-Detection-Engineering/Wazuh/`](../../03-Detection-Engineering/Wazuh/)
 
 ---
 
@@ -233,5 +233,5 @@ nc -vz <wazuh-vm-private> 443
 | Document | Description |
 |----------|-------------|
 | [wazuh.md](wazuh.md) | Wazuh SIEM VM — rules, agents, indexer |
-| [pipeline-thecustomhive.md](../../03-Detection-Engineering/pipeline-thecustomhive.md) | Alert pipeline (Wazuh → TheHive) |
-| [rules.md](../../03-Detection-Engineering/Wazuh/rules.md) | Custom Wazuh detection rules |
+| [README.md#5-thecustomhive-alert-pipeline](../../03-Detection-Engineering/README.md#5-thecustomhive-alert-pipeline) | Alert pipeline (Wazuh → TheHive) |
+| [rules.md](../../03-Detection-Engineering/Wazuh/README.md) | Custom Wazuh detection rules |
