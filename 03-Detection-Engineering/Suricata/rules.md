@@ -92,7 +92,6 @@ sudo tail -f /var/log/suricata/eve-alert.json | jq '{timestamp, src_ip, dest_ip,
 
 ## Related Documents
 
-- [Suricata Log Samples & JSON Reference](log-samples.md)
 - [Suricata Gateway Host Setup](../../01-Lab-Setup/Local/suricata-gateway.md)
 - [Wazuh Decoders for Suricata](Wazuh/decoders.md)
 - [Detection Coverage Matrix](coverage-matrix.md)
