@@ -131,7 +131,7 @@ export const stages: Stage[] = [
     defender:
       "Suricata matches SELECT USER SQLi in URI (SID 2010937). Wazuh custom Rule 100201 matches SQL injection keywords in URI.",
     evidence:
-      "Browser SQLi dump, raw HTTP GET payload in eve-alert.json, and TheHive Alert 17.",
+      "Browser SQLi dump, raw HTTP GET payload in eve-alert.json, and TheHive alert wzb-10160d36c2.",
     telemetry: "HTTP / Network IDS / Web logs",
     gap: "DG-03",
     status: "Detected",
@@ -140,7 +140,7 @@ export const stages: Stage[] = [
     attackPath: "02-Attack-Simulation/Stages/stage-03-sqli.md",
     investigationPath: "04-Investigation/Stages/stage-03-sqli.md",
     ruleId: "Wazuh 100201 / SID 2010937",
-    alertRef: "Alert 17",
+    alertRef: "wzb-10160d36c2",
   },
   {
     id: "04",
@@ -183,7 +183,7 @@ export const stages: Stage[] = [
     defender:
       "Suricata triggers on PHP System Command in HTTP POST (SID 2014726) and PHP Command Injection in GET (SID 2014727). Wazuh correlates Rule 100600.",
     evidence:
-      "Uploaded shell file path, Suricata POST alert in eve-alert.json, and TheHive Alert 21 & 22.",
+      "Uploaded shell file path, Suricata POST alert in eve-alert.json, and TheHive alert wzb-e9a1797ac4.",
     telemetry: "Network IDS / Web server logs",
     gap: "DG-05",
     status: "Detected",
@@ -192,7 +192,7 @@ export const stages: Stage[] = [
     attackPath: "02-Attack-Simulation/Stages/stage-05-webshell.md",
     investigationPath: "04-Investigation/Stages/stage-05-webshell.md",
     ruleId: "Wazuh 100600 / SID 2014726",
-    alertRef: "Alert 21 & 22",
+    alertRef: "wzb-e9a1797ac4",
   },
   {
     id: "06",
@@ -209,7 +209,7 @@ export const stages: Stage[] = [
     defender:
       "Suricata detects outbound reverse shell connection (SID 2002752). Wazuh correlates web user interactive shell execution.",
     evidence:
-      "Netcat shell prompt on Kali, Suricata reverse shell alert, and TheHive Alert 5.",
+      "Netcat shell prompt on Kali, Suricata reverse shell alert, and TheHive alert wzb-f87fab3eda.",
     telemetry: "Process / Network IDS",
     gap: "DG-06",
     status: "Detected",
@@ -218,7 +218,7 @@ export const stages: Stage[] = [
     attackPath: "02-Attack-Simulation/Stages/stage-06-reverse-shell.md",
     investigationPath: "04-Investigation/Stages/stage-06-reverse-shell.md",
     ruleId: "Wazuh 86601 / SID 2002752",
-    alertRef: "Alert 5",
+    alertRef: "wzb-f87fab3eda",
   },
   {
     id: "07",
@@ -235,7 +235,7 @@ export const stages: Stage[] = [
     defender:
       "Linux PAM authentication logs captured by Wazuh Rule 5402 showing sudo execution by service user www-data.",
     evidence:
-      "Root shell ID output, /var/log/auth.log sudo log entry, and TheHive Alert 6.",
+      "Root shell ID output, /var/log/auth.log sudo log entry, and TheHive alert wzb-ccae331b77.",
     telemetry: "Linux auth / PAM logs",
     gap: "DG-07",
     status: "Detected",
@@ -244,7 +244,7 @@ export const stages: Stage[] = [
     attackPath: "02-Attack-Simulation/Stages/stage-07-privesc.md",
     investigationPath: "04-Investigation/Stages/stage-07-privesc.md",
     ruleId: "Wazuh 5402 (PAM)",
-    alertRef: "Alert 6",
+    alertRef: "wzb-ccae331b77",
   },
   {
     id: "08",
@@ -261,7 +261,7 @@ export const stages: Stage[] = [
     defender:
       "Wazuh Syscheck (FIM) detects unauthorized file modification to authorized_keys (Rule 550); auth.log flags root SSH login (Rule 5715).",
     evidence:
-      "SSH session banner, Wazuh Syscheck checksum diff, and TheHive Alert 7.",
+      "SSH session banner, Wazuh Syscheck checksum diff, and TheHive alert wzb-1c8dc0ab5d.",
     telemetry: "FIM / Linux auth logs",
     gap: "DG-08",
     status: "Detected",
@@ -270,7 +270,7 @@ export const stages: Stage[] = [
     attackPath: "02-Attack-Simulation/Stages/stage-08-ssh-persistence.md",
     investigationPath: "04-Investigation/Stages/stage-08-ssh-persistence.md",
     ruleId: "Wazuh 550, 5715",
-    alertRef: "Alert 7",
+    alertRef: "wzb-1c8dc0ab5d",
   },
   {
     id: "09",
@@ -287,7 +287,7 @@ export const stages: Stage[] = [
     defender:
       "Suricata detects internal reconnaissance sweep probes (SID 2000545). Intra-subnet layer 2 sweep limitation documented as logging gap (DG-09).",
     evidence:
-      "Pivot scan output, Suricata internal sweep alert, and TheHive Alert 8.",
+      "Pivot scan output, Suricata internal sweep alert, and TheHive alert wzb-3152e3ed59.",
     telemetry: "Host process / Network IDS",
     gap: "DG-09",
     status: "Logging gap",
@@ -296,7 +296,7 @@ export const stages: Stage[] = [
     attackPath: "02-Attack-Simulation/Stages/stage-09-internal-discovery.md",
     investigationPath: "04-Investigation/Stages/stage-09-internal-discovery.md",
     ruleId: "Wazuh 86601 / SID 2000545",
-    alertRef: "Alert 8",
+    alertRef: "wzb-3152e3ed59",
   },
   {
     id: "10",
@@ -313,7 +313,7 @@ export const stages: Stage[] = [
     defender:
       "Suricata detects anomalous LLMNR/NBT-NS multicast poisoning response on UDP ports 5355/137 (SID 2013028). Wazuh Rule 86601.",
     evidence:
-      "Captured NetNTLMv2 hash string, Suricata multicast alert, and TheHive Alert 9.",
+      "Captured NetNTLMv2 hash string, Suricata multicast alert, and TheHive alert wzb-7a4a134d1b.",
     telemetry: "Network IDS / Windows auth",
     gap: "DG-10",
     status: "Detected",
@@ -322,7 +322,7 @@ export const stages: Stage[] = [
     attackPath: "02-Attack-Simulation/Stages/stage-10-responder.md",
     investigationPath: "04-Investigation/Stages/stage-10-responder.md",
     ruleId: "Wazuh 86601 / SID 2013028",
-    alertRef: "Alert 9",
+    alertRef: "wzb-7a4a134d1b",
   },
   {
     id: "11",
@@ -365,7 +365,7 @@ export const stages: Stage[] = [
     defender:
       "Wazuh Rule 5715 detects repeated root SSH administrative sessions on pivot. Active Directory LDAP search filter gap documented (DG-12).",
     evidence:
-      "BloodHound graph export, SSH logon logs on DVWA, and TheHive alert `[4x] [DVWA] Logon activity: ROOT`.",
+      "BloodHound graph export, SSH logon logs on DVWA, and TheHive alert wzb-dbf3197ceb.",
     telemetry: "Linux auth / LDAP query logs",
     gap: "DG-12",
     status: "Logging gap",
@@ -374,7 +374,7 @@ export const stages: Stage[] = [
     attackPath: "02-Attack-Simulation/Stages/stage-12-bloodhound.md",
     investigationPath: "04-Investigation/Stages/stage-12-bloodhound.md",
     ruleId: "Wazuh 5715 (Pivot Session)",
-    alertRef: "[4x] Logon: ROOT",
+    alertRef: "wzb-dbf3197ceb",
   },
   {
     id: "13",
@@ -391,7 +391,7 @@ export const stages: Stage[] = [
     defender:
       "Domain Controller Windows Security EID 4769 flagged by Wazuh Rule 60107 showing Kerberos TGS request with RC4 encryption (0x17).",
     evidence:
-      "Extracted TGS ticket hash, DC Event ID 4769 audit log, and TheHive Alert 13.",
+      "Extracted TGS ticket hash, DC Event ID 4769 audit log, and TheHive alert wzb-1d2d7fb4b8.",
     telemetry: "Kerberos / Windows Security logs",
     gap: "DG-13",
     status: "Detected",
@@ -400,7 +400,7 @@ export const stages: Stage[] = [
     attackPath: "02-Attack-Simulation/Stages/stage-13-kerberoasting.md",
     investigationPath: "04-Investigation/Stages/stage-13-kerberoasting.md",
     ruleId: "Windows 4769 / Wazuh 60107",
-    alertRef: "Alert 13",
+    alertRef: "wzb-1d2d7fb4b8",
   },
   {
     id: "14",
@@ -417,7 +417,7 @@ export const stages: Stage[] = [
     defender:
       "Windows Security EID 4662 (Directory Service Access with DS-Replication-Get-Changes rights) flagged by Wazuh Rule 60144.",
     evidence:
-      "Secretsdump terminal output, DC Event ID 4662 audit log, and TheHive Alert 14.",
+      "Secretsdump terminal output, DC Event ID 4662 audit log, and TheHive alert wzb-4174e3672e.",
     telemetry: "Directory Service / DRSUAPI",
     gap: "DG-14",
     status: "Detected",
@@ -426,7 +426,7 @@ export const stages: Stage[] = [
     attackPath: "02-Attack-Simulation/Stages/stage-14-dcsync.md",
     investigationPath: "04-Investigation/Stages/stage-14-dcsync.md",
     ruleId: "Windows 4662 / Wazuh 60144",
-    alertRef: "Alert 14",
+    alertRef: "wzb-4174e3672e",
   },
   {
     id: "15",
@@ -443,7 +443,7 @@ export const stages: Stage[] = [
     defender:
       "Suricata detects ET EXPLOIT GoldenPac Privilege Escalation signature (SID 2015862). Wazuh logs Windows LogonType 3 session.",
     evidence:
-      "Wmiexec session banner, Suricata GoldenPac alert in eve-alert.json, and TheHive Alert 15.",
+      "Wmiexec session banner, Suricata GoldenPac alert in eve-alert.json, and TheHive alert wzb-c1e2642eb2.",
     telemetry: "Network IDS / Windows auth logs",
     gap: "DG-15",
     status: "Detected",
@@ -452,7 +452,7 @@ export const stages: Stage[] = [
     attackPath: "02-Attack-Simulation/Stages/stage-15-pass-the-hash.md",
     investigationPath: "04-Investigation/Stages/stage-15-pass-the-hash.md",
     ruleId: "Wazuh 86601 / SID 2015862",
-    alertRef: "Alert 15",
+    alertRef: "wzb-c1e2642eb2",
   },
   {
     id: "16",
@@ -469,7 +469,7 @@ export const stages: Stage[] = [
     defender:
       "Domain Controller EID 4769 flags anomalous Kerberos TGS request lacking preceding AS-REQ; pivot SSH flagged via Rule 5715.",
     evidence:
-      "Ticket ccache file metadata, DC Kerberos audit log, and TheHive Alert 16.",
+      "Ticket ccache file metadata, DC Kerberos audit log, and TheHive alert wzb-8d45b2d236.",
     telemetry: "Kerberos / DC Security logs",
     gap: "DG-16",
     status: "Detected",
@@ -478,7 +478,7 @@ export const stages: Stage[] = [
     attackPath: "02-Attack-Simulation/Stages/stage-16-golden-ticket.md",
     investigationPath: "04-Investigation/Stages/stage-16-golden-ticket.md",
     ruleId: "Windows 4769 / Wazuh 5715",
-    alertRef: "Alert 16",
+    alertRef: "wzb-8d45b2d236",
   },
   {
     id: "17",
@@ -495,7 +495,7 @@ export const stages: Stage[] = [
     defender:
       "Wazuh custom Rule 100613 flags Impacket wmiexec execution via WMI; Windows Security EID 4720 and 4728 alert on account creation.",
     evidence:
-      "Backdoor account in Active Directory, Sysmon command line event, and TheHive Alert 17.",
+      "Backdoor account in Active Directory, Sysmon command line event, and TheHive alert wzb-26b4d06a63.",
     telemetry: "Sysmon / AD Security logs",
     gap: "DG-17",
     status: "Detected",
@@ -504,7 +504,7 @@ export const stages: Stage[] = [
     attackPath: "02-Attack-Simulation/Stages/stage-17-dc-persistence.md",
     investigationPath: "04-Investigation/Stages/stage-17-dc-persistence.md",
     ruleId: "Wazuh 100613, 60109",
-    alertRef: "Alert 17",
+    alertRef: "wzb-26b4d06a63",
   },
   {
     id: "18",
@@ -521,7 +521,7 @@ export const stages: Stage[] = [
     defender:
       "Wazuh custom Rule 100613 detects repeated Impacket wmiexec process fan-outs and redirection output commands.",
     evidence:
-      "Staged text archives, Sysmon Process Creation events, and TheHive Alert 18.",
+      "Staged text archives, Sysmon Process Creation events, and TheHive alert wzb-aa66cb916a.",
     telemetry: "Sysmon / Process monitoring",
     gap: "DG-18",
     status: "Detected",
@@ -530,7 +530,7 @@ export const stages: Stage[] = [
     attackPath: "02-Attack-Simulation/Stages/stage-18-collection.md",
     investigationPath: "04-Investigation/Stages/stage-18-collection.md",
     ruleId: "Wazuh 100613 (Fan-out)",
-    alertRef: "Alert 18",
+    alertRef: "wzb-aa66cb916a",
   },
   {
     id: "19",
@@ -547,7 +547,7 @@ export const stages: Stage[] = [
     defender:
       "Wazuh Rule 5715 detects anomalous administrative SSH burst (6 consecutive sessions within 1 second). Encrypted payload gap documented (DG-19).",
     evidence:
-      "SCP transfer logs on Kali, /var/log/auth.log SSH burst, and TheHive Alert 19.",
+      "SCP transfer logs on Kali, /var/log/auth.log SSH burst, and TheHive alert wzb-34f34a857c.",
     telemetry: "Linux auth / Network flow",
     gap: "DG-19",
     status: "Detected",
@@ -556,7 +556,7 @@ export const stages: Stage[] = [
     attackPath: "02-Attack-Simulation/Stages/stage-19-exfiltration.md",
     investigationPath: "04-Investigation/Stages/stage-19-exfiltration.md",
     ruleId: "Wazuh 5715 (Pivot Burst)",
-    alertRef: "Alert 19",
+    alertRef: "wzb-34f34a857c",
   },
   {
     id: "20",
@@ -573,7 +573,7 @@ export const stages: Stage[] = [
     defender:
       "Wazuh Rule 100613 (wmiexec command execution), Rule 100100 (Registry persistence), and Suricata network alerts all fire.",
     evidence:
-      "Modified desktop screenshot, Sysmon Registry Event 13, and TheHive Alert 20.",
+      "Modified desktop screenshot, Sysmon Registry Event 13, and TheHive alert wzb-71ef983ad8.",
     telemetry: "Sysmon / Registry / Network IDS",
     gap: "DG-20",
     status: "Detected",
@@ -582,7 +582,7 @@ export const stages: Stage[] = [
     attackPath: "02-Attack-Simulation/Stages/stage-20-impact.md",
     investigationPath: "04-Investigation/Stages/stage-20-impact.md",
     ruleId: "Wazuh 100613, 100100",
-    alertRef: "Alert 20",
+    alertRef: "wzb-71ef983ad8",
   },
 ];
 
@@ -764,6 +764,13 @@ export const reportDocs = [
 ] as const;
 
 export const evidenceItems = [
+  {
+    label: "Raw Alert Exports",
+    value: "Captured",
+    tone: "teal",
+    note: "Authentic TheHive 5 alert JSON and Wazuh alert CSV exports preserved in 06-Resources/Alerts/.",
+    path: "06-Resources/Alerts/",
+  },
   {
     label: "Architecture diagram",
     value: "Captured",
