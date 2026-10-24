@@ -41,9 +41,19 @@ for (let i = 1; i <= 20; i += 1) {
   if (!gapIds.has(id)) failures.push(`missing gap ${id}`);
 }
 
-const untested = [...stagesBlock.matchAll(/status: "Not tested"/g)].length;
-if (untested !== 20) {
-  failures.push(`expected 20 Not tested stages, found ${untested}`);
+const detected = [...stagesBlock.matchAll(/status: "Detected"/g)].length;
+if (detected !== 16) {
+  failures.push(`expected 16 Detected stages, found ${detected}`);
+}
+
+const loggingGaps = [...stagesBlock.matchAll(/status: "Logging gap"/g)].length;
+if (loggingGaps !== 2) {
+  failures.push(`expected 2 Logging gap stages, found ${loggingGaps}`);
+}
+
+const detectionGaps = [...stagesBlock.matchAll(/status: "Detection gap"/g)].length;
+if (detectionGaps !== 2) {
+  failures.push(`expected 2 Detection gap stages, found ${detectionGaps}`);
 }
 
 const reportDocs = [...reportBlock.matchAll(/path: "05-Incident-Report\//g)].length;
@@ -58,5 +68,5 @@ if (failures.length) {
 }
 
 console.log(
-  `Data check passed: ${stageIds.length} stages, ${gapIds.size} gap IDs, ${reportDocs} report documents.`,
+  `Data check passed: ${stageIds.length} stages (${detected} Detected, ${loggingGaps} Logging gaps, ${detectionGaps} Detection gaps), ${gapIds.size} gap IDs, ${reportDocs} report documents.`,
 );

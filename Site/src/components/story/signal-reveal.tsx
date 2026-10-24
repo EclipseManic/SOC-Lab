@@ -67,9 +67,8 @@ export function SignalReveal() {
               </div>
             ))}
             <p className="mt-5 max-w-xl text-xs leading-5 text-faint">
-              No attack or alert screenshots are published until redaction
-              review is complete. The absence is part of the record, not a
-              design accident.
+              All visual evidence is published with strict credential and IP redaction.
+              The record documents both verified detections and inherent offline gaps.
             </p>
           </div>
         </div>
