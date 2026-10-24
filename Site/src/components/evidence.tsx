@@ -84,7 +84,7 @@ export function Evidence() {
                     <span className="font-mono text-xs text-amber">192.168.56.1/24</span>.
                     The authoritative value is{" "}
                     <span className="font-mono text-xs text-amber">192.168.56.150/24</span>{" "}
-                    in the network-topology record. The image is not silently
+                    in the architecture record. The image is not silently
                     rewritten.
                   </p>
                 </div>

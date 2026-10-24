@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 
 const fileMetrics = [
   { value: "20", label: "attack stages" },
-  { value: "4", label: "campaign phases" },
+  { value: "16", label: "verified detections" },
   { value: "1", label: "named blind spot" },
   { value: "0", label: "unearned claims" },
 ];

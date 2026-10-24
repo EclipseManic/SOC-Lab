@@ -1,17 +1,17 @@
 import {
-  AlertTriangle,
   ArrowUpRight,
   BookOpenCheck,
+  CheckCircle2,
   Radio,
-  ShieldAlert,
+  ShieldCheck,
   WifiOff,
 } from "lucide-react";
 import {
   chapters,
+  gapCount,
   repoBlob,
   stages,
   statusLegend,
-  untestedCount,
   verifiedCount,
 } from "@/data";
 import { ChapterHandoff } from "@/components/chapter-handoff";
@@ -33,13 +33,13 @@ export function Detection() {
         <div className="mt-10 grid gap-3 lg:grid-cols-[1.05fr_0.95fr]">
           <Card className="relative overflow-hidden p-5 sm:p-6">
             <div
-              className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-amber/10 blur-3xl"
+              className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-teal/10 blur-3xl"
               aria-hidden="true"
             />
             <div className="relative flex flex-wrap items-start justify-between gap-6">
               <div>
-                <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-amber">
-                  <ShieldAlert className="h-3.5 w-3.5" aria-hidden="true" />
+                <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-teal">
+                  <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
                   Verified coverage
                 </div>
                 <div className="mt-3 flex items-baseline gap-2">
@@ -51,20 +51,24 @@ export function Detection() {
                 <p className="mt-2 max-w-md text-sm leading-6 text-muted">
                   A written rule is a hypothesis. Coverage becomes verified only
                   when the stage runs, the rule fires for the right reason, and
-                  the alert is actionable.
+                  the alert is actionable in TheHive.
                 </p>
               </div>
-              <Badge tone="amber">
-                <AlertTriangle className="h-3 w-3" aria-hidden="true" />
-                {untestedCount} not tested
+              <Badge tone="teal">
+                <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+                {verifiedCount} of {stages.length} verified
               </Badge>
             </div>
             <div className="relative mt-5 h-1.5 overflow-hidden rounded-full bg-line/60">
-              <div className="h-full w-0 rounded-full bg-gradient-to-r from-amber to-rose" />
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-teal to-blue transition-all duration-500"
+                style={{ width: `${(verifiedCount / stages.length) * 100}%` }}
+              />
             </div>
             <div className="relative mt-2 flex justify-between font-mono text-[9px] uppercase tracking-[0.12em] text-faint">
-              <span>Defined</span>
-              <span>Validated</span>
+              <span>0%</span>
+              <span className="font-medium text-teal">80% Validated</span>
+              <span>100%</span>
             </div>
           </Card>
 
@@ -90,14 +94,14 @@ export function Detection() {
             <Card className="p-3 sm:p-4">
               <BookOpenCheck className="h-4 w-4 text-blue" aria-hidden="true" />
               <div className="mt-3 font-mono text-2xl font-semibold text-ink">
-                {stages.length}
+                {gapCount}
               </div>
               <p className="mt-1 text-[11px] leading-4 text-faint">
-                gap IDs reserved, DG-01 to DG-20
+                documented visibility & offline gaps
               </p>
             </Card>
             <Card className="p-3 sm:p-4">
-              <AlertTriangle className="h-4 w-4 text-rose" aria-hidden="true" />
+              <ShieldCheck className="h-4 w-4 text-teal" aria-hidden="true" />
               <div className="mt-3 font-mono text-2xl font-semibold text-ink">{verifiedCount}</div>
               <p className="mt-1 text-[11px] leading-4 text-faint">
                 verified alerts in the case record

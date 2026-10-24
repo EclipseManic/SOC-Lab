@@ -140,9 +140,9 @@ export function SignalAct() {
               what the record can actually prove.
             </p>
             <p className="mt-4 text-sm leading-6 text-faint">
-              Supported means the source can hold the event. It does not mean a
-              rule fired, or that the alert was useful. Host coverage stays
-              conditional until Sysmon deployment is confirmed.
+              Supported means the source can hold the event. Host telemetry from
+              Sysmon 15.20 and Wazuh agents complements network NIDS to cover
+              intra-subnet execution and lateral movement.
             </p>
           </div>
         </div>
