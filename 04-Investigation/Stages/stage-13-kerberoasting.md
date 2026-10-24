@@ -1,58 +1,82 @@
 # Investigation — Stage 13 — Kerberoasting
 
-> **Status:** Draft
-> **Attack stage:** [Stage 13](../../02-Attack-Simulation/Stages/stage-13-kerberoasting.md)
-> **TheHive case:** [Case 02](../Cases/case-02-lateral-movement.md)
+> **Status:** Completed  
+> **Attack stage:** [Stage 13](../../02-Attack-Simulation/Stages/stage-13-kerberoasting.md)  
+> **TheHive case:** [Lateral Movement and Credential Access](../Cases/case-02-lateral-movement.md)  
+
+---
 
 ## Alert details
 
-| Alert ID | Rule ID | Source | Severity | TLP / PAP |
-|---|---|---|---|---|
-| TBD | TBD | TBD | TBD | TBD |
+| Field | Value |
+|---|---|
+| **Alert ID** | `wzb-1d2d7fb4b8 / wzb-c1e2642eb2` |
+| **Rule ID** | `Suricata SID 2019922 via Wazuh 86601 + Wazuh 5715` |
+| **Source** | Suricata (ens37 promiscuous capture) + Wazuh SSHD |
+| **Severity** | High |
+| **TLP / PAP** | `TLP:AMBER / PAP:AMBER` |
+
+---
 
 ## What was detected
 
-TBD
+Suricata captured unrouted Kerberos traffic on VMnet2 (192.168.56.30:33986 -> 192.168.56.10:88) triggering SID 2019922 (ET EXPLOIT Possible MS14-068 GoldenPac). In parallel, Wazuh Rule 5715 alerted on pivot SSH activity.
+
+---
 
 ## Triage
 
-Verdict: TBD
-Confidence: TBD
-Reason: TBD
+| Question | Answer |
+|---|---|
+| **Verdict** | True Positive (Network & Pivot Alerted) |
+| **Confidence** | High |
+| **Rationale** | Kerberos TGS request packet captured on wire during Impacket GetUserSPNs.py ticket extraction targeting HANK_SHERMAN. |
+
+---
 
 ## Investigation steps
 
-1. Identify the service account and SPN.
-2. Review Kerberos service ticket requests (event 4769).
-3. Check the ticket encryption type and volume.
-4. Confirm whether the ticket was cracked or used.
-5. Correlate with DCSync and lateral movement.
+1. Inspected Suricata alert wzb-c1e2642eb2 for Kerberos AS-REQ / TGS-REQ payload.
+2. Verified promiscuous mode capture on router interface ens37.
+3. Checked DC Security log for Event ID 4769 (Kerberos Service Ticket Request for HANK_SHERMAN with RC4 encryption 0x17).
+4. Correlated with pivot SSH authentication alert wzb-1d2d7fb4b8.
+5. Identified cracked HANK_SHERMAN Domain Admin account as compromised.
+
+---
 
 ## Evidence
 
-- Attack: `../../02-Attack-Simulation/Attack-Screenshots/stage-13/`
-- Alert: `../../02-Attack-Simulation/alert-screenshots/stage-13/`
-- Queries and logs: TBD
+- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/41.png`](../../02-Attack-Simulation/Attack-Screenshots/41.png)
+- **Alert Evidence:** [`../../03-Detection-Engineering/TheHive_Alert-ScreenShot/11.png`](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/11.png)
+- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv) and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
 
-## IOCs
+---
+
+## Indicators of Compromise (IOCs)
 
 | Type | Value | Context |
 |---|---|---|
-| User | `HANK_SHERMAN` | Kerberoasting target (verify) |
-| SPN | TBD | Service principal name |
-| Ticket encryption | TBD | RC4 or AES |
+| Target SPN | `ad.lab/HANK_SHERMAN` | Targeted Kerberos service principal |
+| Encryption | `RC4-HMAC (0x17)` | Vulnerable ticket encryption |
+| DC IP | `192.168.56.10:88` | Kerberos Key Distribution Center |
+
+---
 
 ## Detection assessment
 
-Status: Not tested
-Gap ID: DG-13
-Recommended rule: TBD
+- **Status:** Detected (Network & Pivot Alerted)
+- **Gap ID:** None
+- **Engineering Assessment:** Suricata caught the Kerberos request via VMnet2 promiscuous sniffing; Wazuh alerted on the pivot session. DC Event 4769 was logged locally.
+
+---
 
 ## Verdict
 
-TBD
+Confirmed True Positive Kerberoasting attack detected via wire signature and pivot session telemetry.
+
+---
 
 ## MITRE ATT&CK
 
-Tactic: Credential Access
-Technique: Kerberoasting (T1558.003)
+- **Tactic:** Credential Access
+- **Technique:** Steal or Forge Kerberos Tickets: Kerberoasting (T1558.003)

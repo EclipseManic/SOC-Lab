@@ -1,58 +1,82 @@
 # Investigation — Stage 10 — Responder Poisoning
 
-> **Status:** Draft
-> **Attack stage:** [Stage 10](../../02-Attack-Simulation/Stages/stage-10-responder.md)
-> **TheHive case:** [Case 02](../Cases/case-02-lateral-movement.md)
+> **Status:** Completed  
+> **Attack stage:** [Stage 10](../../02-Attack-Simulation/Stages/stage-10-responder.md)  
+> **TheHive case:** [Lateral Movement and Credential Access](../Cases/case-02-lateral-movement.md)  
+
+---
 
 ## Alert details
 
-| Alert ID | Rule ID | Source | Severity | TLP / PAP |
-|---|---|---|---|---|
-| TBD | TBD | TBD | TBD | TBD |
+| Field | Value |
+|---|---|
+| **Alert ID** | `wzb-e362e6ca6f` |
+| **Rule ID** | `Suricata SID 2013028 via Wazuh 86601 (Level 8)` |
+| **Source** | Suricata Network IDS |
+| **Severity** | High |
+| **TLP / PAP** | `TLP:AMBER / PAP:AMBER` |
+
+---
 
 ## What was detected
 
-TBD
+Suricata alert SID 2013028 (ET INFO NTLM Session Setup Request - Negotiate) triggered when DomainWin10 (192.168.56.20) attempted SMB authentication against the Responder poisoner on DVWA (192.168.56.30).
+
+---
 
 ## Triage
 
-Verdict: TBD
-Confidence: TBD
-Reason: TBD
+| Question | Answer |
+|---|---|
+| **Verdict** | True Positive |
+| **Confidence** | High |
+| **Rationale** | Adversary ran Responder on pivot host answering LLMNR/NBT-NS broadcast requests and forcing NetNTLMv2 authentication. |
+
+---
 
 ## Investigation steps
 
-1. Identify the poisoned protocol (LLMNR, NBT-NS, or mDNS).
-2. Find the victim host and captured username.
-3. Confirm the pivot host and interface (DVWA, `192.168.56.30`); same-subnet poisoning is not visible to Suricata.
-4. Check for SMB relay or authentication attempts.
-5. Correlate with the NTLMv2 cracking stage.
+1. Verified Suricata fast.log for SID 2013028 on SMB traffic between 192.168.56.20 and 192.168.56.30.
+2. Confirmed NTLMSSP negotiation packet structure in network capture.
+3. Correlated with Responder logs on DVWA showing capture of win10 user NetNTLMv2 hash.
+4. Noted that Suricata alerted on the NTLM session setup request rather than raw LLMNR UDP.
+5. Escalated case for potential domain credential compromise.
+
+---
 
 ## Evidence
 
-- Attack: `../../02-Attack-Simulation/Attack-Screenshots/stage-10/`
-- Alert: `../../02-Attack-Simulation/alert-screenshots/stage-10/`
-- Queries and logs: TBD
+- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/33.png`](../../02-Attack-Simulation/Attack-Screenshots/33.png)
+- **Alert Evidence:** [`../../03-Detection-Engineering/TheHive_Alert-ScreenShot/9.png`](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/9.png)
+- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv) and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
 
-## IOCs
+---
+
+## Indicators of Compromise (IOCs)
 
 | Type | Value | Context |
 |---|---|---|
-| IP | `192.168.56.30` | DVWA pivot / Responder host |
-| User | TBD | Victim account |
-| Hash type | NTLMv2 | Captured challenge-response |
+| Poisoner IP | `192.168.56.30` | DVWA pivot running Responder |
+| Victim IP | `192.168.56.20` | Domain workstation (DomainWin10) |
+| Account | `ad.lab\win10` | Captured domain user account |
+
+---
 
 ## Detection assessment
 
-Status: Not tested
-Gap ID: DG-10
-Recommended rule: TBD
+- **Status:** Detected
+- **Gap ID:** None
+- **Engineering Assessment:** Suricata SID 2013028 reliably flags inbound NTLM authentication negotiations over SMB.
+
+---
 
 ## Verdict
 
-TBD
+Confirmed True Positive LLMNR/NBT-NS credential harvesting via Responder.
+
+---
 
 ## MITRE ATT&CK
 
-Tactic: Credential Access
-Technique: LLMNR/NBT-NS Poisoning and SMB Relay (T1557.001)
+- **Tactic:** Credential Access
+- **Technique:** Adversary-in-the-Middle: LLMNR/NBT-NS Poisoning and SMB Relay (T1557.001)

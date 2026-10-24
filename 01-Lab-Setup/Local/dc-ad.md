@@ -38,7 +38,7 @@ This scale provides realistic BloodHound enumeration results and attack path dis
 
 | Object | Type | Details | Stage |
 |--------|------|---------|-------|
-| `HANK_SHERMAN` | Domain Admin + Service Account | SPN: `CIFS/AWSWAPPS1000000`, Password: `Password123`, PasswordNeverExpires: True | 13 (Kerberoasting) |
+| `HANK_SHERMAN` | Domain Admin + Service Account | SPN: `CIFS/AWSWAPPS1000000`, Password: `<REDACTED>`, PasswordNeverExpires: True | 13 (Kerberoasting) |
 | `Administrator` | Domain Admin | High-value credential target | 14 (DCSync) |
 | `backdoor` | Domain Account | Created for persistence (added to Domain Admins) | 17 (DC Persistence) |
 
@@ -47,8 +47,12 @@ This scale provides realistic BloodHound enumeration results and attack path dis
 
 ## Sysmon 15.20
 
-Sysmon is configured with **sysmon-modular** (Olaf Hartong's modular Sysmon config), identical to the Win10 workstation.
-Captures process creation, network connections, file creation, registry modifications, WMI activity, and DNS queries.
+Sysmon is configured with an adapted **sysmon-modular** baseline, identical to the Win10 workstation:
+- Process creation (Event ID 1) — includes WmiPrvSE parent tracking and ADMIN$ redirection commands
+- Network connections (Event ID 3) — ports 445, 135, 389, 636, 88
+- File creation (Event ID 11) — executable and script staging
+- Registry modifications (Event ID 12/13) — autostart and service persistence
+- Named pipes (Event ID 17/18) — `spoolss`, `atsvc`, `svcctl`, `wmiexec`
 
 ## Advanced Audit Policies
 
@@ -58,38 +62,21 @@ auditpol /get /category:*
 # Account Logon → Kerberos Authentication Service: Success, Failure
 # Account Logon → Kerberos Service Ticket Operations: Success, Failure
 # Account Logon → Credential Validation: Success, Failure
-# DS Access → Directory Service Access: Success, Failure
-# DS Access → Directory Service Changes: Success, Failure
-# Account Management → User Account Management: Success, Failure
-# Account Management → Security Group Management: Success, Failure
-# Logon/Logoff → Logon: Success, Failure
-# Detailed Tracking → Process Creation: Success
+# Account Management → User Account Management: Success, Failure (EID 4720/4726)
+# Account Management → Security Group Management: Success, Failure (EID 4728)
+# Privilege Use → Sensitive Privilege Use: Success, Failure (EID 4672)
+# DS Access → Directory Service Access: Success, Failure (EID 4662)
 ```
 
-> [!IMPORTANT]
-> These audit policies are the **primary detection source** for Stages 13–17:
-> - **Stage 13 (Kerberoasting):** Kerberos Service Ticket Operations logs TGS requests for SPNs with RC4 encryption
-> - **Stage 14 (DCSync):** Directory Service Access logs replication requests from non-DC sources
-> - **Stage 16 (Golden Ticket):** Kerberos Authentication Service detects forged TGTs
-> - **Stage 17 (DC Persistence):** User Account Management and Security Group Management log the `backdoor` account creation and Domain Admins group modification
-
-## Telemetry Sources
-
-| Source | What it captures |
-|--------|-----------------|
-| Windows Security log | Kerberos events, logon/logoff, account management, process creation |
-| Directory Service log | AD replication, object access, LDAP queries |
-| DNS Server log | DNS resolution for domain-joined hosts |
-| Sysmon | Process tree, network connections, file/registry changes |
-| Wazuh agent (`DomainWin10`) | Aggregated host alerts shipped to manager |
-| Velociraptor client | On-demand forensic collection |
+> [!NOTE]
+> For granular LDAP query logging (Event ID 1644, relevant to BloodHound enumeration in Stage 12), the NTDS Diagnostics registry setting `15 Field Engineering` must be configured to level `5` in addition to Directory Service Access auditing.
 
 ## Related Documentation
 
-- [Stage 12 — BloodHound Enumeration](../../02-Attack-Simulation/stage-12/README.md)
-- [Stage 13 — Kerberoasting](../../02-Attack-Simulation/stage-13/README.md)
-- [Stage 14 — DCSync](../../02-Attack-Simulation/stage-14/README.md)
-- [Stage 16 — Golden Ticket](../../02-Attack-Simulation/stage-16/README.md)
-- [Stage 17 — DC Persistence](../../02-Attack-Simulation/stage-17/README.md)
+- [Stage 12 — BloodHound Enumeration](../../02-Attack-Simulation/Stages/stage-12-bloodhound.md)
+- [Stage 13 — Kerberoasting](../../02-Attack-Simulation/Stages/stage-13-kerberoasting.md)
+- [Stage 14 — DCSync](../../02-Attack-Simulation/Stages/stage-14-dcsync.md)
+- [Stage 16 — Golden Ticket](../../02-Attack-Simulation/Stages/stage-16-golden-ticket.md)
+- [Stage 17 — DC Persistence](../../02-Attack-Simulation/Stages/stage-17-dc-persistence.md)
 - [Detection Engineering — Sysmon Baseline](../../03-Detection-Engineering/Sysmon/README.md)
-- [Detection Engineering — Wazuh Rules](../../03-Detection-Engineering/Wazuh/README.md)
+- [Detection Engineering — Wazuh README](../../03-Detection-Engineering/Wazuh/README.md)

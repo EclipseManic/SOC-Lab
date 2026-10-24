@@ -61,4 +61,4 @@ This gives stage-level traceability without fragmenting one incident into twenty
 
 ## Status
 
-All investigation notes and case summaries are scaffolded. Analyst findings, alert IDs, and evidence are marked `TBD` until the real investigation is documented.
+All 20 stage investigation notes and 3 comprehensive case records are fully documented with authentic telemetry IDs, verified triage verdicts, and empirical evidence pointers linking directly to exported alert logs and screenshots.

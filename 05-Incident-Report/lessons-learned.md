@@ -1,44 +1,33 @@
-# Lessons Learned
+# Lessons Learned & Engineering Backlog
 
-## What worked
+Post-incident analysis of defensive posture, telemetry visibility, and strategic roadmap.
 
-- TBD
+---
 
-## What failed or was missed
+## 1. What Succeeded
 
-- TBD
+- **Multi-Sensor Correlation:** Combining Suricata network intrusion signatures with Wazuh endpoint behavioral analytics provided multi-layered verification for 16 attack stages.
+- **Custom Integration Pipeline:** The `thecustomhive` two-tier correlation architecture successfully condensed 808 raw multi-level alert records into 46 high-fidelity, actionable incidents, avoiding alert fatigue in TheHive 5.
+- **High-Velocity Detection:** Host behavioral rules (Auditd SUID execution, Apache error floods, Pass-the-Hash Logon Type 3, process fan-outs) alerted with sub-15-second latency.
+- **Promiscuous Sniffing Resilience:** AF-PACKET promiscuous capture on router interface `ens37` allowed Suricata to observe intra-subnet Layer 2 sweeps and Kerberos ticket requests that did not traverse the router's IP stack.
 
-## Detection gaps
+---
 
-| Gap ID | Lesson | Proposed change | Owner | Status |
+## 2. Defensive Gaps & Architectural Blind Spots
+
+- **Inherent Offline Computation (DG-04 & DG-11):** Password hash cracking occurred entirely within the adversary's local GPU resources on Kali Linux. Cracking generates zero victim network traffic and zero target endpoint execution. SOC strategy must focus on preventing credential dumps and detecting post-crack authentication anomalies.
+- **Intra-Subnet Layer 2 Visibility (DG-09):** Packets switched locally within VMware VMnet2 bypassed gateway IP routing. Mitigated through endpoint process monitoring and promiscuous NIDS sniffing.
+- **Active Directory Diagnostic Logging (DG-12):** Mass LDAP enumeration via SharpHound did not generate high-severity alerts on the DC because Event ID 1644 requires an explicit registry diagnostic setting (`15 Field Engineering` = 5). Mitigated by pivot root SSH authentication telemetry (`Rule 5715`).
+- **Encrypted Exfiltration Inspection (DG-19):** SCP over SSH encrypted file payloads on the wire, hiding archive contents from network IDS. Mitigated by host-level administrative logon rate anomaly correlation (6 sessions in 1 second).
+
+---
+
+## 3. Engineering Backlog & Remediation Roadmap
+
+| Priority | Task Description | Target Component | Owner | Status |
 |---|---|---|---|---|
-| DG-01 | TBD | TBD | TBD | Open |
-| DG-02 | TBD | TBD | TBD | Open |
-| DG-03 | TBD | TBD | TBD | Open |
-
-## Process improvements
-
-| Area | Current state | Improvement | Priority |
-|---|---|---|---|
-| Alert triage | TBD | TBD | TBD |
-| Case management | TBD | TBD | TBD |
-| Evidence handling | TBD | TBD | TBD |
-| Detection tuning | TBD | TBD | TBD |
-| Documentation | TBD | TBD | TBD |
-
-## What I would do differently
-
-TBD
-
-## Next iteration
-
-- [ ] Close the highest-risk detection gaps
-- [ ] Add the missing telemetry sources
-- [ ] Retest the affected stages
-- [ ] Update the coverage matrix and `INDEX.md`
-- [ ] Re-run the campaign from a clean snapshot
-- [ ] Compare detection performance with the first run
-
-## Portfolio reflection
-
-TBD — what this project demonstrates about detection engineering, incident response, and technical communication.
+| **P1** | Set registry key `15 Field Engineering` to `5` to enable Event ID 1644 LDAP logging | Active Directory (PC-DC) | AD Engineering | Backlog |
+| **P1** | Add Domain Admins to `Protected Users` group to disable NTLM Pass-the-Hash | Active Directory (GPO) | Identity Team | Backlog |
+| **P2** | Deploy File Integrity Monitoring (FIM) on web server upload and temporary directories | Wazuh Agent (`ossec.conf`) | SOC Engineering | Backlog |
+| **P2** | Configure Windows Firewall dropped packet logging forwarding to Wazuh | Windows 10 & PC-DC | Endpoint Team | Backlog |
+| **P3** | Migrate standalone service accounts to Group Managed Service Accounts (gMSA) | Active Directory Infrastructure | Systems Admin | Backlog |

@@ -2,10 +2,10 @@
 # audit.rules — Linux auditd ruleset adapted from Nextron Systems Best-Practice
 # Deployed on: DVWA Pivot Host (Ubuntu 24.04, 192.168.56.30)
 # Path: /etc/audit/rules.d/audit.rules
-# Loaded via: augenrules --load
+# Loaded via: augenrules --load (reboot required if previously locked with -e 2)
 # =========================================================================
 
-# Remove any existing rules
+# Remove any existing rules (effective on initial load before locking)
 -D
 
 # Buffer Size
@@ -33,16 +33,18 @@
 -a always,exit -F arch=b64 -S chmod,fchmod,fchmodat -F a2&04000 -k setuid_creation
 -a always,exit -F arch=b32 -S chmod,fchmod,fchmodat -F a2&04000 -k setuid_creation
 
-# --- 3. PERSISTENCE & CRITICAL FILE MODIFICATIONS ---
+# --- 3. PERSISTENCE & CRITICAL FILE ACCESS (Aligned with Wazuh Rules 100217 & 100218) ---
 # Monitor SSH authorized_keys modifications for root and users
 -w /root/.ssh -p wa -k ssh_root_persistence
 -w /home -p wa -k ssh_user_persistence
 
 # Monitor user account databases (/etc/passwd, /etc/shadow, /etc/sudoers)
--w /etc/passwd -p wa -k user_account_modification
--w /etc/shadow -p wa -k user_account_modification
--w /etc/group -p wa -k user_account_modification
--w /etc/gshadow -p wa -k user_account_modification
+-w /etc/passwd -p wa -k identity
+-w /etc/shadow -p wa -k identity
+-w /etc/group -p wa -k identity
+-w /etc/gshadow -p wa -k identity
+-w /etc/passwd -p r -k cat_sensitive_file
+-w /etc/shadow -p r -k cat_sensitive_file
 -w /etc/sudoers -p wa -k sudoers_modification
 -w /etc/sudoers.d/ -p wa -k sudoers_modification
 
@@ -50,12 +52,15 @@
 -w /var/www/html -p wa -k web_directory_write
 
 # --- 4. SUSPICIOUS BINARY & SCRIPT EXECUTION ---
-# Monitor execution of Python, Perl, Bash, Netcat
+# Monitor execution of Python, Netcat, and tools executing from staging directories
 -w /usr/bin/python3 -p x -k python_execution
 -w /usr/bin/nc -p x -k netcat_execution
 -w /bin/nc.traditional -p x -k netcat_execution
--w /tmp -p x -k tmp_execution
+-a always,exit -F arch=b64 -S execve,execveat -F dir=/tmp -k tmp_execution
+-a always,exit -F arch=b32 -S execve,execveat -F dir=/tmp -k tmp_execution
+-a always,exit -F arch=b64 -S execve,execveat -F dir=/opt -k opt_tool_execution
+-a always,exit -F arch=b32 -S execve,execveat -F dir=/opt -k opt_tool_execution
 
 # --- 5. MAKE CONFIGURATION IMMUTABLE ---
-# Lock audit configuration until reboot
+# Lock audit configuration until reboot (prevents attacker modification post-root)
 -e 2

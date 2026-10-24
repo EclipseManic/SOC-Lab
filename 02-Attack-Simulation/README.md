@@ -70,7 +70,12 @@ The evidence sets below are published in the public repository. The attack scree
 
 ## Detection Engineering & Gap Analysis
 
-- **Detection Coverage:** The stage notes currently record 18 of 20 stages as detected, but [03-Detection-Engineering/README.md#3-20-stage-detection-coverage-matrix](../03-Detection-Engineering/README.md#3-20-stage-detection-coverage-matrix) and [README.md#4-detection-gap-register--blind-spot-analysis](../03-Detection-Engineering/README.md#4-detection-gap-register--blind-spot-analysis) still mark DG-04 and DG-11 as untested. No aggregate detection rate is claimed until those records are reconciled.
+- **Detection Coverage:**
+  - **Verified Detections with Alerts:** 16 stages (80.0%)
+  - **Inherent Offline Gaps (Zero Telemetry):** 2 stages (10.0% - Stages 04 & 11)
+  - **Partial / Protocol Logging Gaps:** 2 stages (10.0% - Stages 09 & 12, where detection occurred on alternative layers: Stage 09 via network IDS promiscuous sweep, Stage 12 via pivot SSH session authentication)
+  - **Rule Failures:** 0 stages (0.0%)
+  - **Total Stages:** 20
 - **Offline Detection Gaps:** 
   - **Stage 04 (Hash Cracking):** Recovering plaintext credentials from extracted MD5 database hashes occurs entirely offline on the attacker's workstation (Kali). No network traffic or host-level telemetry is emitted on victim systems.
   - **Stage 11 (NTLMv2 Cracking):** Cracking captured NetNTLMv2 hashes occurs offline via Hashcat dictionary attacks on the attacker's GPU/CPU.

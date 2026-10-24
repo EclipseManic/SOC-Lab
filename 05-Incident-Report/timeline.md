@@ -1,43 +1,27 @@
-# Incident Timeline
+# Consolidated Incident Timeline
 
-All times should use one timezone and one format. Record the source for every row.
+All timestamps represent elapsed simulation time from campaign initiation ($T_0$).
 
-## Timeline
-
-| Time | Stage | Event | Source | Evidence |
-|---|---|---|---|---|
-| TBD | 01 | Reconnaissance starts | Suricata | TBD |
-| TBD | 02 | Brute force attempt | Wazuh / web log | TBD |
-| TBD | 03 | SQL injection | Suricata / Wazuh | TBD |
-| TBD | 05 | Web shell uploaded | Wazuh / FIM | TBD |
-| TBD | 06 | Reverse shell established | Wazuh / network | TBD |
-| TBD | 07 | Privilege escalation | Host log | TBD |
-| TBD | 08 | SSH persistence | Auth log | TBD |
-| TBD | 09 | Internal discovery | Host / process | TBD |
-| TBD | 10 | Responder poisoning | Host / auth | TBD |
-| TBD | 11 | NTLMv2 hash cracked | Offline | TBD |
-| TBD | 12 | BloodHound enumeration | Directory service | TBD |
-| TBD | 13 | Kerberoasting | Kerberos | TBD |
-| TBD | 14 | DCSync | Directory service | TBD |
-| TBD | 15 | Pass-the-Hash | Auth / SMB | TBD |
-| TBD | 16 | Golden Ticket | Kerberos | TBD |
-| TBD | 17 | Backdoor account created | Windows security | TBD |
-| TBD | 18 | Collection | File / process | TBD |
-| TBD | 19 | Exfiltration | Gateway flow | TBD |
-| TBD | 20 | Impact artifacts created | FIM / file | TBD |
-
-## Response timeline
-
-| Time | Action | Owner | Evidence |
-|---|---|---|---|
-| TBD | Alert triaged | TBD | TBD |
-| TBD | Case created | TBD | TBD |
-| TBD | Host isolated | TBD | TBD |
-| TBD | Persistence removed | TBD | TBD |
-| TBD | Host restored | TBD | TBD |
-
-## Notes
-
-- Use the earliest reliable timestamp for each event.
-- If sources disagree, record both and explain the discrepancy.
-- Keep the raw timestamps in the stage notes; this file is the consolidated view.
+| Elapsed Time | Stage | Phase | Telemetry Event | Source Sensor | Evidence Reference |
+|---|---|---|---|---|---|
+| **$T_0$** | 01 | Initial Access | Inbound Nmap port scan & Nikto directory fuzzing | Suricata SID 2000545 / Wazuh Rule 100410 | [Attack 01](../../02-Attack-Simulation/Attack-Screenshots/01.png) · [Alert 01](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/1.png) |
+| **$T_0 + 2m$** | 02 | Initial Access | Hydra HTTP basic authentication flood on `/dvwa/login.php` | Wazuh Rule 100213 / Suricata SID 2000547 | [Attack 05](../../02-Attack-Simulation/Attack-Screenshots/05.png) · [Alert 02](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/2.png) |
+| **$T_0 + 5m$** | 03 | Initial Access | SQL injection UNION SELECT payload extracting users table | Suricata SID 2010938 via Wazuh 86601 | [Attack 09](../../02-Attack-Simulation/Attack-Screenshots/09.png) · [Alert 03](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/3.png) |
+| **$T_0 + 8m$** | 04 | Credential Access | Offline Hashcat MD5 cracking on attacker GPU (`password`) | *Offline Activity (No Victim Telemetry)* | [Attack 13](../../02-Attack-Simulation/Attack-Screenshots/13.png) · DG-04 |
+| **$T_0 + 11m$** | 05 | Persistence | Executable PHP web shell uploaded to `/uploads/shell.php` | Wazuh Rule 100214 / Auditd File Watch | [Attack 16](../../02-Attack-Simulation/Attack-Screenshots/16.png) · [Alert 04](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/4.png) |
+| **$T_0 + 13m$** | 06 | Execution | Interactive Python reverse shell connecting to `192.168.232.135:4444` | Wazuh Rule 100602 via `bashcmd` decoder | [Attack 19](../../02-Attack-Simulation/Attack-Screenshots/19.png) · [Alert 05](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/5.png) |
+| **$T_0 + 16m$** | 07 | Privilege Escalation | SUID `/usr/bin/find` execution reading `/etc/shadow` | Wazuh Rule 100603 / Auditd SUID audit | [Attack 23](../../02-Attack-Simulation/Attack-Screenshots/23.png) · [Alert 06](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/6.png) |
+| **$T_0 + 18m$** | 08 | Persistence | Attacker SSH key written to `/root/.ssh/authorized_keys` | Wazuh Rule 100215 / Auditd | [Attack 26](../../02-Attack-Simulation/Attack-Screenshots/26.png) · [Alert 07](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/7.png) |
+| **$T_0 + 20m$** | 08 | Persistence | Inbound interactive root SSH session established from Kali | Wazuh Rule 5715 (Elevated Level 8) | [Attack 26](../../02-Attack-Simulation/Attack-Screenshots/26.png) · [Alert 07](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/7.png) |
+| **$T_0 + 23m$** | 09 | Discovery | Internal subnet multi-port sweep (`192.168.56.0/24`) | Suricata SID 2000545 (`ens37` promiscuous capture) | [Attack 29](../../02-Attack-Simulation/Attack-Screenshots/29.png) · [Alert 08](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/8.png) |
+| **$T_0 + 27m$** | 10 | Credential Access | Responder poisoning capturing `win10` NetNTLMv2 hash over SMB | Suricata SID 2013028 via Wazuh 86601 | [Attack 33](../../02-Attack-Simulation/Attack-Screenshots/33.png) · [Alert 09](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/9.png) |
+| **$T_0 + 30m$** | 11 | Credential Access | Offline Hashcat NetNTLMv2 cracking on attacker GPU | *Offline Activity (No Victim Telemetry)* | [Attack 36](../../02-Attack-Simulation/Attack-Screenshots/36.png) · DG-11 |
+| **$T_0 + 34m$** | 12 | Discovery | SharpHound/BloodHound LDAP query sweep targeting PC-DC | Wazuh Rule 5715 (Pivot root SSH logon alerted) | [Attack 38](../../02-Attack-Simulation/Attack-Screenshots/38.png) · [Alert 10](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/10.png) |
+| **$T_0 + 38m$** | 13 | Credential Access | Kerberoasting TGS request for `HANK_SHERMAN` SPN | Suricata SID 2019922 (`ens37`) & Wazuh 5715 | [Attack 41](../../02-Attack-Simulation/Attack-Screenshots/41.png) · [Alert 11](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/11.png) |
+| **$T_0 + 42m$** | 14 | Credential Access | Impacket `secretsdump.py` DRSUAPI directory replication | Wazuh Rule 5715 (Pivot root SSH logon alerted) | [Attack 46](../../02-Attack-Simulation/Attack-Screenshots/46.png) · [Alert 12](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/12.png) |
+| **$T_0 + 45m$** | 15 | Lateral Movement | Pass-the-Hash remote logon Type 3 to `DomainWin10` | Windows EID 4624 / Wazuh Rule 60122 (24x in CSV) | [Attack 50](../../02-Attack-Simulation/Attack-Screenshots/50.png) · [Alert 13](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/13.png) |
+| **$T_0 + 48m$** | 16 | Privilege Escalation | Forged Kerberos TGT (Golden Ticket) generated using `krbtgt` | Wazuh Rule 5715 (Pivot root SSH logon alerted) | [Attack 54](../../02-Attack-Simulation/Attack-Screenshots/54.png) · [Alert 14](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/14.png) |
+| **$T_0 + 52m$** | 17 | Persistence | Rogue domain user `backdoor_admin` created and added to DA | Wazuh 100613 / Windows EID 4720 & 4728 | [Attack 58](../../02-Attack-Simulation/Attack-Screenshots/58.png) · [Alert 15](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/15.png) |
+| **$T_0 + 55m$** | 18 | Collection | Host reconnaissance harvesting commands & tar staging | Wazuh Rule 100613 (Fan-out) & Auditd tar watch | [Attack 62](../../02-Attack-Simulation/Attack-Screenshots/62.png) · [Alert 16](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/16.png) |
+| **$T_0 + 58m$** | 19 | Exfiltration | Rapid SCP burst transferring `/tmp/data.tar.gz` to Kali | Wazuh Rule 5715 (Logon burst: 6 sessions / 1s) | [Attack 66](../../02-Attack-Simulation/Attack-Screenshots/66.png) · [Alert 17](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/17.png) |
+| **$T_0 + 62m$** | 20 | Impact | Impacket `wmiexec` modifying desktop wallpaper & defacement | Wazuh Rule 100613 / Sysmon EID 1 & 13 | [Attack 70](../../02-Attack-Simulation/Attack-Screenshots/70.png) · [Alert 18](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/18.png) |

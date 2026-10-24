@@ -1,58 +1,82 @@
 # Investigation — Stage 20 — Impact
 
-> **Status:** Draft
-> **Attack stage:** [Stage 20](../../02-Attack-Simulation/Stages/stage-20-impact.md)
-> **TheHive case:** [Case 03](../Cases/case-03-domain-compromise.md)
+> **Status:** Completed  
+> **Attack stage:** [Stage 20](../../02-Attack-Simulation/Stages/stage-20-impact.md)  
+> **TheHive case:** [Domain Compromise and Impact](../Cases/case-03-domain-compromise.md)  
+
+---
 
 ## Alert details
 
-| Alert ID | Rule ID | Source | Severity | TLP / PAP |
-|---|---|---|---|---|
-| TBD | TBD | TBD | TBD | TBD |
+| Field | Value |
+|---|---|
+| **Alert ID** | `wzb-71ef983ad8 / wzb-1f43c1540f` |
+| **Rule ID** | `Wazuh 100613 / Sysmon EID 1` |
+| **Source** | Wazuh Windows Agent & Sysmon on Win10/DC |
+| **Severity** | High |
+| **TLP / PAP** | `TLP:AMBER / PAP:AMBER` |
+
+---
 
 ## What was detected
 
-TBD
+Wazuh process fan-out rule 100613 triggered on DomainWin10 and PC-DC as Impacket wmiexec spawned registry modification commands (reg add) altering desktop wallpaper and user shell configurations to display defacement notices.
+
+---
 
 ## Triage
 
-Verdict: TBD
-Confidence: TBD
-Reason: TBD
+| Question | Answer |
+|---|---|
+| **Verdict** | True Positive |
+| **Confidence** | High |
+| **Rationale** | WMI-driven administrative fan-out executing unauthorized registry tampering to modify user interface settings. |
+
+---
 
 ## Investigation steps
 
-1. Identify the affected host and files.
-2. Record timestamps, paths, and hashes.
-3. Confirm the process or account that created the artifacts.
-4. Assess the operational impact.
-5. Revert the host from a clean snapshot after evidence collection.
+1. Verified Sysmon Event ID 1 on DomainWin10 for wmiprvse.exe -> cmd.exe /Q /c reg add HKCU\Control Panel\Desktop.
+2. Verified Sysmon Event ID 13 registry modification event for Wallpaper value.
+3. Confirmed Wazuh process fan-out alert grouping in TheHive queue.
+4. Confirmed physical defacement rendered on Windows client desktop.
+5. Finalized Case 03 and transitioned to Incident Response / Remediation.
+
+---
 
 ## Evidence
 
-- Attack: `../../02-Attack-Simulation/Attack-Screenshots/stage-20/`
-- Alert: `../../02-Attack-Simulation/alert-screenshots/stage-20/`
-- Queries and logs: TBD
+- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/70.png`](../../02-Attack-Simulation/Attack-Screenshots/70.png)
+- **Alert Evidence:** [`../../03-Detection-Engineering/TheHive_Alert-ScreenShot/18.png`](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/18.png)
+- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv) and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
 
-## IOCs
+---
+
+## Indicators of Compromise (IOCs)
 
 | Type | Value | Context |
 |---|---|---|
-| File | `hacked.bmp` | Impact artifact (verify path) |
-| File | `README_HACKED.txt` | Impact artifact (verify path) |
-| Host | TBD | Affected host |
+| Tool | `wmiexec.py` | WMI command execution tool |
+| Registry | `HKCU\Control Panel\Desktop\Wallpaper` | Tampered autostart/display key |
+| Targets | `DomainWin10 & PC-DC` | Defaced domain endpoints |
+
+---
 
 ## Detection assessment
 
-Status: Not tested
-Gap ID: DG-20
-Recommended rule: TBD
+- **Status:** Detected
+- **Gap ID:** None
+- **Engineering Assessment:** Sysmon process creation and registry auditing rules combined with Wazuh fan-out correlation provided complete visibility of impact commands.
+
+---
 
 ## Verdict
 
-TBD
+Confirmed True Positive enterprise impact and endpoint defacement.
+
+---
 
 ## MITRE ATT&CK
 
-Tactic: Impact
-Technique: Internal Defacement (T1491.001)
+- **Tactic:** Impact
+- **Technique:** Defacement: Internal Defacement (T1491.001)

@@ -1,58 +1,82 @@
 # Investigation — Stage 08 — SSH Persistence
 
-> **Status:** Draft
-> **Attack stage:** [Stage 08](../../02-Attack-Simulation/Stages/stage-08-ssh-persistence.md)
-> **TheHive case:** [Case 02](../Cases/case-02-lateral-movement.md)
+> **Status:** Completed  
+> **Attack stage:** [Stage 08](../../02-Attack-Simulation/Stages/stage-08-ssh-persistence.md)  
+> **TheHive case:** [Lateral Movement and Credential Access](../Cases/case-02-lateral-movement.md)  
+
+---
 
 ## Alert details
 
-| Alert ID | Rule ID | Source | Severity | TLP / PAP |
-|---|---|---|---|---|
-| TBD | TBD | TBD | TBD | TBD |
+| Field | Value |
+|---|---|
+| **Alert ID** | `wzb-846468a306` |
+| **Rule ID** | `Wazuh 5715 (Level 8) / Wazuh 100215` |
+| **Source** | Wazuh SSHD & Auditd on DVWA |
+| **Severity** | High |
+| **TLP / PAP** | `TLP:AMBER / PAP:AMBER` |
+
+---
 
 ## What was detected
 
-TBD
+Auditd file watch detected root authorized_keys modification in /root/.ssh/authorized_keys. Shortly after, Wazuh Rule 5715 triggered on inbound root SSH authentication from Kali (192.168.232.135).
+
+---
 
 ## Triage
 
-Verdict: TBD
-Confidence: TBD
-Reason: TBD
+| Question | Answer |
+|---|---|
+| **Verdict** | True Positive |
+| **Confidence** | High |
+| **Rationale** | Unauthorized addition of an external SSH public key to root authorized_keys followed by interactive SSH login. |
+
+---
 
 ## Investigation steps
 
-1. Check `~/.ssh/authorized_keys` and file modification times.
-2. Review authentication logs for the new key or account.
-3. Identify the key fingerprint and owner.
-4. Check for additional persistence mechanisms.
-5. Remove or document the persistence only after evidence collection.
+1. Inspected Auditd file watch events on /root/.ssh/authorized_keys.
+2. Verified sshd authlog (/var/log/auth.log) for Accepted publickey for root from 192.168.232.135.
+3. Confirmed Wazuh Rule 5715 raised to Level 8 for TheHive forwarding.
+4. Identified attacker SSH session as the active pivot channel for domain lateral movement.
+5. Linked alert to Case 02 (Lateral Movement).
+
+---
 
 ## Evidence
 
-- Attack: `../../02-Attack-Simulation/Attack-Screenshots/stage-08/`
-- Alert: `../../02-Attack-Simulation/alert-screenshots/stage-08/`
-- Queries and logs: TBD
+- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/26.png`](../../02-Attack-Simulation/Attack-Screenshots/26.png)
+- **Alert Evidence:** [`../../03-Detection-Engineering/TheHive_Alert-ScreenShot/7.png`](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/7.png)
+- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv) and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
 
-## IOCs
+---
+
+## Indicators of Compromise (IOCs)
 
 | Type | Value | Context |
 |---|---|---|
-| File | `~/.ssh/authorized_keys` | Persistence file |
-| Key fingerprint | TBD | Added key (redact if sensitive) |
-| User | TBD | Account used |
+| Path | `/root/.ssh/authorized_keys` | Modified SSH persistence target |
+| User | `root` | Compromised administrative account |
+| IP | `192.168.232.135` | Attacker connection origin |
+
+---
 
 ## Detection assessment
 
-Status: Not tested
-Gap ID: DG-08
-Recommended rule: TBD
+- **Status:** Detected
+- **Gap ID:** None
+- **Engineering Assessment:** Both the file persistence modification and the subsequent interactive logon generated immediate alerts.
+
+---
 
 ## Verdict
 
-TBD
+Confirmed True Positive SSH persistence established by adversary.
+
+---
 
 ## MITRE ATT&CK
 
-Tactic: Persistence
-Technique: SSH Authorized Keys (T1098.004)
+- **Tactic:** Persistence
+- **Technique:** Account Manipulation: SSH Authorized Keys (T1098.004)

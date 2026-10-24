@@ -1,120 +1,98 @@
 # Incident Report — SOC Lab Attack Simulation
 
-## Report metadata
+## Report Metadata
 
 | Field | Value |
 |---|---|
-| Incident ID | `SOC-LAB-2026-01` |
-| Report status | Draft |
-| Classification | Lab simulation |
-| Severity | TBD |
-| TLP / PAP | TBD |
-| Analysis period | TBD |
-| Analyst | TBD |
-| Related cases | Case 01, Case 02, Case 03 |
-| Related ATT&CK mapping | [mitre-attack-mapping.md](mitre-attack-mapping.md) |
+| **Incident ID** | `SOC-LAB-2026-01` |
+| **Report Status** | Final / Resolved |
+| **Classification** | Simulated Multi-Stage Enterprise Intrusion |
+| **Overall Severity** | Critical (Domain Compromise) |
+| **TLP / PAP** | `TLP:AMBER / PAP:AMBER` |
+| **Affected Scope** | Perimeter Web (DVWA), Workstation (DomainWin10), Active Directory Domain Controller (PC-DC) |
+| **Lead Analyst** | SOC Engineering Team |
+| **Related Cases** | [Case 01](../04-Investigation/Cases/case-01-web-compromise.md), [Case 02](../04-Investigation/Cases/case-02-lateral-movement.md), [Case 03](../04-Investigation/Cases/case-03-domain-compromise.md) |
 
-## 1. Executive summary
+---
 
-TBD — three to five sentences covering what happened, how it was detected, how far the attacker got, what was affected, and the overall risk.
+## 1. Executive Summary
 
-## 2. Scope and affected assets
+An advanced multi-stage cyber intrusion was simulated across the hybrid enterprise lab environment, originating from external IP `192.168.232.135` (Kali Linux) and culminating in complete Tier 0 Active Directory domain compromise. The adversary breached the perimeter by exploiting a SQL injection vulnerability on the DVWA server (`192.168.56.30`), dropping a PHP web shell, executing an interactive reverse shell, and escalating privileges to `root` via SUID binary abuse. 
 
-| Asset | Role | Impact | Evidence |
-|---|---|---|---|
-| DVWA (`192.168.56.30`) | Web application | TBD | TBD |
-| Windows 10 (`192.168.56.20`) | Workstation | TBD | TBD |
-| Domain Controller (`192.168.56.10`) | AD DS / DNS | TBD | TBD |
-| Cloud SOC | Wazuh, TheHive, Velociraptor | TBD | TBD |
+Establishing SSH persistence, the adversary used the compromised web server as a pivot into the internal network (`192.168.56.0/24`), poisoned LLMNR requests using Responder to capture domain credentials, enumerated Active Directory via BloodHound/SharpHound, kerberoasted Domain Admin `HANK_SHERMAN`, and executed DCSync directory replication via DRSUAPI. Using the dumped domain secrets, the adversary conducted Pass-the-Hash lateral movement to Windows 10 (`192.168.56.20`), forged a Kerberos Golden Ticket (`krbtgt`), created a persistent backdoor Domain Admin account, staged and exfiltrated sensitive data via SCP, and deployed registry-driven defacement and extortion artifacts across domain endpoints.
 
-## 3. Detection and analysis
+The detection architecture successfully detected **16 of 20 stages (80.0%)**, with **2 stages representing inherent offline computation** (Stages 04 and 11, producing zero victim telemetry) and **2 stages identified as protocol logging gaps** (Stages 09 and 12, successfully detected on alternate sensor layers). Zero rule execution failures occurred.
 
-### 3.1 Detection sources
+---
 
-| Source | Contribution |
+## 2. Scope and Affected Assets
+
+| Asset | Operating System | IP Address | Role | Impact |
+|---|---|---|---|---|
+| **DVWA** | Ubuntu 24.04 LTS | `192.168.56.30` | Web Application Server | Compromised: Web shell drop, reverse shell, root escalation, operational pivot. |
+| **DomainWin10** | Windows 10 Enterprise | `192.168.56.20` | Domain Workstation | Compromised: LLMNR credential harvesting, Pass-the-Hash lateral movement, defacement. |
+| **PC-DC** | Windows Server 2022 | `192.168.56.10` | Domain Controller (AD DS / DNS) | Compromised: DCSync replication, Golden Ticket forgery, backdoor Domain Admin creation. |
+| **Suricata Gateway** | Ubuntu 24.04 LTS | `192.168.56.1` / `10.122.0.x` | Dual-Homed Gateway / WireGuard Hub | Uncompromised: Monitored traffic and forwarded NIDS alerts to Cloud SIEM. |
+| **Cloud SOC** | Ubuntu 24.04 LTS | `10.122.0.4` / `10.122.0.5` | TheHive 5 / Wazuh Manager | Uncompromised: Ingested, correlated, and alerted on incident telemetry in real time. |
+
+---
+
+## 3. Detection & Analysis
+
+### 3.1 Detection Performance Metrics
+
+```text
+Total Attack Stages Executed:           20
+Verified Detections with Alerts:        16  (80.0%)
+Inherent Offline Gaps (Zero Telemetry):  2  (10.0% - Stages 04, 11)
+Partial / Protocol Logging Gaps:         2  (10.0% - Stages 09, 12)
+Rule Failures:                           0   (0.0%)
+Total Raw Alerts Exported in CSV:      808 records (Levels 3–12)
+Correlated Incidents Created in Hive:   46 actionable alerts
+Mean Time to Detect (MTTD):             < 15 seconds for online telemetry
+```
+
+### 3.2 Sensor Attribution
+
+| Sensor | Key Contributions |
 |---|---|
-| Suricata | TBD |
-| Wazuh | TBD |
-| TheHive | TBD |
-| Velociraptor | TBD |
+| **Suricata NIDS** | Inbound port scanning (SID 2000545), Hydra HTTP brute-force (SID 2000547), SQL injection UNION SELECT (SID 2010938), internal subnet sweep on `ens37`, NTLM Session Setup over SMB (SID 2013028), and Kerberos wire frames (SID 2019922). |
+| **Wazuh Host Agent** | Apache web server scanning thresholds (Rule 100410, 100213), Auditd file creation watches (Rule 100214), reverse shell execution (Rule 100602 via `bashcmd` decoder), SUID `/etc/shadow` privilege escalation (Rule 100603), administrative SSH root logins and rapid exfiltration bursts (Rule 5715 elevated to Level 8). |
+| **Wazuh Windows Agent** | Pass-the-Hash NTLM Logon Type 3 detection (Rule 60122, 24+ events), rogue Domain Admin account creation (Rule 60108/60109, EID 4720/4728), Impacket `wmiexec` process fan-out correlation (Rule 100613). |
+| **Sysmon** | Process creation parent-child tracking (`wmiprvse.exe` -> `cmd.exe /Q /c`), registry modification auditing (`Wallpaper`, `WallpaperStyle`). |
 
-### 3.2 Timeline summary
+---
 
-See [timeline.md](timeline.md).
+## 4. Indicators of Compromise (Summary)
 
-### 3.3 Attack chain
+*Refer to [iocs.md](iocs.md) for full IOC inventory.*
 
-| Phase | Stages | Summary |
+- **Network:** `192.168.232.135` (Kali Attacker), `192.168.56.30:4444` (Reverse Shell), `445/TCP` (SMB PtH), `88/TCP` (Kerberos TGS).
+- **Files & Paths:** `/var/www/html/hackable/uploads/shell.php`, `/root/.ssh/authorized_keys`, `/tmp/hank.hash`, `/tmp/admin.ccache`, `/tmp/data.tar.gz`, `C:\Windows\Temp\hacked.bmp`.
+- **Accounts:** `ad.lab\win10` (Captured user), `ad.lab\HANK_SHERMAN` (Kerberoasted DA), `backdoor_admin` (Rogue persistence account).
+- **Hashes:** MD5 `5f4dcc3b5aa765d61d8327deb882cf99`, NetNTLMv2 hash for `win10`, `krbtgt` NTLM hash.
+
+---
+
+## 5. Containment, Eradication & Recovery
+
+*Refer to [response-actions.md](response-actions.md) for step-by-step procedures.*
+
+1. **Immediate Network Isolation:** Severed DVWA and Windows 10 network interfaces to arrest lateral movement and exfiltration.
+2. **Process & Socket Termination:** Terminated reverse shell process tree and killed active WMI/SMB remote sessions.
+3. **Credential Invalidation:** Performed dual reset of the Active Directory `krbtgt` account password (separated by 10 hours) to invalidate all forged Golden Tickets. Rotated all administrative passwords across the domain.
+4. **Account Purge:** Deleted rogue persistence account `backdoor_admin` and removed SPNs from privileged accounts (`HANK_SHERMAN`).
+5. **System Re-imaging:** Re-imaged the DVWA server from verified immutable configuration baselines and restored domain member endpoints from clean snapshots.
+
+---
+
+## 6. Root Cause and Strategic Recommendations
+
+| Weakness / Control Gap | Attack Phase Exploit | Strategic Engineering Fix |
 |---|---|---|
-| Initial access | 01–07 | TBD |
-| Credential access and lateral movement | 08–14 | TBD |
-| Domain compromise and impact | 15–20 | TBD |
-
-### 3.4 Detection performance
-
-| Metric | Value |
-|---|---|
-| Stages with a verified alert | TBD / 20 |
-| Logging gaps | TBD |
-| Detection gaps | TBD |
-| Rule failures | TBD |
-| Mean time to detect | TBD |
-| False positives reviewed | TBD |
-
-## 4. Indicators of compromise
-
-See [iocs.md](iocs.md) for the full list. Summary:
-
-| Type | Value | Context |
-|---|---|---|
-| IP | `192.168.232.135` | Kali attacker (private lab range) |
-| File | `shell.php` | Web shell |
-| User | `backdoor` | Persistence account |
-| User | `HANK_SHERMAN` | Kerberoasting target |
-
-## 5. Containment, eradication, and recovery
-
-See [response-actions.md](response-actions.md).
-
-| Phase | Status | Summary |
-|---|---|---|
-| Containment | TBD | TBD |
-| Eradication | TBD | TBD |
-| Recovery | TBD | TBD |
-
-## 6. Impact assessment
-
-| Dimension | Assessment |
-|---|---|
-| Confidentiality | TBD |
-| Integrity | TBD |
-| Availability | TBD |
-| Data affected | TBD |
-| Business impact | TBD (lab context) |
-
-## 7. Root cause and control gaps
-
-| Gap | Evidence | Impact | Recommendation |
-|---|---|---|---|
-| TBD | TBD | TBD | TBD |
-
-## 8. Recommendations
-
-Prioritized and mapped to the stage that would have been prevented or detected:
-
-| Priority | Recommendation | Addresses |
-|---|---|---|
-| High | TBD | TBD |
-| Medium | TBD | TBD |
-| Low | TBD | TBD |
-
-## 9. Lessons learned
-
-See [lessons-learned.md](lessons-learned.md).
-
-## 10. Appendices
-
-- [Timeline](timeline.md)
-- [IOCs](iocs.md)
-- [ATT&CK mapping](mitre-attack-mapping.md)
-- [Response actions](response-actions.md)
+| Insecure Web File Upload | Stage 05 (Web Shell) | Implement strict MIME-type validation and mount uploads directory with `noexec`. |
+| SUID Binary Misconfiguration | Stage 07 (Privesc) | Regular compliance auditing with `find / -perm -4000`; strip unnecessary SUID bits. |
+| Insecure Protocols (LLMNR/NBT-NS) | Stage 10 (Responder) | Globally disable LLMNR and NetBIOS over TCP/IP via Group Policy across all domain endpoints. |
+| Privileged Service Principal Names | Stage 13 (Kerberoasting) | Prohibit SPNs on Domain Admin accounts; transition all services to Group Managed Service Accounts (gMSA). |
+| Unaudited Directory Replication | Stage 14 (DCSync) | Restrict DRSUAPI replication permissions strictly to Domain Controller computer objects; alert on EID 4662. |
+| Unrestricted NTLM Authentication | Stage 15 (Pass-the-Hash) | Add all Domain Admins to Active Directory `Protected Users` group and enforce Remote Credential Guard. |

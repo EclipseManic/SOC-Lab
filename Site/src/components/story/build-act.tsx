@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   AnimatePresence,
   motion,
@@ -75,6 +75,17 @@ const buildSteps: BuildStep[] = [
     tone: "amber",
   },
 ];
+
+const STEP_STARTS = [0, 0.18, 0.32, 0.54, 0.88] as const;
+
+function stepIndexForProgress(progress: number): number {
+  if (!Number.isFinite(progress)) return 0;
+  let active = 0;
+  for (let index = 1; index < STEP_STARTS.length; index += 1) {
+    if (progress >= STEP_STARTS[index]) active = index;
+  }
+  return active;
+}
 
 function BuildLedger() {
   return (
@@ -177,8 +188,8 @@ function SvgNode({
   const accent = tone === "amber" ? palette.amber : palette.teal;
   const lit = state !== "idle";
   const active = state === "active";
-  const titleSize = compact ? 14 : 17;
-  const lineSize = compact ? 10 : 11.5;
+  const titleSize = compact ? 15 : 18;
+  const lineSize = compact ? 12 : 13;
 
   return (
     <g>
@@ -226,7 +237,7 @@ function SvgNode({
       </text>
       {lines.map((line, index) => (
         <text
-          key={line}
+          key={index}
           x={x + 16}
           y={y + (compact ? 43 : 52) + index * 18}
           fill={active ? palette.muted : palette.faint}
@@ -261,6 +272,7 @@ function Trace({
   return (
     <motion.path
       d={d}
+      fill="none"
       stroke={color}
       strokeWidth={width}
       strokeLinecap="round"
@@ -288,11 +300,12 @@ function TravelPulse({
 }) {
   const cx = useTransform(progress, input, x);
   const cy = useTransform(progress, input, y);
-  const opacity = useTransform(
-    progress,
-    [input[0], input[0] + 0.01, input[input.length - 2], input[input.length - 1]],
-    [0, 1, 1, 0],
-  );
+  const last = input[input.length - 1];
+  const opacityInput =
+    input.length >= 3
+      ? [input[0], input[0] + 0.01, input[input.length - 2], last]
+      : [input[0], input[0] + 0.01, last - 0.01, last];
+  const opacity = useTransform(progress, opacityInput, [0, 1, 1, 0]);
 
   return (
     <g>
@@ -326,9 +339,9 @@ function BuildStepStrip({
   const amber = step.tone === "amber";
 
   return (
-    <div className="border-t border-line/60 bg-canvas/25 px-4 py-3 sm:px-5">
-      <div className="grid gap-3 lg:grid-cols-[92px_minmax(0,1fr)_auto] lg:items-start lg:gap-6">
-        <div className="flex items-baseline gap-2 lg:block">
+    <div className="border-t border-line/60 bg-canvas/25 px-4 py-2.5 sm:px-5">
+      <div className="grid gap-3 xl:grid-cols-[92px_minmax(0,1fr)_auto] xl:items-start xl:gap-6">
+        <div className="flex items-baseline gap-2 xl:block">
           <span
             className={cn(
               "font-mono text-[10px]",
@@ -337,7 +350,7 @@ function BuildStepStrip({
           >
             {step.n}
           </span>
-          <span className="ml-2 font-mono text-[9px] uppercase tracking-[0.16em] text-faint lg:ml-0 lg:mt-1 lg:block">
+          <span className="ml-2 font-mono text-[9px] uppercase tracking-[0.16em] text-faint xl:ml-0 xl:mt-1 xl:block">
             {step.label}
           </span>
         </div>
@@ -353,13 +366,13 @@ function BuildStepStrip({
             <h3 className="text-xl font-semibold leading-tight tracking-[-0.035em] text-ink">
               {step.title}
             </h3>
-            <p className="mt-1 max-w-3xl text-sm leading-6 text-muted">
+            <p className="mt-1 max-w-3xl text-sm leading-5 text-muted">
               {step.body}
             </p>
           </motion.div>
         </AnimatePresence>
 
-        <div className="flex flex-col items-start gap-2 lg:items-end">
+        <div className="flex flex-col items-start gap-2 xl:items-end">
           <p
             className={cn(
               "font-mono text-[9px] tracking-[0.04em]",
@@ -402,7 +415,7 @@ function SignalMap({
   activeStep: number;
   step: BuildStep;
 }) {
-  const observedOpacity = useTransform(progress, [0.9, 0.97], [0, 1]);
+  const observedOpacity = useTransform(progress, [0.88, 0.92], [0, 1]);
 
   return (
     <div className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-[2rem] border border-line/70 bg-panel/35">
@@ -410,7 +423,7 @@ function SignalMap({
         className="hero-grid pointer-events-none absolute inset-0 opacity-30"
         aria-hidden="true"
       />
-      <div className="relative min-h-0 flex-1 p-2 sm:p-3">
+      <div className="relative min-h-0 flex-1 p-2">
         <svg
           viewBox="0 0 1600 720"
           preserveAspectRatio="xMidYMid meet"
@@ -448,9 +461,9 @@ function SignalMap({
             x="1568"
             y="36"
             textAnchor="end"
-            fill="#4c5c72"
+            fill={palette.faint}
             fontFamily="var(--font-mono)"
-            fontSize="9"
+            fontSize="10.5"
             letterSpacing="1.8"
           >
             FULL LAB TOPOLOGY · SOC-LAB-001
@@ -498,7 +511,7 @@ function SignalMap({
           <g
             fill={palette.faint}
             fontFamily="var(--font-mono)"
-            fontSize="10.5"
+            fontSize="12"
             letterSpacing="1.8"
           >
             <text x="50" y="94">
@@ -613,11 +626,11 @@ function SignalMap({
           />
           <SvgNode
             x={700}
-            y={318}
+            y={312}
             w={144}
-            h={72}
+            h={88}
             label="L2 segment"
-            lines={[".56.0/24 · gw .150"]}
+            lines={[".56.0/24", "gw .150"]}
             state={nodeState(activeStep, 2)}
           />
           <SvgNode
@@ -668,7 +681,7 @@ function SignalMap({
             label="Wazuh"
             lines={[
               "manager · indexer · dashboard",
-              "thecustomhive · 1514 / 9000",
+              "1514 → TheHive 9000",
               "private VNet only",
             ]}
             state={nodeState(activeStep, 3)}
@@ -685,9 +698,9 @@ function SignalMap({
           />
           <SvgNode
             x={1264}
-            y={612}
+            y={598}
             w={272}
-            h={44}
+            h={48}
             label="Analyst VPN"
             lines={["10.8.0.3 · management only"]}
             state={nodeState(activeStep, 3)}
@@ -697,7 +710,7 @@ function SignalMap({
           <g
             fill={palette.faint}
             fontFamily="var(--font-mono)"
-            fontSize="9.5"
+            fontSize="11"
             letterSpacing="1"
           >
             <text x="286" y="342">
@@ -729,7 +742,7 @@ function SignalMap({
           <g
             fill={palette.faint}
             fontFamily="var(--font-mono)"
-            fontSize="9"
+            fontSize="10.5"
             letterSpacing="1.4"
           >
             <text x="48" y="620">
@@ -756,7 +769,7 @@ function SignalMap({
               y="617"
               fill={palette.amber}
               fontFamily="var(--font-mono)"
-              fontSize="9.5"
+              fontSize="10.5"
               letterSpacing="0.9"
             >
               SAME-SUBNET ALERTS OBSERVED ON ENS37
@@ -818,10 +831,7 @@ function ScrollBuild() {
   const [activeStep, setActiveStep] = useState(0);
 
   useMotionValueEvent(scrollYProgress, "change", (latest) => {
-    const next = Math.min(
-      buildSteps.length - 1,
-      Math.max(0, Math.floor(latest * buildSteps.length)),
-    );
+    const next = stepIndexForProgress(latest);
     setActiveStep((previous) => (previous === next ? previous : next));
   });
 
@@ -834,9 +844,18 @@ function ScrollBuild() {
       aria-label="Act II: The build"
       className="relative border-b border-line/60"
     >
-      <div className="hidden lg:block lg:h-[460vh]">
-        <div className="sticky top-[72px] flex h-[calc(100svh-72px)] flex-col overflow-hidden">
-          <div className="container-page flex h-full flex-col gap-3 py-4 xl:py-5">
+      <div className="hidden xl:block xl:h-[460vh]">
+        <div className="sr-only">
+          <ol>
+            {buildSteps.map((item) => (
+              <li key={item.n}>
+                {item.n} {item.label}: {item.title} {item.body} {item.meta}
+              </li>
+            ))}
+          </ol>
+        </div>
+        <div className="sticky top-[72px] flex h-[calc(100svh-72px)] flex-col overflow-x-hidden overflow-y-auto">
+          <div className="mx-auto flex h-full w-full max-w-[112rem] flex-col gap-2 px-4 py-3 sm:px-6 xl:py-4 2xl:max-w-[120rem] 2xl:px-8">
             <div className="flex shrink-0 items-start justify-between gap-6">
               <div>
                 <div className="flex items-center gap-3">
@@ -845,7 +864,7 @@ function ScrollBuild() {
                   </span>
                   <span className="h-px w-10 bg-line" aria-hidden="true" />
                 </div>
-                <h2 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-ink">
+                <h2 className="mt-1 text-3xl font-semibold tracking-[-0.04em] text-ink">
                   Follow the signal.
                 </h2>
               </div>
@@ -867,7 +886,7 @@ function ScrollBuild() {
               />
             </div>
 
-            <div className="flex shrink-0 items-center justify-between border-t border-line/60 pt-3">
+            <div className="flex shrink-0 items-center justify-between border-t border-line/60 pt-2">
               <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-faint">
                 The wire is not the whole record
               </span>
@@ -879,7 +898,7 @@ function ScrollBuild() {
         </div>
       </div>
 
-      <div className="lg:hidden">
+      <div className="xl:hidden">
         <BuildLedger />
       </div>
     </section>
@@ -888,6 +907,21 @@ function ScrollBuild() {
 
 export function BuildAct() {
   const reduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (window.location.hash !== "#build") return;
+
+    let frame = 0;
+    const scrollToBuild = () => {
+      document.getElementById("build")?.scrollIntoView({ block: "start" });
+    };
+
+    frame = requestAnimationFrame(() => {
+      frame = requestAnimationFrame(scrollToBuild);
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
   if (reduceMotion) {
     return (
