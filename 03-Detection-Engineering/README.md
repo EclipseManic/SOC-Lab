@@ -15,7 +15,6 @@ This section details the detection logic, rules, parsers, and pipeline automatio
 | [Wazuh/decoders.md](Wazuh/decoders.md) | Custom `bashcmd` shell decoder and Suricata JSON parser definitions |
 | [Wazuh/false-positives.md](Wazuh/false-positives.md) | Tuning decisions, noise suppression rules, and triage metrics |
 | [Suricata/rules.md](Suricata/rules.md) | Network IDS signatures (`et/open` + custom Nmap rules) and `threshold.config` tuning |
-| [Suricata/log-samples.md](Suricata/log-samples.md) | Real, redacted `eve-alert.json` event captures across attack stages |
 
 ### 2. Deployed Rule Files & Scripts (Codebase Artifacts)
 
