@@ -29,6 +29,8 @@ export interface Stage {
   caseSlug: string;
   attackPath: string;
   investigationPath: string;
+  ruleId?: string;
+  alertRef?: string;
 }
 
 export const phases: Record<
@@ -85,6 +87,8 @@ export const stages: Stage[] = [
     caseSlug: "case-01-web-compromise",
     attackPath: "02-Attack-Simulation/Stages/stage-01-recon.md",
     investigationPath: "04-Investigation/Stages/stage-01-recon.md",
+    ruleId: "Wazuh 86601 / SID 3400002",
+    alertRef: "wzb-3a8045a03c",
   },
   {
     id: "02",
@@ -109,6 +113,8 @@ export const stages: Stage[] = [
     caseSlug: "case-01-web-compromise",
     attackPath: "02-Attack-Simulation/Stages/stage-02-bruteforce.md",
     investigationPath: "04-Investigation/Stages/stage-02-bruteforce.md",
+    ruleId: "Wazuh 31153, 31151, 31168",
+    alertRef: "wzb-81becfcc8d",
   },
   {
     id: "03",
@@ -133,6 +139,8 @@ export const stages: Stage[] = [
     caseSlug: "case-01-web-compromise",
     attackPath: "02-Attack-Simulation/Stages/stage-03-sqli.md",
     investigationPath: "04-Investigation/Stages/stage-03-sqli.md",
+    ruleId: "Wazuh 100201 / SID 2010937",
+    alertRef: "Alert 17",
   },
   {
     id: "04",
@@ -157,6 +165,8 @@ export const stages: Stage[] = [
     caseSlug: "case-01-web-compromise",
     attackPath: "02-Attack-Simulation/Stages/stage-04-hash-crack.md",
     investigationPath: "04-Investigation/Stages/stage-04-hash-crack.md",
+    ruleId: "N/A (Offline Attacker GPU)",
+    alertRef: "Offline activity",
   },
   {
     id: "05",
@@ -181,6 +191,8 @@ export const stages: Stage[] = [
     caseSlug: "case-01-web-compromise",
     attackPath: "02-Attack-Simulation/Stages/stage-05-webshell.md",
     investigationPath: "04-Investigation/Stages/stage-05-webshell.md",
+    ruleId: "Wazuh 100600 / SID 2014726",
+    alertRef: "Alert 21 & 22",
   },
   {
     id: "06",
@@ -205,6 +217,8 @@ export const stages: Stage[] = [
     caseSlug: "case-01-web-compromise",
     attackPath: "02-Attack-Simulation/Stages/stage-06-reverse-shell.md",
     investigationPath: "04-Investigation/Stages/stage-06-reverse-shell.md",
+    ruleId: "Wazuh 86601 / SID 2002752",
+    alertRef: "Alert 5",
   },
   {
     id: "07",
@@ -229,6 +243,8 @@ export const stages: Stage[] = [
     caseSlug: "case-01-web-compromise",
     attackPath: "02-Attack-Simulation/Stages/stage-07-privesc.md",
     investigationPath: "04-Investigation/Stages/stage-07-privesc.md",
+    ruleId: "Wazuh 5402 (PAM)",
+    alertRef: "Alert 6",
   },
   {
     id: "08",
@@ -253,6 +269,8 @@ export const stages: Stage[] = [
     caseSlug: "case-02-lateral-movement",
     attackPath: "02-Attack-Simulation/Stages/stage-08-ssh-persistence.md",
     investigationPath: "04-Investigation/Stages/stage-08-ssh-persistence.md",
+    ruleId: "Wazuh 550, 5715",
+    alertRef: "Alert 7",
   },
   {
     id: "09",
@@ -277,6 +295,8 @@ export const stages: Stage[] = [
     caseSlug: "case-02-lateral-movement",
     attackPath: "02-Attack-Simulation/Stages/stage-09-internal-discovery.md",
     investigationPath: "04-Investigation/Stages/stage-09-internal-discovery.md",
+    ruleId: "Wazuh 86601 / SID 2000545",
+    alertRef: "Alert 8",
   },
   {
     id: "10",
@@ -301,6 +321,8 @@ export const stages: Stage[] = [
     caseSlug: "case-02-lateral-movement",
     attackPath: "02-Attack-Simulation/Stages/stage-10-responder.md",
     investigationPath: "04-Investigation/Stages/stage-10-responder.md",
+    ruleId: "Wazuh 86601 / SID 2013028",
+    alertRef: "Alert 9",
   },
   {
     id: "11",
@@ -325,6 +347,8 @@ export const stages: Stage[] = [
     caseSlug: "case-02-lateral-movement",
     attackPath: "02-Attack-Simulation/Stages/stage-11-ntlmv2-crack.md",
     investigationPath: "04-Investigation/Stages/stage-11-ntlmv2-crack.md",
+    ruleId: "N/A (Offline Attacker GPU)",
+    alertRef: "Offline activity",
   },
   {
     id: "12",
@@ -349,6 +373,8 @@ export const stages: Stage[] = [
     caseSlug: "case-02-lateral-movement",
     attackPath: "02-Attack-Simulation/Stages/stage-12-bloodhound.md",
     investigationPath: "04-Investigation/Stages/stage-12-bloodhound.md",
+    ruleId: "Wazuh 5715 (Pivot Session)",
+    alertRef: "[4x] Logon: ROOT",
   },
   {
     id: "13",
@@ -373,6 +399,8 @@ export const stages: Stage[] = [
     caseSlug: "case-02-lateral-movement",
     attackPath: "02-Attack-Simulation/Stages/stage-13-kerberoasting.md",
     investigationPath: "04-Investigation/Stages/stage-13-kerberoasting.md",
+    ruleId: "Windows 4769 / Wazuh 60107",
+    alertRef: "Alert 13",
   },
   {
     id: "14",
@@ -397,6 +425,8 @@ export const stages: Stage[] = [
     caseSlug: "case-02-lateral-movement",
     attackPath: "02-Attack-Simulation/Stages/stage-14-dcsync.md",
     investigationPath: "04-Investigation/Stages/stage-14-dcsync.md",
+    ruleId: "Windows 4662 / Wazuh 60144",
+    alertRef: "Alert 14",
   },
   {
     id: "15",
@@ -421,6 +451,8 @@ export const stages: Stage[] = [
     caseSlug: "case-03-domain-compromise",
     attackPath: "02-Attack-Simulation/Stages/stage-15-pass-the-hash.md",
     investigationPath: "04-Investigation/Stages/stage-15-pass-the-hash.md",
+    ruleId: "Wazuh 86601 / SID 2015862",
+    alertRef: "Alert 15",
   },
   {
     id: "16",
@@ -445,6 +477,8 @@ export const stages: Stage[] = [
     caseSlug: "case-03-domain-compromise",
     attackPath: "02-Attack-Simulation/Stages/stage-16-golden-ticket.md",
     investigationPath: "04-Investigation/Stages/stage-16-golden-ticket.md",
+    ruleId: "Windows 4769 / Wazuh 5715",
+    alertRef: "Alert 16",
   },
   {
     id: "17",
@@ -469,6 +503,8 @@ export const stages: Stage[] = [
     caseSlug: "case-03-domain-compromise",
     attackPath: "02-Attack-Simulation/Stages/stage-17-dc-persistence.md",
     investigationPath: "04-Investigation/Stages/stage-17-dc-persistence.md",
+    ruleId: "Wazuh 100613, 60109",
+    alertRef: "Alert 17",
   },
   {
     id: "18",
@@ -493,6 +529,8 @@ export const stages: Stage[] = [
     caseSlug: "case-03-domain-compromise",
     attackPath: "02-Attack-Simulation/Stages/stage-18-collection.md",
     investigationPath: "04-Investigation/Stages/stage-18-collection.md",
+    ruleId: "Wazuh 100613 (Fan-out)",
+    alertRef: "Alert 18",
   },
   {
     id: "19",
@@ -517,6 +555,8 @@ export const stages: Stage[] = [
     caseSlug: "case-03-domain-compromise",
     attackPath: "02-Attack-Simulation/Stages/stage-19-exfiltration.md",
     investigationPath: "04-Investigation/Stages/stage-19-exfiltration.md",
+    ruleId: "Wazuh 5715 (Pivot Burst)",
+    alertRef: "Alert 19",
   },
   {
     id: "20",
@@ -541,6 +581,8 @@ export const stages: Stage[] = [
     caseSlug: "case-03-domain-compromise",
     attackPath: "02-Attack-Simulation/Stages/stage-20-impact.md",
     investigationPath: "04-Investigation/Stages/stage-20-impact.md",
+    ruleId: "Wazuh 100613, 100100",
+    alertRef: "Alert 20",
   },
 ];
 

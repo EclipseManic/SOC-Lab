@@ -51,8 +51,8 @@ const buildSteps: BuildStep[] = [
     n: "04",
     label: "SOC plane",
     title: "Follow the signal inward.",
-    body: "Wazuh collects host telemetry; TheHive turns an alert into a case. The path is private, reached over WireGuard.",
-    meta: "Wazuh → TheHive · 10.122.0.0/16",
+    body: "Wazuh collects host telemetry; thecustomhive runs a 2-tier correlation daemon to deliver alerts into TheHive. The path is private, reached over WireGuard.",
+    meta: "Wazuh → thecustomhive → TheHive · 10.122.0.0/16",
     tone: "teal",
   },
   {

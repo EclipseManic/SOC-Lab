@@ -1,34 +1,56 @@
 import { useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ArrowUpRight } from "lucide-react";
-import { phases, stages, type Phase, type Stage } from "@/data";
+import { phases, repoBlob, stages, type Phase, type Stage } from "@/data";
 import { cn } from "@/lib/utils";
 
 const phaseOrder: Phase[] = ["web", "cred", "domain", "impact"];
 
 function StageDetail({ stage }: { stage: Stage }) {
   return (
-    <div className="grid gap-5 border-b border-line/60 bg-panel/25 px-4 py-6 sm:grid-cols-3 sm:gap-8">
-      <div>
-        <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-faint">
-          What happened
-        </p>
-        <p className="mt-2 text-sm leading-6 text-muted">{stage.plain}</p>
+    <div className="border-b border-line/60 bg-panel/25 px-4 py-6">
+      <div className="grid gap-5 sm:grid-cols-3 sm:gap-8">
+        <div>
+          <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-faint">
+            What happened
+          </p>
+          <p className="mt-2 text-sm leading-6 text-muted">{stage.plain}</p>
+        </div>
+        <div>
+          <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-faint">
+            Attacker action
+          </p>
+          <p className="mt-2 text-sm leading-6 text-muted">{stage.attacker}</p>
+        </div>
+        <div>
+          <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-faint">
+            Evidence to collect
+          </p>
+          <p className="mt-2 text-sm leading-6 text-muted">{stage.evidence}</p>
+          <p className="mt-3 font-mono text-[9px] uppercase tracking-[0.12em] text-teal">
+            {stage.telemetry}
+          </p>
+        </div>
       </div>
-      <div>
-        <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-faint">
-          Attacker action
-        </p>
-        <p className="mt-2 text-sm leading-6 text-muted">{stage.attacker}</p>
-      </div>
-      <div>
-        <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-faint">
-          Evidence to collect
-        </p>
-        <p className="mt-2 text-sm leading-6 text-muted">{stage.evidence}</p>
-        <p className="mt-3 font-mono text-[9px] uppercase tracking-[0.12em] text-teal">
-          {stage.telemetry}
-        </p>
+      <div className="mt-5 flex flex-wrap items-center gap-4 border-t border-line/50 pt-4 text-xs">
+        <a
+          href={`${repoBlob}/${stage.attackPath}`}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1 font-mono text-[9px] uppercase tracking-[0.12em] text-faint transition hover:text-teal"
+        >
+          View attack doc
+          <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
+        </a>
+        <a
+          href={`${repoBlob}/${stage.investigationPath}`}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1 font-mono text-[9px] uppercase tracking-[0.12em] text-faint transition hover:text-teal"
+        >
+          View investigation doc
+          <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
+        </a>
       </div>
     </div>
   );
@@ -101,12 +123,11 @@ export function AttackAct() {
         </div>
 
         <div className="mt-6 flex flex-col gap-3 border-b border-line/70 pb-5 sm:flex-row sm:items-center sm:justify-between">
-          <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-amber">
-            Status note / No stage is marked validated
+          <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-teal">
+            Adversary Timeline / 20 Executed Stages
           </p>
           <p className="max-w-xl text-xs leading-5 text-faint">
-            An action in the record is not the same as a detected action. The
-            detection question is the next act.
+            Every stage documents the offensive action, MITRE ATT&CK mapping, and required telemetry. Detection verification and rule correlation follow in Act IV.
           </p>
         </div>
 
