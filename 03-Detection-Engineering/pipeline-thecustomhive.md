@@ -1,9 +1,9 @@
 # thecustomhive — Batched Wazuh to TheHive Alert Pipeline
 
 > **Source Code & Artifacts:**
-> - Ingestion Wrapper: [`custom-thehive`](custom-thehive)
-> - Core Correlation & Flush Engine: [`custom-thehive.py`](custom-thehive.py)
-> - Flush Daemon Service: [`thehive-flush.service`](thehive-flush.service)
+> - Ingestion Wrapper: [`Wazuh/custom-thehive`](Wazuh/custom-thehive)
+> - Core Correlation & Flush Engine: [`Wazuh/custom-thehive.py`](Wazuh/custom-thehive.py)
+> - Flush Daemon Service: [`Wazuh/thehive-flush.service`](Wazuh/thehive-flush.service)
 > - Wazuh Integration Configuration: [`Wazuh/ossec.conf`](Wazuh/ossec.conf)
 
 ---

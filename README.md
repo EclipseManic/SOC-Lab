@@ -49,7 +49,7 @@ The VPN policy allows `10.8.0.0/24` to both `192.168.232.0/24` and `192.168.56.0
 | Identity | Windows Server 2022 DC, `ad.lab` | Local, `192.168.56.10` | AD DS, DNS, Kerberos |
 | SIEM | Wazuh manager, indexer, dashboard | Wazuh VM, private only | Log collection, rules, alerting |
 | Case management | TheHive | TheHive/automation VM | Alerts, cases, observables, tasks, timelines |
-| Automation | [thecustomhive](03-Detection-Engineering/pipeline-thecustomhive.md) (Python) | TheHive/automation VM | Wazuh API → TheHive alert pipeline |
+| Automation | [thecustomhive](03-Detection-Engineering/pipeline-thecustomhive.md) (Python) | Wazuh VM | 2-tier correlation & flush daemon to TheHive |
 | DFIR | Velociraptor | TheHive/automation VM | Endpoint artifact collection |
 | Ingress | Nginx Proxy Manager | TheHive/automation VM | Internal TLS/reverse proxy for SOC services |
 | Connectivity | WireGuard | Both sides | VPN hub on `10.8.0.1/24`, Suricata client on `10.8.0.2/32` |
@@ -58,7 +58,7 @@ The VPN policy allows `10.8.0.0/24` to both `192.168.232.0/24` and `192.168.56.0
 
 1. **One public port.** `51820/UDP` on the TheHive/automation VM is the only public inbound rule. Everything else is VPN, peering, or closed. The provider console is the break-glass path.
 2. **Vendor-neutral.** DigitalOcean, OVHcloud, Vultr, Azure, and AWS can host this architecture. The provider does not matter — the firewall, VPN, routing, peering, and segmentation do.
-3. **TheHive VM routes telemetry.** It is the ingress hub: it terminates the tunnel, forwards agent traffic to the Wazuh VM, and runs the pipeline that turns Wazuh alerts into TheHive alerts.
+3. **TheHive VM routes telemetry.** It is the ingress hub: it terminates the tunnel, forwards agent traffic to the Wazuh VM over VNet peering, and terminates the VPN for analyst access.
 4. **Fail closed.** If the tunnel or the hub is down, agents queue or fail; no service falls back to a public listener.
 5. **Document the blind spot.** Suricata sees attacker↔victim and victim↔cloud traffic. It does not see victim-to-victim traffic on `192.168.56.0/24`, which is same-subnet. Lateral-movement detection for those stages depends on Wazuh and host telemetry.
 6. **Honest evidence.** Unverified rules are marked unverified. Missing artifacts are marked missing. Nothing is presented as a result until it exists.

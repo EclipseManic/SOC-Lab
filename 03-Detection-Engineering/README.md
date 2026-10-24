@@ -21,9 +21,9 @@ This section details the detection logic, rules, parsers, and pipeline automatio
 
 | File | Type | Host / Location | Purpose |
 |---|---|---|---|
-| [custom-thehive](custom-thehive) | Shell Script | Wazuh Manager (`/var/ossec/integrations/`) | POSIX wrapper invoked by Wazuh per alert |
-| [custom-thehive.py](custom-thehive.py) | Python 3 Script | Wazuh Manager (`/var/ossec/integrations/`) | Production correlation & batched flush engine: zero-HTTP ingest, recon tool fingerprinting, TheHive 5 sync |
-| [thehive-flush.service](thehive-flush.service) | Systemd Unit | Wazuh Manager (`/etc/systemd/system/`) | Background daemon managing `custom-thehive.py --flush-daemon` |
+| [Wazuh/custom-thehive](Wazuh/custom-thehive) | Shell Script | Wazuh Manager (`/var/ossec/integrations/`) | POSIX wrapper invoked by Wazuh per alert |
+| [Wazuh/custom-thehive.py](Wazuh/custom-thehive.py) | Python 3 Script | Wazuh Manager (`/var/ossec/integrations/`) | Production correlation & batched flush engine: zero-HTTP ingest, recon tool fingerprinting, TheHive 5 sync |
+| [Wazuh/thehive-flush.service](Wazuh/thehive-flush.service) | Systemd Unit | Wazuh Manager (`/etc/systemd/system/`) | Background daemon managing `custom-thehive.py --flush-daemon` |
 | [Wazuh/local_rules.xml](Wazuh/local_rules.xml) | Wazuh Rules XML | Wazuh SIEM (`/var/ossec/etc/rules/`) | Complete authentic local ruleset: LOLBins, wmiexec, privilege escalation, suppressions |
 | [Wazuh/local_decoder.xml](Wazuh/local_decoder.xml) | Wazuh Decoder XML | Wazuh SIEM (`/var/ossec/etc/decoders/`) | Custom regex parser extracting `uid, user, pwd, command` from `/var/log/bashcmd.log` |
 | [Wazuh/ossec.conf](Wazuh/ossec.conf) | Wazuh Config XML | Wazuh SIEM (`/var/ossec/etc/`) | Wazuh manager configuration defining the `custom-thehive` integration block |
@@ -53,9 +53,9 @@ Windows 10 / DC (Sysmon & Auditpol)  ----->  Sysmon Modular Configuration (Sysmo
 
 Private Wazuh SIEM (Cloud VM 2)      ----->  Wazuh Engine & Local Rules (Wazuh/local_rules.xml)
                                              Manager Integration Block (Wazuh/ossec.conf)
-                                             thecustomhive Ingest & Queue (custom-thehive, custom-thehive.py)
+                                             thecustomhive Ingest & Queue (Wazuh/custom-thehive, Wazuh/custom-thehive.py)
 
-TheHive Case Management (Cloud VM 1) ----->  thecustomhive Flush Daemon (thehive-flush.service)
+TheHive Case Management (Cloud VM 1) ----->  thecustomhive Flush Daemon (Wazuh/thehive-flush.service)
                                              Correlated Case & Alert Creation (TheHive 5 API)
 ```
 

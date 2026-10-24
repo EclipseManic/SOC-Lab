@@ -21,10 +21,11 @@
 
 ## Components
 
-| Component | Version | Purpose | Port |
-|-----------|---------|---------|------|
+| Component | Version | Purpose | Port / Path |
+|-----------|---------|---------|-------------|
 | Wazuh Manager | 4.14.8 | Receives events, applies rules, generates alerts | `1514/TCP` (events), `1515/TCP` (enrollment) |
-| Wazuh API | — | Query alerts for thecustomhive | `55000/TCP` |
+| custom-thehive | — | POSIX wrapper & O(1) SQLite queue (Tier 1 Ingest) | `/var/ossec/integrations/custom-thehive` |
+| thehive-flush.service | — | Background daemon (Tier 2 Async Flush to TheHive) | Service managing `custom-thehive.py --flush-daemon` |
 | Wazuh Indexer | — | Stores and indexes alert data | `9200/TCP` |
 | Wazuh Dashboard | — | Search, visualization, administration | `443/TCP` |
 
@@ -80,16 +81,19 @@ Return traffic follows the reverse path. The TheHive VM has kernel forwarding en
 
 ---
 
-## Alert Path
+## Alert Path & Integration Architecture
+
+The manager evaluates incoming telemetry and automatically processes alerts through the local correlation pipeline:
 
 ```
-Agent / Suricata
-  → Wazuh Manager (rule match)
-    → alerts.json
-      → Wazuh API (55000/TCP)
-        → thecustomhive (on TheHive VM)
-          → TheHive API (localhost:9000)
-            → Analyst queue
+Agent / Suricata Event
+  → Wazuh Manager Engine (local_rules.xml evaluation)
+    → Alert Level >= 8 Triggered
+      → /var/ossec/integrations/custom-thehive (Tier 1: O(1) SQLite WAL queue - ZERO HTTP)
+        → thehive-flush.service (Tier 2: Async Correlation Daemon on 5s loop)
+          → HTTP POST over VNet peering (http://10.122.0.4:9000/api/v1)
+            → TheHive 5 Case Management
+              → Analyst Triage Queue
 ```
 
 For full pipeline details, see [pipeline-thecustomhive.md](../../03-Detection-Engineering/pipeline-thecustomhive.md).
@@ -98,7 +102,7 @@ For full pipeline details, see [pipeline-thecustomhive.md](../../03-Detection-En
 
 ## Detection Content
 
-Custom rules and decoders are deployed on this Wazuh Manager. A brief summary of custom rule IDs is provided here; **full rule definitions and analysis are in Detection Engineering.**
+Custom rules, decoders, and integration scripts are deployed directly on this Wazuh Manager. A brief summary is provided below; **full definitions and analysis are in Detection Engineering.**
 
 ### Custom Rule Summary
 
@@ -116,8 +120,12 @@ Custom rules and decoders are deployed on this Wazuh Manager. A brief summary of
 |----------|---------|
 | [rules.md](../../03-Detection-Engineering/Wazuh/rules.md) | Custom rules in `local_rules.xml` |
 | [decoders.md](../../03-Detection-Engineering/Wazuh/decoders.md) | Custom decoders in `local_decoder.xml` |
+| [ossec.conf](../../03-Detection-Engineering/Wazuh/ossec.conf) | Wazuh Manager integration configuration |
+| [custom-thehive](../../03-Detection-Engineering/Wazuh/custom-thehive) | POSIX integration wrapper script |
+| [custom-thehive.py](../../03-Detection-Engineering/Wazuh/custom-thehive.py) | Production correlation & flush engine |
+| [thehive-flush.service](../../03-Detection-Engineering/Wazuh/thehive-flush.service) | Systemd unit file for the flush daemon |
 | [false-positives.md](../../03-Detection-Engineering/Wazuh/false-positives.md) | False-positive tuning and exclusions |
-| [pipeline-thecustomhive.md](../../03-Detection-Engineering/pipeline-thecustomhive.md) | Alert pipeline (Wazuh API → TheHive) |
+| [pipeline-thecustomhive.md](../../03-Detection-Engineering/pipeline-thecustomhive.md) | Alert pipeline architecture documentation |
 
 ---
 
@@ -127,8 +135,8 @@ Custom rules and decoders are deployed on this Wazuh Manager. A brief summary of
 |--------|-------------|------|----------|---------|
 | On-prem agents (via WireGuard) | Wazuh VM | `1514` | TCP | Event shipping |
 | New agents (via WireGuard) | Wazuh VM | `1515` | TCP | Agent enrollment |
-| TheHive VM (thecustomhive) | Wazuh VM | `55000` | TCP | Alert polling via API |
 | Analyst (via WireGuard + NPM) | Wazuh VM | `443` | TCP | Dashboard access |
+| Wazuh VM (thehive-flush.service) | TheHive VM (`10.122.0.4`) | `9000` | TCP | Correlated alert batches pushed via VNet peering |
 | TheHive VM (internal) | Wazuh VM | `9200` | TCP | Indexer queries (optional) |
 
 > [!IMPORTANT]
@@ -142,18 +150,21 @@ Custom rules and decoders are deployed on this Wazuh Manager. A brief summary of
 # Listening sockets
 sudo ss -ltnp
 
-# Wazuh service status
+# Wazuh and integration service status
 systemctl status wazuh-manager
 systemctl status wazuh-indexer
 systemctl status wazuh-dashboard
+systemctl status thehive-flush.service
 
 # Agent list
 /var/ossec/bin/agent_control -l
 
-# Connectivity test from TheHive VM (hub)
-nc -vz <wazuh-vm-private> 1514
-nc -vz <wazuh-vm-private> 55000
-nc -vz <wazuh-vm-private> 443
+# Verify integration script and SQLite WAL queue
+ls -la /var/ossec/integrations/custom-thehive*
+ls -lh /var/ossec/logs/correlation_state.db*
+
+# Connectivity to TheHive over VNet peering
+nc -vz 10.122.0.4 9000
 ```
 
 ---
@@ -162,7 +173,7 @@ nc -vz <wazuh-vm-private> 443
 
 | Document | Description |
 |----------|-------------|
-| [thehive.md](thehive.md) | TheHive / Automation VM — VPN, routing, case management |
+| [thehive.md](thehive.md) | TheHive VM — VPN, routing, case management |
 | [rules.md](../../03-Detection-Engineering/Wazuh/rules.md) | Custom Wazuh detection rules |
 | [decoders.md](../../03-Detection-Engineering/Wazuh/decoders.md) | Custom Wazuh decoders |
 | [false-positives.md](../../03-Detection-Engineering/Wazuh/false-positives.md) | False-positive tuning |
