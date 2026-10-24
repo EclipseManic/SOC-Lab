@@ -1,81 +1,91 @@
-# DVWA — Web Application Target
+# DVWA — Web Application Target & Internal Pivot
 
-## Role
+| Property | Value |
+|----------|-------|
+| **OS** | Ubuntu 24.04 |
+| **Role** | Vulnerable web application · internal pivot host |
+| **Address** | `192.168.56.30/24` |
+| **Default gateway** | `192.168.56.150` |
+| **Resources** | 2 vCPU · 4 GB RAM |
+| **Wazuh agent** | `DVWA` |
+| **Velociraptor** | Client v0.77.1 |
+| **SSH key** | `manichand gupta@ManicLenovo` |
 
-DVWA (Damn Vulnerable Web Application) is the initial-access target and later the internal pivot. It provides deliberate web vulnerabilities — SQL injection, command injection, file upload, and more — in a controlled application.
+## Why This Host Matters Twice
 
-## Configuration
+DVWA serves a **dual role** in the attack chain:
 
-| Item | Value |
-|---|---|
-| OS | Ubuntu (`TBD` version) |
-| Address | `192.168.56.30/24` |
-| Default gateway | `192.168.56.150` (Suricata `eth1`) |
-| NICs | Single NIC on `192.168.56.0/24` |
-| Web stack | Apache, PHP, MySQL/MariaDB |
-| DVWA security level | `low` for the campaign |
-| Wazuh agent | Installed and enrolled; manager reached through the tunnel |
-| Resources | `TBD` vCPU / `TBD` GB RAM |
+1. **Initial access target** — Kali reaches DVWA through the Suricata gateway, so every inbound exploit attempt generates network-level alerts on the sensor.
+2. **Internal pivot** — After obtaining a reverse shell, tools run **from** DVWA inside `192.168.56.0/24`, where Suricata is blind. Detection shifts entirely to Wazuh agent telemetry, auditd, and bash command logging.
 
 ## Services
 
-| Service | Port | Purpose |
-|---|---|---|
-| Apache | `80/TCP` | DVWA web application |
-| MySQL/MariaDB | `3306/TCP` | Application database |
-| SSH | `22/TCP` | Administration (and later, persistence evidence) |
+| Service | Port | Protocol |
+|---------|------|----------|
+| Apache | 80 | TCP |
+| MySQL | 3306 | TCP |
+| SSH | 22 | TCP |
 
-## Why this host matters twice
+### Web Stack
 
-DVWA is the only host that is both an internet-style target and an internal pivot:
+- **Apache 2.4.58** with PHP
+- **MySQL** — database user `dvwa` / password `p@ssw0rd`
+- **DVWA security level:** `low`
 
-1. **Initial access.** Kali reaches it through the Suricata gateway, so the web attacks are visible as network events.
-2. **Pivot.** After the reverse shell, tooling runs *from* `192.168.56.30`. Internal discovery, Responder poisoning, and NTLM capture then happen inside `192.168.56.0/24`, where Suricata is blind. Those stages are host-telemetry detections.
+## Intentional Weaknesses (Deliberate Attack Surface)
 
-## Network path
+| Weakness | Purpose |
+|----------|---------|
+| DVWA security level `low` | No input validation — enables SQLi, XSS, command injection |
+| MySQL credentials `dvwa:p@ssw0rd` | Weak database credentials |
+| File upload with no restrictions | Allows webshell upload (Stage 06) |
+| SUID bash at `/tmp/bash` | Privilege escalation path (Stage 07) |
+| `www-data` has `sudo python3 NOPASSWD` | Alternative privilege escalation |
+| `/etc/passwd` chmod 666 | Writable by any user — allows account creation |
+| No WAF in front of the application | All payloads reach Apache unfiltered |
 
-| Destination | Path |
-|---|---|
-| DC, Windows 10 (`192.168.56.0/24`) | Direct, same subnet — no router hop |
-| Kali (`192.168.232.0/24`) | Via `192.168.56.150` |
-| Wazuh manager (`10.122.0.0/16`) | Via `192.168.56.150` → `wg0` → hub → peering |
+> [!CAUTION]
+> These weaknesses are **intentional** for the lab. Every one maps to a specific attack stage and a corresponding detection rule.
 
-## Intentional weaknesses
+## Auditd Configuration
 
-- DVWA security level set to `low`
-- Weak/default application credentials
-- File upload permitted
-- Verbose application errors
-- No WAF in front of the application
+Nextron auditd rules provide comprehensive syscall auditing across the host.
+The full ruleset is loaded from `/etc/audit/rules.d/`:
 
-These weaknesses are deliberate. They are the attack surface, not an accident.
+```bash
+# Nextron auditd rules (loaded via /etc/audit/rules.d/)
+auditctl -l   # Shows full ruleset
+```
 
-## Telemetry
+Custom web-specific rules monitor Apache and PHP process activity, capturing file access patterns and command execution by the `www-data` user.
 
-- Apache access and error logs
-- PHP errors
-- Authentication logs (`/var/log/auth.log`)
-- Wazuh agent alerts
-- Suricata HTTP events for requests crossing the gateway (Kali → DVWA only)
+## Custom Bash Command Logging
 
-## Reset procedure
+All bash commands executed by `root` and `www-data` are captured to `/var/log/bashcmd.log`.
+This provides a plain-text audit trail of every interactive and scripted shell command on the host.
 
-1. Revert the VM to the clean snapshot.
-2. Confirm DVWA is reachable through the gateway.
-3. Confirm the Wazuh agent reconnects through the tunnel.
-4. Confirm the database is in the expected state.
+A custom Wazuh decoder (`bashcmd`) parses these log entries into structured alerts.
+See [Detection Engineering — Decoders](../../03-Detection-Engineering/Wazuh/decoders.md) for the decoder configuration.
 
-Document the actual snapshot name and reset commands.
+## Telemetry Sources
 
-## Evidence
+| Source | What it captures |
+|--------|-----------------|
+| Apache access/error logs | HTTP requests, errors, webshell activity |
+| `/var/log/auth.log` | SSH logins, sudo usage, PAM events |
+| `/var/log/bashcmd.log` | All bash commands (root, www-data) |
+| Wazuh agent (`DVWA`) | Aggregated host-based alerts shipped to manager |
+| Velociraptor client | On-demand forensic collection |
+| Suricata HTTP events | Gateway-crossing traffic only (inbound from Kali) |
 
-- [ ] DVWA login page
-- [ ] Security level configuration
-- [ ] Wazuh agent status with manager address
-- [ ] Clean snapshot confirmation
+> [!NOTE]
+> Suricata sees traffic **to** DVWA from Kali (crosses the gateway), but **not** traffic **from** DVWA to other victims on `192.168.56.0/24` (stays on the local switch).
 
-## Related documents
+## Related Documentation
 
-- [Attack stage 05 — Web shell](../../02-Attack-Simulation/Stages/stage-05-webshell.md)
-- [Attack stage 06 — Reverse shell](../../02-Attack-Simulation/Stages/stage-06-reverse-shell.md)
-- [Attack stage 10 — Responder](../../02-Attack-Simulation/Stages/stage-10-responder.md)
+- [Stage 05 — SQL Injection](../../02-Attack-Simulation/stage-05/README.md)
+- [Stage 06 — Webshell Upload](../../02-Attack-Simulation/stage-06/README.md)
+- [Stage 07 — Privilege Escalation](../../02-Attack-Simulation/stage-07/README.md)
+- [Stage 08 — Reverse Shell](../../02-Attack-Simulation/stage-08/README.md)
+- [Stage 10 — Responder](../../02-Attack-Simulation/stage-10/README.md)
+- [Detection Engineering — Decoders](../../03-Detection-Engineering/Wazuh/decoders.md)

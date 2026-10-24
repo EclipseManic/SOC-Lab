@@ -1,113 +1,169 @@
-# Wazuh VM — SIEM and Detection
+# Wazuh SIEM VM
 
-## Role
+> Private SIEM stack — receives events from all monitored hosts, applies detection rules, and feeds alerts into the TheHive pipeline. No public IP; reachable only through the TheHive VM over VNet peering.
 
-The Wazuh VM collects host and network telemetry, applies decoders and rules, and produces the alerts that feed TheHive. It is **private only**: it has no public listener, no reverse proxy, and no VPN endpoint of its own. Everything reaches it through the TheHive/automation VM over VNet peering.
+---
 
-## Placement
+## VM Specifications
 
-| Item | Value |
-|---|---|
-| Cloud private plan | `10.122.0.0/16` summary; this VM is in the second of two peered `/24` VNets |
-| Private address | Provider-assigned inside `10.122.0.0/16` — not published |
-| Public exposure | None |
-| Inbound path | TheHive/automation VM → VNet peering |
-| Outbound path | Peering back to the hub, then the WireGuard tunnel |
+| Property | Value |
+|----------|-------|
+| **OS** | Ubuntu 24.04.4 LTS |
+| **RAM** | 8 GB |
+| **vCPU** | 2 |
+| **Cloud network** | `10.122.0.0/16` (second of two peered `/24` VNets) |
+| **Public IP** | None |
+| **Public listeners** | None |
+| **Access method** | VNet peering from TheHive VM; analyst access via WireGuard + NPM (`wazuh.lab`) |
+| **SSH key** | `manichand gupta@ManicLenovo` |
+
+---
 
 ## Components
 
-| Component | Purpose | Port |
-|---|---|---|
-| Wazuh Manager | Receives events, applies rules, generates alerts | `1514/TCP` events, `1515/TCP` enrollment |
-| Wazuh API | Query alerts for thecustomhive | `55000/TCP` |
-| Wazuh Indexer | Stores and indexes alerts and events | `9200/TCP` |
-| Wazuh Dashboard | Search, visualisation, administration | `443/TCP` |
-| Wazuh Agents | Collect logs and file integrity events from DVWA, Windows 10, DC | outbound to manager |
+| Component | Version | Purpose | Port |
+|-----------|---------|---------|------|
+| Wazuh Manager | 4.14.8 | Receives events, applies rules, generates alerts | `1514/TCP` (events), `1515/TCP` (enrollment) |
+| Wazuh API | — | Query alerts for thecustomhive | `55000/TCP` |
+| Wazuh Indexer | — | Stores and indexes alert data | `9200/TCP` |
+| Wazuh Dashboard | — | Search, visualization, administration | `443/TCP` |
 
-All of the above are private. The dashboard is reached by an analyst connected to the VPN, routed through the hub.
+---
 
-## Forwarding path
+## Enrolled Agents
 
-```text
-Victim host (192.168.56.0/24)
-  -> default gateway 192.168.56.150 (Suricata eth1)
-  -> wg0 (10.8.0.2)
-  -> WireGuard 51820/UDP
-  -> TheHive/automation VM (10.8.0.1) forwards
-  -> VNet peering
-  -> Wazuh VM private address, 1514/TCP
+| Agent Name | Host | IP | OS | Status |
+|------------|------|----|----|--------|
+| DVWA | DVWA Ubuntu | `192.168.56.30` | Ubuntu 24.04 | Active |
+| Win10User | Windows 10 | `192.168.56.20` | Windows 10 Pro N | Active |
+| DomainWin10 | Domain Controller | `192.168.56.10` | Windows Server 2022 | Active |
+| Suricata | Suricata Gateway | `192.168.56.150` | Ubuntu 24.04 | Active |
+
+---
+
+## Agent Configuration
+
+Each agent's `ossec.conf` points to the Wazuh Manager's private cloud IP over port `1514/TCP`.
+
+### Example — DVWA Agent (`/var/ossec/etc/ossec.conf`)
+
+```xml
+<ossec_config>
+  <client>
+    <server>
+      <address>10.122.0.x</address>
+      <port>1514</port>
+      <protocol>tcp</protocol>
+    </server>
+  </client>
+</ossec_config>
 ```
 
-The hub must have IP forwarding enabled and a route to the Wazuh VM's private address. Agents are configured with the Wazuh VM's private address, or with a hub-side forwarder — whichever the build actually uses, record it here.
+The on-prem agents do not have direct connectivity to the `10.122.0.0/16` network. Traffic is routed through the WireGuard tunnel (see [Forwarding Path](#forwarding-path) below).
 
-## Agents
+---
 
-| Agent | Host | Status |
-|---|---|---|
-| `TBD` | DVWA (`192.168.56.30`) | Not tested |
-| `TBD` | Windows 10 (`192.168.56.20`) | Not tested |
-| `TBD` | Domain Controller (`192.168.56.10`) | Not tested |
-| `TBD` | Suricata gateway | Not tested |
+## Agent Forwarding Path
 
-## Detection content
+How on-prem agents reach the cloud-hosted Wazuh Manager:
 
-Document:
-
-- Enabled rule groups
-- Custom rules and their IDs
-- Custom decoders, especially for Suricata `eve.json`
-- File integrity monitoring paths
-- Active response configuration (if used)
-- Alert level threshold used by thecustomhive
-- Suppression and false-positive tuning
-
-The rule catalogue and coverage analysis live in `03-Detection-Engineering/Wazuh/`. No rule in this lab is validated yet; see [03-Detection-Engineering/gaps.md](../../03-Detection-Engineering/gaps.md).
-
-## Alert path
-
-```text
-Agent or Suricata -> Wazuh Manager -> rule match -> alerts.json
-  -> Wazuh API 55000/TCP (private VNet)
-     -> thecustomhive (TheHive/automation VM)
-        -> TheHive API (local)
-           -> analyst queue
+```
+Victim host (192.168.56.x)
+  → default gateway 192.168.56.150 (Suricata)
+    → wg0 tunnel (10.8.0.2)
+      → WireGuard → TheHive VM (10.8.0.1)
+        → VNet peering
+          → Wazuh VM 1514/TCP
 ```
 
-## Firewall expectations
+Return traffic follows the reverse path. The TheHive VM has kernel forwarding enabled (`net.ipv4.ip_forward = 1`) and static routes for `192.168.56.0/24` and `192.168.232.0/24` pointing back through `wg0`.
 
-| Source | Destination | Port | Allowed |
-|---|---|---|---|
-| TheHive/automation VM | Wazuh VM | `1514`, `1515`, `55000`, `9200`, `443` | Yes |
-| VPN client (`10.8.0.0/24`) | Wazuh VM | `443` (dashboard) | Yes, via the hub |
-| Internet | Wazuh VM | Any | **No** |
+---
 
-Verify on the live build:
+## Alert Path
+
+```
+Agent / Suricata
+  → Wazuh Manager (rule match)
+    → alerts.json
+      → Wazuh API (55000/TCP)
+        → thecustomhive (on TheHive VM)
+          → TheHive API (localhost:9000)
+            → Analyst queue
+```
+
+For full pipeline details, see [pipeline-thecustomhive.md](../../03-Detection-Engineering/pipeline-thecustomhive.md).
+
+---
+
+## Detection Content
+
+Custom rules and decoders are deployed on this Wazuh Manager. A brief summary of custom rule IDs is provided here; **full rule definitions and analysis are in Detection Engineering.**
+
+### Custom Rule Summary
+
+| Rule ID(s) | Detection |
+|-------------|-----------|
+| `100613` | Impacket wmiexec activity |
+| `100603` | Sensitive privilege usage |
+| `100410` | Suricata 4xx burst |
+| `100201` | SQL injection (SQLi) patterns |
+| `100100` – `100104` | Registry persistence mechanisms |
+
+### Detection Engineering References
+
+| Document | Content |
+|----------|---------|
+| [rules.md](../../03-Detection-Engineering/Wazuh/rules.md) | Custom rules in `local_rules.xml` |
+| [decoders.md](../../03-Detection-Engineering/Wazuh/decoders.md) | Custom decoders in `local_decoder.xml` |
+| [false-positives.md](../../03-Detection-Engineering/Wazuh/false-positives.md) | False-positive tuning and exclusions |
+| [pipeline-thecustomhive.md](../../03-Detection-Engineering/pipeline-thecustomhive.md) | Alert pipeline (Wazuh API → TheHive) |
+
+---
+
+## Firewall Expectations
+
+| Source | Destination | Port | Protocol | Purpose |
+|--------|-------------|------|----------|---------|
+| On-prem agents (via WireGuard) | Wazuh VM | `1514` | TCP | Event shipping |
+| New agents (via WireGuard) | Wazuh VM | `1515` | TCP | Agent enrollment |
+| TheHive VM (thecustomhive) | Wazuh VM | `55000` | TCP | Alert polling via API |
+| Analyst (via WireGuard + NPM) | Wazuh VM | `443` | TCP | Dashboard access |
+| TheHive VM (internal) | Wazuh VM | `9200` | TCP | Indexer queries (optional) |
+
+> [!IMPORTANT]
+> No inbound traffic reaches this VM from the public internet. Every flow above transits through VNet peering from the TheHive VM, which itself is gated behind WireGuard.
+
+---
+
+## Verification Commands
 
 ```bash
-sudo ss -ltnp | grep -E '1514|1515|55000|9200|443'
-# From the hub
-nc -vz -w 3 <wazuh-vm-private-address> 55000
-nc -vz -w 3 <wazuh-vm-private-address> 1514
+# Listening sockets
+sudo ss -ltnp
+
+# Wazuh service status
+systemctl status wazuh-manager
+systemctl status wazuh-indexer
+systemctl status wazuh-dashboard
+
+# Agent list
+/var/ossec/bin/agent_control -l
+
+# Connectivity test from TheHive VM (hub)
+nc -vz <wazuh-vm-private> 1514
+nc -vz <wazuh-vm-private> 55000
+nc -vz <wazuh-vm-private> 443
 ```
 
-## Verification
+---
 
-- [ ] All agents show as active
-- [ ] A test event produces a Wazuh alert
-- [ ] The alert appears in the dashboard over the VPN
-- [ ] The alert reaches TheHive through thecustomhive
-- [ ] The Wazuh VM accepts nothing from the internet
-- [ ] The rule ID is recorded in `INDEX.md`
+## Related Documents
 
-## Evidence
-
-- [ ] Agent inventory
-- [ ] Rule test output
-- [ ] Dashboard alert screenshot (VPN session, no public IP visible)
-- [ ] Redacted manager configuration
-
-## Related documents
-
-- [Wazuh detection content](../../03-Detection-Engineering/Wazuh/rules.md)
-- [thecustomhive pipeline](../pipeline-thecustomhive.md)
-- [WireGuard](wireguard.md)
+| Document | Description |
+|----------|-------------|
+| [thehive.md](thehive.md) | TheHive / Automation VM — VPN, routing, case management |
+| [rules.md](../../03-Detection-Engineering/Wazuh/rules.md) | Custom Wazuh detection rules |
+| [decoders.md](../../03-Detection-Engineering/Wazuh/decoders.md) | Custom Wazuh decoders |
+| [false-positives.md](../../03-Detection-Engineering/Wazuh/false-positives.md) | False-positive tuning |
+| [pipeline-thecustomhive.md](../../03-Detection-Engineering/pipeline-thecustomhive.md) | Alert pipeline (Wazuh → TheHive) |
