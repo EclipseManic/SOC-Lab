@@ -82,7 +82,7 @@ export function SignalReveal() {
               The signal.
             </p>
             <p className="mt-1 max-w-md text-sm leading-6 text-muted">
-              The boundary is set. The capability matrix starts here.
+              The boundary is set. Detection validation and the correlation pipeline start here.
             </p>
           </div>
           <span className="inline-flex w-fit items-center gap-2 rounded-full border border-amber/30 bg-amber/10 px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-amber">

@@ -3,7 +3,6 @@ import {
   Database,
   FileWarning,
   FolderGit2,
-  ImageOff,
   LockKeyhole,
   ShieldCheck,
 } from "lucide-react";
@@ -52,19 +51,19 @@ export function Evidence() {
           </Card>
 
           <div className="grid gap-3">
-            <Card className="border-rose/20 bg-rose/[0.04] p-5">
+            <Card className="border-teal/20 bg-teal/[0.04] p-5">
               <div className="flex items-start gap-3">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-rose/25 bg-rose/10 text-rose">
-                  <ImageOff className="h-4 w-4" aria-hidden="true" />
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-teal/25 bg-teal/10 text-teal">
+                  <ShieldCheck className="h-4 w-4" aria-hidden="true" />
                 </span>
                 <div>
                   <h3 className="text-sm font-medium text-ink">
-                    Screenshots are not a gallery yet
+                    Visual Evidence Chain Published
                   </h3>
                   <p className="mt-2 text-sm leading-6 text-muted">
-                    Attack and alert captures exist, but publication waits for a
-                    redaction review. The ledger labels them “Pending review” rather
-                    than turning an unreviewed image into proof.
+                    Attack executions and TheHive alert captures across all 20 stages are
+                    published in dedicated folders with strict IP and credential redaction,
+                    providing concrete visual proof for every verified detection.
                   </p>
                 </div>
               </div>

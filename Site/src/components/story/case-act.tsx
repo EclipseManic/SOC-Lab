@@ -138,8 +138,9 @@ export function CaseAct() {
               ))}
             </div>
             <p className="mt-4 text-xs leading-5 text-faint">
-              Observables and screenshots are not published until redaction
-              review is complete. The case record names the absence.
+              Detailed analyst tasks, containment timestamps, and final verdicts
+              remain open for manual triage. The case files document scope and
+              observables while leaving conclusions unforced.
             </p>
           </div>
         </div>
