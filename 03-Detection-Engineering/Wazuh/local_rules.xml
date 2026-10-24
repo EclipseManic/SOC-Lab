@@ -1,161 +1,1314 @@
-<!--
-  local_rules.xml — Custom Wazuh Ruleset for SOC Lab
-  Path: /var/ossec/etc/rules/local_rules.xml
-  Manager: Wazuh 4.14.8 (Ubuntu 24.04.4 LTS, Cloud VM 2)
-  Rules range: 100000 - 100999
--->
+<!-- Local rules -->
 
-<group name="soc-lab,">
+<!-- Modify it at your will. -->
+<!-- Copyright (C) 2015, Wazuh Inc. -->
 
-  <!-- ===================================================================== -->
-  <!-- 1. LATERAL MOVEMENT & EXECUTION DETECTION (Sysmon Event ID 1)         -->
-  <!-- ===================================================================== -->
-  <group name="windows,sysmon,execution,">
-    <!-- Rule 100613: Impacket wmiexec execution via WMI with ADMIN$ staging -->
-    <rule id="100613" level="12">
-      <if_sid>61603</if_sid>
-      <field name="win.eventdata.parentCommandLine" type="pcre2">cmd\.exe\s+/Q\s+/c\s+.*\\\\ADMIN\$\\\\__\d+</field>
-      <description>Impacket wmiexec detected: command execution via WMI service with output staged in ADMIN$ share</description>
-      <mitre>
-        <id>T1047</id>
-        <id>T1059.003</id>
-      </mitre>
-      <info type="text">Matches Stage 17, 18, and 20 lateral movement and persistence commands</info>
-    </rule>
+<!-- Example -->
 
-    <!-- Rule 100614: Suspicious process spawning from web server (DVWA) -->
-    <rule id="100614" level="12">
-      <if_sid>5402</if_sid>
-      <field name="command" type="pcre2">python3?\s+-c\s+.*pty\.spawn|nc\s+-e|bash\s+-i</field>
-      <description>DVWA Pivot: Interactive reverse shell spawned by web service account</description>
-      <mitre>
-        <id>T1059.004</id>
-      </mitre>
-    </rule>
-  </group>
 
-  <!-- ===================================================================== -->
-  <!-- 2. PRIVILEGE ESCALATION & TOKEN MANIPULATION (Security EID 4672)      -->
-  <!-- ===================================================================== -->
-  <group name="windows,privilege_escalation,">
-    <!-- Rule 100603: High-risk administrative privileges assigned during logon -->
-    <rule id="100603" level="10">
-      <if_sid>60103</if_sid>
-      <field name="win.eventdata.privilegeList" type="pcre2">SeDebugPrivilege|SeTakeOwnershipPrivilege|SeLoadDriverPrivilege|SeImpersonatePrivilege</field>
-      <description>Windows: High-risk administrative privilege assigned to logon session</description>
-      <mitre>
-        <id>T1134</id>
-        <id>T1078.002</id>
-      </mitre>
-    </rule>
-  </group>
 
-  <!-- ===================================================================== -->
-  <!-- 3. NETWORK ANOMALY & SCAN AGGREGATION (Suricata Correlation)         -->
-  <!-- ===================================================================== -->
-  <group name="suricata,recon,">
-    <!-- Rule 100410: Anomaly burst of Suricata alerts from single IP -->
-    <rule id="100410" level="8" frequency="100" timeframe="60">
-      <if_matched_sid>86601</if_matched_sid>
-      <same_source_ip />
-      <description>Suricata: Anomaly burst of network alerts from single source (>100 alerts in 60s)</description>
-      <mitre>
-        <id>T1595.001</id>
-      </mitre>
-    </rule>
-  </group>
 
-  <!-- ===================================================================== -->
-  <!-- 4. WEB APPLICATION EXPLOITATION (Apache Access & Suricata Correlation)-->
-  <!-- ===================================================================== -->
-  <group name="web,sqli,exploit,">
-    <!-- Rule 100201: SQL Injection keyword patterns in URI parameter -->
-    <rule id="100201" level="10">
-      <if_sid>31101</if_sid>
-      <url type="pcre2">(?i)(?:UNION(?:\s+ALL)?\s+SELECT|OR\s+1=1|AND\s+1=1|SLEEP\s*\(|BENCHMARK\s*\(|ORDER\s+BY\s+\d+)</url>
-      <description>Web application attack: SQL injection payload detected in URI query string</description>
-      <mitre>
-        <id>T1190</id>
-      </mitre>
-    </rule>
 
-    <!-- Rule 100600: Web server PHP command execution / upload exploit -->
-    <rule id="100600" level="10">
-      <if_sid>86601</if_sid>
-      <field name="data.alert.signature" type="pcre2">(?i)PHP\s+System\s+Command|Exploit\s+Suspected\s+PHP\s+Injection</field>
-      <description>Suricata: PHP web shell upload or command execution attempt detected</description>
-      <mitre>
-        <id>T1505.003</id>
-      </mitre>
-    </rule>
-  </group>
 
-  <!-- ===================================================================== -->
-  <!-- 5. WINDOWS PERSISTENCE VIA REGISTRY (Sysmon Event ID 13)              -->
-  <!-- ===================================================================== -->
-  <group name="windows,sysmon,persistence,">
-    <!-- Rule 100100: Registry Run/RunOnce autostart entry created/modified -->
-    <rule id="100100" level="12">
-      <if_sid>61603</if_sid>
-      <field name="win.eventdata.targetObject" type="pcre2">(?i)\\\\CurrentVersion\\\\Run(?:Once)?\\\\[^\\]+$</field>
-      <description>Persistence: Registry autostart Run or RunOnce key created or modified</description>
-      <mitre>
-        <id>T1547.001</id>
-      </mitre>
-    </rule>
 
-    <!-- Rule 100101: Winlogon shell/userinit persistence modification -->
-    <rule id="100101" level="12">
-      <if_sid>61603</if_sid>
-      <field name="win.eventdata.targetObject" type="pcre2">(?i)\\\\Microsoft\\\\Windows\s+NT\\\\CurrentVersion\\\\Winlogon\\\\(Shell|Userinit)</field>
-      <description>Persistence: Winlogon Shell or Userinit value altered</description>
-      <mitre>
-        <id>T1547.004</id>
-      </mitre>
-    </rule>
-  </group>
 
-  <!-- ===================================================================== -->
-  <!-- 6. PIVOT HOST COMMAND AUDITING (Parsed from /var/log/bashcmd.log)     -->
-  <!-- ===================================================================== -->
-  <group name="linux,auditd,pivot,">
-    <!-- Rule 100615: Credential dumping tooling executed on Linux pivot -->
-    <rule id="100615" level="12">
-      <decoded_as>bashcmd</decoded_as>
-      <field name="command" type="pcre2">(?i)(?:secretsdump|GetUserSPNs|responder|mimikatz|bloodhound|sharphound)</field>
-      <description>DVWA Pivot: Adversary credential access or enumeration tool executed via bash</description>
-      <mitre>
-        <id>T1003.006</id>
-        <id>T1558.003</id>
-        <id>T1087.002</id>
-      </mitre>
-    </rule>
-  </group>
+<group name="local,shell_and_lolbin_all,">
 
-  <!-- ===================================================================== -->
-  <!-- 7. NOISE SUPPRESSION & TUNING RULES (Level 0 = Ignored)               -->
-  <!-- ===================================================================== -->
-  <group name="tuning,">
-    <!-- Rule 100901: Suppress routine Windows Defender service events in lab -->
-    <rule id="100901" level="0">
-      <if_sid>60100</if_sid>
-      <field name="win.system.providerName">Microsoft-Antimalware</field>
-      <description>Tuning: Suppress benign Windows Defender status changes in lab environment</description>
-    </rule>
+  <rule id="60137" level="3" overwrite="yes" ignore="2">
+    <if_sid>60103</if_sid>
+    <field name="win.system.eventID">^538$|^551$|^4634$|^4647$</field>
+    <description>user=$(win.eventdata.targetUserName) domain=$(win.eventdata.targetDomainName) logonType=$(win.eventdata.logonType) logonId=$(win.eventdata.targetLogonId) - Windows User Logoff</description>
+    <options>no_full_log</options>
+    <group>windows,windows_security,</group>
+  </rule>
 
-    <!-- Rule 100902: Suppress routine Windows Update background client polling -->
-    <rule id="100902" level="0">
-      <if_sid>60100</if_sid>
-      <field name="win.system.providerName">Microsoft-Windows-WindowsUpdateClient</field>
-      <description>Tuning: Suppress scheduled Windows Update polling noise</description>
-    </rule>
+  <!-- 67028 overwrite: add user context to Special Privileges alert -->
+  <rule id="67028" level="5" overwrite="yes">
+    <if_sid>60106</if_sid>
+    <field name="win.system.eventID">^4672$</field>
+    <description>user=$(win.eventdata.subjectUserName) domain=$(win.eventdata.subjectDomainName) host=$(win.system.computer) logonId=$(win.eventdata.subjectLogonId) - Special privileges assigned to new logon</description>
+    <options>no_full_log</options>
+    <group>windows,WEF,</group>
+    <mitre>
+      <id>T1484</id>
+    </mitre>
+  </rule>
 
-    <!-- Rule 100903: Suppress routine domain controller machine account logon noise -->
-    <rule id="100903" level="0">
-      <if_sid>60103</if_sid>
-      <field name="win.eventdata.targetUserName" type="pcre2">^PC-DC\$$</field>
-      <description>Tuning: Suppress internal machine account ticket requests on DC</description>
-    </rule>
-  </group>
+  <!-- 100603: Sensitive attack privileges assigned - SeDebug/SeImpersonate/SeTcb -->
+  <rule id="100603" level="6" ignore="2">
+    <if_sid>67028</if_sid>
+    <field name="win.eventdata.privilegeList" type="pcre2">SeDebugPrivilege|SeImpersonatePrivilege|SeTcbPrivilege|SeTakeOwnershipPrivilege</field>
+    <field name="win.eventdata.subjectUserName" type="pcre2" negate="yes">^SYSTEM$|^LOCAL SERVICE$|^NETWORK SERVICE$|\$$</field>
+    <description>user=$(win.eventdata.subjectUserName) domain=$(win.eventdata.subjectDomainName) host=$(win.system.computer) logonId=$(win.eventdata.subjectLogonId) - ALERT: Sensitive privileges assigned to human account logon</description>
+    <mitre>
+      <id>T1134</id>
+    </mitre>
+  </rule>
 
+  <rule id="100270" level="5">
+    <if_group>sysmon_event1</if_group>
+    <field name="win.eventdata.originalFileName" type="pcre2">(?i)^(powershell\.exe|pwsh\.exe)$</field>
+    <description>PowerShell spawned - user=$(win.eventdata.user) parent=$(win.eventdata.parentImage) cmdline=$(win.eventdata.commandLine)</description>
+  </rule>
+
+  <rule id="100271" level="5">
+    <if_group>windows</if_group>
+    <field name="win.system.eventID">^4104$</field>
+    <description>PowerShell script block executed - content=$(win.eventdata.scriptBlockText)</description>
+  </rule>
+
+
+<!-- Suppress: DC machine account (ends in $) routine self-logon -->
+  <rule id="100610" level="0">
+    <if_sid>60106</if_sid>
+    <field name="win.eventdata.targetUserName" type="pcre2">\$$</field>
+    <description>Suppress: machine account self-logon (routine AD/Netlogon background activity)</description>
+  </rule>
+
+<!-- Suppress: DC machine account (ends in $) special-privilege self-logon -->
+  <rule id="100611" level="0">
+    <if_sid>67028</if_sid>
+    <field name="win.eventdata.subjectUserName" type="pcre2">\$$|^SYSTEM$|^LOCAL SERVICE$|^NETWORK SERVICE$</field>
+    <description>Suppress: machine/SYSTEM/service account privilege assignment (routine background activity)</description>
+  </rule>
+
+  <!-- Throttle: Windows Error Reporting summary, max 1 alert per 60s -->
+  <rule id="60608" level="4" overwrite="yes" ignore="60">
+    <if_sid>60600</if_sid>
+    <field name="win.system.providerName">^Windows Error Reporting$</field>
+    <field name="win.system.eventID">^1001$</field>
+    <options>no_full_log</options>
+    <description>Windows Error Reporting summary (throttled 1/min) - $(win.system.computer)</description>
+  </rule>
+
+  <!-- Suppress: ESENT / VSS / Windows Search boot noise -->
+  <rule id="100612" level="0">
+    <if_sid>60798,60809,60807,60808,60805,60702,60668</if_sid>
+    <description>Suppress: ESENT/VSS/Windows Search routine service events</description>
+  </rule>
+
+  <!-- DETECT: Impacket wmiexec - cmd.exe /Q /c with output redirected to ADMIN$ share, child of WmiPrvSE -->
+  <rule id="100613" level="10">
+    <if_sid>92069</if_sid>
+    <field name="win.eventdata.originalFileName" type="pcre2">(?i)^cmd\.exe$</field>
+    <field name="win.eventdata.commandLine" type="pcre2">(?i)/Q\s+/c\s+.*ADMIN\$\\+__\d+</field>
+    <description>Impacket wmiexec detected - user=$(win.eventdata.user) host=$(win.system.computer) cmdline=$(win.eventdata.commandLine)</description>
+    <mitre>
+      <id>T1047</id>
+    </mitre>
+  </rule>
+
+  <!-- DETECT: recon/LOLBin run by a non-SYSTEM, non-machine account -->
+  <rule id="100614" level="4">
+    <if_sid>100274</if_sid>
+    <field name="win.eventdata.user" type="pcre2" negate="yes">(?i)^NT AUTHORITY\\|\$$</field>
+    <description>Recon/LOLBin by user account - $(win.eventdata.originalFileName) user=$(win.eventdata.user) host=$(win.system.computer) cmdline=$(win.eventdata.commandLine)</description>
+    <mitre>
+      <id>T1033</id>
+    </mitre>
+  </rule>
+
+  <!-- DETECT: human account network logon from a host outside the known lab hosts (.10 DC, .20 Win10) -->
+  <rule id="100615" level="5" ignore="2">
+    <if_sid>92651</if_sid>
+    <field name="win.system.eventID">^4624$</field>
+    <field name="win.eventdata.targetUserName" type="pcre2" negate="yes">(?i)\$$|^ANONYMOUS LOGON$|^SYSTEM$|^LOCAL SERVICE$|^NETWORK SERVICE$</field>
+    <field name="win.eventdata.ipAddress" type="pcre2" negate="yes">^192\.168\.56\.(10|20)$</field>
+    <description>Remote logon by user account - user=$(win.eventdata.targetUserName) domain=$(win.eventdata.targetDomainName) logonType=$(win.eventdata.logonType) src_ip=$(win.eventdata.ipAddress) authpkg=$(win.eventdata.authenticationPackageName) host=$(win.system.computer)</description>
+    <mitre>
+      <id>T1078</id>
+    </mitre>
+  </rule>
+
+
+  <rule id="100272" level="5">
+    <if_group>sysmon_event1</if_group>
+    <field name="win.eventdata.originalFileName" type="pcre2">(?i)^cmd\.exe$</field>
+    <description>CMD spawned - user=$(win.eventdata.user) parent=$(win.eventdata.parentImage) cmdline=$(win.eventdata.commandLine)</description>
+  </rule>
+
+  <rule id="100273" level="5">
+    <if_group>sysmon_event1</if_group>
+    <field name="win.eventdata.originalFileName" type="pcre2">(?i)^wmic\.exe$</field>
+    <description>WMIC spawned - user=$(win.eventdata.user) parent=$(win.eventdata.parentImage) cmdline=$(win.eventdata.commandLine)</description>
+  </rule>
+
+  <rule id="100274" level="0">
+    <if_group>sysmon_event1</if_group>
+    <field name="win.eventdata.originalFileName" type="pcre2">(?i)^(mshta\.exe|cscript\.exe|wscript\.exe|rundll32\.exe|regsvr32\.exe|certutil\.exe|msiexec\.exe|bitsadmin\.exe|curl\.exe|wget\.exe|ftp\.exe|schtasks\.exe|at\.exe|reg\.exe|sc\.exe|net\.exe|netsh\.exe|nltest\.exe|whoami\.exe|systeminfo\.exe|tasklist\.exe|taskkill\.exe|ipconfig\.exe|nslookup\.exe|ping\.exe|tracert\.exe)$</field>
+    <description>LOLBin/recon tool spawned - $(win.eventdata.originalFileName) user=$(win.eventdata.user) parent=$(win.eventdata.parentImage) cmdline=$(win.eventdata.commandLine)</description>
+  </rule>
+
+  <rule id="100299" level="0">
+    <if_sid>100274</if_sid>
+    <field name="win.eventdata.commandLine" type="pcre2">(?i)sysmain\.dll,PfSvWsSwapAssessmentTask</field>
+    <field name="win.eventdata.parentImage" type="pcre2">(?i)\\svchost\.exe$</field>
+    <field name="win.eventdata.user" type="pcre2">(?i)NT AUTHORITY\\SYSTEM</field>
+    <description>Suppress: rundll32 SysMain task from svchost as SYSTEM - legitimate</description>
+  </rule>
+
+
+  <!-- 100602: Machine account interactive/RDP/NewCredentials logon - always anomalous -->
+  <rule id="100602" level="12">
+    <if_sid>60106</if_sid>
+    <field name="win.eventdata.targetUserName" type="pcre2">\$$</field>
+    <field name="win.eventdata.logonType" type="pcre2">^(2|7|9|10)$</field>
+    <description>user=$(win.eventdata.targetUserName) src_ip=$(win.eventdata.ipAddress) logonType=$(win.eventdata.logonType) - ANOMALOUS: machine account logon with interactive/RDP/NewCredentials type</description>
+  </rule>
+
+  <rule id="100601" level="10">
+    <if_sid>60106</if_sid>
+    <field name="win.eventdata.targetUserName" type="pcre2">\$(@|$)|^SYSTEM$|^LOCAL SERVICE$|^NETWORK SERVICE$</field>
+    <field name="win.eventdata.ipAddress" type="pcre2">(?i)^(?!::1$|127\.0\.0\.1$|fe80:|192\.168\.56\.10$).+</field>
+    <description>user=$(win.eventdata.targetUserName) src_ip=$(win.eventdata.ipAddress) authpkg=$(win.eventdata.authenticationPackageName) - ANOMALOUS: machine/service account logon from non-local source</description>
+  </rule>
+
+
+
+  <rule id="100346" level="0">
+    <if_sid>100274</if_sid>
+    <field name="win.eventdata.originalFileName" type="pcre2">(?i)^sc\.exe$</field>
+    <field name="win.eventdata.commandLine" type="pcre2">(?i)sc(\.exe)?\s+start\s+\w+</field>
+    <field name="win.eventdata.parentImage" type="pcre2">(?i)\\svchost\.exe$</field>
+    <field name="win.eventdata.user" type="pcre2">(?i)^NT AUTHORITY\\+SYSTEM$</field>
+    <description>Suppress: sc.exe start service by svchost Task Scheduler as SYSTEM - Windows maintenance</description>
+  </rule>
+
+  <rule id="100347" level="0">
+    <if_sid>100274</if_sid>
+    <field name="win.eventdata.originalFileName" type="pcre2">(?i)^RUNDLL32\.EXE$</field>
+    <field name="win.eventdata.parentImage" type="pcre2">(?i)\\svchost\.exe$</field>
+    <field name="win.eventdata.commandLine" type="pcre2">(?i)C:\\Windows\\system32\\[^\\]+\.dll,</field>
+    <field name="win.eventdata.user" type="pcre2">(?i)^NT AUTHORITY\\(SYSTEM|LOCAL SERVICE|NETWORK SERVICE)$</field>
+    <description>Suppress: rundll32 loading system32 DLL via svchost as service account - legitimate Windows maintenance</description>
+  </rule>
+
+
+  <rule id="100275" level="5">
+    <if_group>windows</if_group>
+    <field name="win.system.eventID">^4688$</field>
+    <description>Process created (4688) - $(win.eventdata.newProcessName) by $(win.eventdata.subjectUserName) cmdline=$(win.eventdata.commandLine)</description>
+  </rule>
+
+  <rule id="100276" level="0">
+    <if_sid>100271</if_sid>
+    <field name="win.eventdata.scriptBlockText" type="pcre2">^prompt$</field>
+    <description>Suppress: PowerShell internal prompt rendering - not a user command</description>
+  </rule>
+
+  <rule id="100277" level="0">
+    <if_sid>100275</if_sid>
+    <field name="win.eventdata.subjectUserName" type="pcre2">\$$</field>
+    <description>Suppress: EID 4688 by machine account - background OS activity</description>
+  </rule>
+
+  <rule id="100278" level="3">
+    <if_sid>100275</if_sid>
+    <match>powershell.exe|pwsh.exe|cmd.exe|wmic.exe|mshta.exe|cscript.exe|wscript.exe|rundll32.exe|regsvr32.exe|certutil.exe|msiexec.exe|bitsadmin.exe|schtasks.exe|whoami.exe|systeminfo.exe|tasklist.exe|taskkill.exe|ipconfig.exe|nslookup.exe|ping.exe|tracert.exe|nltest.exe|netsh.exe</match>
+    <description>user=$(win.eventdata.subjectUserName) parent=$(win.eventdata.parentProcessName) new_proc=$(win.eventdata.newProcessName) cmdline=$(win.eventdata.commandLine) - Suppress: EID 4688 duplicate (Sysmon EID 1 covers it)</description>
+  </rule>
+
+  <rule id="100279" level="0">
+    <if_sid>100275</if_sid>
+    <match>SearchFilterHost.exe|SearchProtocolHost.exe|SearchIndexer.exe</match>
+    <description>Suppress: Windows Search indexer from EID 4688 - background OS activity</description>
+  </rule>
+
+</group>
+
+
+<group name="local,noise_suppression,">
+
+  <!-- 92154: taskschd.dll by Windows Update/Edge/maintenance -->
+
+  <rule id="100297" level="0">
+    <if_sid>92154</if_sid>
+    <field name="win.eventdata.signed">true</field>
+    <field name="win.eventdata.signatureStatus">Valid</field>
+    <description>Suppress: taskschd.dll load by signed binary as service account - legitimate</description>
+  </rule>
+
+  <!-- 92213: PSScriptPolicyTest file drop - fires on every PS session start -->
+  <rule id="100286" level="0">
+    <if_sid>92213</if_sid>
+    <field name="win.eventdata.targetFilename" type="pcre2">(?i)PSScriptPolicyTest_</field>
+    <description>Suppress: PSScriptPolicyTest file drop - PowerShell AppLocker probe, not malicious</description>
+  </rule>
+
+  <!-- 60106: Logon Success from machine accounts (WIN10$, PC-DC$) -->
+  <rule id="100287" level="0">
+    <if_sid>60106</if_sid>
+    <field name="win.eventdata.targetUserName" type="pcre2">\$$</field>
+    <field name="win.eventdata.logonType" type="pcre2">^(3|5)$</field>
+    <field name="win.eventdata.ipAddress" type="pcre2">(?i)^(::1|127\.0\.0\.1|fe80:|192\.168\.56\.10)$</field>
+    <description>user=$(win.eventdata.targetUserName) domain=$(win.eventdata.targetDomainName) src_ip=$(win.eventdata.ipAddress) authpkg=$(win.eventdata.authenticationPackageName) - Suppress: logon success from machine account (local source only)</description>
+  </rule>
+
+  <!-- 60106: Logon type 5 - service logons -->
+  <rule id="100288" level="0">
+    <if_sid>60106</if_sid>
+    <field name="win.eventdata.logonType">^5$</field>
+    <field name="win.eventdata.targetUserName" type="pcre2">\$$|^SYSTEM$|^LOCAL SERVICE$|^NETWORK SERVICE$</field>
+    <description>Suppress: Logon Success type 5 service logon from machine/service account - background OS activity</description>
+  </rule>
+
+  <!-- 60137: User Logoff from machine accounts -->
+  <rule id="100291" level="0">
+    <if_sid>60137</if_sid>
+    <field name="win.eventdata.targetUserName" type="pcre2">\$$</field>
+    <description>user=$(win.eventdata.targetUserName) domain=$(win.eventdata.targetDomainName) - Suppress: logoff from machine account</description>
+  </rule>
+
+
+  <!-- 100306: Network logon type 3 from machine account -->
+  <rule id="100306" level="0">
+    <if_sid>60106</if_sid>
+    <field name="win.eventdata.targetUserName" type="pcre2">\$$</field>
+    <field name="win.eventdata.logonType">^3$</field>
+    <field name="win.eventdata.ipAddress" type="pcre2">(?i)^(::1|127\.0\.0\.1|fe80:|192\.168\.56\.10)$</field>
+    <description>user=$(win.eventdata.targetUserName) src_ip=$(win.eventdata.ipAddress) - Suppress: type3 network logon from machine account (local source only)</description>
+  </rule>
+
+  <!-- 100307: Network logoff type 3 from machine account -->
+  <rule id="100307" level="0">
+    <if_sid>60137</if_sid>
+    <field name="win.eventdata.targetUserName" type="pcre2">\$$</field>
+    <field name="win.eventdata.logonType">^3$</field>
+    <description>user=$(win.eventdata.targetUserName) domain=$(win.eventdata.targetDomainName) - Suppress: type3 logoff from machine account</description>
+  </rule>
+
+  <!-- 100271: PowerShell internal error handling blocks - not user commands -->
+  <rule id="100292" level="0">
+    <if_sid>100271</if_sid>
+    <field name="win.eventdata.scriptBlockText" type="pcre2">(?i)^\s*(\$global:\?|prompt|\{\s*Set-StrictMode\s+-Version\s+1;)</field>
+    <description>Suppress: PowerShell internal error handling and prompt blocks - not user commands</description>
+  </rule>
+
+  <!-- 60642: Software protection service scheduled - background Windows licensing -->
+  <rule id="100293" level="0">
+    <if_sid>60642</if_sid>
+    <description>Suppress: Software protection service scheduling - background Windows licensing</description>
+  </rule>
+
+
+  <!-- Suppress: PS module auto-loading when cmdlets pull in network DLLs -->
+  <rule id="100294" level="0">
+    <if_sid>100271</if_sid>
+    <field name="win.eventdata.scriptBlockText" type="pcre2">(?i)(cmdletization|CimSession|ThrottleLimit|Export-ModuleMember|PSMessageDetails|OriginInfo|ErrorCategory|cdxml|objectModelWrapper)</field>
+    <description>Suppress: PowerShell module auto-load block - not a user command</description>
+  </rule>
+
+  <!-- Suppress: PS Where-Object scriptblock split into separate 4104 event -->
+  <rule id="100295" level="0">
+    <if_sid>100271</if_sid>
+    <field name="win.eventdata.scriptBlockText" type="pcre2">^\s*\{[^}]{1,100}\}$</field>
+    <description>Suppress: PowerShell inline scriptblock fragment - split event</description>
+  </rule>
+
+  <!-- Suppress: 92154 when triggered by schtasks loading its own DLL -->
+  <rule id="100296" level="0">
+    <if_sid>92154</if_sid>
+    <field name="win.eventdata.image" type="pcre2">(?i)\\\\schtasks\.exe$</field>
+    <description>Suppress: taskschd.dll loaded by schtasks.exe - expected self-load</description>
+  </rule>
+</group>
+
+
+
+
+
+
+<group name="ids,suricata,">
+
+  <rule id="86601" level="8" overwrite="yes">
+      <if_sid>86600</if_sid>
+      <field name="event_type">^alert$</field>
+      <description>Suricata: Alert - $(alert.signature)</description>
+  </rule>
+
+  <!-- HTTP 2xx → Level 3 -->
+  <rule id="100600" level="8">
+    <if_sid>86601</if_sid>
+    <field name="http.status">^2\d\d$</field>
+    <description>Suricata: [$(http.status)] [$(src_ip)] [$(http.url)] [$(alert.signature)]</description>
+  </rule>
+
+  <!-- HTTP 3xx → Level 3 -->
+  <rule id="100305" level="3">
+    <if_sid>86601</if_sid>
+    <field name="http.status">^3\d\d$</field>
+    <description>Suricata: [$(http.status)] [$(src_ip)] [$(http.url)] [$(alert.signature)]</description>
+  </rule>
+
+  <!-- HTTP 4xx → Level 3 -->
+  <rule id="100400" level="3">
+    <if_sid>86601</if_sid>
+    <field name="http.status">^4\d\d$</field>
+    <description>Suricata: [$(http.status)] [$(src_ip)] [$(http.url)] [$(alert.signature)]</description>
+  </rule>
+
+  <!-- HTTP 5xx → Level 3 -->
+  <rule id="100500" level="3">
+    <if_sid>86601</if_sid>
+    <field name="http.status">^5\d\d$</field>
+    <description>Suricata: [$(http.status)] [$(src_ip)] [$(http.url)] [$(alert.signature)]</description>
+  </rule>
+
+  <rule id="100410" level="8" frequency="10" timeframe="15" ignore="15">
+    <if_matched_sid>100400</if_matched_sid>
+    <field name="src_ip">\.+</field>
+    <description>Suricata: High-volume HTTP 4xx burst from $(src_ip) - possible scan/enumeration (>100 in 60s)</description>
+  </rule>
+
+  <!-- THRESHOLD: >100 HTTP 5xx alerts in 60s from same source → Level 8 -->
+  <rule id="100510" level="8" frequency="10" timeframe="15" ignore="15">
+    <if_matched_sid>100500</if_matched_sid>
+    <field name="src_ip">\.+</field>
+    <description>Suricata: High-volume HTTP 5xx burst from $(src_ip) - possible fault-injection/DoS attempt (>100 in 60s)</description>
+  </rule>
+
+
+</group>
+
+
+
+
+
+
+<group name="local,windows_noise_suppression,">
+
+ <!-- DETECT: wrong parent -->
+  <rule id="100300" level="12">
+    <if_group>sysmon_event1</if_group>
+    <field name="win.eventdata.commandLine" type="pcre2">(?i)sysmain\.dll,PfSvWsSwapAssessmentTask</field>
+    <field name="win.eventdata.parentImage" type="pcre2" negate="yes">(?i)\\svchost\.exe$</field>
+    <description>SUSPICIOUS: rundll32 faking SysMain task - parent is NOT svchost (possible masquerade)</description>
+  </rule>
+
+
+  <rule id="100304" level="0">
+    <if_group>sysmon_event1</if_group>
+    <field name="win.eventdata.user" type="pcre2">\$$</field>
+    <description>Suppress: PowerShell spawned by machine account - background OS activity</description>
+  </rule>
+
+  <rule id="100308" level="0">
+    <if_group>windows_application</if_group>
+    <match>^Software Protection</match>
+    <description>Suppress: Software Protection Platform events - background Windows licensing</description>
+  </rule>
+
+  <rule id="100310" level="0">
+    <if_sid>92213</if_sid>
+    <field name="win.eventdata.image" type="pcre2">(?i)\\cleanmgr\.exe$</field>
+    <field name="win.eventdata.targetFilename" type="pcre2">(?i)\\Temp\\.*\\DismHost\.exe$</field>
+    <description>Suppress: DismHost.exe dropped by cleanmgr - legitimate Windows Disk Cleanup</description>
+  </rule>
+
+  <rule id="100311" level="0">
+    <if_sid>92200</if_sid>
+    <field name="win.eventdata.image" type="pcre2">(?i)\\explorer\.exe$</field>
+    <field name="win.eventdata.targetFilename" type="pcre2">(?i)\\Start Menu\\Programs\\(?!Startup).*\.lnk$</field>
+    <description>Suppress: explorer.exe creating Start Menu shortcut - legitimate Windows activity</description>
+  </rule>
+
+  <rule id="100312" level="0">
+    <if_sid>92200</if_sid>
+    <field name="win.eventdata.image" type="pcre2">(?i)\\taskhostw\.exe$</field>
+    <field name="win.eventdata.targetFilename" type="pcre2">(?i)\\Temp\\SDIAG_</field>
+    <description>Suppress: taskhostw dropping SDIAG scripts - Windows Diagnostics troubleshooter</description>
+  </rule>
+
+  <rule id="100313" level="0">
+    <if_sid>60132</if_sid>
+    <field name="win.eventdata.subjectUserName" type="pcre2">(?i)^LOCAL SERVICE$</field>
+    <field name="win.eventdata.processName" type="pcre2">(?i)\\svchost\.exe$</field>
+    <description>Suppress: System time changed by Windows Time Service via svchost - NTP sync</description>
+  </rule>
+
+  <rule id="100314" level="0">
+    <if_sid>61102</if_sid>
+    <field name="win.eventdata.timeSource" type="pcre2">(?i)PC-DC\.ad\.lab</field>
+    <description>Suppress: Windows Time Service drift error from domain NTP source - lab time sync noise</description>
+  </rule>
+
+  <rule id="100315" level="0">
+    <if_sid>67027</if_sid>
+    <field name="win.eventdata.subjectUserName" type="pcre2">\$$</field>
+    <description>Suppress: EID 4688 (WEF/Security) by machine account - background OS activity</description>
+  </rule>
+
+
+  <!-- Wazuh Agent - process itself -->
+  <rule id="100318" level="0">
+    <if_sid>100270,100272,100273,100274,100275,67027</if_sid>
+    <field name="win.eventdata.image" type="pcre2">(?i)\\(ossec-agent|wazuh.agent)\\</field>
+    <description>Suppress: Wazuh Agent process - security monitoring activity</description>
+  </rule>
+
+  <!-- Wazuh Agent - direct child -->
+  <rule id="100319" level="0">
+    <if_sid>100270,100272,100273,100274,100275,67027</if_sid>
+    <field name="win.eventdata.parentImage" type="pcre2">(?i)\\(ossec-agent|wazuh.agent)\\</field>
+    <description>Suppress: Child of Wazuh Agent process - security monitoring activity</description>
+  </rule>
+
+
+  <rule id="100320" level="0">
+    <if_group>sysmon_event1</if_group>
+    <field name="win.eventdata.commandLine" type="pcre2">(?i)PcaSvc\.dll,PcaPatchSdbTask</field>
+    <field name="win.eventdata.parentImage" type="pcre2">(?i)\\svchost\.exe$</field>
+    <field name="win.eventdata.user" type="pcre2">(?i)NT AUTHORITY\\SYSTEM</field>
+    <description>Suppress: rundll32 PcaSvc PatchSdb task from svchost as SYSTEM - legitimate Windows activity</description>
+  </rule>
+
+  <!-- CMD direct child of vmtoolsd -->
+  <rule id="100350" level="0">
+    <if_sid>100272</if_sid>
+    <field name="win.eventdata.parentImage" type="pcre2">(?i)\\vmtoolsd\.exe$</field>
+    <field name="win.eventdata.user" type="pcre2">(?i)^NT AUTHORITY\\+SYSTEM$</field>
+    <description>Suppress: CMD spawned directly by VMware Tools daemon as SYSTEM</description>
+  </rule>
+
+  <!-- ipconfig grandchild of vmtoolsd via cmd.exe -->
+  <rule id="100351" level="0">
+    <if_sid>100274</if_sid>
+    <field name="win.eventdata.originalFileName" type="pcre2">(?i)^ipconfig\.exe$</field>
+    <field name="win.eventdata.user" type="pcre2">(?i)^NT AUTHORITY\\+SYSTEM$</field>
+    <field name="win.eventdata.parentCommandLine" type="pcre2">(?i)(suspend-vm-default|resume-vm-default|vmware)</field>
+    <description>Suppress: ipconfig from VMware Tools cmd.exe chain as SYSTEM</description>
+  </rule>
+
+
+  <rule id="100322" level="0">
+    <if_sid>92201</if_sid>
+    <field name="win.eventdata.user" type="pcre2">(?i)NT AUTHORITY\\SYSTEM</field>
+    <description>Suppress: Scripting file created by SYSTEM - Wazuh SCA/background OS activity</description>
+  </rule>
+
+  <rule id="100323" level="0">
+    <if_sid>100271</if_sid>
+    <field name="win.eventdata.scriptBlockText" type="pcre2">(?i)secedit\s+/export</field>
+    <description>Suppress: secedit export scriptblock - Wazuh SCA password policy check</description>
+  </rule>
+
+  <rule id="100324" level="0">
+    <if_sid>92031</if_sid>
+    <field name="win.eventdata.user" type="pcre2">(?i)NT AUTHORITY\\SYSTEM</field>
+    <description>Suppress: Discovery by SYSTEM - Wazuh SCA/background activity not real user</description>
+  </rule>
+
+
+  <rule id="100325" level="0">
+    <if_group>sysmon_event1</if_group>
+    <field name="win.eventdata.image" type="pcre2">(?i)\\rundll32\.exe$</field>
+    <field name="win.eventdata.parentImage" type="pcre2">(?i)\\svchost\.exe$</field>
+    <field name="win.eventdata.commandLine" type="pcre2">(?i)C:\\Windows\\system32\\[^\\]+\.dll,</field>
+    <field name="win.eventdata.user" type="pcre2">(?i)NT AUTHORITY\\(SYSTEM|LOCAL SERVICE|NETWORK SERVICE)</field>
+    <description>Suppress: rundll32 loading system32 DLL via svchost as service account - legitimate Windows maintenance</description>
+  </rule>
+
+
+  <rule id="100326" level="0">
+    <if_group>sysmon_event1</if_group>
+    <field name="win.eventdata.commandLine" type="pcre2">(?i)sc\.exe\s+start\s+w32time</field>
+    <description>Suppress: sc.exe starting w32time - Windows Time Service</description>
+  </rule>
+
+
+  <rule id="100327" level="0">
+    <if_sid>100275</if_sid>
+    <field name="win.eventdata.commandLine" type="pcre2">(?i)conhost\.exe.*-ForceV1</field>
+    <description>Suppress: conhost.exe ForceV1 - background console host by service account</description>
+  </rule>
+
+  <rule id="100328" level="0">
+    <if_sid>100271</if_sid>
+    <field name="win.eventdata.scriptBlockText" type="pcre2">(?i)^Set-Alias\s+-Name\s+(gcim|scim|ncim|rcim|icim|rcie|gcai|gcls)</field>
+    <description>Suppress: CIM alias Set-Alias scriptblock - PS module autoload not user command</description>
+  </rule>
+
+
+  <rule id="100330" level="0">
+    <if_sid>60132</if_sid>
+    <field name="win.eventdata.processName" type="pcre2">(?i)\\vmtoolsd\.exe$</field>
+    <description>Suppress: System time changed by VMware Tools - VM resume/suspend sync</description>
+  </rule>
+
+  <rule id="100331" level="0">
+    <if_sid>100275</if_sid>
+    <field name="win.eventdata.newProcessName" type="pcre2">(?i)\\audiodg\.exe$</field>
+    <field name="win.eventdata.subjectUserName" type="pcre2">(?i)^LOCAL SERVICE$</field>
+    <description>Suppress: audiodg.exe spawned by LOCAL SERVICE - Windows Audio service</description>
+  </rule>
+
+
+  <rule id="100332" level="0">
+    <if_sid>100275</if_sid>
+    <field name="win.eventdata.newProcessName" type="pcre2">(?i)\\conhost\.exe$</field>
+    <field name="win.eventdata.parentProcessName" type="pcre2">(?i)\\ngentask\.exe$</field>
+    <description>Suppress: conhost spawned by ngentask - .NET background JIT compilation</description>
+  </rule>
+
+
+  <rule id="100340" level="0">
+    <if_sid>100274</if_sid>
+    <field name="win.eventdata.user" type="pcre2">(?i)^NT AUTHORITY\\+SYSTEM$</field>
+    <field name="win.eventdata.parentImage" type="pcre2">(?i)\\(svchost|TrustedInstaller|TiWorker|WmiPrvSE|msiexec|wuauclt|UsoClient|SIHClient|WaasMedicSVC|dism|dismhost|ngentask|ngen|vds|StorSvc)\.exe$</field>
+    <description>Suppress: Shell/LOLBin as SYSTEM under known Windows OS maintenance parent</description>
+  </rule>
+
+  <rule id="100341" level="0">
+    <if_sid>100274</if_sid>
+    <field name="win.eventdata.user" type="pcre2">(?i)^NT AUTHORITY\\+SYSTEM$</field>
+    <field name="win.eventdata.parentCommandLine" type="pcre2">(?i)(VMware.Tools|suspend-vm-default|resume-vm-default)</field>
+    <description>Suppress: Shell/LOLBin as SYSTEM whose parent traces to VMware Tools bat scripts</description>
+  </rule>
+
+  <rule id="100342" level="0">
+    <if_sid>100270</if_sid>
+    <field name="win.eventdata.user" type="pcre2">(?i)^NT AUTHORITY\\+SYSTEM$</field>
+    <field name="win.eventdata.parentImage" type="pcre2">(?i)(CompatTelRunner|SIHClient|UsoClient|appraiser)\.exe</field>
+    <description>Suppress: Shell/LOLBin as SYSTEM from Windows telemetry parent</description>
+  </rule>
+
+  <rule id="100343" level="0">
+    <if_sid>100271</if_sid>
+    <field name="win.eventdata.scriptBlockText" type="pcre2">(?i)(InboxIMEs|InboxPattern|LanguageProfiles|DoScheduledTelemetryRun|PfSvWsSwapAssessmentTask|final result|NetLbfoTeamNic|get-vmswitch)</field>
+    <description>Suppress: PS script block from Windows telemetry scheduled tasks</description>
+  </rule>
+
+  <rule id="100344" level="0">
+    <if_sid>92217</if_sid>
+    <field name="win.eventdata.image" type="pcre2">(?i)\\(MpCmdRun|MsMpEng|NisSrv)\.exe$</field>
+    <description>Suppress: Windows Defender dropping update executables</description>
+  </rule>
+
+
+
+
+
+
+  <!-- PSScriptPolicyTest from SysWOW64 PS - Wazuh SCA probe -->
+  <rule id="100355" level="0">
+    <if_sid>92201</if_sid>
+    <field name="win.eventdata.targetFilename" type="pcre2">(?i)__PSScriptPolicyTest_</field>
+    <description>Suppress: PSScriptPolicyTest drop - Wazuh SCA AppLocker probe</description>
+  </rule>
+
+  <!-- Kerberos machine account TGS tickets (PC-DC$@AD.LAB format) -->
+  <rule id="100356" level="0">
+    <if_sid>60106</if_sid>
+    <field name="win.eventdata.targetUserName" type="pcre2">(?i)\$@</field>
+    <description>user=$(win.eventdata.targetUserName) src_ip=$(win.eventdata.ipAddress) - Suppress: Kerberos TGS request for machine account</description>
+  </rule>
+
+  <!-- Logoff type 3 for domain users between known lab hosts -->
+  <rule id="100357" level="0">
+    <if_sid>60137</if_sid>
+    <field name="win.eventdata.logonType">^3$</field>
+    <field name="win.eventdata.targetUserName" type="pcre2">\$$</field>
+    <description>user=$(win.eventdata.targetUserName) domain=$(win.eventdata.targetDomainName) - Suppress: type3 network logoff from machine account</description>
+  </rule>
+
+  <!-- Wazuh SCA discovery - net1 user from ossec-agent directory -->
+  <rule id="100358" level="0">
+    <if_sid>92031</if_sid>
+    <field name="win.eventdata.currentDirectory" type="pcre2">(?i)\\ossec.agent\\</field>
+    <description>Suppress: Discovery from Wazuh agent directory - SCA check</description>
+  </rule>
+
+  <!-- Wazuh SCA PS scriptblocks - Win32_UserAccount SID checks -->
+  <rule id="100359" level="0">
+    <if_sid>100271</if_sid>
+    <field name="win.eventdata.scriptBlockText" type="pcre2">(?i)(Win32_UserAccount|Win32_LocalGroup|SID LIKE|ossec-agent)</field>
+    <description>Suppress: PS script block from Wazuh SCA user account checks</description>
+  </rule>
+
+  <!-- TPM/Secure Boot error on VM - no TPM hardware -->
+  <rule id="100360" level="0">
+    <if_sid>61102</if_sid>
+    <field name="win.eventdata.hResult">-2147020471</field>
+    <description>Suppress: Secure Boot update error - VM has no TPM</description>
+  </rule>
+
+
+  <rule id="100377" level="0">
+    <if_sid>100271</if_sid>
+    <field name="win.eventdata.path" type="pcre2">\.psd1$</field>
+    <description>Suppress: PowerShell module manifest auto-load - benign</description>
+  </rule>
+
+
+
+
+</group>
+
+
+
+
+<group name="local,vmware_tools_noise,">
+
+  <rule id="100372" level="0">
+    <if_sid>100272</if_sid>
+    <field name="win.eventdata.parentImage" type="pcre2">(?i)vmtoolsd\.exe</field>
+    <field name="win.eventdata.user" type="pcre2">(?i)SYSTEM</field>
+    <description>Suppress: cmd.exe spawned by vmtoolsd as SYSTEM</description>
+  </rule>
+
+  <rule id="100373" level="0">
+    <if_sid>100270,100272,100273,100274,100275</if_sid>
+    <field name="win.eventdata.parentCommandLine" type="pcre2">(?i)(suspend-vm-default|resume-vm-default)</field>
+    <description>Suppress: any process spawned by the VMware Tools suspend/resume cmd chain</description>
+  </rule>
+
+  <rule id="100374" level="0">
+    <if_group>sysmon_event1</if_group>
+    <field name="win.eventdata.parentImage" type="pcre2">(?i)\\net\.exe$</field>
+    <field name="win.eventdata.image" type="pcre2">(?i)\\net1\.exe$</field>
+    <description>Suppress: net1.exe internal helper spawned by net.exe - normal Windows behavior</description>
+  </rule>
+
+</group>
+
+
+
+<group name="local,trusted_system_maintenance,">
+
+  <rule id="100380" level="0">
+    <if_sid>100270,100271,100272,100273,100274,100275</if_sid>
+    <field name="win.eventdata.user" type="pcre2">(?i)^NT AUTHORITY\\+SYSTEM$</field>
+    <field name="win.eventdata.parentImage" type="pcre2">(?i)(CompatTelRunner|SIHClient|UsoClient|appraiser|vmtoolsd|TrustedInstaller|TiWorker|WmiPrvSE|msiexec|wuauclt|dismhost|ngentask|svchost)\.exe</field>
+    <description>Suppress: any shell/LOLBin/PowerShell spawned by known OS/hypervisor maintenance process as SYSTEM</description>
+  </rule>
+
+</group>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- ==================== SSH ==================== -->
+
+
+
+
+<!-- ==================== AUDITD ==================== -->
+
+<group name="local,audit_process,">
+  <rule id="100199" level="10">
+    <if_sid>80700</if_sid>
+    <field name="audit.syscall">59</field>
+    <match type="pcre2">comm="(whoami|id|nc|ncat|netcat)"|a0="sudo"[\s\S]*?a1="-l"|a0="bash"[\s\S]*?a1="-i"</match>
+    <description>Auditd: blacklisted/suspicious command executed - $(audit.exe)</description>
+    <group>blacklist_command,</group>
+  </rule>
+</group>
+
+<group name="local,audit_file_access,">
+  <rule id="100217" level="12">
+    <if_group>audit</if_group>
+    <field name="audit.key">identity</field>
+    <description>Auditd: sensitive file accessed - $(audit.file.name) by uid=$(audit.uid)</description>
+    <group>sensitive_file_access,</group>
+  </rule>
+</group>
+
+<group name="local,wazuh_tuning,">
+  <rule id="100160" level="0">
+    <if_sid>100217</if_sid>
+    <field name="audit.exe">^/var/ossec/bin/wazuh-syscheckd$</field>
+    <description>Suppress: Wazuh's own FIM process reading identity files during scans - self-noise, not attacker activity.</description>
+  </rule>
+
+  <rule id="100216" level="0">
+    <if_sid>80792</if_sid>
+    <field name="audit.exe" type="pcre2">(?i)^/var/ossec/</field>
+    <description>Suppress Wazuh's own internal inventory scan noise</description>
+  </rule>
+
+</group>
+
+<group name="local,audit_credential_read,">
+  <rule id="100218" level="12">
+    <if_group>audit</if_group>
+    <field name="audit.key">cat_sensitive_file</field>
+    <field name="audit.file.name" type="pcre2">^/etc/(passwd|shadow|group|gshadow)$</field>
+    <description>Auditd: cat used on sensitive file - $(audit.file.name) by uid=$(audit.uid) auid=$(audit.auid)</description>
+    <group>credential_access,</group>
+  </rule>
+</group>
+
+<group name="audit,">
+  <rule id="100280" level="0">
+    <if_sid>80792</if_sid>
+    <list field="audit.exe" lookup="match_key">etc/lists/wazuh-internal-bins</list>
+    <description>Suppress Wazuh's own internal inventory scan noise</description>
+  </rule>
+</group>
+
+
+<!-- ==================== PAM ==================== -->
+
+<group name="local,">
+  <rule id="100219" level="0">
+    <if_sid>5501</if_sid>
+    <description>PAM session opened - suppressed</description>
+  </rule>
+
+  <rule id="100105" level="0">
+    <if_sid>5502</if_sid>
+    <description>PAM session closed - suppressed</description>
+  </rule>
+</group>
+
+
+<!-- ==================== LINUX PROCESS MONITOR ==================== -->
+
+<group name="process_monitor,linux,">
+  <rule id="100180" level="3">
+    <if_sid>80700</if_sid>
+    <decoded_as>auditd</decoded_as>
+    <field name="audit.key">process_creation</field>
+    <description>Auditd: process execution detected ($(audit.exe))</description>
+  </rule>
+</group>
+
+
+<!-- ==================== LINUX SYSCHECK NOISE ==================== -->
+
+<group name="local,linux_syscheck_noise,">
+  <rule id="100242" level="0">
+    <if_sid>554</if_sid>
+    <field name="syscheck.path" type="pcre2">/etc/apparmor\.d/|/usr/bin/tcpdump|/usr/bin/nmap|/usr/bin/nping|/etc/audit/rules\.d/|/etc/alternatives/</field>
+    <description>Ignore: package manager installing/updating known security tooling (tcpdump, nmap, audit rules, apparmor profiles) - scheduled/expected, not attacker-dropped file</description>
+  </rule>
+</group>
+
+
+<!-- ==================== BASH COMMAND LOG ==================== -->
+
+<group name="local,bash_command_log,">
+  <rule id="100220" level="5">
+    <program_name>^bashcmd$</program_name>
+    <description>Bash command by $(dstuser) (uid:$(uid)): $(command)</description>
+  </rule>
+</group>
+
+
+<!-- ==================== WINDOWS AUTH ==================== -->
+
+
+
+<!-- ==================== WINDOWS NOISE ==================== -->
+
+<group name="local,windows_noise,">
+
+  <!-- Broader version (no image filter) - covers powershell.exe, sdiagnhost.exe, etc. -->
+  <rule id="100170" level="0">
+    <if_sid>92213</if_sid>
+    <field name="win.eventdata.targetFilename" type="pcre2">PSScriptPolicyTest.*\.ps1$</field>
+    <description>Suppress: PowerShell's own internal AppLocker/language-mode policy test file - documented PowerShell internals, fires on every session start regardless of host process (powershell.exe, sdiagnhost.exe, etc.), not attacker script drop.</description>
+  </rule>
+
+  <rule id="100171" level="0">
+    <if_sid>92201</if_sid>
+    <field name="win.eventdata.targetFilename" type="pcre2">PSScriptPolicyTest.*\.ps1$</field>
+    <description>Suppress: PowerShell's own internal AppLocker/language-mode policy test file creation - same as 100170 but for the create event, any host process.</description>
+  </rule>
+
+  <rule id="100173" level="0">
+    <if_group>sysmon_eid13_detections</if_group>
+    <field name="win.eventdata.targetObject" type="pcre2">\\Services\\\w+_[0-9a-f]{7}\\(ImagePath|Description)$</field>
+    <field name="win.eventdata.details" type="pcre2">^C:\\\\Windows\\\\system32\\\\svchost\.exe</field>
+    <description>Suppress: routine per-user service instantiation on logon (UserDataSvc, CDPUserSvc, WpnUserService, cbdhsvc, etc.) - Windows normal SCM behavior, not a persistence mechanism. Real persistence paths (Run, RunOnce, Winlogon, IFEO, non-per-user services) are untouched by this rule.</description>
+  </rule>
+
+</group>
+
+
+<!-- ==================== WINDOWS VMWARE NOISE ==================== -->
+
+<group name="local,windows_vmware,">
+
+  <rule id="100167" level="0">
+    <if_sid>92052,92032</if_sid>
+    <field name="win.eventdata.parentImage" type="pcre2">vmtoolsd\.exe$</field>
+    <field name="win.eventdata.commandLine" type="pcre2">(?i)(suspend-vm-default|resume-vm-default)\.bat</field>
+    <description>Suppress: VMware Tools suspend/resume script - documented default power-op behavior, not attacker activity</description>
+  </rule>
+
+  <rule id="100169" level="0">
+    <if_sid>92032</if_sid>
+    <field name="win.eventdata.parentImage" type="pcre2">cmd\.exe$</field>
+    <field name="win.eventdata.parentCommandLine" type="pcre2">(?i)(suspend-vm-default|resume-vm-default)\.bat</field>
+    <description>Suppress: ipconfig/network activity spawned by the cmd.exe wrapper of the VMware suspend/resume script - not independent attacker recon.</description>
+  </rule>
+
+</group>
+
+
+<!-- ==================== WINDOWS SERVICE NOISE ==================== -->
+
+<group name="local,windows_service_noise,">
+  <rule id="100243" level="0">
+    <if_sid>61104</if_sid>
+    <field name="win.eventdata.param1" type="pcre2">Background Intelligent Transfer Service</field>
+    <description>Ignore: BITS service startup type change - routine Windows Update behavior, not persistence indicator</description>
+  </rule>
+</group>
+
+
+<!-- ==================== WINDOWS STORAGE NOISE ==================== -->
+
+<group name="local,windows_storage_noise,">
+  <rule id="100244" level="0">
+    <if_sid>60602</if_sid>
+    <field name="win.system.providerName" type="pcre2">Microsoft-Windows-Defrag</field>
+    <description>Ignore: disk retrim unsupported on virtual disk backend (VirtualBox/VMware) - hardware limitation, not an error condition of interest</description>
+  </rule>
+</group>
+
+
+<!-- ==================== WINDOWS DNS NOISE ==================== -->
+
+<group name="local,windows_dns_noise,">
+  <rule id="100241" level="0">
+    <if_sid>61109</if_sid>
+    <field name="win.eventdata.queryName" type="pcre2">virtualearth\.net|dev\.virtualearth</field>
+    <description>Ignore: transient DNS timeout for Microsoft Bing Maps telemetry endpoint - common after network re-init (VM resume), not an indicator</description>
+  </rule>
+</group>
+
+
+<!-- ==================== WINDOWS SDIAG NOISE ==================== -->
+
+<group name="local,windows_sdiag_noise,">
+  <rule id="100240" level="0">
+    <if_sid>92200,92217,92213</if_sid>
+    <field name="win.eventdata.targetFilename" type="pcre2">SDIAG_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}</field>
+    <description>Ignore: Windows Troubleshooting Platform diagnostic package staging files (taskhostw.exe) - built-in OS diagnostics, not attacker activity</description>
+  </rule>
+</group>
+
+
+<!-- ==================== WINDOWS CLEANMGR NOISE ==================== -->
+
+<group name="local,windows_cleanmgr_noise,">
+  <!-- Note: current file's 100310 already covers DismHost via 92213+image filter.
+       This rule is broader: if_sid 92213 + image=cleanmgr, no filename filter.
+       Kept as complement - covers any cleanmgr file-create, not just DismHost. -->
+  <rule id="100230" level="0">
+    <if_sid>92213</if_sid>
+    <field name="win.eventdata.image" type="pcre2">cleanmgr\.exe$</field>
+    <description>Ignore: Disk Cleanup (cleanmgr.exe) legitimately drops files into per-run temp folder - not malware</description>
+  </rule>
+</group>
+
+
+<!-- ==================== WINDOWS WAZUH NOISE (REMAPPED) ==================== -->
+<!-- Original ID was 100310 in backup files - conflicts with current file's    -->
+<!-- 100310 (cleanmgr DismHost suppression). Remapped to 100381.              -->
+
+<group name="local,windows_wazuh_noise,">
+  <rule id="100381" level="0">
+    <if_sid>92021,92031</if_sid>
+    <field name="win.eventdata.parentImage" type="pcre2">(?i)\\ossec-agent\\wazuh-agent\.exe$</field>
+    <description>Ignore: Wazuh agent's own SCA/benchmark check (secedit/net user) - not attacker activity [remapped from 100310: ID in use by current cleanmgr rule]</description>
+  </rule>
+</group>
+
+
+<!-- ==================== REGISTRY PERSISTENCE DETECTIONS ==================== -->
+
+<group name="sysmon,registry_persistence,">
+
+  <!-- Suppress noisy built-in rule for generic service ImagePath (92307) -->
+  <rule id="100092" level="0">
+    <if_sid>92307</if_sid>
+    <field name="win.eventdata.targetObject" type="pcre2">(?i)\\Services\\</field>
+    <description>Suppressed: generic service ImagePath creation (too noisy) - real service DLL hijack caught by 100104</description>
+  </rule>
+
+  <rule id="100100" level="12">
+    <if_group>sysmon_eid13_detections</if_group>
+    <field name="win.eventdata.targetObject" type="pcre2">(?i)\\Microsoft\\Windows\\CurrentVersion\\(Run|RunOnce|RunOnceEx|RunServices|RunServicesOnce)\\</field>
+    <description>Persistence: Run/RunOnce registry key modified - $(win.eventdata.details)</description>
+    <mitre>
+      <id>T1547.001</id>
+    </mitre>
+  </rule>
+
+  <rule id="100101" level="12">
+    <if_group>sysmon_eid13_detections</if_group>
+    <field name="win.eventdata.targetObject" type="pcre2">(?i)\\Winlogon\\(Shell|Userinit)</field>
+    <description>Persistence: Winlogon Shell/Userinit modified - $(win.eventdata.details)</description>
+    <mitre>
+      <id>T1547.004</id>
+    </mitre>
+  </rule>
+
+  <rule id="100102" level="12">
+    <if_group>sysmon_eid13_detections</if_group>
+    <field name="win.eventdata.targetObject" type="pcre2">(?i)\\Image File Execution Options\\.*\\Debugger</field>
+    <description>Persistence: IFEO Debugger hijack - $(win.eventdata.details)</description>
+    <mitre>
+      <id>T1546.012</id>
+    </mitre>
+  </rule>
+
+  <rule id="100103" level="10">
+    <if_group>sysmon_eid13_detections</if_group>
+    <field name="win.eventdata.targetObject" type="pcre2">(?i)\\CurrentVersion\\Explorer\\(Shell Folders|User Shell Folders)</field>
+    <description>Persistence: Shell Folders registry modified - $(win.eventdata.details)</description>
+    <mitre>
+      <id>T1547.001</id>
+    </mitre>
+  </rule>
+
+  <rule id="100104" level="10">
+    <if_group>sysmon_eid13_detections</if_group>
+    <field name="win.eventdata.targetObject" type="pcre2">(?i)\\Services\\.*\\Parameters\\ServiceDll</field>
+    <description>Persistence: Service DLL hijack (svchost service) - $(win.eventdata.details)</description>
+    <mitre>
+      <id>T1543.003</id>
+    </mitre>
+  </rule>
+
+</group>
+
+
+<!-- ==================== SURICATA NOISE ==================== -->
+
+<group name="local,suricata_noise,">
+  <!-- Using file2 (.bak) versions: correct field name "alert.signature_id" not "data.alert.signature_id"
+       Consistent with current ruleset's alert.signature usage in rule 86601 -->
+
+  <rule id="100250" level="0">
+    <if_sid>86601</if_sid>
+    <field name="alert.signature_id" type="pcre2">^(2210054|2210050|2225018|2225003)$</field>
+    <field name="src_ip" type="pcre2">^192\.168\.56\.10$</field>
+    <description>Ignore: known-noisy Suricata protocol-anomaly sigs from DomainWin10 client</description>
+  </rule>
+
+  <rule id="100252" level="0">
+    <if_sid>86601</if_sid>
+    <field name="alert.signature_id" type="pcre2">^(2210054|2210050|2225018|2225003)$</field>
+    <field name="src_ip" type="pcre2">^192\.168\.56\.20$</field>
+    <description>Ignore: known-noisy Suricata protocol-anomaly sigs from DC</description>
+  </rule>
+
+</group>
+
+<group name="local,suricata_stats_noise,">
+  <rule id="100251" level="0">
+    <match>^The average number of logs</match>
+    <description>Ignore: Suricata agent log-volume spike - high baseline agent, stats anomaly not actionable</description>
+  </rule>
+</group>
+
+
+<!-- ==================== DVWA WEB ==================== -->
+
+<group name="dvwa,web,accesslog,">
+
+  <!-- Override built-in 31100: retag 2xx/3xx as DVWA access -->
+  <rule id="31108" level="3" overwrite="yes">
+    <if_sid>31100</if_sid>
+    <id>^2|^3</id>
+    <compiled_rule>is_simple_http_request</compiled_rule>
+    <description>DVWA: [$(id)] [$(srcip)] [$(url)]</description>
+  </rule>
+
+  <rule id="100200" level="3">
+    <decoded_as>web-accesslog</decoded_as>
+    <description>DVWA: [$(id)] [$(srcip)] [$(url)]</description>
+  </rule>
+
+  <rule id="100201" level="7">
+    <if_sid>100200</if_sid>
+    <url>UNION|union|SELECT.+FROM|select.+from|information_schema|sleep\(|benchmark\(|--\s|'--|OR 1=1|or 1=1|'=' </url>
+    <description>DVWA: Possible SQL Injection - [$(id)] [$(srcip)] [$(url)]</description>
+    <group>sqli,attack,</group>
+  </rule>
+
+  <rule id="100202" level="7">
+    <if_sid>100200</if_sid>
+    <url>&lt;script|javascript:|onerror=|onload=|%3Cscript</url>
+    <description>DVWA: Possible XSS - [$(id)] [$(srcip)] [$(url)]</description>
+    <group>xss,attack,</group>
+  </rule>
+
+  <rule id="100203" level="7">
+    <if_sid>100200</if_sid>
+    <url>\.\./|\.\.%2f|etc/passwd|boot\.ini</url>
+    <description>DVWA: Possible LFI/Path Traversal - [$(id)] [$(srcip)] [$(url)]</description>
+    <group>lfi,attack,</group>
+  </rule>
+
+  <rule id="100204" level="7">
+    <if_sid>100200</if_sid>
+    <url>;cat |;ls |;whoami|\|nc |%3Bcat|%7Cwhoami|&amp;&amp;\s*id</url>
+    <description>DVWA: Possible Command Injection - [$(id)] [$(srcip)] [$(url)]</description>
+    <group>cmdi,attack,</group>
+  </rule>
+
+  <rule id="100205" level="7">
+    <if_sid>100200</if_sid>
+    <url>redirect=http|redirect=https|url=http|url=https|next=http|return=http|returnurl=http</url>
+    <description>DVWA: Possible Open Redirect - [$(id)] [$(srcip)] [$(url)]</description>
+    <group>redirect,attack,</group>
+  </rule>
+
+  <rule id="100206" level="5">
+    <if_sid>100200</if_sid>
+    <url>login.php</url>
+    <description>DVWA: Login page access - [$(id)] [$(srcip)] [$(url)]</description>
+    <group>authentication_failed,</group>
+  </rule>
+
+  <rule id="100207" level="10" frequency="6" timeframe="15" ignore="15">
+    <if_matched_sid>100206</if_matched_sid>
+    <same_source_ip />
+    <description>DVWA: Possible Brute Force - [$(id)] [$(srcip)] [$(url)]</description>
+    <group>authentication_failures,brute_force,attack,</group>
+    <mitre>
+      <id>T1110</id>
+    </mitre>
+  </rule>
+
+  <rule id="100208" level="5">
+    <if_sid>100200</if_sid>
+    <url>vulnerabilities/upload/</url>
+    <description>DVWA: File upload endpoint accessed - [$(id)] [$(srcip)] [$(url)] [visibility only, content not inspected]</description>
+    <group>file_upload,</group>
+  </rule>
+
+  <rule id="100209" level="5">
+    <if_sid>100200</if_sid>
+    <url>change_user_details|csrf</url>
+    <description>DVWA: State-changing POST to CSRF-sensitive endpoint - [$(id)] [$(srcip)] [$(url)] [weak signal, verify Referer manually]</description>
+    <group>csrf,</group>
+  </rule>
+
+  <rule id="100210" level="5">
+    <if_sid>100200</if_sid>
+    <url>id=|user=|uid=</url>
+    <description>DVWA: Request with user/id parameter - [$(id)] [$(srcip)] [$(url)] [visibility only, cannot verify session-to-resource ownership]</description>
+    <group>authorisation,</group>
+  </rule>
+
+  <rule id="31101" level="5" overwrite="yes">
+    <if_sid>31100</if_sid>
+    <id>^4</id>
+    <description>Web server 4xx error - [$(id)] [$(srcip)] [$(url)]</description>
+    <group>attack,pci_dss_6.5,pci_dss_11.4,gdpr_IV_35.7.d,nist_800_53_SA.11,nist_800_53_SI.4,tsc_CC6.6,tsc_CC7.1,tsc_CC8.1,tsc_CC6.1,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
+  </rule>
+
+  <rule id="31120" level="5" overwrite="yes">
+    <if_sid>31100</if_sid>
+    <id>^50</id>
+    <description>Web server 5xx error - [$(id)] [$(srcip)] [$(url)]</description>
+  </rule>
+
+
+  <rule id="100211" level="3">
+    <if_sid>100200</if_sid>
+    <id>^4[0-9][0-9]$</id>
+    <description>DVWA: [$(id)] [$(srcip)] [$(url)]</description>
+    <group>dvwa_4xx,</group>
+  </rule>
+
+  <rule id="100212" level="3">
+    <if_sid>100200</if_sid>
+    <id>^5[0-9][0-9]$</id>
+    <description>DVWA: [$(id)] [$(srcip)] [$(url)]</description>
+    <group>dvwa_5xx,</group>
+  </rule>
+
+  <rule id="100213" level="10" frequency="30" timeframe="15" ignore="15">
+    <if_matched_sid>100211</if_matched_sid>
+    <same_source_ip />
+    <description>DVWA: High rate of 4xx errors (30+ in 60s) - [$(id)] [$(srcip)] [$(url)]</description>
+    <group>dvwa_4xx_threshold,attack,</group>
+  </rule>
+
+  <rule id="100214" level="12" frequency="15" timeframe="15" ignore="15">
+    <if_matched_sid>100212</if_matched_sid>
+    <same_source_ip />
+    <description>DVWA: High rate of 5xx errors (15+ in 60s) - [$(id)] [$(srcip)] [$(url)]</description>
+    <group>dvwa_5xx_threshold,attack,</group>
+  </rule>
+
+  <rule id="31151" level="10" frequency="50" timeframe="15" ignore="15" overwrite="yes">
+    <if_matched_sid>31101</if_matched_sid>
+    <same_source_ip />
+    <description>DVWA: Multiple 400 errors - [$(id)] [$(srcip)] [$(url)]</description>
+    <mitre>
+      <id>T1595.002</id>
+    </mitre>
+    <group>web_scan,recon,</group>
+  </rule>
+
+  <rule id="31163" level="10" frequency="30" timeframe="15" ignore="15" overwrite="yes">
+    <if_matched_sid>31123</if_matched_sid>
+    <same_source_ip />
+    <description>DVWA: Multiple 503 errors - [$(id)] [$(srcip)] [$(url)]</description>
+    <mitre>
+      <id>T1498</id>
+    </mitre>
+    <group>web_scan,recon,</group>
+  </rule>
+
+</group>
+
+
+<!-- ==================== WEB SCAN ==================== -->
+
+<group name="local,syslog,web_rules,">
+  <rule id="100501" level="5">
+    <if_sid>31102</if_sid>
+    <description>Multiple web server 400 error codes from same source ip.</description>
+    <group>web_scan,recon,</group>
+  </rule>
+</group>
+
+
+<!-- ==================== THEHIVE LEVEL OVERRIDES ==================== -->
+
+<group name="local,windows_auth_thehive,">
+
+  <rule id="60106" level="3" overwrite="yes">
+    <if_sid>60103</if_sid>
+    <field name="win.system.eventID">^528$|^540$|^673$|^4624$|^4769$</field>
+    <description>user=$(win.eventdata.targetUserName) domain=$(win.eventdata.targetDomainName) logonType=$(win.eventdata.logonType) src_ip=$(win.eventdata.ipAddress) authpkg=$(win.eventdata.authenticationPackageName) - Windows Logon Success</description>
+    <options>no_full_log</options>
+    <group>authentication_success,pci_dss_10.2.5,gpg13_7.1,gpg13_7.2,gdpr_IV_32.2,hipaa_164.312.b,nist_800_53_AU.14,nist_800_53_AC.9,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
+    <mitre>
+      <id>T1078</id>
+    </mitre>
+  </rule>
+
+  <rule id="60105" level="8" overwrite="yes">
+    <if_sid>60104</if_sid>
+    <field name="win.system.eventID">^529$|^530$|^531$|^532$|^533$|^534$|^535$|^536$|^537$|^539$|^4625$</field>
+    <description>Windows Logon Failure</description>
+    <options>no_full_log</options>
+    <group>authentication_failed,pci_dss_10.2.4,pci_dss_10.2.5,gpg13_7.1,gdpr_IV_35.7.d,gdpr_IV_32.2,hipaa_164.312.b,nist_800_53_AU.14,nist_800_53_AC.7,tsc_CC6.1,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
+    <mitre>
+      <id>T1078</id>
+    </mitre>
+  </rule>
+
+  <rule id="100261" level="0">
+    <if_sid>92151</if_sid>
+    <field name="win.eventdata.image" type="pcre2">(?i)\\ServerManager\.exe$</field>
+    <description>Suppress: ServerManager.exe legitimately loads PowerShell automation library for role/feature management</description>
+  </rule>
+
+  <rule id="100260" level="0">
+    <if_sid>61104</if_sid>
+    <field name="win.eventdata.param1" type="pcre2">^(Background Intelligent Transfer Service|Windows Modules Installer)$</field>
+    <description>Suppress: routine service startup type toggling (BITS, TrustedInstaller) during Windows Update activity</description>
+  </rule>
+
+  <rule id="60122" level="8" overwrite="yes">
+    <if_sid>60105</if_sid>
+    <field name="win.system.eventID">^529$|^4625$</field>
+    <description>Logon Failure - Unknown user or bad password</description>
+    <options>no_full_log</options>
+    <group>authentication_failed,pci_dss_10.2.4,pci_dss_10.2.5,gpg13_7.1,gdpr_IV_35.7.d,gdpr_IV_32.2,hipaa_164.312.b,nist_800_53_AU.14,nist_800_53_AC.7,tsc_CC6.1,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
+    <mitre>
+      <id>T1531</id>
+    </mitre>
+  </rule>
+
+</group>
+
+<group name="local,sshd_thehive,">
+
+  <rule id="5716" level="8" overwrite="yes">
+    <if_sid>5700</if_sid>
+    <match>^Failed|^error: PAM: Authentication</match>
+    <description>sshd: authentication failed.</description>
+    <mitre>
+      <id>T1110</id>
+    </mitre>
+    <group>authentication_failed,gdpr_IV_35.7.d,gdpr_IV_32.2,gpg13_7.1,hipaa_164.312.b,nist_800_53_AU.14,nist_800_53_AC.7,pci_dss_10.2.4,pci_dss_10.2.5,tsc_CC6.1,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
+  </rule>
+
+</group>
+
+<!-- ==================== THEHIVE LEVEL OVERRIDES PART 2 ==================== -->
+
+<group name="local,windows_auth_thehive2,">
+
+  <rule id="67022" level="6" overwrite="yes">
+    <if_sid>60106</if_sid>
+    <field name="win.eventdata.logonType" negate="yes">3|5</field>
+    <description>user=$(win.eventdata.targetUserName) domain=$(win.eventdata.targetDomainName) logonType=$(win.eventdata.logonType) src_ip=$(win.eventdata.ipAddress) - Non network or service local logon</description>
+    <options>no_full_log</options>
+  </rule>
+
+</group>
+
+<group name="local,sshd_thehive2,">
+
+  <rule id="5715" level="8" overwrite="yes">
+    <if_sid>5700</if_sid>
+    <match>^Accepted|authenticated.$</match>
+    <description>sshd: authentication success.</description>
+    <mitre>
+      <id>T1078</id>
+      <id>T1021</id>
+    </mitre>
+    <group>authentication_success,gdpr_IV_32.2,gpg13_7.1,gpg13_7.2,hipaa_164.312.b,nist_800_53_AU.14,nist_800_53_AC.7,pci_dss_10.2.5,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
+  </rule>
+
+</group>
+
+
+<!-- ==================== SDIAG + DISMHOST SUPPRESSIONS ==================== -->
+
+<group name="local,sdiag_ps_noise,">
+
+  <rule id="100390" level="0">
+    <if_sid>100271</if_sid>
+    <field name="win.eventdata.path" type="pcre2">(?i)SDIAG_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}</field>
+    <description>Suppress: PS 4104 script block from Windows SDIAG troubleshooter temp path - legitimate OS diagnostics</description>
+  </rule>
+
+  <rule id="100391" level="0">
+    <if_sid>100271</if_sid>
+    <field name="win.eventdata.scriptBlockText" type="pcre2">(?i)(SDIAG_|TS_WERQueue|TS_DiagnosticHistory|CL_Utility|CL_LocalizationData|Write-DiagProgress|Update-DiagR|Update-Diagr|RC_WERQueue|RC_DiagnosticHistory|ConvertFrom-StringData)</field>
+    <description>Suppress: PS 4104 script block containing SDIAG/troubleshooter content - legitimate Windows diagnostics</description>
+  </rule>
+
+</group>
+
+<group name="local,dismhost_noise,">
+
+  <rule id="100392" level="0">
+    <if_sid>100275</if_sid>
+    <field name="win.eventdata.newProcessName" type="pcre2">(?i)\DismHost\.exe$</field>
+    <field name="win.eventdata.parentProcessName" type="pcre2">(?i)\cleanmgr\.exe$</field>
+    <description>Suppress: DismHost.exe spawned by cleanmgr via EID 4688 - legitimate Windows Disk Cleanup</description>
+  </rule>
+
+</group>
+
+<group name="local,auth_level_floor,">
+  <rule id="100002" level="6" overwrite="no">
+    <if_group>authentication_failed</if_group>
+    <field name="win.eventdata.targetUserName">.+</field>
+    <description>user=$(win.eventdata.targetUserName) src_ip=$(win.eventdata.ipAddress) logonType=$(win.eventdata.logonType) - Authentication failure</description>
+  </rule>
 </group>
