@@ -1,8 +1,8 @@
 # Wazuh Rules — Custom & Built-in Rule Catalog
 
 > **Production Ruleset:** The complete XML definition deployed on the Wazuh Manager is located in [`local_rules.xml`](local_rules.xml).
-> **Manager Configuration:** Manager integration and logging settings are in [`ossec.conf`](ossec.conf).
-> **TheHive Integration:** Ingestion wrapper [`custom-thehive`](custom-thehive), correlation engine [`custom-thehive.py`](custom-thehive.py), and service unit [`thehive-flush.service`](thehive-flush.service).
+> **Manager Configuration:** Manager integration and logging settings are in [`ossec.conf`](../../06-Resources/Configs/ossec.conf).
+> **TheHive Integration:** Ingestion wrapper [`custom-thehive`](../../06-Resources/Scripts/custom-thehive), correlation engine [`custom-thehive.py`](../../06-Resources/Scripts/custom-thehive.py), and service unit [`thehive-flush.service`](../../06-Resources/Scripts/thehive-flush.service).
 
 ## Overview
 

@@ -16,20 +16,19 @@ This section details the detection logic, rules, parsers, and pipeline automatio
 | [Wazuh/false-positives.md](Wazuh/false-positives.md) | Tuning decisions, noise suppression rules, and triage metrics |
 | [Suricata/rules.md](Suricata/rules.md) | Network IDS signatures (`et/open` + custom Nmap rules) and `threshold.config` tuning |
 
-### 2. Deployed Rule Files & Scripts (Codebase Artifacts)
+### 2. Deployed Rule Files & Telemetry Baselines
 
 | File | Type | Host / Location | Purpose |
 |---|---|---|---|
-| [Wazuh/custom-thehive](Wazuh/custom-thehive) | Shell Script | Wazuh Manager (`/var/ossec/integrations/`) | POSIX wrapper invoked by Wazuh per alert |
-| [Wazuh/custom-thehive.py](Wazuh/custom-thehive.py) | Python 3 Script | Wazuh Manager (`/var/ossec/integrations/`) | Production correlation & batched flush engine: zero-HTTP ingest, recon tool fingerprinting, TheHive 5 sync |
-| [Wazuh/thehive-flush.service](Wazuh/thehive-flush.service) | Systemd Unit | Wazuh Manager (`/etc/systemd/system/`) | Background daemon managing `custom-thehive.py --flush-daemon` |
 | [Wazuh/local_rules.xml](Wazuh/local_rules.xml) | Wazuh Rules XML | Wazuh SIEM (`/var/ossec/etc/rules/`) | Complete authentic local ruleset: LOLBins, wmiexec, privilege escalation, suppressions |
 | [Wazuh/local_decoder.xml](Wazuh/local_decoder.xml) | Wazuh Decoder XML | Wazuh SIEM (`/var/ossec/etc/decoders/`) | Custom regex parser extracting `uid, user, pwd, command` from `/var/log/bashcmd.log` |
-| [Wazuh/ossec.conf](Wazuh/ossec.conf) | Wazuh Config XML | Wazuh SIEM (`/var/ossec/etc/`) | Wazuh manager configuration defining the `custom-thehive` integration block |
 | [Suricata/custom.rules](Suricata/custom.rules) | Suricata Rules | Gateway (`/etc/suricata/rules/`) | Custom signatures (Nmap OS detection probes, SQL injection, LLMNR, GoldenPac) |
 | [Suricata/threshold.config](Suricata/threshold.config) | Tuning Config | Gateway (`/etc/suricata/`) | Rate-limiting rules for Nmap OS probes and multi-port scans |
 | [Sysmon/sysmonconfig.xml](Sysmon/sysmonconfig.xml) | Sysmon XML Config | Windows 10 & DC (`C:\Windows\`) | Modular telemetry baseline for process creation, named pipes, and registry tracking |
 | [Auditd/audit.rules](Auditd/audit.rules) | Linux Auditd Rules | DVWA (`/etc/audit/rules.d/`) | Syscall monitoring for SUID bash, execve execution, and identity file access |
+
+> [!NOTE]
+> Supporting automation scripts ([`custom-thehive`](../06-Resources/Scripts/custom-thehive), [`custom-thehive.py`](../06-Resources/Scripts/custom-thehive.py)), background service units ([`thehive-flush.service`](../06-Resources/Scripts/thehive-flush.service)), and server configs ([`ossec.conf`](../06-Resources/Configs/ossec.conf)) are maintained under [06-Resources/](../06-Resources/).
 
 ---
 
@@ -51,11 +50,9 @@ Windows 10 / DC (Sysmon & Auditpol)  ----->  Sysmon Modular Configuration (Sysmo
                                              Wazuh Rules: wmiexec, Sysmon, Registry (Wazuh/local_rules.xml)
 
 Private Wazuh SIEM (Cloud VM 2)      ----->  Wazuh Engine & Local Rules (Wazuh/local_rules.xml)
-                                             Manager Integration Block (Wazuh/ossec.conf)
-                                             thecustomhive Ingest & Queue (Wazuh/custom-thehive, Wazuh/custom-thehive.py)
+                                             Integration Hook & Daemon (06-Resources/Scripts/)
 
-TheHive Case Management (Cloud VM 1) ----->  thecustomhive Flush Daemon (Wazuh/thehive-flush.service)
-                                             Correlated Case & Alert Creation (TheHive 5 API)
+TheHive Case Management (Cloud VM 1) ----->  TheHive 5 REST Ingestion & Cases (TheHive 5 API)
 ```
 
 ---

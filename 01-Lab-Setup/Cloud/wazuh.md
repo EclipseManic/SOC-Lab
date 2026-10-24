@@ -120,10 +120,10 @@ Custom rules, decoders, and integration scripts are deployed directly on this Wa
 |----------|---------|
 | [rules.md](../../03-Detection-Engineering/Wazuh/rules.md) | Custom rules in `local_rules.xml` |
 | [decoders.md](../../03-Detection-Engineering/Wazuh/decoders.md) | Custom decoders in `local_decoder.xml` |
-| [ossec.conf](../../03-Detection-Engineering/Wazuh/ossec.conf) | Wazuh Manager integration configuration |
-| [custom-thehive](../../03-Detection-Engineering/Wazuh/custom-thehive) | POSIX integration wrapper script |
-| [custom-thehive.py](../../03-Detection-Engineering/Wazuh/custom-thehive.py) | Production correlation & flush engine |
-| [thehive-flush.service](../../03-Detection-Engineering/Wazuh/thehive-flush.service) | Systemd unit file for the flush daemon |
+| [ossec.conf](../../06-Resources/Configs/ossec.conf) | Wazuh Manager integration configuration |
+| [custom-thehive](../../06-Resources/Scripts/custom-thehive) | POSIX integration wrapper script |
+| [custom-thehive.py](../../06-Resources/Scripts/custom-thehive.py) | Production correlation & flush engine |
+| [thehive-flush.service](../../06-Resources/Scripts/thehive-flush.service) | Systemd unit file for the flush daemon |
 | [false-positives.md](../../03-Detection-Engineering/Wazuh/false-positives.md) | False-positive tuning and exclusions |
 | [pipeline-thecustomhive.md](../../03-Detection-Engineering/pipeline-thecustomhive.md) | Alert pipeline architecture documentation |
 
