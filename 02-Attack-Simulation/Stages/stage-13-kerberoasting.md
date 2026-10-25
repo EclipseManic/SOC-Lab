@@ -26,6 +26,10 @@ scp root@192.168.56.30:/tmp/hank.hash /tmp/hank.hash
 hashcat -m 13100 /tmp/hank.hash /usr/share/wordlists/rockyou.txt --force
 ```
 
+> [!NOTE]
+> **Dictionary Wordlist Note:**  
+> Because Hank Sherman's password in this lab was intentionally set to a common dictionary word (`Password123`), it is already present in standard `rockyou.txt` and manual insertion into the wordlist is not required. If a custom or unique password is assigned instead, make sure to insert it near the top 1,000 lines of `rockyou.txt` for fast recovery.
+
 ---
 
 ## What happened

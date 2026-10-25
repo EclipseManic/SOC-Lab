@@ -16,6 +16,11 @@ The entire laboratory architecture—from the isolated attacker workstation on V
 > **Scope Boundary — Baseline Setup vs. Attack Chain Execution:**
 > This directory details only the **clean baseline state** of the laboratory infrastructure before any attack commences. Attacker-generated artifacts (such as uploaded web shells, reverse shells, SSH persistence keys, Golden Tickets, or the `backdoor` Domain Admin account created during Stage 17) are **never** pre-configured in lab setup. They are generated dynamically during the execution of the attack campaign documented in [02-Attack-Simulation/](../02-Attack-Simulation/).
 
+> [!TIP]
+> **Implementation Notice — Reference Architecture vs. Blind Copy-Paste:**
+> All configuration files, commands, IP subnets, and parameter blocks documented in these setup guides serve as **an authoritative blueprint and reference implementation** of how this specific laboratory was configured and operationalized.  
+> They are **not intended for blind copy-pasting** as wholesale file replacements. Many configuration snippets highlight only the *specific, targeted parameters* required to implement a mechanism (e.g., targeted XML stanzas in `ossec.conf` or specific YAML keys in Netplan). Practitioners replicating this environment must adapt interface names (e.g., `ens33` vs `eth0`), local IP assignments, hypervisor virtual network names, and credentials to match their own individual hardware and virtualization setups.
+
 ---
 
 ## Why the Lab Was Built This Way (Engineering Decisions)

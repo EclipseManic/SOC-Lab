@@ -9,6 +9,10 @@
 
 Demonstrate complete domain-wide operational impact through internal defacement, simulated ransomware data encryption, extortion note deployment, and forced service interruption across both the primary Domain Controller (`PC-DC`) and the Windows 10 enterprise workstation (`Win10`).
 
+> [!NOTE]
+> **Defacement Image Format:**  
+> Any standard 24-bit bitmap image (`.bmp`) can be used as `hacked.bmp`. There is no requirement for any specific graphic or proprietary asset—any valid `.bmp` file saved to `/home/kali/hacked.bmp` will successfully apply as the desktop background across Windows endpoints.
+
 ## Commands
 
 ```bash
