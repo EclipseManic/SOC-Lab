@@ -17,6 +17,8 @@ Supporting reference material, core automation scripts, server configurations, a
 | [Diagrams/Neon%20Suricata%20Network%20Defense%20Diagram.png](Diagrams/Neon%20Suricata%20Network%20Defense%20Diagram.png) | Detection Engineering | Dual-NIC router, AF-PACKET promiscuous sniffing, and threshold filtering |
 | [Diagrams/Wazuh%20Log%20Ingestion%20to%20TheHive%20Flow.png](Diagrams/Wazuh%20Log%20Ingestion%20to%20TheHive%20Flow.png) | Detection Engineering | Wazuh multi-source ingestion, decoders, and Level 8 threshold fork |
 | [Diagrams/Wazuh%20to%20TheHive%20Security%20Pipeline.png](Diagrams/Wazuh%20to%20TheHive%20Security%20Pipeline.png) | Detection Engineering | 2-tier SQLite WAL queue and asynchronous correlation flush daemon |
+| [Diagrams/On-Prem%20to%20Cloud%20Telemetry%20Flow.png](Diagrams/On-Prem%20to%20Cloud%20Telemetry%20Flow.png) | Network Transit | Dedicated on-prem victim agent transit via Suricata, zero-NAT WireGuard, and VNet peering into Wazuh Manager |
+| [Diagrams/Wazuh–TheHive%20Neon%20Alert%20Pipeline.png](Diagrams/Wazuh–TheHive%20Neon%20Alert%20Pipeline.png) | Detection Pipeline | Dedicated neon 2-tier asynchronous alert correlation pipeline (SQLite WAL queue to TheHive 5) |
 | [Diagrams/SOC%20Analyst%20Investigation%20Lifecycle.png](Diagrams/SOC%20Analyst%20Investigation%20Lifecycle.png) | Investigation Lifecycle | 10-step analyst playbook from alert intake through case archiving |
 | [Scripts/custom-thehive](Scripts/custom-thehive) | Automation Script | POSIX wrapper invoked by Wazuh per alert on `/var/ossec/integrations/` |
 | [Scripts/custom-thehive.py](Scripts/custom-thehive.py) | Automation Engine | Production 2-tier correlation & batched flush daemon (zero-HTTP ingest, recon tool fingerprinting, TheHive 5 sync) |
