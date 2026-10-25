@@ -8,16 +8,6 @@ I built a small company network in a hybrid cloud lab, executed an end-to-end 20
 
 ---
 
-## Result at a Glance
-
-| Metric | Result | Plain-English Summary |
-|---|:---:|---|
-| **Attack stages run** | **20** | Full kill chain: external reconnaissance, web exploitation, Linux privilege escalation, network credential theft, Active Directory takeover, and domain defacement |
-| **Stages caught** | **16 (80%)** | Actionable alerts raised in TheHive 5 via Suricata NIDS, Linux Auditd, and Windows Sysmon |
-| **Stages missed** | **4 (20%)** | **2 offline:** Password cracking ran locally on the attacker's GPU (zero victim telemetry by definition).<br>**2 logging gaps:** Internal discovery and BloodHound LDAP scans were visible on the pivot or wire, but lacked target-side detection rules. |
-
----
-
 ## How It Works
 
 [![Conceptual Network Architecture](06-Resources/Diagrams/Neon%20Cybersecurity%20Network%20Architecture%20Diagram.png)](06-Resources/Diagrams/Neon%20Cybersecurity%20Network%20Architecture%20Diagram.png)
@@ -78,6 +68,16 @@ Using the mapped path, the attacker requests a Kerberos service ticket for a pri
 | **18** | Automated collection of confidential domain files and system information | **Yes** (Sysmon process fan-out) | [Stage 18 — Collection](02-Attack-Simulation/Stages/stage-18-collection.md) · [Investigation](04-Investigation/Stages/stage-18-collection.md) |
 | **19** | Exfiltrating stolen data archive to the attacker over encrypted SCP | **Yes** (Rapid SSH session burst) | [Stage 19 — Exfiltration](02-Attack-Simulation/Stages/stage-19-exfiltration.md) · [Investigation](04-Investigation/Stages/stage-19-exfiltration.md) |
 | **20** | Pushing remote desktop wallpaper defacement across domain endpoints via WMI | **Yes** (WMI fan-out & Sysmon registry) | [Stage 20 — Impact](02-Attack-Simulation/Stages/stage-20-impact.md) · [Investigation](04-Investigation/Stages/stage-20-impact.md) |
+
+---
+
+## Result at a Glance
+
+| Metric | Result | Plain-English Summary |
+|---|:---:|---|
+| **Attack stages run** | **20** | Full kill chain: external reconnaissance, web exploitation, Linux privilege escalation, network credential theft, Active Directory takeover, and domain defacement |
+| **Stages caught** | **16 (80%)** | Actionable alerts raised in TheHive 5 via Suricata NIDS, Linux Auditd, and Windows Sysmon |
+| **Stages missed** | **4 (20%)** | **2 offline:** Password cracking ran locally on the attacker's GPU (zero victim telemetry by definition).<br>**2 logging gaps:** Internal discovery and BloodHound LDAP scans were visible on the pivot or wire, but lacked target-side detection rules. |
 
 ---
 
