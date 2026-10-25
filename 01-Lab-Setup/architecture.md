@@ -89,8 +89,26 @@ flowchart LR
 | **WireGuard VPN** | `10.8.0.0/24` | Encrypted tunnel linking lab to cloud | Tunnel interface `wg0` | Point-to-point WireGuard routing |
 | **Cloud SOC** | `10.122.0.0/16` (Peered `/24`s) | Wazuh and TheHive private cloud | Unmonitored (Internal cloud) | Cloud VNet peering; private IPs |
 
-> [!IMPORTANT]
-> **Source IP Preservation:** To ensure Wazuh agent registration and alert logs reflect the actual victim IP addresses (`192.168.56.10`, `.20`, `.30`) rather than a single NAT address, MASQUERADE is **not** applied to victim telemetry traversing the WireGuard tunnel. The cloud VPN hub (`10.8.0.1`) maintains a static kernel route directing `192.168.56.0/24` back through `10.8.0.2`.
+### Detailed Routing & Forwarding Rules
+
+1. **Attacker Routing (Kali Linux):**
+   - Kali operates with a **single physical network adapter** (`eth0: 192.168.232.135/24` on VMware NAT).
+   - Kali uses its default gateway (`192.168.232.2`) for general internet connectivity (downloading tools, wordlists, and updates).
+   - Kali enforces **only one static route** in `/etc/network/interfaces`:
+     ```text
+     up ip route add 192.168.56.0/24 via 192.168.232.162 dev eth0
+     ```
+   - All attack traffic targeting the victim subnet (`192.168.56.0/24`) is routed to Suricata's external adapter (`ens33: 192.168.232.162`), where it is forwarded through the gateway and sniffed on the wire.
+
+2. **Victim Gateway Routing:**
+   - All victim hosts (`192.168.56.10`, `.20`, `.30`) set their default gateway to **`192.168.56.150`** (Suricata's internal adapter `ens37`).
+   - When an endpoint communicates outside its local subnet (e.g. shipping logs to Wazuh Manager `10.122.1.4:1514`), packets hit `192.168.56.150`.
+   - The Security Gateway routes these packets into its **WireGuard VPN client interface (`wg0: 10.8.0.2/32`)** on the `10.8.0.0/24` transit network.
+
+3. **Source IP Preservation (Zero NAT on Tunnel):**
+   - The gateway forwards victim packets into `wg0` **without NAT or masquerading**.
+   - If NAT were enabled, every alert arriving at Wazuh would display the gateway's tunnel IP (`10.8.0.2`), masking which host was compromised.
+   - Because NAT is omitted, the cloud hub (`10.8.0.1`) routes replies back to `192.168.56.0/24` via `10.8.0.2`, allowing Wazuh Manager to register and attribute telemetry to authentic victim IPs (`192.168.56.10`, `.20`, `.30`).
 
 ---
 
