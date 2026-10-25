@@ -681,7 +681,7 @@ export const chapters = [
       hiring:
         "Evidence maturity is part of the work: documented, scaffolded, draft, pending. The labels are the proof of rigor.",
     },
-    proof: "INDEX.md · 06-Resources/README.md · 06-Resources/Diagrams/soc-lab.png",
+    proof: "INDEX.md · 06-Resources/README.md · 06-Resources/Diagrams/SOC_Lab_Architecture.png",
   },
 ] as const;
 
@@ -776,7 +776,7 @@ export const evidenceItems = [
     value: "Captured",
     tone: "teal",
     note: "High-level overview. The architecture & network tables are authoritative for addresses and flows.",
-    path: "06-Resources/Diagrams/soc-lab.png",
+    path: "06-Resources/Diagrams/SOC_Lab_Architecture.png",
   },
   {
     label: "Architecture & Network",

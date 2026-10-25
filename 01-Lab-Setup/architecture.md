@@ -51,7 +51,7 @@ flowchart LR
     SG <-->|"WireGuard Tunnel\n10.8.0.0/24 (51820/UDP)"| HUB
 ```
 
-> Latest exported diagram: [06-Resources/Diagrams/soc-lab.png](../06-Resources/Diagrams/soc-lab.png)
+> Latest exported diagram: [06-Resources/Diagrams/SOC_Lab_Architecture.png](../06-Resources/Diagrams/SOC_Lab_Architecture.png)
 
 ---
 
