@@ -32,20 +32,20 @@ DVWA serves a **dual role** in the attack chain:
 - **MySQL** — database user `dvwa` / password `<REDACTED>`
 - **DVWA security level:** `low`
 
-## Intentional Weaknesses (Deliberate Attack Surface)
+## Intentional Weaknesses (Baseline Attack Surface)
 
-| Weakness | Purpose |
-|----------|---------|
-| DVWA security level `low` | No input validation — enables SQLi, XSS, command injection |
-| MySQL credentials `dvwa:<REDACTED>` | Weak database credentials |
-| File upload with no restrictions | Allows webshell upload (Stage 05) |
-| SUID bash at `/tmp/bash` | Privilege escalation path (Stage 07) |
-| `www-data` has `sudo python3 NOPASSWD` | Alternative privilege escalation |
-| `/etc/passwd` chmod 666 | Writable by any user — allows account creation |
-| No WAF in front of the application | All payloads reach Apache unfiltered |
+To evaluate web application and endpoint detection engineering under realistic conditions, DVWA is provisioned with the following baseline vulnerabilities:
 
-> [!NOTE]
-> These vulnerabilities were deliberately configured to evaluate web application and endpoint detection engineering under realistic post-exploitation conditions.
+| Weakness | Initial Configuration | Defensive Purpose |
+|----------|-----------------------|-------------------|
+| DVWA Security Level `low` | Configured in `config/config.inc.php` | Disables input sanitization, allowing evaluation of perimeter NIDS and web log detection rules |
+| Weak Database Credentials | `dvwa:<REDACTED>` on `3306/TCP` | Simulates exposed database credentials on a compromised web host |
+| Permissive File Uploads | Native DVWA upload module | Allows testing file write auditing and process execution tracking |
+| Passwordless Sudo (`sudoers`) | `www-data ALL=(ALL) NOPASSWD: /usr/bin/python3` in `/etc/sudoers.d/dvwa` | Real-world administrative misconfiguration enabling privilege escalation tracking |
+| Direct Inbound Exposure | Apache exposed on `80/TCP` without WAF | Ensures adversary attack traffic reaches Suricata and Apache directly without intermediate filtering |
+
+> [!IMPORTANT]
+> **Lab Setup Scope:** Only the vulnerable web service and sudoers configuration are set up initially. Attacker artifacts (such as uploaded web shells, reverse shell pipes, or modified SSH keys) are **not** pre-created; they are generated dynamically during the execution of the attack simulation stages.
 
 ## Auditd Configuration
 

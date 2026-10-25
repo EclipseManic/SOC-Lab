@@ -34,13 +34,17 @@ The domain was populated with [BadBlood](https://github.com/davidprowe/BadBlood)
 
 This scale provides realistic BloodHound enumeration results and attack path discovery during Stage 12.
 
-## Key Domain Objects Used in the Attack
+## Baseline Domain Accounts & Service Principals
 
-| Object | Type | Details | Stage |
-|--------|------|---------|-------|
-| `HANK_SHERMAN` | Domain Admin + Service Account | SPN: `CIFS/AWSWAPPS1000000`, Password: `<REDACTED>`, PasswordNeverExpires: True | 13 (Kerberoasting) |
-| `Administrator` | Domain Admin | High-value credential target | 14 (DCSync) |
-| `backdoor` | Domain Account | Created for persistence (added to Domain Admins) | 17 (DC Persistence) |
+The baseline domain is provisioned with realistic enterprise accounts (generated via BadBlood and default Active Directory setup) that serve as initial targets for the adversary campaign:
+
+| Account | Type | Baseline Configuration & Purpose |
+|---------|------|----------------------------------|
+| `Administrator` | Built-in Domain Admin | Standard high-privilege domain account (targeted during DCSync replication) |
+| `HANK_SHERMAN` | Domain Admin & Service Account | Populated by BadBlood with SPN `CIFS/AWSWAPPS1000000`, password `<REDACTED>`, and `PasswordNeverExpires: True` (simulates a vulnerable shadow admin service account) |
+
+> [!IMPORTANT]
+> **Lab Setup Scope:** Only baseline accounts exist prior to the attack campaign. Attacker-generated artifacts—such as the `backdoor` Domain Admin account created during Stage 17—are **not** created during lab setup. They are dynamically created by the red-team tradecraft documented in [02-Attack-Simulation/Stages/stage-17-dc-persistence.md](../../02-Attack-Simulation/Stages/stage-17-dc-persistence.md).
 
 > [!WARNING]
 > `HANK_SHERMAN` is a service account with a Domain Admin group membership **and** a weak password — the exact combination that makes Kerberoasting devastating. This is a deliberate misconfiguration created by BadBlood.

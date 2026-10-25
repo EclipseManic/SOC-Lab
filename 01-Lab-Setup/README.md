@@ -12,6 +12,10 @@ The entire laboratory architecture—from the isolated attacker workstation on V
 
 *Figure 1: Master architecture blueprint of the SOC Lab ([view full-resolution 4K asset](../06-Resources/Diagrams/SOC_Lab_Architecture.png)).*
 
+> [!IMPORTANT]
+> **Scope Boundary — Baseline Setup vs. Attack Chain Execution:**
+> This directory details only the **clean baseline state** of the laboratory infrastructure before any attack commences. Attacker-generated artifacts (such as uploaded web shells, reverse shells, SSH persistence keys, Golden Tickets, or the `backdoor` Domain Admin account created during Stage 17) are **never** pre-configured in lab setup. They are generated dynamically during the execution of the attack campaign documented in [02-Attack-Simulation/](../02-Attack-Simulation/).
+
 ---
 
 ## Why the Lab Was Built This Way (Engineering Decisions)
