@@ -63,7 +63,7 @@ With full interactive command execution confirmed on `PC-DC`, the adversary esta
 
 | Source | Rule | Rule ID | TheHive Alert | Severity | Status |
 |---|---|---|---|---|---|
-| Wazuh (Windows Agent) | Successful Remote Logon Detected - User:\Administrator - NTLM authentication, possible pass-the-hash attack | Rule 60122 / Win Event 4624 | `wzb-4624-pth` (Fired 24+ times in CSV) | High (3) | DETECTED |
+| Wazuh (Windows Agent) | Successful Remote Logon Detected - User:\Administrator - NTLM authentication, possible pass-the-hash attack | Rule 60122 / Win Event 4624 | 24x in `Wazuh-Raw-Alerts.csv` (EID 4624) & `wzb-b7f91cd3ab` | High (3) | DETECTED |
 | Suricata / Wazuh | ET EXPLOIT Possible MS14-068 GoldenPac Priv Esc in-use | Rule 86601 / SID 2019922 | `[1x] [Suricata] Suricata: Alert - ET EXPLOIT Possible GoldenPac Priv Esc in-use` | Medium (2) | DETECTED |
 
 ### Detection Analysis

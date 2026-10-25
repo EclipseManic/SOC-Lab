@@ -10,9 +10,9 @@
 
 | Field | Value |
 |---|---|
-| **Alert ID** | `wzb-34f34a857c / wzb-846468a306` |
-| **Rule ID** | `Wazuh 5715 (Level 8 - 6 sessions / 1s burst)` |
-| **Source** | Wazuh SSHD on DVWA pivot |
+| **Alert ID** | `wzb-34f34a857c` |
+| **Rule ID** | Wazuh `5715` (Elevated Level 8 - 6 rapid SSH sessions in 0.57s) |
+| **Source** | Linux SSHD (Pivot Host DVWA) |
 | **Severity** | High |
 | **TLP / PAP** | `TLP:AMBER / PAP:AMBER` |
 
@@ -20,7 +20,7 @@
 
 ## What was detected
 
-Wazuh correlation engine flagged a rapid administrative burst of 6 SSH root authentications within 1 second on DVWA (wzb-34f34a857c) as SCP transferred the staged archive (/tmp/data.tar.gz) back to Kali.
+Adversary exfiltrated collected archive data from the DVWA pivot back to Kali via SCP. While network payload was encrypted (DG-19), Wazuh Rule 5715 triggered on the burst of 6 administrative SSH connections within 0.57 seconds, escalating to TheHive.
 
 ---
 
@@ -46,9 +46,9 @@ Wazuh correlation engine flagged a rapid administrative burst of 6 SSH root auth
 
 ## Evidence
 
-- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/66.png`](../../02-Attack-Simulation/Attack-Screenshots/66.png)
+- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/56.png`](../../02-Attack-Simulation/Attack-Screenshots/56.png)
 - **Alert Evidence:** [`../../03-Detection-Engineering/TheHive_Alert-ScreenShot/17.png`](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/17.png)
-- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv) and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
+- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv), [`Wazuh-Raw-Alerts.csv`](../../06-Resources/Alerts/Wazuh-Raw-Alerts.csv), and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
 
 ---
 
@@ -64,7 +64,7 @@ Wazuh correlation engine flagged a rapid administrative burst of 6 SSH root auth
 
 ## Detection assessment
 
-- **Status:** Detected (Pivot Alerted)
+- **Status:** Detected (Pivot Alerted; DG-19)
 - **Gap ID:** DG-19
 - **Engineering Assessment:** DG-19 Documented: Network payload inspection was blind due to SSH encryption, but host-level session rate correlation caught the exfiltration burst.
 

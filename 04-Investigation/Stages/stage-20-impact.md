@@ -10,9 +10,9 @@
 
 | Field | Value |
 |---|---|
-| **Alert ID** | `wzb-71ef983ad8 / wzb-1f43c1540f` |
-| **Rule ID** | `Wazuh 100613 / Sysmon EID 1` |
-| **Source** | Wazuh Windows Agent & Sysmon on Win10/DC |
+| **Alert ID** | `wzb-71ef983ad8`, `wzb-1f43c1540f`, `wzb-ddc9d1a730` |
+| **Rule ID** | Wazuh `100613` (Process Fan-out) / Sysmon EID 1 (`cmd.exe /Q /c`) |
+| **Source** | Windows Security / Sysmon EID 1 / Wazuh |
 | **Severity** | High |
 | **TLP / PAP** | `TLP:AMBER / PAP:AMBER` |
 
@@ -20,7 +20,7 @@
 
 ## What was detected
 
-Wazuh process fan-out rule 100613 triggered on DomainWin10 and PC-DC as Impacket wmiexec spawned registry modification commands (reg add) altering desktop wallpaper and user shell configurations to display defacement notices.
+Adversary deployed defacement commands across domain endpoints via Impacket `wmiexec`, altering desktop wallpaper registry keys. Wazuh Rule 100613 alerted on high-frequency child process spawning (9 child processes each on DC and workstation), escalating immediately to TheHive.
 
 ---
 
@@ -46,9 +46,9 @@ Wazuh process fan-out rule 100613 triggered on DomainWin10 and PC-DC as Impacket
 
 ## Evidence
 
-- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/70.png`](../../02-Attack-Simulation/Attack-Screenshots/70.png)
+- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/57.png`](../../02-Attack-Simulation/Attack-Screenshots/57.png)
 - **Alert Evidence:** [`../../03-Detection-Engineering/TheHive_Alert-ScreenShot/18.png`](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/18.png)
-- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv) and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
+- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv), [`Wazuh-Raw-Alerts.csv`](../../06-Resources/Alerts/Wazuh-Raw-Alerts.csv), and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
 
 ---
 

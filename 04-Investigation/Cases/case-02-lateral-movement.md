@@ -18,8 +18,8 @@ Following root privilege escalation on the DVWA host (`192.168.56.30`), the adve
 | Stage | Attack | Investigation | Detection Status |
 |---|---|---|---|
 | 08 | [SSH persistence](../../02-Attack-Simulation/Stages/stage-08-ssh-persistence.md) | [stage-08](../Stages/stage-08-ssh-persistence.md) | **Detected** (Wazuh Rule 5715 Level 8 & Rule 100215) |
-| 09 | [Internal discovery](../../02-Attack-Simulation/Stages/stage-09-internal-discovery.md) | [stage-09](../Stages/stage-09-internal-discovery.md) | **Detected** (Suricata SID 2000545 promiscuous sweep; DG-09) |
-| 10 | [Responder poisoning](../../02-Attack-Simulation/Stages/stage-10-responder.md) | [stage-10](../Stages/stage-10-responder.md) | **Detected** (Suricata SID 2013028 NTLM session setup via Wazuh 86601) |
+| 09 | [Internal discovery](../../02-Attack-Simulation/Stages/stage-09-internal-discovery.md) | [stage-09](../Stages/stage-09-internal-discovery.md) | **Detected** (Suricata SID 3400001, 3400002 on ens37; DG-09) |
+| 10 | [Responder poisoning](../../02-Attack-Simulation/Stages/stage-10-responder.md) | [stage-10](../Stages/stage-10-responder.md) | **Detected** (Suricata SID 2067085–2067087 NTLM session setup via Wazuh 86601) |
 | 11 | [NTLMv2 cracking](../../02-Attack-Simulation/Stages/stage-11-ntlmv2-crack.md) | [stage-11](../Stages/stage-11-ntlmv2-crack.md) | **Detection gap** (DG-11: Inherent offline cracking) |
 | 12 | [BloodHound enumeration](../../02-Attack-Simulation/Stages/stage-12-bloodhound.md) | [stage-12](../Stages/stage-12-bloodhound.md) | **Detected** (Wazuh Rule 5715 pivot logon alerted; DG-12) |
 | 13 | [Kerberoasting](../../02-Attack-Simulation/Stages/stage-13-kerberoasting.md) | [stage-13](../Stages/stage-13-kerberoasting.md) | **Detected** (Suricata SID 2019922 wire alert & Wazuh Rule 5715) |
@@ -31,7 +31,7 @@ Following root privilege escalation on the DVWA host (`192.168.56.30`), the adve
 
 | Source | What it contributed |
 |---|---|
-| **Suricata** | Sniffing on `ens37` in promiscuous mode captured internal subnet port sweeps from DVWA (SID 2000545), NTLM Session Setup over SMB during Responder poisoning (SID 2013028), and Kerberos TGS-REQ wire frames during Kerberoasting (SID 2019922). |
+| **Suricata** | Sniffing on `ens37` in promiscuous mode captured internal subnet port sweeps from DVWA (SID 2000545), NTLM Session Setup over SMB during Responder poisoning (SIDs 2067085–2067087), and Kerberos TGS-REQ wire frames during Kerberoasting (SID 2019922). |
 | **Wazuh** | Monitored Linux authentication on DVWA: authorized_keys modification (Rule 100215) and interactive root SSH logons (Rule 5715 elevated to Level 8) providing end-to-end pivot visibility. Monitored Windows domain member events. |
 | **TheHive** | Aggregated pivot logons and network IDS alerts into correlated incident cases. |
 | **Velociraptor** | Queried Active Directory audit events, inspected `/root/.ssh/authorized_keys` and `/tmp/hank.hash` on DVWA pivot. |
@@ -42,14 +42,14 @@ Following root privilege escalation on the DVWA host (`192.168.56.30`), the adve
 
 | Time | Event | Source | Evidence |
 |---|---|---|---|
-| T+18m | Attacker public key added to /root/.ssh/authorized_keys | Wazuh Auditd | [Attack 26](../../02-Attack-Simulation/Attack-Screenshots/26.png) · [Alert 07](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/7.png) |
-| T+20m | Inbound root SSH interactive session established from Kali | Wazuh SSHD | [Attack 26](../../02-Attack-Simulation/Attack-Screenshots/26.png) · [Alert 07](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/7.png) |
-| T+23m | Internal subnet discovery sweep against 192.168.56.0/24 | Suricata (`ens37`) | [Attack 29](../../02-Attack-Simulation/Attack-Screenshots/29.png) · [Alert 08](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/8.png) |
-| T+27m | Responder LLMNR/NBT-NS poisoning capturing win10 NetNTLMv2 hash | Suricata / Wazuh | [Attack 33](../../02-Attack-Simulation/Attack-Screenshots/33.png) · [Alert 09](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/9.png) |
-| T+30m | Offline Hashcat NetNTLMv2 hash cracking on Kali | Offline GPU | [Attack 36](../../02-Attack-Simulation/Attack-Screenshots/36.png) · DG-11 |
-| T+34m | BloodHound/SharpHound LDAP query volume from DVWA to DC | Wazuh SSHD | [Attack 38](../../02-Attack-Simulation/Attack-Screenshots/38.png) · [Alert 10](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/10.png) |
+| T+18m | Attacker public key added to /root/.ssh/authorized_keys | Wazuh Auditd | [Attack 26](../../02-Attack-Simulation/Attack-Screenshots/18.png) · [Alert 07](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/7.png) |
+| T+20m | Inbound root SSH interactive session established from Kali | Wazuh SSHD | [Attack 26](../../02-Attack-Simulation/Attack-Screenshots/18.png) · [Alert 07](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/7.png) |
+| T+23m | Internal subnet discovery sweep against 192.168.56.0/24 | Suricata (`ens37`) | [Attack 29](../../02-Attack-Simulation/Attack-Screenshots/21.png) · [Alert 08](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/8.png) |
+| T+27m | Responder LLMNR/NBT-NS poisoning capturing win10 NetNTLMv2 hash | Suricata / Wazuh | [Attack 33](../../02-Attack-Simulation/Attack-Screenshots/28.png) · [Alert 09](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/9.png) |
+| T+30m | Offline Hashcat NetNTLMv2 hash cracking on Kali | Offline GPU | [Attack 36](../../02-Attack-Simulation/Attack-Screenshots/31.png) · DG-11 |
+| T+34m | BloodHound/SharpHound LDAP query volume from DVWA to DC | Wazuh SSHD | [Attack 38](../../02-Attack-Simulation/Attack-Screenshots/33.png) · [Alert 10](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/10.png) |
 | T+38m | Kerberoasting TGS-REQ requested for HANK_SHERMAN SPN | Suricata / Wazuh | [Attack 41](../../02-Attack-Simulation/Attack-Screenshots/41.png) · [Alert 11](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/11.png) |
-| T+42m | DCSync replication dumping domain hashes via DRSUAPI | Wazuh SSHD | [Attack 46](../../02-Attack-Simulation/Attack-Screenshots/46.png) · [Alert 12](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/12.png) |
+| T+42m | DCSync replication dumping domain hashes via DRSUAPI | Wazuh SSHD | [Attack 46](../../02-Attack-Simulation/Attack-Screenshots/45.png) · [Alert 12](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/12.png) |
 
 ---
 
@@ -58,7 +58,7 @@ Following root privilege escalation on the DVWA host (`192.168.56.30`), the adve
 | Type | Value | Context |
 |---|---|---|
 | **Pivot IP** | `192.168.56.30` | Compromised DVWA host used as operational pivot |
-| **Domain Member** | `192.168.56.20` (`DomainWin10`) | Workstation poisoned by Responder |
+| **Domain Member** | `192.168.56.20` (`Win10User`) | Workstation poisoned by Responder |
 | **Domain Controller** | `192.168.56.10` (`PC-DC.ad.lab`) | Target of LDAP, Kerberoasting, and DCSync attacks |
 | **Account** | `ad.lab\win10` | Compromised domain workstation user account |
 | **Account** | `ad.lab\HANK_SHERMAN` | Kerberoasted Domain Admin service account |

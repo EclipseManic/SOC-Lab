@@ -30,8 +30,8 @@ The detection architecture successfully detected **16 of 20 stages (80.0%)**, wi
 | Asset | Operating System | IP Address | Role | Impact |
 |---|---|---|---|---|
 | **DVWA** | Ubuntu 24.04 LTS | `192.168.56.30` | Web Application Server | Compromised: Web shell drop, reverse shell, root escalation, operational pivot. |
-| **DomainWin10** | Windows 10 Enterprise | `192.168.56.20` | Domain Workstation | Compromised: LLMNR credential harvesting, Pass-the-Hash lateral movement, defacement. |
-| **PC-DC** | Windows Server 2022 | `192.168.56.10` | Domain Controller (AD DS / DNS) | Compromised: DCSync replication, Golden Ticket forgery, backdoor Domain Admin creation. |
+| **Win10** (`Win10User`) | Windows 10 Enterprise | `192.168.56.20` | Domain Workstation | Compromised: LLMNR credential harvesting, Pass-the-Hash remote logon, defacement. |
+| **PC-DC** (`DomainWin10`) | Windows Server 2022 | `192.168.56.10` | Domain Controller (AD DS / DNS) | Compromised: DCSync replication, Golden Ticket forgery, backdoor Domain Admin creation. |
 | **Suricata Gateway** | Ubuntu 24.04 LTS | `192.168.56.1` / `10.122.0.x` | Dual-Homed Gateway / WireGuard Hub | Uncompromised: Monitored traffic and forwarded NIDS alerts to Cloud SIEM. |
 | **Cloud SOC** | Ubuntu 24.04 LTS | `10.122.0.4` / `10.122.0.5` | TheHive 5 / Wazuh Manager | Uncompromised: Ingested, correlated, and alerted on incident telemetry in real time. |
 
@@ -46,9 +46,11 @@ Total Attack Stages Executed:           20
 Verified Detections with Alerts:        16  (80.0%)
 Inherent Offline Gaps (Zero Telemetry):  2  (10.0% - Stages 04, 11)
 Partial / Protocol Logging Gaps:         2  (10.0% - Stages 09, 12)
+Encrypted Transport Gap:                 1  (DG-19: Documented / Pivot Alerted)
 Rule Failures:                           0   (0.0%)
-Total Raw Alerts Exported in CSV:      808 records (Levels 3–12)
-Correlated Incidents Created in Hive:   46 actionable alerts
+Total Raw Alerts Exported in CSV:      9,567 rows (Wazuh-Raw-Alerts.csv)
+High-Severity Escalations (>= 8):      808 rows (wazuh_alerts.csv)
+Correlated Incidents Created in Hive:   46 actionable alerts (thehive_alerts.json)
 Mean Time to Detect (MTTD):             < 15 seconds for online telemetry
 ```
 
@@ -56,10 +58,10 @@ Mean Time to Detect (MTTD):             < 15 seconds for online telemetry
 
 | Sensor | Key Contributions |
 |---|---|
-| **Suricata NIDS** | Inbound port scanning (SID 2000545), Hydra HTTP brute-force (SID 2000547), SQL injection UNION SELECT (SID 2010938), internal subnet sweep on `ens37`, NTLM Session Setup over SMB (SID 2013028), and Kerberos wire frames (SID 2019922). |
-| **Wazuh Host Agent** | Apache web server scanning thresholds (Rule 100410, 100213), Auditd file creation watches (Rule 100214), reverse shell execution (Rule 100602 via `bashcmd` decoder), SUID `/etc/shadow` privilege escalation (Rule 100603), administrative SSH root logins and rapid exfiltration bursts (Rule 5715 elevated to Level 8). |
-| **Wazuh Windows Agent** | Pass-the-Hash NTLM Logon Type 3 detection (Rule 60122, 24+ events), rogue Domain Admin account creation (Rule 60108/60109, EID 4720/4728), Impacket `wmiexec` process fan-out correlation (Rule 100613). |
-| **Sysmon** | Process creation parent-child tracking (`wmiprvse.exe` -> `cmd.exe /Q /c`), registry modification auditing (`Wallpaper`, `WallpaperStyle`). |
+| **Suricata NIDS** | Inbound port scanning (SIDs 3400001/3400002), Hydra HTTP brute-force (SID 2000547), web shell id response (SID 2019284), reverse shell connection (SID 3400020), internal subnet sweep on `ens37` (14 alerts in raw CSV), NTLM Session Setup over SMB (SIDs 2067085–2067087), and Kerberos TGS-REQ wire frames (SID 2019922). |
+| **Wazuh Host Agent** | Apache web server scanning thresholds (Rule 100410, 100213, 31153 passwd watchlist), Auditd `web_process_creation` (execve monitoring), reverse shell spawn (Rule 100199), SUID privilege escalation (Rule 5402 PAM), Syscheck FIM authorized_keys (Rule 550), and administrative SSH root logins and rapid exfiltration bursts (Rule 5715 elevated to Level 8). |
+| **Wazuh Windows Agent** | Pass-the-Hash NTLM Logon Type 3 detection (EID 4624, 24 events in CSV: 15 on Win10User, 9 on DomainWin10), rogue Domain Admin account creation (Rule 60108/60109, EID 4720/4728), Impacket `wmiexec` process fan-out correlation (Rule 100613). |
+| **Sysmon** | Process creation parent-child tracking (`wmiprvse.exe` -> `cmd.exe /Q /c`), command-line argument auditing, registry modification auditing. |
 
 ---
 

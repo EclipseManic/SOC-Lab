@@ -10,9 +10,9 @@
 
 | Field | Value |
 |---|---|
-| **Alert ID** | `wzb-2c0ebdf596` |
-| **Rule ID** | `Wazuh 100603 (Level 8)` |
-| **Source** | Wazuh Linux Auditd on DVWA |
+| **Alert ID** | Logged in CSV (12x Rule `5402`) |
+| **Rule ID** | Wazuh `5402` (PAM - Successful sudo to ROOT) / Auditd `web_process_creation` |
+| **Source** | Linux Auth PAM / Auditd |
 | **Severity** | High |
 | **TLP / PAP** | `TLP:AMBER / PAP:AMBER` |
 
@@ -20,7 +20,7 @@
 
 ## What was detected
 
-Wazuh Rule 100603 triggered on SUID privilege escalation: www-data executed /usr/bin/find with -exec /bin/sh to obtain effective root privileges and read /etc/shadow.
+Adversary abused a misconfigured SUID `/usr/bin/find` binary and executed commands escalating to `root`. Linux Auditd recorded the command execution under uid 33, and Wazuh PAM authentication logs captured successful root elevation (Rule 5402, 12 instances).
 
 ---
 
@@ -46,9 +46,9 @@ Wazuh Rule 100603 triggered on SUID privilege escalation: www-data executed /usr
 
 ## Evidence
 
-- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/23.png`](../../02-Attack-Simulation/Attack-Screenshots/23.png)
+- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/17.png`](../../02-Attack-Simulation/Attack-Screenshots/17.png)
 - **Alert Evidence:** [`../../03-Detection-Engineering/TheHive_Alert-ScreenShot/6.png`](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/6.png)
-- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv) and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
+- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv), [`Wazuh-Raw-Alerts.csv`](../../06-Resources/Alerts/Wazuh-Raw-Alerts.csv), and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
 
 ---
 
@@ -64,7 +64,7 @@ Wazuh Rule 100603 triggered on SUID privilege escalation: www-data executed /usr
 
 ## Detection assessment
 
-- **Status:** Detected
+- **Status:** Detected (Host Alerted)
 - **Gap ID:** None
 - **Engineering Assessment:** Rule 100603 elevated to Level 8 ensured immediate transmission to TheHive 5 queue.
 

@@ -10,8 +10,8 @@
 
 | Field | Value |
 |---|---|
-| **Alert ID** | `wzb-e362e6ca6f` |
-| **Rule ID** | `Suricata SID 2013028 via Wazuh 86601 (Level 8)` |
+| **Alert ID** | `wzb-7a4a134d1b` |
+| **Rule ID** | Suricata SIDs `2067085`–`2067087` (`ET INFO NTLM Session Setup Request - Negotiate`) via Wazuh `86601` |
 | **Source** | Suricata Network IDS |
 | **Severity** | High |
 | **TLP / PAP** | `TLP:AMBER / PAP:AMBER` |
@@ -20,7 +20,7 @@
 
 ## What was detected
 
-Suricata alert SID 2013028 (ET INFO NTLM Session Setup Request - Negotiate) triggered when DomainWin10 (192.168.56.20) attempted SMB authentication against the Responder poisoner on DVWA (192.168.56.30).
+Adversary ran Responder on the DVWA pivot to intercept LLMNR/NBT-NS name resolution requests from `Win10User` (`192.168.56.20`), poisoning the request and capturing the NetNTLMv2 hash. Suricata flagged the inbound NTLM Session Setup over SMB (SIDs 2067085–2067087), escalating to TheHive.
 
 ---
 
@@ -36,7 +36,7 @@ Suricata alert SID 2013028 (ET INFO NTLM Session Setup Request - Negotiate) trig
 
 ## Investigation steps
 
-1. Verified Suricata fast.log for SID 2013028 on SMB traffic between 192.168.56.20 and 192.168.56.30.
+1. Verified Suricata fast.log for SIDs 2067085–2067087 on SMB traffic between 192.168.56.20 and 192.168.56.30.
 2. Confirmed NTLMSSP negotiation packet structure in network capture.
 3. Correlated with Responder logs on DVWA showing capture of win10 user NetNTLMv2 hash.
 4. Noted that Suricata alerted on the NTLM session setup request rather than raw LLMNR UDP.
@@ -46,9 +46,9 @@ Suricata alert SID 2013028 (ET INFO NTLM Session Setup Request - Negotiate) trig
 
 ## Evidence
 
-- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/33.png`](../../02-Attack-Simulation/Attack-Screenshots/33.png)
+- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/28.png`](../../02-Attack-Simulation/Attack-Screenshots/28.png)
 - **Alert Evidence:** [`../../03-Detection-Engineering/TheHive_Alert-ScreenShot/9.png`](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/9.png)
-- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv) and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
+- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv), [`Wazuh-Raw-Alerts.csv`](../../06-Resources/Alerts/Wazuh-Raw-Alerts.csv), and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
 
 ---
 
@@ -66,7 +66,7 @@ Suricata alert SID 2013028 (ET INFO NTLM Session Setup Request - Negotiate) trig
 
 - **Status:** Detected
 - **Gap ID:** None
-- **Engineering Assessment:** Suricata SID 2013028 reliably flags inbound NTLM authentication negotiations over SMB.
+- **Engineering Assessment:** Suricata SIDs 2067085–2067087 reliably flags inbound NTLM authentication negotiations over SMB.
 
 ---
 

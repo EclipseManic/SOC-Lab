@@ -10,9 +10,9 @@
 
 | Field | Value |
 |---|---|
-| **Alert ID** | `None (Offline Activity)` |
-| **Rule ID** | `N/A` |
-| **Source** | Offline computation on Kali Linux |
+| **Alert ID** | *None (Offline Activity)* |
+| **Rule ID** | *N/A (DG-11)* |
+| **Source** | Attacker GPU (Hashcat on Kali) |
 | **Severity** | Informational |
 | **TLP / PAP** | `TLP:WHITE` |
 
@@ -20,7 +20,7 @@
 
 ## What was detected
 
-Zero host or network alerts generated. Hashcat mode 5600 was executed offline on the attacker workstation against the captured NetNTLMv2 hash.
+Adversary cracked the captured `win10` NetNTLMv2 hash offline on Kali Linux using Hashcat. No target network traffic or host execution occurred.
 
 ---
 
@@ -46,9 +46,9 @@ Zero host or network alerts generated. Hashcat mode 5600 was executed offline on
 
 ## Evidence
 
-- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/36.png`](../../02-Attack-Simulation/Attack-Screenshots/36.png)
-- **Alert Evidence:** [`None (Inherent offline gap)`](None (Inherent offline gap))
-- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv) and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
+- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/31.png`](../../02-Attack-Simulation/Attack-Screenshots/31.png)
+- **Alert Evidence:** *None (Offline Activity)*
+- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv), [`Wazuh-Raw-Alerts.csv`](../../06-Resources/Alerts/Wazuh-Raw-Alerts.csv), and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
 
 ---
 
@@ -64,7 +64,7 @@ Zero host or network alerts generated. Hashcat mode 5600 was executed offline on
 
 ## Detection assessment
 
-- **Status:** Detection gap
+- **Status:** Detection Gap (Offline)
 - **Gap ID:** DG-11
 - **Engineering Assessment:** Inherent offline gap. Mitigation requires GPO enforcement to disable LLMNR and NBT-NS across all domain endpoints.
 

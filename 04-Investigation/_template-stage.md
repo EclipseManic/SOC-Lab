@@ -1,8 +1,8 @@
 # Investigation — Stage XX — Stage Name
 
 > **Status:** Draft
-> **Attack stage:** [Stage XX](../02-Attack-Simulation/Stages/stage-XX-name.md)
-> **TheHive case:** [Case XX](../Cases/case-XX-name.md)
+> **Attack stage:** `02-Attack-Simulation/Stages/stage-XX-name.md` (Template Placeholder)
+> **TheHive case:** `04-Investigation/Cases/case-XX-name.md` (Template Placeholder)
 
 ## Alert details
 
@@ -23,45 +23,44 @@ Summarize the alert exactly as it appeared, without adding conclusions yet.
 
 | Question | Answer |
 |---|---|
-| True positive, false positive, or benign? | TBD |
-| Confidence | TBD |
-| Why | TBD |
-| Scope | TBD |
+| Verdict | TP / FP / Suspicious |
+| Confidence | Low / Medium / High |
+| Rationale | One or two sentences |
 
 ## Investigation steps
 
-1. TBD — query, log source, or artifact
-2. TBD
-3. TBD
+1.
+2.
+3.
 
 ## Evidence
 
-- Attack evidence: `../02-Attack-Simulation/Attack-Screenshots/stage-XX/`
-- Alert evidence: `../02-Attack-Simulation/alert-screenshots/stage-XX/`
-- Queries and log excerpts: TBD
-- Velociraptor artifacts: TBD
+- **Attack Evidence:** `../../02-Attack-Simulation/Attack-Screenshots/XX.png` (Template Placeholder)
+- **Alert Evidence:** `../../03-Detection-Engineering/TheHive_Alert-ScreenShot/XX.png` (Template Placeholder)
+- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../06-Resources/Alerts/wazuh_alerts.csv) and [`thehive_alerts.json`](../06-Resources/Alerts/thehive_alerts.json)
 
-## IOCs
+## Indicators of Compromise (IOCs)
 
 | Type | Value | Context |
 |---|---|---|
-| TBD | TBD | TBD |
+| IP | | |
+| File | | |
+| User | | |
 
 ## Detection assessment
 
-| Field | Value |
-|---|---|
-| Status | Detected / Logging gap / Detection gap / Rule failure / Not tested |
-| Gap ID | DG-XX |
-| Recommended rule | TBD |
-| Retest date | TBD |
+- Status: Detected / Blind spot / Partial
+- Gap ID: DG-XX (if applicable)
+- Engineering Assessment: What needs fixing if this was a gap.
 
 ## Verdict
 
-What happened, how far the attacker got, and what evidence supports the conclusion.
+Summarize the investigation conclusions and root cause.
 
 ## MITRE ATT&CK
 
-| Tactic | Technique | ID |
-|---|---|---|
-| TBD | TBD | TBD |
+| Field | Value |
+|---|---|
+| Technique | |
+| Tactic | |
+| Sub-technique | |

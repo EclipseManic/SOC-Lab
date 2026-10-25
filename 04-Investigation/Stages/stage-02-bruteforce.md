@@ -10,8 +10,8 @@
 
 | Field | Value |
 |---|---|
-| **Alert ID** | `wzb-51c6a2fa5f` |
-| **Rule ID** | `Wazuh 100213 / Suricata SID 2000547` |
+| **Alert ID** | `wzb-81becfcc8d`, `wzb-6a22425401`, `wzb-8b2c36ea17` |
+| **Rule ID** | Wazuh `100213` (Level 10), Wazuh `31153` / Suricata SID `2000547` (via `86601`) |
 | **Source** | Wazuh (Apache) / Suricata (Network IDS) |
 | **Severity** | High |
 | **TLP / PAP** | `TLP:AMBER / PAP:AMBER` |
@@ -20,7 +20,7 @@
 
 ## What was detected
 
-Suricata detected a rapid burst of HTTP POST authentication attempts matching Hydra dictionary attack signatures (SID 2000547). Wazuh Rule 100213 triggered upon detecting 8 failed authentication attempts (HTTP 401 Unauthorized) within a 15-second window on /dvwa/login.php.
+Suricata and Wazuh flagged an aggressive HTTP POST credential brute-force attack against `/login.php` using Hydra from `192.168.232.135`. Wazuh Rule 100213 alerted on multiple 401 Unauthorized responses, while Suricata SID 2000547 detected python-requests user-agent patterns.
 
 ---
 
@@ -46,9 +46,9 @@ Suricata detected a rapid burst of HTTP POST authentication attempts matching Hy
 
 ## Evidence
 
-- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/05.png`](../../02-Attack-Simulation/Attack-Screenshots/05.png)
+- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/6.png`](../../02-Attack-Simulation/Attack-Screenshots/6.png)
 - **Alert Evidence:** [`../../03-Detection-Engineering/TheHive_Alert-ScreenShot/2.png`](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/2.png)
-- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv) and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
+- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv), [`Wazuh-Raw-Alerts.csv`](../../06-Resources/Alerts/Wazuh-Raw-Alerts.csv), and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
 
 ---
 

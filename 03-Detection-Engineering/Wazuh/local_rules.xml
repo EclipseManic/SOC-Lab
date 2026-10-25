@@ -357,14 +357,14 @@
   <rule id="100410" level="8" frequency="10" timeframe="15" ignore="15">
     <if_matched_sid>100400</if_matched_sid>
     <field name="src_ip">\.+</field>
-    <description>Suricata: High-volume HTTP 4xx burst from $(src_ip) - possible scan/enumeration (>100 in 60s)</description>
+    <description>Suricata: High-volume HTTP 4xx burst from $(src_ip) - possible scan/enumeration (10+ in 15s)</description>
   </rule>
 
-  <!-- THRESHOLD: >100 HTTP 5xx alerts in 60s from same source → Level 8 -->
+  <!-- THRESHOLD: >10 HTTP 5xx alerts in 15s from same source → Level 8 -->
   <rule id="100510" level="8" frequency="10" timeframe="15" ignore="15">
     <if_matched_sid>100500</if_matched_sid>
     <field name="src_ip">\.+</field>
-    <description>Suricata: High-volume HTTP 5xx burst from $(src_ip) - possible fault-injection/DoS attempt (>100 in 60s)</description>
+    <description>Suricata: High-volume HTTP 5xx burst from $(src_ip) - possible fault-injection/DoS attempt (10+ in 15s)</description>
   </rule>
 
 
@@ -1137,14 +1137,14 @@
   <rule id="100213" level="10" frequency="30" timeframe="15" ignore="15">
     <if_matched_sid>100211</if_matched_sid>
     <same_source_ip />
-    <description>DVWA: High rate of 4xx errors (30+ in 60s) - [$(id)] [$(srcip)] [$(url)]</description>
+    <description>DVWA: High rate of 4xx errors (30+ in 15s) - [$(id)] [$(srcip)] [$(url)]</description>
     <group>dvwa_4xx_threshold,attack,</group>
   </rule>
 
   <rule id="100214" level="12" frequency="15" timeframe="15" ignore="15">
     <if_matched_sid>100212</if_matched_sid>
     <same_source_ip />
-    <description>DVWA: High rate of 5xx errors (15+ in 60s) - [$(id)] [$(srcip)] [$(url)]</description>
+    <description>DVWA: High rate of 5xx errors (15+ in 15s) - [$(id)] [$(srcip)] [$(url)]</description>
     <group>dvwa_5xx_threshold,attack,</group>
   </rule>
 

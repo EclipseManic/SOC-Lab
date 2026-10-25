@@ -10,9 +10,9 @@
 
 | Field | Value |
 |---|---|
-| **Alert ID** | `wzb-846468a306` |
-| **Rule ID** | `Wazuh 5715 (Level 8) / Wazuh 100215` |
-| **Source** | Wazuh SSHD & Auditd on DVWA |
+| **Alert ID** | `wzb-1208f0ea54` |
+| **Rule ID** | Wazuh `5715` (Elevated Level 8) / Wazuh `550` (Syscheck FIM) |
+| **Source** | Linux SSHD / Wazuh Syscheck |
 | **Severity** | High |
 | **TLP / PAP** | `TLP:AMBER / PAP:AMBER` |
 
@@ -20,7 +20,7 @@
 
 ## What was detected
 
-Auditd file watch detected root authorized_keys modification in /root/.ssh/authorized_keys. Shortly after, Wazuh Rule 5715 triggered on inbound root SSH authentication from Kali (192.168.232.135).
+Adversary appended an SSH public key to `/root/.ssh/authorized_keys` and initiated direct root SSH logons from Kali (`192.168.232.135`). Wazuh Syscheck flagged the authorized_keys modification, and Wazuh Rule 5715 (elevated to Level 8) alerted on the interactive root SSH session.
 
 ---
 
@@ -46,9 +46,9 @@ Auditd file watch detected root authorized_keys modification in /root/.ssh/autho
 
 ## Evidence
 
-- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/26.png`](../../02-Attack-Simulation/Attack-Screenshots/26.png)
+- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/18.png`](../../02-Attack-Simulation/Attack-Screenshots/18.png)
 - **Alert Evidence:** [`../../03-Detection-Engineering/TheHive_Alert-ScreenShot/7.png`](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/7.png)
-- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv) and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
+- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv), [`Wazuh-Raw-Alerts.csv`](../../06-Resources/Alerts/Wazuh-Raw-Alerts.csv), and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
 
 ---
 

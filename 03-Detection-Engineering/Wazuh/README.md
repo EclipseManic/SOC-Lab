@@ -106,7 +106,7 @@ Detects lateral movement and privilege abuse involving domain machine accounts (
 <rule id="100410" level="8" frequency="10" timeframe="15" ignore="15">
   <if_matched_sid>100400</if_matched_sid>
   <field name="src_ip">\.+</field>
-  <description>Suricata: High-volume HTTP 4xx burst from $(src_ip) - possible scan/enumeration (>100 in 60s)</description>
+  <description>Suricata: High-volume HTTP 4xx burst from $(src_ip) - possible scan/enumeration (10+ in 15s)</description>
 </rule>
 ```
 
@@ -221,7 +221,25 @@ Wazuh's integration daemon evaluates `<level>8</level>` in `ossec.conf` before p
 
 ---
 
-## 6. Verification Commands
+---
+
+## 6. Alert Exports & Telemetry Datasets
+
+The repository provides two empirical alert export datasets in [`06-Resources/Alerts/`](../../06-Resources/Alerts/):
+
+| Dataset File | Records | Scope & Content |
+|---|---|---|
+| [`Wazuh-Raw-Alerts.csv`](../../06-Resources/Alerts/Wazuh-Raw-Alerts.csv) | **9,567 rows** | Complete raw alert export across all agents (`DVWA`: 8,114, `Suricata`: 1,168, `DomainWin10`: 168, `Win10User`: 117). Contains raw rule descriptions, agent names, and JSON-encoded event objects in `full_log`. |
+| [`wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv) | **808 rows** | Filtered incident dataset capturing elevated alerts and triage events. |
+| [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json) | **46 alerts** | Actionable incident alerts created in TheHive 5 after correlation and aggregation by `thecustomhive`. |
+
+### CSV Structure
+Both CSV exports contain three core columns:
+- `rule.description`: The Wazuh rule description string.
+- `agent.name`: The reporting agent (`DVWA`, `Suricata`, `DomainWin10` for DC, `Win10User` for Windows 10 workstation).
+- `full_log`: The raw underlying event payload, including Suricata EVE-JSON (with `signature_id`, flow IPs/ports), Windows EventChannel XML/JSON (with `eventID`, `targetUserName`, `logonType`), and Linux Auditd messages (with syscall, binary path, and `key`).
+
+## 7. Verification Commands
 
 ```bash
 # Verify rule and decoder syntax on Wazuh Manager

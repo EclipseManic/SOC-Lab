@@ -10,9 +10,9 @@
 
 | Field | Value |
 |---|---|
-| **Alert ID** | `wzb-26b4d06a63 / wzb-299a007168` |
-| **Rule ID** | `Wazuh 100613 / Wazuh 60108, 60109` |
-| **Source** | Wazuh Windows Agent on PC-DC |
+| **Alert ID** | `wzb-26b4d06a63`, `wzb-299a007168`, `wzb-1834f3248e` |
+| **Rule ID** | Wazuh `100613` (Fan-out) / Wazuh `60109` (EID 4728), `60108` (EID 4720) |
+| **Source** | Windows Security / Wazuh Process Correlation |
 | **Severity** | High |
 | **TLP / PAP** | `TLP:AMBER / PAP:AMBER` |
 
@@ -20,7 +20,7 @@
 
 ## What was detected
 
-Wazuh detected process fan-out from Impacket wmiexec on PC-DC creating a rogue local/domain user account (Event ID 4720: backdoor_admin) and adding it to Domain Admins (Event ID 4728).
+Adversary created a rogue local domain user `backdoor_admin` and added it to Domain Admins via Impacket `wmiexec`. Wazuh Rule 100613 alerted on the WMI process fan-out, Rule 60108 captured account creation (EID 4720), and Rule 60109 captured addition to Domain Admins (EID 4728).
 
 ---
 
@@ -46,9 +46,9 @@ Wazuh detected process fan-out from Impacket wmiexec on PC-DC creating a rogue l
 
 ## Evidence
 
-- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/58.png`](../../02-Attack-Simulation/Attack-Screenshots/58.png)
+- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/52.png`](../../02-Attack-Simulation/Attack-Screenshots/52.png)
 - **Alert Evidence:** [`../../03-Detection-Engineering/TheHive_Alert-ScreenShot/15.png`](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/15.png)
-- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv) and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
+- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv), [`Wazuh-Raw-Alerts.csv`](../../06-Resources/Alerts/Wazuh-Raw-Alerts.csv), and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
 
 ---
 

@@ -10,8 +10,8 @@
 
 | Field | Value |
 |---|---|
-| **Alert ID** | `wzb-96c21e0640` |
-| **Rule ID** | `Wazuh 100410 / Suricata SID 2000545` |
+| **Alert ID** | `wzb-3a8045a03c`, `wzb-6a39ab2a3d`, `wzb-4de933ca95` |
+| **Rule ID** | Wazuh `100410` (Level 10) / Suricata SID `3400001`, `3400002` (via `86601`) |
 | **Source** | Wazuh (Apache) / Suricata (Network IDS) |
 | **Severity** | High |
 | **TLP / PAP** | `TLP:AMBER / PAP:AMBER` |
@@ -20,7 +20,7 @@
 
 ## What was detected
 
-Suricata network IDS flagged an inbound port scan and Nmap Scripting Engine user-agent burst from Kali Linux (192.168.232.135). Simultaneously, Wazuh Rule 100410 triggered on DVWA after exceeding the threshold of 10 HTTP 4xx error responses within a 15-second window during automated web directory fuzzing.
+Suricata network IDS flagged inbound port scans and Nmap probes from Kali Linux (`192.168.232.135`). Simultaneously, Wazuh Rule 100410 triggered on DVWA after exceeding the threshold of 10 HTTP 4xx error responses within a 15-second window during automated web directory fuzzing.
 
 ---
 
@@ -46,9 +46,9 @@ Suricata network IDS flagged an inbound port scan and Nmap Scripting Engine user
 
 ## Evidence
 
-- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/01.png`](../../02-Attack-Simulation/Attack-Screenshots/01.png)
+- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/1.png`](../../02-Attack-Simulation/Attack-Screenshots/1.png)
 - **Alert Evidence:** [`../../03-Detection-Engineering/TheHive_Alert-ScreenShot/1.png`](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/1.png)
-- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv) and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
+- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv), [`Wazuh-Raw-Alerts.csv`](../../06-Resources/Alerts/Wazuh-Raw-Alerts.csv), and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
 
 ---
 

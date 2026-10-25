@@ -49,9 +49,9 @@ What Suricata **can** and **cannot** inspect:
 
 | Traffic | Visible to Suricata | Why |
 |---------|---------------------|-----|
-| Kali → Victim | ✅ Yes | Routed through eth0 → eth1 |
-| Victim → Cloud | ✅ Yes | Exits via eth1 → wg0 |
-| Victim ↔ Victim | ❌ No | Same L2 segment — no routing |
+| Kali → Victim | ✅ Yes | Routed through ens33 → ens37 (gateway forward) |
+| Victim → Cloud | ✅ Yes | Exits via ens37 → wg0 (WireGuard tunnel; no MASQUERADE preserves source IPs) |
+| Victim ↔ Victim | ⚠️ Partial (Layer 2 Promiscuous) | Captured by Suricata AF-PACKET promiscuous sniffing on ens37 (14 alerts captured in raw data); unicast L2 traffic not hitting promiscuous mirror is monitored via Wazuh/Sysmon endpoint telemetry |
 | Cloud ↔ Cloud | ❌ No | VNet peering, never reaches local gateway |
 | Loopback | ❌ No | Never leaves the host |
 

@@ -1,6 +1,7 @@
 <!--
-  sysmonconfig.xml — Olaf Hartong sysmon-modular baseline adapted for SOC Lab
-  Deployed on: Windows Server 2022 DC (PC-DC) & Windows 10 Pro N (DomainWin10)
+  sysmonconfig.xml — Sysmon Telemetry Baseline for SOC Lab
+  Deployed on: Windows Server 2022 DC (PC-DC.ad.lab / Wazuh Agent: DomainWin10)
+               Windows 10 Enterprise (Win10.ad.lab / Wazuh Agent: Win10User)
   Version: Sysmon v15.20 (64-bit service Sysmon64)
 -->
 <Sysmon schemaversion="4.90">

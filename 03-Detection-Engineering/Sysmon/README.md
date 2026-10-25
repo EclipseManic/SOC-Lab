@@ -2,7 +2,7 @@
 
 > **Production Configuration & Artifacts:**
 > - Modular Configuration: [`sysmonconfig.xml`](sysmonconfig.xml)
-> - Target Deployment: Domain Controller (`192.168.56.10`, Server 2022) & Windows 10 Workstation (`192.168.56.20`, Win10 Pro N)
+> - Target Deployment: Domain Controller (`192.168.56.10`, Server 2022 / Agent: `DomainWin10`) & Windows 10 Workstation (`192.168.56.20`, Win10 Pro N / Agent: `Win10User`)
 > - Version: Microsoft Sysmon v15.20 (64-bit service `Sysmon64`)
 > - Wazuh Ingestion: `Microsoft-Windows-Sysmon/Operational` eventchannel
 
@@ -88,8 +88,10 @@ Wazuh agents on `DomainWin10` and `Win10User` collect Sysmon operational events 
 
 Wazuh correlates Sysmon events with custom rules in [`03-Detection-Engineering/Wazuh/local_rules.xml`](../Wazuh/local_rules.xml):
 - **Rule 100613 (Level 10):** Flags Impacket `wmiexec` commands spawning `cmd.exe /Q /c` with `ADMIN$\__<id>` redirection.
-- **Rule 100100–100104 (Level 12):** Flags Registry `Run`/`RunOnce`, IFEO, and service hijacking attempts.
-- **Rule 61603 (Level 3):** Standard Sysmon Process Creation baseline rule, correlated into `process_fanout` groups by [`custom-thehive.py`](../../06-Resources/Scripts/custom-thehive.py).
+- **Rule 100613 (Level 10):** Flags Impacket `wmiexec` commands spawning `cmd.exe /Q /c` with `ADMIN$\__<id>` output redirection (fired on both `DomainWin10` and `Win10User`).
+- **Rule 92041 (Level 5 / Sysmon Registry):** Caught `reg.exe` modifying `Wallpaper` and `WallpaperStyle` registry values during Stage 20 impact.
+- **Rules 100100–100104 (Level 12):** Engineered rules in `local_rules.xml` covering `Run`/`RunOnce`, IFEO, and autostart persistence.
+- **Rule 61603 (Level 3):** Standard Sysmon Process Creation baseline rule, correlated into `process_fanout` incident groups by [`custom-thehive.py`](../../06-Resources/Scripts/custom-thehive.py).
 
 ---
 
