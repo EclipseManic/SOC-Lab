@@ -23,6 +23,11 @@ Suricata is deployed in **passive IDS mode** via AF-PACKET capture on the gatewa
 
 ## Network Diagram
 
+[![SOC Network Architecture Diagram](../06-Resources/Diagrams/Neon%20SOC%20Network%20Architecture%20Diagram.png)](../06-Resources/Diagrams/Neon%20SOC%20Network%20Architecture%20Diagram.png)
+
+<details>
+<summary>Click to view Mermaid text specification</summary>
+
 ```mermaid
 flowchart LR
     subgraph LOCAL["LOCAL — VMware Workstation Pro"]
@@ -51,7 +56,9 @@ flowchart LR
     SG <-->|"WireGuard Tunnel\n10.8.0.0/24 (51820/UDP)"| HUB
 ```
 
-> Latest exported diagram: [06-Resources/Diagrams/SOC_Lab_Architecture.png](../06-Resources/Diagrams/SOC_Lab_Architecture.png)
+</details>
+
+> Full-resolution 4K Blueprint: [06-Resources/Diagrams/SOC_Lab_Architecture.png](../06-Resources/Diagrams/SOC_Lab_Architecture.png)
 
 ---
 

@@ -8,6 +8,15 @@ Supporting reference material, core automation scripts, server configurations, a
 |---|---|---|
 | [attack-chain-full.pdf](attack-chain-full.pdf) | Master Blueprint | Definitive 20-stage attack simulation and campaign reference document |
 | [Diagrams/SOC_Lab_Architecture.png](Diagrams/SOC_Lab_Architecture.png) | Architecture Diagram | High-resolution master architecture diagram covering local zones, WireGuard tunnel, and split-cloud SOC VMs |
+| [Diagrams/Neon%20Cybersecurity%20Network%20Architecture%20Diagram.png](Diagrams/Neon%20Cybersecurity%20Network%20Architecture%20Diagram.png) | Architecture Diagram | High-level 3-tier lab topology conceptual overview |
+| [Diagrams/Neon%20Cybersecurity%20Lab%20Network%20Diagram.png](Diagrams/Neon%20Cybersecurity%20Lab%20Network%20Diagram.png) | Architecture Diagram | Detailed 4-zone network segmentation & WireGuard tunnel addressing |
+| [Diagrams/Neon%20SOC%20Network%20Architecture%20Diagram.png](Diagrams/Neon%20SOC%20Network%20Architecture%20Diagram.png) | Architecture Diagram | Complete interface routing, VNet peering, and IP configuration flow |
+| [Diagrams/Neon%20Cybersecurity%20Incident%20Response%20Pipeline.png](Diagrams/Neon%20Cybersecurity%20Incident%20Response%20Pipeline.png) | Detection Pipeline | 7-step automated detection, triage, and live response lifecycle |
+| [Diagrams/Cybersecurity%20Lab-to-Detection%20Mapping.png](Diagrams/Cybersecurity%20Lab-to-Detection%20Mapping.png) | Detection Engineering | Physical and virtual host infrastructure mapped to detection rulesets |
+| [Diagrams/Neon%20Suricata%20Network%20Defense%20Diagram.png](Diagrams/Neon%20Suricata%20Network%20Defense%20Diagram.png) | Detection Engineering | Dual-NIC router, AF-PACKET promiscuous sniffing, and threshold filtering |
+| [Diagrams/Wazuh%20Log%20Ingestion%20to%20TheHive%20Flow.png](Diagrams/Wazuh%20Log%20Ingestion%20to%20TheHive%20Flow.png) | Detection Engineering | Wazuh multi-source ingestion, decoders, and Level 8 threshold fork |
+| [Diagrams/Wazuh%20to%20TheHive%20Security%20Pipeline.png](Diagrams/Wazuh%20to%20TheHive%20Security%20Pipeline.png) | Detection Engineering | 2-tier SQLite WAL queue and asynchronous correlation flush daemon |
+| [Diagrams/SOC%20Analyst%20Investigation%20Lifecycle.png](Diagrams/SOC%20Analyst%20Investigation%20Lifecycle.png) | Investigation Lifecycle | 10-step analyst playbook from alert intake through case archiving |
 | [Scripts/custom-thehive](Scripts/custom-thehive) | Automation Script | POSIX wrapper invoked by Wazuh per alert on `/var/ossec/integrations/` |
 | [Scripts/custom-thehive.py](Scripts/custom-thehive.py) | Automation Engine | Production 2-tier correlation & batched flush daemon (zero-HTTP ingest, recon tool fingerprinting, TheHive 5 sync) |
 | [Scripts/thehive-flush.service](Scripts/thehive-flush.service) | Systemd Unit | Background service unit running `custom-thehive.py --flush-daemon` |

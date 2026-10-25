@@ -60,37 +60,7 @@ When packets travel across routers and VPN tunnels, routers typically apply NAT 
 
 The environment is cleanly divided into four zones:
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                   LOCAL LAB (ON HOST LAPTOP)                │
-│                                                             │
-│  [Zone 1: Attacker]         [Zone 2: Security Gateway]      │
-│  Kali Linux                 Ubuntu Server (Dual-NIC)        │
-│  192.168.232.135/24 ──────▶ ens33: 192.168.232.162/24       │
-│  (VMnet8 NAT)               ens37: 192.168.56.150/24        │
-│                                    │                        │
-│                                    ▼                        │
-│                             [Zone 3: Victim Network]        │
-│                             192.168.56.0/24 (VMnet2)        │
-│                             ├─ DC: 192.168.56.10            │
-│                             ├─ Win10: 192.168.56.20         │
-│                             └─ DVWA: 192.168.56.30          │
-└────────────────────────────────────┬────────────────────────┘
-                                     │ WireGuard Tunnel (UDP 51820)
-                                     │ 10.8.0.0/24
-                                     ▼
-┌─────────────────────────────────────────────────────────────┐
-│              CLOUD SOC INFRASTRUCTURE (2 × VMs)             │
-│              Shared Private Subnet: 10.122.0.0/16           │
-│                                                             │
-│  [VM1 — TheHive & Ingress]    [VM2 — Wazuh SIEM]            │
-│  Private: 10.122.0.4          Private: 10.122.1.4           │
-│  • WireGuard Server (10.8.0.1) • Wazuh Manager & Indexer    │
-│  • TheHive 5 Case Management   • Wazuh Dashboard (5601)     │
-│  • NPM Admin (10.122.0.4:81)   • thecustomhive SOAR Daemon  │
-│  • Velociraptor Server         • SQLite WAL Event Queue     │
-└─────────────────────────────────────────────────────────────┘
-```
+[![Lab Segmentation & Network Zones](../06-Resources/Diagrams/Neon%20Cybersecurity%20Lab%20Network%20Diagram.png)](../06-Resources/Diagrams/Neon%20Cybersecurity%20Lab%20Network%20Diagram.png)
 
 ### Zone 1: Attacker Zone (Kali Linux)
 - **Subnet:** `192.168.232.0/24` (VMware VMnet8 NAT)
@@ -132,30 +102,7 @@ The environment is cleanly divided into four zones:
 
 The entire detection pipeline operates in 7 clean steps:
 
-```
-[Adversary Execution]
-       │ (1) Kali attacks victim subnet (192.168.56.0/24)
-       ▼
-[Security Gateway (Suricata)]
-       │ (2) Wire inspection on ens37 -> eve-alert.json
-       ▼
-[WireGuard VPN Tunnel]
-       │ (3) Suricata & host agent events streamed via UDP 51820 to 10.122.1.4:1514
-       ▼
-[Wazuh Manager (VM2)]
-       │ (4) Rule engine evaluates logs; Level >= 8 alerts queued into SQLite WAL
-       │     thecustomhive correlation daemon groups bursts by tool & host
-       ▼
-[TheHive 5 REST API (VM1)]
-       │ (5) High-confidence alerts created automatically over private peering
-       ▼
-[SOC Analyst Triage]
-       │ (6) Analyst investigates alert observables, timeline, and false-positive context
-       │     Promotes true positives to formal multi-stage Incident Cases
-       ▼
-[Velociraptor DFIR (VM1)]
-       │ (7) On-demand live endpoint artifact collection, memory dumps, and process inspection
-```
+[![7-Step Automated Incident Response Pipeline](../06-Resources/Diagrams/Neon%20Cybersecurity%20Incident%20Response%20Pipeline.png)](../06-Resources/Diagrams/Neon%20Cybersecurity%20Incident%20Response%20Pipeline.png)
 
 ---
 
