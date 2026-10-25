@@ -10,9 +10,9 @@
 
 | Field | Value |
 |---|---|
-| **Alert ID** | `wzb-10160d36c2` |
-| **Rule ID** | Wazuh `31153` (Level 10 - Sensitive file /etc/passwd in URL parameter) |
-| **Source** | Wazuh (Apache Access Logs) |
+| **Alert ID** | Suricata Wire Alert (Row 9108) & Wazuh Rule 31106 |
+| **Rule ID** | Suricata SID `2010963` (`ET WEB_SERVER SELECT USER`) / Wazuh `31106` |
+| **Source** | Suricata Network IDS (`ens33`) / Wazuh (Apache Access Logs) |
 | **Severity** | High |
 | **TLP / PAP** | `TLP:AMBER / PAP:AMBER` |
 
@@ -20,7 +20,9 @@
 
 ## What was detected
 
-Wazuh flagged an SQL injection and path traversal parameter pattern in Apache access logs attempting to access `/etc/passwd` via URL injection, triggering watchlist Rule 31153 and escalating to TheHive.
+The adversary submitted an SQL injection payload targeting `/vulnerabilities/sqli/`:
+`GET /vulnerabilities/sqli/?id=1%27+UNION+SELECT+user%2C+password+FROM+users--+-&Submit=Submit HTTP/1.1`
+Suricata on `ens33` flagged the request under signature SID `2010963` (`ET WEB_SERVER SELECT USER SQL Injection Attempt in URI`, Row 9108 in raw CSV). Concurrently, Wazuh on DVWA logged Rule `31106` (*A web attack returned code 200 (success)*, Row 9109) and 5 occurrences of Rule `31103` (*SQL injection attempt*). Because these alerts operated at Level 6 (below the $\ge 8$ SOAR escalation threshold), they were preserved in raw telemetry rather than creating a separate incident in TheHive. (The separate TheHive alert `wzb-10160d36c2` corresponds to the Stage 01/02 automated Nikto fuzzing scan matching the `/etc/passwd` watchlist).
 
 ---
 

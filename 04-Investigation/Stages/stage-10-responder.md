@@ -10,8 +10,8 @@
 
 | Field | Value |
 |---|---|
-| **Alert ID** | `wzb-7a4a134d1b` |
-| **Rule ID** | Suricata SIDs `2067085`–`2067087` (`ET INFO NTLM Session Setup Request - Negotiate`) via Wazuh `86601` |
+| **Alert ID** | Pivot Command Log (Row 9231) & `wzb-7a4a134d1b` |
+| **Rule ID** | Wazuh `bashcmd` (uid:0 Responder.py) / Suricata SIDs `2067085`–`2067087` |
 | **Source** | Suricata Network IDS |
 | **Severity** | High |
 | **TLP / PAP** | `TLP:AMBER / PAP:AMBER` |
@@ -20,7 +20,7 @@
 
 ## What was detected
 
-Adversary ran Responder on the DVWA pivot to intercept LLMNR/NBT-NS name resolution requests from `Win10User` (`192.168.56.20`), poisoning the request and capturing the NetNTLMv2 hash. Suricata flagged the inbound NTLM Session Setup over SMB (SIDs 2067085–2067087), escalating to TheHive.
+The adversary launched Responder on the DVWA pivot at $T_0 + 26m$ (`17:36:26+05:30`), captured via Wazuh bashcmd logging (`python3 /opt/Responder/Responder.py -I ens33 -wd`, Row 9231 in raw CSV). At $T_0 + 28m$ (`17:38:29`), the captured NetNTLMv2 hash was copied to `/tmp/win10.hash` (Row 9242). In TheHive, alert `wzb-7a4a134d1b` (Suricata SIDs 2067085–2067087, *ET INFO NTLM Session Setup Request - Negotiate*) represents remote SMB authentication captured on `ens37`.
 
 ---
 

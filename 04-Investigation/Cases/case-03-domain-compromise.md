@@ -17,9 +17,9 @@ Armed with the dumped domain NTLM hashes from DCSync, the adversary executed Pas
 
 | Stage | Attack | Investigation | Detection Status |
 |---|---|---|---|
-| 15 | [Pass-the-Hash](../../02-Attack-Simulation/Stages/stage-15-pass-the-hash.md) | [stage-15](../Stages/stage-15-pass-the-hash.md) | **Detected** (Windows EID 4624 (24x in CSV) / Wazuh Rule 100613) |
+| 15 | [Pass-the-Hash](../../02-Attack-Simulation/Stages/stage-15-pass-the-hash.md) | [stage-15](../Stages/stage-15-pass-the-hash.md) | **Detected** (Windows EID 4624 Logon Type 3 NTLM (24x in CSV) / Wazuh Rule 100613) |
 | 16 | [Golden Ticket](../../02-Attack-Simulation/Stages/stage-16-golden-ticket.md) | [stage-16](../Stages/stage-16-golden-ticket.md) | **Detected** (Wazuh Rule 5715 pivot logon alerted in TheHive) |
-| 17 | [DC persistence](../../02-Attack-Simulation/Stages/stage-17-dc-persistence.md) | [stage-17](../Stages/stage-17-dc-persistence.md) | **Detected** (Wazuh Rule 100613 fan-out, EID 4720/4728) |
+| 17 | [DC persistence](../../02-Attack-Simulation/Stages/stage-17-dc-persistence.md) | [stage-17](../Stages/stage-17-dc-persistence.md) | **Detected** (Wazuh Rule 100613 fan-out (net user /add, net localgroup)) |
 | 18 | [Collection](../../02-Attack-Simulation/Stages/stage-18-collection.md) | [stage-18](../Stages/stage-18-collection.md) | **Detected** (Wazuh Rule 100613 fan-out & Auditd archive staging) |
 | 19 | [Exfiltration](../../02-Attack-Simulation/Stages/stage-19-exfiltration.md) | [stage-19](../Stages/stage-19-exfiltration.md) | **Detected** (Wazuh Rule 5715 rapid SSH burst: 6 sessions/1s; DG-19) |
 | 20 | [Impact](../../02-Attack-Simulation/Stages/stage-20-impact.md) | [stage-20](../Stages/stage-20-impact.md) | **Detected** (Wazuh Rule 100613 process fan-out & Sysmon EID 1/13) |
@@ -30,7 +30,7 @@ Armed with the dumped domain NTLM hashes from DCSync, the adversary executed Pas
 
 | Source | What it contributed |
 |---|---|
-| **Wazuh** | Windows Agent on DomainWin10 alerted on Pass-the-Hash NTLM Type 3 logons (Rule 60122, 24+ events). Windows Agent on PC-DC alerted on rogue user creation (Rule 60108, EID 4720) and Domain Admins membership addition (Rule 60109, EID 4728). Process fan-out correlation (Rule 100613) grouped Impacket wmiexec commands. Linux SSH logon rate correlation (Rule 5715) detected rapid exfiltration burst (6 sessions in 1s). |
+| **Wazuh** | Windows Agent on DomainWin10 alerted on Pass-the-Hash NTLM Type 3 logons (Event ID 4624, 24+ events). Windows Agent on PC-DC alerted on rogue user creation (Rule 60108, EID 4720) and Domain Admins membership addition (Rule 60109, EID 4728). Process fan-out correlation (Rule 100613) grouped Impacket wmiexec commands. Linux SSH logon rate correlation (Rule 5715) detected rapid exfiltration burst (6 sessions in 1s). |
 | **Sysmon** | Process creation monitoring (EID 1) traced `wmiprvse.exe` -> `cmd.exe /Q /c` fan-outs. Registry modification monitoring (EID 13) recorded desktop wallpaper tampering. |
 | **Suricata** | Monitored perimeter network sessions and inter-subnet SMB/RPC traffic. |
 | **TheHive** | Aggregated correlated security events into actionable incident tasks and timeline observables. |

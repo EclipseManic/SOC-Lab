@@ -11,7 +11,7 @@
 | Field | Value |
 |---|---|
 | **Alert ID** | `wzb-b7f91cd3ab`–`ccff195e0c` & 24x CSV |
-| **Rule ID** | Windows EID `4624` (24x in CSV: 15 on Win10User, 9 on DomainWin10) / Wazuh `100613` (WMI Fan-out) |
+| **Rule ID** | Windows EID `4624` (Logon Type 3 NTLM: 15 Win10, 9 DC) / Wazuh `100613` (WMI Fan-out) |
 | **Source** | Windows Security Log / Wazuh Process Correlation |
 | **Severity** | High |
 | **TLP / PAP** | `TLP:AMBER / PAP:AMBER` |
@@ -36,7 +36,7 @@ Adversary executed Pass-the-Hash remote logons over SMB using NTLM authenticatio
 
 ## Investigation steps
 
-1. Inspected Wazuh alerts CSV confirming 24 occurrences of Rule 60122 on DomainWin10.
+1. Inspected Wazuh alerts CSV confirming 24 occurrences of Windows Event ID 4624 on DomainWin10.
 2. Verified Windows Security Event ID 4624: LogonType=3, AuthenticationPackage=NTLM, LogonProcessName=NtLmSsp.
 3. Identified source IP as DVWA pivot (192.168.56.30) connecting to target 192.168.56.20.
 4. Confirmed administrative session established without Kerberos pre-authentication.
@@ -67,7 +67,7 @@ Adversary executed Pass-the-Hash remote logons over SMB using NTLM authenticatio
 
 - **Status:** Detected (Host & Pivot Alerted)
 - **Gap ID:** None
-- **Engineering Assessment:** Wazuh Rule 60122 specifically detects NTLM network logons for administrative accounts, generating strong empirical evidence in alerts CSV.
+- **Engineering Assessment:** Wazuh Windows Event ID 4624 specifically detects NTLM network logons for administrative accounts, generating strong empirical evidence in alerts CSV.
 
 ---
 

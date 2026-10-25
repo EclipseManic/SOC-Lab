@@ -18,13 +18,13 @@ In this lab, Sysmon is deployed using an adapted, high-signal **`sysmon-modular`
 
 ## 2. Active Event Types & Campaign Coverage
 
-| Event ID | Sysmon Event Name | Active Filters & Monitored Objects | Validated Campaign Stages |
+| Event ID | Sysmon Event Name | Active Filters & Monitored Objects | Telemetry Status in Campaign Dataset |
 |---|---|---|---|
-| **EID 1** | Process Creation | Command-line logging, ParentImage `WmiPrvSE.exe`, `ADMIN$\__`, LOLBins (`whoami`, `net`, `dsquery`, `schtasks`, `rundll32`) | **15, 17, 18, 20** (Impacket `wmiexec`, `net user /add`, data staging) |
-| **EID 3** | Network Connection | Ports 445 (SMB), 135 (RPC), 389/636 (LDAP), 5985/5986 (WinRM), 88 (Kerberos) | **13, 15** (Kerberos requests and SMB lateral movement) |
-| **EID 11** | File Creation | Executables, scripts, and images written to `C:\Users\Public\` and `\Temp\` (`.bmp`, `.exe`, `.ps1`, `.vbs`) | **18, 20** (Staging collection archives, wallpaper drop) |
-| **EID 12/13** | Registry Modification | Autostarts (`Run`, `RunOnce`), `Winlogon`, `Services`, `IFEO`, `Shell Folders`, Desktop `Wallpaper` | **17, 20** (Registry autostart persistence, desktop defacement) |
-| **EID 17/18** | Named Pipe Events | Pipes `spoolss`, `atsvc`, `svcctl`, `wmiexec` | **15, 17** (Remote RPC and Impacket named pipe creation) |
+| **EID 1** | Process Creation | Command-line logging, ParentImage `WmiPrvSE.exe`, `ADMIN$\__`, LOLBins (`whoami`, `net`, `dsquery`, `schtasks`, `rundll32`) | **Active Alerting (73 rows in raw export)** — Traced Impacket `wmiexec` child processes in Stages 15, 17, 18, 20 |
+| **EID 3** | Network Connection | Ports 445 (SMB), 135 (RPC), 389/636 (LDAP), 5985/5986 (WinRM), 88 (Kerberos) | **Telemetry Baseline Collected** — Ingested by agent; no independent alert rows generated |
+| **EID 11** | File Creation | Executables, scripts, and images written to `C:\Users\Public\` and `\Temp\` (`.bmp`, `.exe`, `.ps1`, `.vbs`) | **Telemetry Baseline Collected** — Monitored on disk; no independent alert rows generated |
+| **EID 12/13** | Registry Modification | Autostarts (`Run`, `RunOnce`), `Winlogon`, `Services`, `IFEO`, `Shell Folders`, Desktop `Wallpaper` | **Telemetry Baseline Collected** — Registry audited; custom rules 100100–104 did not fire |
+| **EID 17/18** | Named Pipe Events | Pipes `spoolss`, `atsvc`, `svcctl`, `wmiexec` | **Telemetry Baseline Collected** — Monitored on endpoint; no independent alert rows generated |
 
 > [!NOTE]
 > **Tuning Decision on EID 7, 8, and 22:** High-volume event categories like Image Loaded (EID 7), CreateRemoteThread (EID 8), and DNS Query (EID 22) were intentionally omitted from `sysmonconfig.xml` to prevent log saturation on 4 GB RAM VMs while focusing detection capacity on execution, network connections, file staging, and registry persistence.

@@ -42,7 +42,7 @@ The VPN policy allows `10.8.0.0/24` to both `192.168.232.0/24` and `192.168.56.0
 
 | Layer | Component | Where | Role |
 |---|---|---|---|
-| Attack | Kali Linux | Local, `192.168.232.0/24` | Adversary workstation and tooling |
+| Attack | Kali Linux | Local, `192.168.232.135` | Adversary workstation and tooling |
 | Network detection | Suricata gateway | Local, `192.168.56.150` / `192.168.232.162` | Router between attack and victim segments; `eve-alert.json` to Wazuh |
 | Web target | DVWA on Ubuntu | Local, `192.168.56.30` | Initial access and web attack surface |
 | Workstation | Windows 10 | Local, `192.168.56.20` | Credential access and lateral movement target |
@@ -88,7 +88,7 @@ The VPN policy allows `10.8.0.0/24` to both `192.168.232.0/24` and `192.168.56.0
 | 06 | Reverse shell | Execution | T1059.004 Unix Shell | **Detected** |
 | 07 | Privilege escalation | Privilege Escalation | T1548.003 Sudo and Sudo Caching | **Detected (Host Alerted)** |
 | 08 | SSH persistence | Persistence | T1098.004 SSH Authorized Keys | **Detected** |
-| 09 | Internal discovery | Discovery | T1018 Remote System Discovery | **Detected (Network Alerted; DG-09)** |
+| 09 | Internal discovery | Discovery | T1018 Remote System Discovery | **Logging Gap (Network Alerted; DG-09)** |
 | 10 | Responder poisoning | Credential Access | T1557.001 LLMNR/NBT-NS Poisoning and Relay | **Detected** |
 | 11 | NTLMv2 cracking | Credential Access | T1110.002 Password Cracking | **Detection Gap** (Offline; DG-11) |
 | 12 | BloodHound enumeration | Discovery | T1087.002 Domain Account | **Logging Gap (Pivot Alerted; DG-12)** |
@@ -120,6 +120,11 @@ Full detail: [02-Attack-Simulation/README.md](02-Attack-Simulation/README.md).
 | TheHive case summaries | **Complete** — all 3 multi-stage cases fully reconciled |
 | Incident report | **Complete** — executive summary, timeline, observables, and remediation |
 
+
+## Dataset Redaction & Sanitization Policy
+
+In accordance with [SECURITY.md](SECURITY.md), all real public IP addresses, cloud provider identifiers, VPN cryptographic keys, and credential hashes have been scrubbed. Pre-simulation test execution paths in raw CSV records (such as legacy test execution harnesses like `sandcat.exe`) have been sanitized to `<REDACTED>` and generic labels (`Runnerunner.exe`).
+
 ## Evidence convention
 
 All attack and alert evidence screenshots live in dedicated evidence folders:
@@ -143,7 +148,7 @@ Empirical results across the 20-stage attack simulation:
 | Encrypted exfiltration gap | 1 (DG-19: Documented / Pivot Alerted) |
 | Rule failures | 0 |
 | Raw telemetry records | 9,567 rows ([`Wazuh-Raw-Alerts.csv`](06-Resources/Alerts/Wazuh-Raw-Alerts.csv)) |
-| Escalated alerts ($\ge 8$) | 808 rows ([`wazuh_alerts.csv`](06-Resources/Alerts/wazuh_alerts.csv)) |
+| Filtered analysis set | 808 rows ([`wazuh_alerts.csv`](06-Resources/Alerts/wazuh_alerts.csv)) |
 | Correlated TheHive alerts | 46 incidents ([`thehive_alerts.json`](06-Resources/Alerts/thehive_alerts.json)) |
 
 ## Skills demonstrated

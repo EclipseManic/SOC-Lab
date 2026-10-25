@@ -11,7 +11,7 @@
 | Field | Value |
 |---|---|
 | **Alert ID** | `wzb-26b4d06a63`, `wzb-299a007168`, `wzb-1834f3248e` |
-| **Rule ID** | Wazuh `100613` (Fan-out) / Wazuh `60109` (EID 4728), `60108` (EID 4720) |
+| **Rule ID** | Wazuh `100613` (WMI Fan-out: `net user /add`, `net localgroup`) |
 | **Source** | Windows Security / Wazuh Process Correlation |
 | **Severity** | High |
 | **TLP / PAP** | `TLP:AMBER / PAP:AMBER` |
@@ -20,7 +20,7 @@
 
 ## What was detected
 
-Adversary created a rogue local domain user `backdoor_admin` and added it to Domain Admins via Impacket `wmiexec`. Wazuh Rule 100613 alerted on the WMI process fan-out, Rule 60108 captured account creation (EID 4720), and Rule 60109 captured addition to Domain Admins (EID 4728).
+Adversary created a rogue local domain user `backdoor_admin` and added it to Domain Admins via Impacket `wmiexec`. Wazuh Rule 100613 alerted on the WMI process fan-out, Wazuh Rule 100613 alerted on child process command lines executing net user and net localgroup Domain Admins.
 
 ---
 
