@@ -34,12 +34,12 @@
 
 ## Enrolled Agents
 
-| Agent Name | Host | IP | OS | Status |
-|------------|------|----|----|--------|
-| DVWA | DVWA Ubuntu | `192.168.56.30` | Ubuntu 24.04 | Active |
-| Win10User | Windows 10 | `192.168.56.20` | Windows 10 Pro N | Active |
-| DomainWin10 | Domain Controller | `192.168.56.10` | Windows Server 2022 | Active |
-| Suricata | Suricata Gateway | `192.168.56.150` | Ubuntu 24.04 | Active |
+| Agent ID | Agent Name | Host | IP | OS | Status |
+|:---:|------------|------|----|----|--------|
+| `001` | **Suricata** | Suricata Gateway | `192.168.56.150` | Ubuntu 24.04 LTS | Active |
+| `002` | **DVWA** | DVWA Web Server | `192.168.56.30` | Ubuntu 24.04 LTS | Active |
+| `003` | **Win10User** | Windows 10 Workstation | `192.168.56.20` | Windows 10 Pro N (22H2) | Active |
+| `004` | **DomainWin10** | Domain Controller (PC-DC) | `192.168.56.10` | Windows Server 2022 | Active |
 
 ---
 

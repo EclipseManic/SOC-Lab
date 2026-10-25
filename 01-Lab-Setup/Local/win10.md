@@ -2,18 +2,19 @@
 
 | Property | Value |
 |----------|-------|
-| **OS** | Windows 10 Pro N, Build 19045.6216 |
+| **OS** | Windows 10 Pro N for Workstations, Version 22H2, Build 19045.6216 |
 | **Role** | Domain-joined workstation target |
 | **Hostname** | `Win10Workstation` / `win10` |
 | **Address** | `192.168.56.20/24` |
-| **Default gateway** | `192.168.56.150` |
+| **Default gateway** | `192.168.56.150` (Suricata Gateway) |
 | **Primary DNS** | `192.168.56.10` (`PC-DC.ad.lab`) |
 | **Domain** | `ad.lab` |
 | **Domain User Account** | `ad\victim` (Standard Domain User) |
-| **Local Account** | `win10` / `<REDACTED>` |
-| **Resources** | 2 vCPU · 4 GB RAM |
-| **Wazuh agent** | `Win10User` |
+| **Local Account** | `win10` / `Secur3Lab!` |
+| **Resources** | 2 vCPU · 4 GB RAM · 60 GB NVMe |
+| **Wazuh agent** | `Win10User` (Agent ID: `003`) |
 | **Velociraptor** | Client v0.77.1 |
+| **SSH Management** | None (Windows endpoint — managed via WinRM / local console) |
 
 ---
 
@@ -39,6 +40,17 @@ Resolve-DnsName -Name "ad.lab" -Server 192.168.56.10
 # Join the machine to ad.lab using Domain Administrator credentials
 $cred = Get-Credential -UserName "ad\Administrator" -Message "Enter Domain Admin Password"
 Add-Computer -DomainName "ad.lab" -Credential $cred -Restart -Force
+```
+
+### Sensitive Files Staging (Target for Stage 18 Collection)
+
+To evaluate internal data discovery and exfiltration detection rules during [Stage 18 — Internal Collection](../../02-Attack-Simulation/Stages/stage-18-collection.md), a directory with synthetic enterprise documents is placed on the user profile:
+
+```powershell
+# Create sensitive document staging directory
+New-Item -ItemType Directory -Path "C:\Users\win10\Documents\Sensitive" -Force
+Set-Content -Path "C:\Users\win10\Documents\Sensitive\passwords.txt" -Value "Internal Services Password Baseline: [CONFIDENTIAL]"
+Set-Content -Path "C:\Users\win10\Documents\Sensitive\financial_records.xlsx" -Value "Q3 Operating Revenue Analysis"
 ```
 
 ---

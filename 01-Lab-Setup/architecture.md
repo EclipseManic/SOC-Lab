@@ -11,13 +11,16 @@ Suricata is deployed in **passive IDS mode** via AF-PACKET capture on the gatewa
 
 ---
 
-## Three-Tier Model
+## Three-Tier Model (8 Total Machines)
+
+The laboratory infrastructure comprises **8 machines in total** (7 Virtual Machines + 1 Physical Analyst Host):
 
 | Tier | Segment | Hosts | Boundary |
 |------|---------|-------|----------|
 | **Attack** | `192.168.232.0/24` (VMware VMnet8 NAT) | Kali `192.168.232.135` | Reaches victims only through the gateway router |
 | **Victim** | `192.168.56.0/24` (VMware VMnet2 Host-Only) | DC `.10`, Win10 `.20`, DVWA `.30` | Default gateway `192.168.56.150` (`ens37`) |
 | **Cloud SOC** | Peered VNets within `10.122.0.0/16` | Wazuh VM (`.1.4`), TheHive/Hub VM (`.0.4`) | Ingress restricted to WireGuard `51820/UDP` |
+| **Analyst Workstation** | Physical Host Laptop (`10.8.0.3`) | Windows Host / VMware Hypervisor | Connects to Cloud SOC and Local Lab via WireGuard tunnel |
 
 ---
 
@@ -73,6 +76,7 @@ flowchart LR
 | **DVWA** | Ubuntu 24.04 LTS | `ens33`: `192.168.56.30/24` | `192.168.56.150` | Web application target + internal pivot | Wazuh Agent `DVWA` + Auditd + `bashcmd` |
 | **Wazuh VM** | Ubuntu 24.04 LTS (Cloud) | `eth0`: `10.122.1.4/24` (Private VNet) | Cloud Gateway | SIEM Manager, Indexer, Dashboard, thecustomhive | Local SQLite queue + `custom-thehive.py` |
 | **TheHive VM** | Ubuntu 24.04 LTS (Cloud) | `eth0`: `10.122.0.4/24` (Private VNet)<br>`wg0`: `10.8.0.1/24` | Cloud Gateway | TheHive 5, WireGuard Hub, NGINX Reverse Proxy | Incident cases, alerts, triage queue |
+| **Host Laptop** | Windows 11 Physical Host | `wg0`: `10.8.0.3/32` (VPN Interface) | Physical Gateway | Hypervisor Host, SOC Analyst Console, SSH Bastion | Interactive incident response and management |
 
 ---
 

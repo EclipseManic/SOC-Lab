@@ -11,7 +11,7 @@
 | **Resources** | 2 vCPU · 4 GB RAM |
 | **Wazuh agent** | `DVWA` |
 | **Velociraptor** | Client v0.77.1 |
-| **SSH Management** | `analyst@soc-workstation` (Public Key Authentication) |
+| **SSH Management** | Host laptop key (`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5... manichand gupta@ManicLenovo`) |
 
 ---
 
@@ -88,25 +88,36 @@ Configure `/var/www/html/dvwa/config/config.inc.php` to set the database credent
 <?php
 // /var/www/html/dvwa/config/config.inc.php
 $_DVWA = array();
-$_DVWA[ 'db_server' ]   = '127.0.0.1';
-$_DVWA[ 'db_database' ] = 'dvwa';
-$_DVWA[ 'db_user' ]     = 'dvwa';
-$_DVWA[ 'db_password' ] = '<REDACTED>';
-$_DVWA[ 'db_port' ]     = '3306';
+$_DVWA[ 'db_server' ]   = getenv('DB_SERVER') ?: '127.0.0.1';
+$_DVWA[ 'db_database' ] = getenv('DB_DATABASE') ?: 'dvwa';
+$_DVWA[ 'db_user' ]     = getenv('DB_USER') ?: 'dvwa';
+$_DVWA[ 'db_password' ] = getenv('DB_PASSWORD') ?: 'p@ssw0rd';
+$_DVWA[ 'db_port' ]     = getenv('DB_PORT') ?: '3306';
 
 // Enforce LOW security level for detection engineering evaluation
-$_DVWA[ 'default_security_level' ] = 'low';
+$_DVWA[ 'default_security_level' ] = getenv('DEFAULT_SECURITY_LEVEL') ?: 'low';
 $_DVWA[ 'default_phpids_level' ]   = 'disabled';
 $_DVWA[ 'default_phpids_verbose' ] = 'false';
 ?>
 ```
 
-Enable required PHP configurations in `/etc/php/8.3/apache2/php.ini`:
+Enable required PHP configurations in `/var/www/html/dvwa/php.ini` and `/etc/php/8.3/apache2/php.ini`:
 ```ini
-allow_url_fopen = On
-allow_url_include = Off
+magic_quotes_gpc = Off
+allow_url_fopen = on
+allow_url_include = on
 display_errors = Off
 ```
+
+### Pre-Installed Core System Utilities
+
+To support simulation monitoring and initial pivot staging, the following permanent packages are confirmed on the base image:
+- **`nmap`** (`/usr/bin/nmap`) — used during internal segment sweeps (Stage 09).
+- **`python3`** (`Python 3.13.15`) — used for interactive pty shell invocation (Stage 07).
+- **`pip3`** (`pip 24.0`) — used for offline package dependency resolution.
+
+> [!NOTE]
+> Attack-specific tools (such as Impacket, BloodHound-python, and Responder) are **not** permanently pre-installed in the clean base image; they are transferred dynamically from Kali via SCP during active attack execution.
 
 Restart Apache to activate changes:
 ```bash
@@ -309,15 +320,20 @@ sudo systemctl enable --now wazuh-agent
 
 ## 7. Velociraptor DFIR Client Installation
 
-The Velociraptor Linux client connects to the cloud server (`https://velo.lab:8000` on `10.122.0.4`) through the WireGuard tunnel for incident triage and live memory/disk forensics:
+The Velociraptor Linux client connects to the cloud server (`https://10.122.0.4:8000/`) through the WireGuard tunnel for incident triage and live memory/disk forensics:
 
 ```bash
 # Install and register Velociraptor client as a systemd service
-sudo /usr/local/bin/velociraptor-v0.77.1-linux-amd64 --config /etc/velociraptor/client.config.yaml service install
+sudo /usr/local/bin/velociraptor_client --config /etc/velociraptor/client.config.yaml service install
 
-# Verify service status
+# Verify service status and enrolled client ID
 sudo systemctl status velociraptor_client
+# Active: active (running); Enrolled Client ID: C.34fd07e6c2ec0623
 ```
+
+- **Client Binary:** `/usr/local/bin/velociraptor_client` (v0.77.1 amd64)
+- **Configuration:** `/etc/velociraptor/client.config.yaml`
+- **Writeback State:** `/etc/velociraptor.writeback.yaml` (contains local RSA client identity)
 
 ---
 

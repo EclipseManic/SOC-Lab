@@ -126,6 +126,7 @@ The entire detection pipeline operates in 7 clean steps:
 | **Cloud Subnet (VM1 & VM2)** | `10.122.0.0/16` | Private Cloud VNet | Peered private cloud network for SOC services (zero public IPs) |
 | **Cloud VM1 (TheHive / Hub)** | `10.122.0.4` | Private Cloud / `eth0` | TheHive 5, Cassandra, Elasticsearch, Velociraptor, NPM, WireGuard Server |
 | **Cloud VM2 (Wazuh SIEM)** | `10.122.1.4` | Private Cloud / `eth0` | Wazuh Manager, Indexer, Dashboard, `custom-thehive` flush daemon |
+| **Host Laptop (Physical Workstation)** | `10.8.0.3` | WireGuard / `wg0` | Windows 11 host running VMware hypervisor; direct VPN analyst access |
 
 ### Key Port Allocations
 
