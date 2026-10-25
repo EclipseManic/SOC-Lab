@@ -17,7 +17,7 @@ Stage-by-stage mapping of the adversary campaign across the MITRE ATT&CK enterpr
 | 07 | Privilege Escalation | Privilege Escalation | Abuse Elevation Control Mechanism: SUID | `T1548.003` | **Detected (Host Alerted)** | Wazuh `5402` (PAM) / Auditd `web_process_creation` |
 | 08 | SSH Persistence | Persistence | Account Manipulation: SSH Authorized Keys | `T1098.004` | **Detected** | Wazuh `5715` (Elevated Level 8) / Wazuh `550` (Syscheck) |
 | 09 | Internal Discovery | Discovery | Remote System Discovery | `T1018` | **Logging Gap (Network Alerted; DG-09)** | Suricata SIDs `3400001`, `3400002`, `3400020` on `ens37` (14 alerts) |
-| 10 | Responder Poisoning | Credential Access | Adversary-in-the-Middle: LLMNR/NBT-NS Poisoning | `T1557.001` | **Detected** | Wazuh `bashcmd` (uid:0 Responder.py) / Suricata SIDs `2067085`–`2067087` |
+| 10 | Responder Poisoning | Credential Access | Adversary-in-the-Middle: LLMNR/NBT-NS Poisoning | `T1557.001` | **Detected (Pivot Telemetry)** | Wazuh `bashcmd` (uid:0 Responder.py execution on pivot) |
 | 11 | NTLMv2 Cracking | Credential Access | Password Cracking | `T1110.002` | **Detection Gap** (Offline) | *Inherent Offline Gap (DG-11)* |
 | 12 | BloodHound AD Recon | Discovery | Permission Groups Discovery: Domain Groups | `T1087.002` | **Logging Gap (Pivot Alerted; DG-12)** | Wazuh `5715` (Pivot root SSH logon alerted) |
 | 13 | Kerberoasting | Credential Access | Steal or Forge Kerberos Tickets: Kerberoasting | `T1558.003` | **Detected (Network & Pivot Alerted)** | Suricata SID `2019922` (ET Open Kerberos TGS-REQ) & Wazuh `5715` |
@@ -27,7 +27,7 @@ Stage-by-stage mapping of the adversary campaign across the MITRE ATT&CK enterpr
 | 17 | DC Persistence | Persistence | Create Account: Domain Account | `T1136.002` | **Detected** | Wazuh `100613` (WMI Fan-out: `net user /add`, `net localgroup`) |
 | 18 | Collection | Collection | Data from Local System | `T1005` | **Detected** | Wazuh `100613` (Process Fan-out: `whoami`, `net user`, `net group`) |
 | 19 | Exfiltration | Exfiltration | Exfiltration Over C2 Channel | `T1041` | **Detected (Pivot Alerted; DG-19)** | Wazuh `5715` (Rapid logon burst: 6 sessions / 1s) |
-| 20 | Impact | Impact | Defacement: Internal Defacement | `T1491.001` | **Detected** | Wazuh `100613` / Sysmon EID `1` |
+| 20 | Impact | Impact | Defacement: Internal Defacement | `T1491.001` | **Detected** | Wazuh `100613` / Sysmon EID `1` / Suricata SIDs `2067085`–`2067087` |
 
 ---
 

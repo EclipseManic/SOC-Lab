@@ -10,9 +10,9 @@
 
 | Field | Value |
 |---|---|
-| **Alert ID** | Pivot Command Log (Row 9231) & `wzb-7a4a134d1b` |
-| **Rule ID** | Wazuh `bashcmd` (uid:0 Responder.py) / Suricata SIDs `2067085`–`2067087` |
-| **Source** | Suricata Network IDS |
+| **Alert ID** | None (Pivot Log Only — Sheet Row 9233 / CSV Row 9231) |
+| **Rule ID** | Wazuh `bashcmd` (uid:0 Responder.py execution on pivot) |
+| **Source** | Linux Auth / Pivot Host DVWA (`bashcmd`) |
 | **Severity** | High |
 | **TLP / PAP** | `TLP:AMBER / PAP:AMBER` |
 
@@ -20,7 +20,7 @@
 
 ## What was detected
 
-The adversary launched Responder on the DVWA pivot at $T_0 + 26m$ (`17:36:26+05:30`), captured via Wazuh bashcmd logging (`python3 /opt/Responder/Responder.py -I ens33 -wd`, Row 9231 in raw CSV). At $T_0 + 28m$ (`17:38:29`), the captured NetNTLMv2 hash was copied to `/tmp/win10.hash` (Row 9242). In TheHive, alert `wzb-7a4a134d1b` (Suricata SIDs 2067085–2067087, *ET INFO NTLM Session Setup Request - Negotiate*) represents remote SMB authentication captured on `ens37`.
+The adversary launched Responder on the DVWA pivot at $T_0 + 26m$ (`17:36:26+05:30`), captured via Wazuh bashcmd logging (`python3 /opt/Responder/Responder.py -I ens33 -wd`, Sheet row 9233 / CSV data row 9231). At $T_0 + 28m$ (`17:38:29`), the captured NetNTLMv2 hash was copied to `/tmp/win10.hash` (Sheet row 9244 / CSV data row 9242). This command-line activity was logged locally on the pivot host at Level 5 without SIEM-to-SOAR escalation. (Note: Alert `wzb-7a4a134d1b`, which captured Suricata SIDs 2067085–2067087 NTLM Session Setup over SMB, occurred at 12:53:59 during Stage 20 remote execution against Win10).
 
 ---
 
@@ -47,7 +47,7 @@ The adversary launched Responder on the DVWA pivot at $T_0 + 26m$ (`17:36:26+05:
 ## Evidence
 
 - **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/28.png`](../../02-Attack-Simulation/Attack-Screenshots/28.png)
-- **Alert Evidence:** [`../../03-Detection-Engineering/TheHive_Alert-ScreenShot/9.png`](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/9.png)
+- **Alert Evidence:** *Pivot Logged (Sheet Row 9233 / CSV Row 9231 in `Wazuh-Raw-Alerts.csv`)*
 - **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv), [`Wazuh-Raw-Alerts.csv`](../../06-Resources/Alerts/Wazuh-Raw-Alerts.csv), and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
 
 ---
@@ -64,7 +64,7 @@ The adversary launched Responder on the DVWA pivot at $T_0 + 26m$ (`17:36:26+05:
 
 ## Detection assessment
 
-- **Status:** Detected
+- **Status:** Detected (Pivot Telemetry)
 - **Gap ID:** None
 - **Engineering Assessment:** Suricata SIDs 2067085–2067087 reliably flags inbound NTLM authentication negotiations over SMB.
 

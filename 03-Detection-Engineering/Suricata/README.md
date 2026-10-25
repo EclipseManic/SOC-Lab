@@ -70,7 +70,7 @@ As documented in [`06-Resources/Alerts/Wazuh-Raw-Alerts.csv`](../../06-Resources
 1. **Nmap Port Scans:** `192.168.56.30 -> 192.168.56.20` on ports 995, 111, 443 (SIDs `3400001` / `3400002`).
 2. **Metasploit / Shell Sweep:** `192.168.56.30` probing internal targets on port 4444 (SID `3400020`).
 3. **Kerberoasting TGS-REQ:** `192.168.56.30:33986 -> 192.168.56.10:88` (SID `2019922`).
-4. **NTLM Session Setup:** `192.168.56.30:32922 -> 192.168.56.20:445` (SIDs `2067085`, `2067086`).
+4. **NTLM Session Setup:** `192.168.56.30:32922 -> 192.168.56.20:445` (SIDs `2067085`, `2067086`, logged at 12:53:59 during Stage 20 remote execution to workstation).
 
 This empirical evidence demonstrates that network sensors deployed in promiscuous mode provide critical intra-subnet detection capabilities even when packets bypass gateway routing.
 

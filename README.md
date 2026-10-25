@@ -123,15 +123,16 @@ Full detail: [02-Attack-Simulation/README.md](02-Attack-Simulation/README.md).
 
 ## Dataset Redaction & Sanitization Policy
 
-In accordance with [SECURITY.md](SECURITY.md), all real public IP addresses, cloud provider identifiers, VPN cryptographic keys, and credential hashes have been scrubbed. Pre-simulation test execution paths in raw CSV records (such as legacy test execution harnesses like `sandcat.exe`) have been sanitized to `<REDACTED>` and generic labels (`Runnerunner.exe`).
+In accordance with [SECURITY.md](SECURITY.md), all real public IP addresses, cloud provider identifiers, VPN cryptographic keys, and credential hashes have been scrubbed. Pre-simulation test execution paths in raw CSV records (such as legacy test execution harnesses like `sandcat.exe`) have been sanitized to `<REDACTED>` and generic labels (`Runner
+unner.exe`).
 
 ## Evidence convention
 
 All attack and alert evidence screenshots live in dedicated evidence folders:
 
-- `02-Attack-Simulation/Attack-Screenshots/` — attacker-side terminal outputs and tools (`1.png` – `60.png`)
-- `03-Detection-Engineering/TheHive_Alert-ScreenShot/` — TheHive and Wazuh alert evidence (`1.png` – `22.4.png`)
-- `06-Resources/attack-chain-full.pdf` — unredacted campaign master blueprint reference
+- `02-Attack-Simulation/Attack-Screenshots/` — 62 attacker-side terminal screenshots (`1.png` – `60.png`, including intermediate steps `58.5.png`, `59.5.png`)
+- `03-Detection-Engineering/TheHive_Alert-ScreenShot/` — 60 TheHive and Wazuh alert captures (`1.png` – `22.4.png`)
+- `06-Resources/attack-chain-full.pdf` — complete campaign master blueprint reference (private lab addressing and topologies)
 
 Never include cloud public IPs, provider hostnames, API keys, VPN keys, or real password hashes. See [SECURITY.md](SECURITY.md).
 
