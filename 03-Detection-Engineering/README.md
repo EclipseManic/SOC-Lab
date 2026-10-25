@@ -36,24 +36,7 @@ This section details the detection engineering architecture, custom rule definit
 
 Detection engineering directly interfaces with the underlying lab infrastructure:
 
-```text
-Local Infrastructure (01-Lab-Setup)         Detection Engineering (03-Detection-Engineering)
-===================================         ================================================
-Suricata Gateway (Dual-NIC Router)   ----->  Passive AF-PACKET IDS (Suricata/custom.rules)
-                                             Rate-limiting & Suppression (Suricata/threshold.config)
-                                             Wazuh Built-in Suricata Decoders (0025-suricata_decoders.xml)
-
-DVWA Target (/var/log/bashcmd.log)   ----->  Custom bashcmd Decoder (Wazuh/local_decoder.xml)
-                                             Kernel Syscall Auditing (Auditd/audit.rules)
-
-Windows 10 / DC (Sysmon & Security)  ----->  Tailored 90-line Sysmon Baseline (Sysmon/sysmonconfig.xml)
-                                             Wazuh Rules: wmiexec, Pass-the-Hash, Registry (Wazuh/local_rules.xml)
-
-Private Wazuh SIEM (Cloud VM 2)      ----->  Wazuh Engine & Local Rules (Wazuh/local_rules.xml)
-                                             Integration Hook & Daemon (06-Resources/Scripts/)
-
-TheHive Case Management (Cloud VM 1) ----->  TheHive 5 REST Ingestion & Cases (TheHive 5 API)
-```
+[![Cybersecurity Lab-to-Detection Mapping](../06-Resources/Diagrams/Cybersecurity%20Lab-to-Detection%20Mapping.png)](../06-Resources/Diagrams/Cybersecurity%20Lab-to-Detection%20Mapping.png)
 
 ---
 
@@ -149,36 +132,7 @@ To solve this, **`thecustomhive`** was engineered as a resilient two-tier pipeli
 - **Tier 1 (Fast Durable Ingest):** `/var/ossec/integrations/custom-thehive` is a lightweight POSIX wrapper that reads the alert JSON and appends it directly to a local SQLite database in Write-Ahead Logging (WAL) mode. This executes locally in sub-millisecond time with zero HTTP overhead.
 - **Tier 2 (Async Correlation & Batched Flush):** A standalone systemd daemon (`thehive-flush.service`) running `custom-thehive.py --flush-daemon` executes an asynchronous 5-second polling loop. It acquires atomic leases on queued records, applies regex tool fingerprinting (Nmap, sqlmap, Nikto, ffuf, Hydra), groups related events by campaign, process tree, or logon burst, and syncs aggregated Markdown alerts to TheHive 5 REST API across private cloud networking. If TheHive VM is temporarily restarted or unreachable, events remain securely buffered on disk.
 
-```text
-┌──────────────────────────────────────────────────────────────────────────────────┐
-│                             WAZUH MANAGER HOST                                   │
-│                                                                                  │
-│   Incoming Telemetry (Agents & Suricata)                                         │
-│          │                                                                       │
-│          ▼                                                                       │
-│   Wazuh Analysis Engine (ossec.conf: Level >= 8)                                 │
-│          │                                                                       │
-│          ▼                                                                       │
-│   /var/ossec/integrations/custom-thehive <alert_file>                            │
-│          │                                                                       │
-│          ▼  (Tier 1: O(1) Local Ingestion - ZERO HTTP)                          │
-│   SQLite WAL Queue (/var/ossec/logs/correlation_state.db)                        │
-│          │                                                                       │
-│          │  (Tier 2: Async Correlated Sync - 5s Cadence)                         │
-│          ▼                                                                       │
-│   thehive-flush.service (custom-thehive.py --flush-daemon)                       │
-│          │                                                                       │
-│          │  • Tool Fingerprint Matching (Nmap, sqlmap, Nikto, ffuf, Hydra)       │
-│          │  • Correlation (Process Chains, Fan-outs, Logon Groups, Bursts)       │
-│          │  • Deduplication & Aggregate Markdown Rendering                       │
-│          │                                                                       │
-│          ▼  (HTTP POST/PATCH - api/v1/alert)                                     │
-│ ┌──────────────────────────────────────────────────────────────────────────────┐ │
-│ │ TheHive 5 Host (http://10.122.0.4:9000/api/v1)                               │ │
-│ │ • Cases / Alerts Triage Queue                                                │ │
-│ └──────────────────────────────────────────────────────────────────────────────┘ │
-└──────────────────────────────────────────────────────────────────────────────────┘
-```
+[![Wazuh to TheHive Security Pipeline](../06-Resources/Diagrams/Wazuh%20to%20TheHive%20Security%20Pipeline.png)](../06-Resources/Diagrams/Wazuh%20to%20TheHive%20Security%20Pipeline.png)
 
 ### Two-Tier Pipeline Mechanics
 1. **Tier 1 (Fast Durable Ingest - Zero HTTP):** Wazuh forks `/var/ossec/integrations/custom-thehive` per alert ($\ge 8$). Inserts rows into an SQLite WAL queue (`correlation_state.db`) in O(1) time without blocking on network requests.

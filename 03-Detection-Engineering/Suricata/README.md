@@ -13,22 +13,7 @@
 
 Suricata operates in passive IDS mode on the gateway router between the external attack segment (`192.168.232.0/24`, `ens33`) and the internal victim segment (`192.168.56.0/24`, `ens37`).
 
-```text
-Attacker (Kali 192.168.232.135)
-        │  [ens33]
-        ▼
-┌─────────────────────────────────────────────────────────────┐
-│ Suricata Gateway (Linux Router + Passive IDS)               │
-│ • Linux Kernel IP Forwarding (net.ipv4.ip_forward = 1)      │
-│ • AF-PACKET promiscuous capture on ens37                    │
-│ • Rulesets: ET Open + aleksibovellan/nmap + custom.rules    │
-│ • Rate-limiting: threshold.config                           │
-│ • Output: /var/log/suricata/eve-alert.json                  │
-└─────────────────────────────────────────────────────────────┘
-        │  [ens37]
-        ▼
-Victims Subnet: DC (.10), Win10 (.20), DVWA (.30)
-```
+[![Suricata Gateway Network Topology](../../06-Resources/Diagrams/Neon%20Suricata%20Network%20Defense%20Diagram.png)](../../06-Resources/Diagrams/Neon%20Suricata%20Network%20Defense%20Diagram.png)
 
 ---
 

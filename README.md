@@ -20,18 +20,7 @@ I built a small company network in a hybrid cloud lab, executed an end-to-end 20
 
 ## How It Works
 
-```
-                     ┌──────────────────────────────────────────────┐
-                     │            Victim Company Network            │
-                     │                                              │
-┌──────────────┐     │  ┌───────────┐    ┌───────────────────────┐  │      ┌─────────────────────────┐
-│              │     │  │  Gateway  │    │  Internal Targets     │  │      │        Cloud SOC        │
-│   Attacker   │────▶│  │  Router   │───▶│  • Web Server (DVWA)  │  │─────▶│  • Wazuh SIEM           │
-│ (Kali Linux) │     │  │ (Suricata)│    │  • Windows 10 Client  │  │(VPN) │  • TheHive 5 Cases      │
-│              │     │  └───────────┘    │  • Domain Controller  │  │      │  • DFIR / Velociraptor  │
-└──────────────┘     │                   └───────────────────────┘  │      └─────────────────────────┘
-                     └──────────────────────────────────────────────┘
-```
+[![Conceptual Network Architecture](06-Resources/Diagrams/Neon%20Cybersecurity%20Network%20Architecture%20Diagram.png)](06-Resources/Diagrams/Neon%20Cybersecurity%20Network%20Architecture%20Diagram.png)
 
 The attacker starts outside the network on an isolated subnet. Every perimeter probe crosses a Linux router running a **Suricata** network intrusion detection system (NIDS). Inside the victim network, endpoints run **Wazuh** agents, **Sysmon**, and **Auditd**. All telemetry is forwarded over an encrypted WireGuard VPN to a cloud-hosted SOC stack running **Wazuh SIEM** and **TheHive 5** case management.
 

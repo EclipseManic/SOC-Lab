@@ -23,6 +23,8 @@ This gives stage-level traceability without fragmenting one incident into twenty
 
 ## Investigation workflow
 
+[![SOC Analyst Investigation Lifecycle](../06-Resources/Diagrams/SOC%20Analyst%20Investigation%20Lifecycle.png)](../06-Resources/Diagrams/SOC%20Analyst%20Investigation%20Lifecycle.png)
+
 1. **Receive the alert.** Record the alert ID, rule ID, source, and timestamp.
 2. **Triage.** Decide true positive, false positive, or benign. Set severity, TLP, and PAP.
 3. **Create or update the case.** Use the three-case map above.

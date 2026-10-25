@@ -17,23 +17,7 @@ Wazuh functions as the centralized SIEM and correlation engine in the SOC lab. I
 
 Alerts matching level $\ge 8$ (or designated high-priority SIDs) are passed via Wazuh's integration mechanism to [`custom-thehive`](../../06-Resources/Scripts/custom-thehive), which persists them in an SQLite WAL queue before asynchronous correlation and dispatch to TheHive 5.
 
-```text
-Log Sources (Auditd, Bash, Sysmon, EventLog, Suricata)
-                         │
-                         ▼
-             Wazuh Decoders (local_decoder.xml)
-                         │
-                         ▼
-        Wazuh Rules Engine (local_rules.xml)
-                         │
-             ┌───────────┴───────────┐
-             ▼                       ▼
-      Rule Level < 8          Rule Level >= 8
-    (Indexed in Dashboard)   (custom-thehive Ingest)
-                                     │
-                                     ▼
-                             TheHive 5 Alerts
-```
+[![Wazuh Log Ingestion & Rules Engine Flow](../../06-Resources/Diagrams/Wazuh%20Log%20Ingestion%20to%20TheHive%20Flow.png)](../../06-Resources/Diagrams/Wazuh%20Log%20Ingestion%20to%20TheHive%20Flow.png)
 
 ---
 
