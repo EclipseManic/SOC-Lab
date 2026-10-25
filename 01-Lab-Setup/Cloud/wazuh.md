@@ -67,7 +67,10 @@ The on-prem agents do not have direct connectivity to the `10.122.0.0/16` networ
 
 ## Agent Forwarding Path
 
-How on-prem agents reach the cloud-hosted Wazuh Manager:
+How on-prem agents reach the cloud-hosted Wazuh Manager across network zones:
+
+[![Agent Forwarding & Network Transit Pipeline](../../06-Resources/Diagrams/Secure%20Network%20Topology%20Infographic.png)](../../06-Resources/Diagrams/Secure%20Network%20Topology%20Infographic.png)
+*Figure 1: On-prem agent telemetry transit through the Suricata Gateway, WireGuard tunnel, and private VNet peering into Wazuh Manager.*
 
 ```
 Victim host (192.168.56.x)
@@ -85,6 +88,9 @@ Return traffic follows the reverse path. The TheHive VM has kernel forwarding en
 ## Alert Path & Integration Architecture
 
 The manager evaluates incoming telemetry and automatically processes alerts through the local correlation pipeline:
+
+[![Wazuh to TheHive Security Pipeline](../../06-Resources/Diagrams/Wazuh%20to%20TheHive%20Security%20Pipeline.png)](../../06-Resources/Diagrams/Wazuh%20to%20TheHive%20Security%20Pipeline.png)
+*Figure 2: Two-tier asynchronous alert correlation pipeline from Wazuh Manager Level ≥ 8 trigger into TheHive 5 case management.*
 
 ```
 Agent / Suricata Event
