@@ -112,7 +112,7 @@ export function LabAct() {
               actually have known?
             </p>
             <a
-              href={`${repoBlob}/01-Lab-Setup/architecture.md`}
+              href={`${repoBlob}/01-Lab-Setup/README.md`}
               target="_blank"
               rel="noreferrer"
               className="mt-6 inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-faint transition hover:text-teal"
