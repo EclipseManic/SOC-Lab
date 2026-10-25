@@ -137,12 +137,13 @@ The Suricata peer's `AllowedIPs` include both on-prem subnets (`192.168.232.0/24
 
 Runs as a Docker container. Provides friendly domain names for internal services, accessible **only over WireGuard** — no public DNS record, no public listener.
 
-| Internal Domain | Backend | Proxy Port |
-|-----------------|---------|------------|
-| `thehive.lab` | `localhost:9000` | `443` |
-| `wazuh.lab` | `<wazuh-vm-private>:443` | `443` |
-| `velo.lab` | `localhost:8889` | `443` |
-| `npm.lab` | `localhost:81` | `443` |
+| Internal Domain | Backend | Proxy Port | Notes |
+|-----------------|---------|------------|-------|
+| `thehive.lab` | `localhost:9000` | `443` | TheHive 5 analyst web UI |
+| `wazuh.lab` | `10.122.1.4:443` | `443` | Wazuh Dashboard |
+| `velo.lab` | `localhost:8889` | `443` | Velociraptor DFIR console |
+
+The Nginx Proxy Manager administration interface is accessed directly by IP and port at **`https://10.122.0.4:81`**, configured with a custom-generated TLS certificate and private key (strictly HTTPS; plain HTTP is disabled).
 
 Container ports: `80`, `81`, `443/TCP`.
 
@@ -159,7 +160,7 @@ net.ipv4.ip_forward = 1
 
 
 ### Routing & NAT Architecture (Agent IP Preservation)
-- **Agent Source IP Preservation:** Wazuh agents running on `192.168.56.0/24` forward telemetry over the WireGuard tunnel (`wg0`) to the Wazuh Manager at `10.122.0.5`. On the Wazuh VM, a static return route (`ip route add 192.168.56.0/24 via 10.122.0.4`) routes replies back to the TheHive gateway without applying NAT. This ensures that agent source IPs (`192.168.56.10`, `.20`, `.30`) remain intact in the Wazuh dashboard rather than collapsing into a single gateway address.
+- **Agent Source IP Preservation:** Wazuh agents running on `192.168.56.0/24` forward telemetry over the WireGuard tunnel (`wg0`) to the Wazuh Manager at `10.122.1.4`. On the Wazuh VM, a static return route (`ip route add 192.168.56.0/24 via 10.122.0.4`) routes replies back to the TheHive gateway without applying NAT. This ensures that agent source IPs (`192.168.56.10`, `.20`, `.30`) remain intact in the Wazuh dashboard rather than collapsing into a single gateway address.
 - **MASQUERADE Scope:** The `POSTROUTING -o eth0 -j MASQUERADE` iptables rule on this host is scoped for outbound internet traffic originating from the VPN client pool (`10.8.0.0/24`), ensuring analyst internet traffic can egress while inter-VNet agent flows preserve their original addressing.
 
 ### Return Routes
@@ -192,7 +193,7 @@ TheHive receives incoming alerts pushed directly from the Wazuh Manager VM over 
 | `8889` | TCP | Velociraptor GUI | VPN only |
 | `8000` | TCP | Velociraptor frontend | VPN only (client-initiated) |
 | `443` | TCP | Nginx Proxy Manager (HTTPS) | VPN only |
-| `81` | TCP | Nginx Proxy Manager (admin) | VPN only |
+| `81` | TCP | Nginx Proxy Manager (Admin HTTPS: `https://10.122.0.4:81`) | VPN only (custom TLS cert/key) |
 | `80` | TCP | Nginx Proxy Manager (HTTP redirect) | VPN only |
 
 ---

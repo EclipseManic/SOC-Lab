@@ -14,37 +14,51 @@ The entire laboratory architecture—from the isolated attacker workstation on V
 
 ---
 
-## Architectural Philosophy & Engineering Decisions
+## Why the Lab Was Built This Way (Engineering Decisions)
 
-Building an enterprise-grade detection environment on personal hardware requires balancing realistic network segregation, hypervisor performance, and cloud resource constraints. Four core design decisions define this lab:
+Building a realistic corporate detection environment on personal hardware is tricky. You want real Active Directory traffic, deep endpoint telemetry, and a cloud SIEM, but you don't want your laptop to freeze or your cloud bills to explode. 
 
-### 1. Split-Cloud SOC Infrastructure (2 × Dedicated VMs)
-- **The Problem:** Running Wazuh Manager, OpenSearch Indexer, Wazuh Dashboard, TheHive 5, Apache Cassandra, and Elasticsearch on a single cloud VM leads to memory starvation, JVM heap thrashing, and dropped agent events under heavy attack loads.
-- **The Solution:** The cloud environment is split across two peered virtual machines on a shared private subnet (`10.122.0.0/16`):
-  - **VM1 (`10.122.0.4`):** Ingress Hub, Case Management & Response (`TheHive 5`, `Cassandra 4.x`, `Elasticsearch 8.x`, `Velociraptor Server`, `Nginx Proxy Manager`, and `WireGuard Server`).
-  - **VM2 (`10.122.0.5`):** Detection & Analytics (`Wazuh Manager 4.x`, `Wazuh Indexer`, `Wazuh Dashboard`, and the `custom-thehive` correlation daemon).
-- **The Result:** Complete JVM isolation, stable log ingestion, and clean separation between detection engineering and incident case management.
+Here is the plain-English reasoning behind the four biggest architectural choices in this lab:
 
-### 2. Zero Public Cloud IPs & the "Single Inbound Port" Principle
-- **The Problem:** Exposing SIEM dashboards, database ports (Elasticsearch `9200`, Cassandra `9042`), or API management endpoints directly to the public internet creates unacceptable security risk and constant brute-force noise.
-- **The Solution:** Neither cloud VM has public web ports exposed. The **only** inbound port permitted across the cloud security group is **UDP 51820 (WireGuard VPN)** on VM1.
-- **The Result:** All web dashboards (`https://wazuh.lab`, `https://thehive.lab`, `https://velo.lab`, `https://npm.lab`) are accessible strictly through the encrypted WireGuard tunnel via Nginx Proxy Manager with private TLS termination.
+### 1. Why Split the Cloud into Two Separate VMs? (`10.122.0.4` and `10.122.1.4`)
 
-### 3. Dual-Homed Gateway: Perimeter Router + Passive NIDS
-- **The Problem:** Running Suricata inline (IPS mode with NFQUEUE or inline bridging) can introduce packet jitter, drop timing-sensitive red-team scans (e.g. Nmap or Nikto), and distort real-world lateral movement dynamics.
-- **The Solution:** The Ubuntu Security Gateway is dual-homed (`ens33` on `192.168.232.0/24` facing Kali; `ens37` on `192.168.56.0/24` facing the victims). It acts as an active Layer 3 router (`net.ipv4.ip_forward = 1`) with static routing enforced on Kali, while running Suricata 8.0.6 in **passive AF-PACKET promiscuous IDS mode** on `ens37`.
-- **The Result:** Authentic adversary traffic delivery with zero packet distortion, combined with full wire-level packet inspection and logging to `eve-alert.json`.
+In enterprise security, teams often try to dump their SIEM, search engine, and ticketing system onto one giant server to save time. In practice, this causes disaster:
+- **The problem:** Wazuh SIEM relies on OpenSearch Indexer to index thousands of security logs per second. At the same time, TheHive 5 runs Apache Cassandra and Elasticsearch to manage case files and alert attachments. Both software stacks consume huge amounts of memory and CPU. When we simulated aggressive attacks (like heavy web fuzzing or network scans), running both on a single VM caused the memory to run out, leading to system freezes and silent log loss.
+- **How we fixed it:** We split the cloud workload across two peered virtual machines on our private cloud network (`10.122.0.0/16`):
+  - **VM1 — TheHive & Gateway Hub (`10.122.0.4`):** Runs TheHive 5, Cassandra, Elasticsearch, the Velociraptor DFIR server, Nginx Proxy Manager, and the WireGuard VPN server.
+  - **VM2 — Wazuh SIEM (`10.122.1.4`):** Dedicated entirely to threat detection and search. Runs Wazuh Manager, Wazuh Indexer, Wazuh Dashboard, and our custom alert forwarding engine.
+- **The payoff:** Each system has its own dedicated memory and CPU. Even when a simulated attack generates bursts of thousands of alerts, the SIEM never drops a single event, and TheHive's analyst interface stays fast and responsive.
 
-### 4. Source IP Preservation (No Masquerading on Tunnel)
-- **The Problem:** Applying standard NAT/MASQUERADE to traffic exiting the victim network into the WireGuard tunnel would cause all endpoint events to appear as originating from the gateway (`10.8.0.2`), breaking agent identity and source-based detection rules in Wazuh.
-- **The Solution:** The gateway forwards victim telemetry directly into the WireGuard interface (`wg0`) without NAT. The cloud VPN hub (`10.8.0.1`) maintains a static kernel route directing `192.168.56.0/24` back through `10.8.0.2`.
-- **The Result:** Wazuh Manager registers agents and correlates telemetry with authentic victim IP addresses (`192.168.56.10`, `.20`, `.30`).
+### 2. Zero Public Cloud IPs & the "Single Door" Ingress Rule
+
+Most hacked cloud servers are breached because an administrative port (like an SSH port, database, or web console) was left open to the public internet.
+- **The problem:** If you expose Wazuh Dashboard, TheHive, or backend databases (like Elasticsearch on port `9200` or Cassandra on `9042`) directly to the public internet, automated scanners and bots will immediately start brute-forcing them. That floods your SIEM with internet noise and exposes the lab to compromise.
+- **How we fixed it:** Neither cloud VM has public IP addresses for its services. Across the entire cloud infrastructure, there is **only one single open inbound port:** **UDP port 51820 (WireGuard VPN)** on VM1.
+- **How access works:**
+  - To view dashboards, the analyst connects their laptop to the WireGuard VPN (`10.8.0.0/24`).
+  - Friendly internal domains (`https://wazuh.lab`, `https://thehive.lab`, and `https://velo.lab`) are routed privately through Nginx Proxy Manager with private TLS encryption.
+  - The Nginx Proxy Manager administration console is accessed directly by IP and port at **`https://10.122.0.4:81`** using a custom-generated TLS certificate and private key (strictly HTTPS; unencrypted HTTP is disabled).
+- **The payoff:** To anyone scanning from the public internet, the entire cloud SOC is a brick wall with no open web ports, no exposed databases, and zero attack surface.
+
+### 3. Dual-Homed Gateway: Why Passive IDS Instead of Active Blocking
+
+Security teams often argue over whether to run an inline IPS (which actively drops attacks in real time) or a passive IDS (which listens and alerts without blocking).
+- **The problem:** If we ran Suricata inline in IPS mode (using NFQUEUE or bridge filtering), an aggressive Nmap scan or timing-sensitive exploit might trigger an immediate connection reset or introduce packet jitter. That would artificially break the attacker's tools halfway through and prevent us from testing multi-stage lateral movement.
+- **How we fixed it:** We set up an Ubuntu Server as a dual-homed Layer 3 router bridging Kali (`ens33: 192.168.232.162`) to the victim subnet (`ens37: 192.168.56.150`). Standard Linux kernel routing (`net.ipv4.ip_forward = 1`) forwards attack traffic smoothly. Then, we configured Suricata 8.0.6 to run in **passive AF-PACKET promiscuous mode** sniffing the victim interface (`ens37`).
+- **The payoff:** Attack traffic reaches its targets exactly as it would in a real adversary breach. At the same time, Suricata passively inspects every packet on the wire and generates rich network alerts in `eve-alert.json` without interfering with attack tradecraft.
+
+### 4. Preserving Real Victim IP Addresses (No NAT on the Tunnel)
+
+When packets travel across routers and VPN tunnels, routers typically apply NAT (Network Address Translation, or `MASQUERADE`) to replace the sender's original IP with the router's IP.
+- **The problem:** If our gateway applied NAT to telemetry entering the WireGuard tunnel, every single alert arriving at Wazuh in the cloud would appear to come from the gateway's tunnel IP (`10.8.0.2`). You would lose all visibility into which machine was actually attacked—the Domain Controller (`.10`), Windows 10 (`.20`), or DVWA (`.30`).
+- **How we fixed it:** We disabled NAT masquerading for all victim traffic traveling through the WireGuard tunnel (`wg0`). On the cloud side, we added a static return route directing `192.168.56.0/24` back through `10.8.0.2`.
+- **The payoff:** Wazuh Manager sees and registers the real, authentic IP address of every victim host (`192.168.56.10`, `.20`, `.30`). Every alert and investigation artifact maps cleanly to the exact compromised machine.
 
 ---
 
-## Lab Segmentation & Zone Profiles
+## Lab Segmentation & Network Zones
 
-The architecture spans four clearly bounded security zones:
+The environment is cleanly divided into four zones:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -70,45 +84,45 @@ The architecture spans four clearly bounded security zones:
 │              Shared Private Subnet: 10.122.0.0/16           │
 │                                                             │
 │  [VM1 — TheHive & Ingress]    [VM2 — Wazuh SIEM]            │
-│  Private: 10.122.0.4          Private: 10.122.0.5           │
+│  Private: 10.122.0.4          Private: 10.122.1.4           │
 │  • WireGuard Server (10.8.0.1) • Wazuh Manager & Indexer    │
 │  • TheHive 5 Case Management   • Wazuh Dashboard (5601)     │
-│  • Nginx Proxy Manager         • thecustomhive SOAR Daemon  │
+│  • NPM Admin (10.122.0.4:81)   • thecustomhive SOAR Daemon  │
 │  • Velociraptor Server         • SQLite WAL Event Queue     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ### Zone 1: Attacker Zone (Kali Linux)
 - **Subnet:** `192.168.232.0/24` (VMware VMnet8 NAT)
-- **Host:** Kali Linux (`192.168.232.135/24`)
-- **Routing:** Default route `0.0.0.0/0` points to VMware NAT gateway (`192.168.232.2`) for package updates. Static host route `192.168.56.0/24 via 192.168.232.162` forces all attack traffic through the Security Gateway router.
+- **IP Address:** `192.168.232.135/24`
+- **Routing:** Default route `0.0.0.0/0` points to VMware NAT gateway (`192.168.232.2`) for package updates. A static host route (`192.168.56.0/24 via 192.168.232.162`) forces all adversary traffic through the Security Gateway router.
 - **Tooling:** Nmap, Metasploit, Burp Suite, Hydra, Impacket (`wmiexec`, `GetUserSPNs`, `secretsdump`), BloodHound, Responder, CrackMapExec, Hashcat.
 
 ### Zone 2: Security Gateway (Ubuntu Server & Suricata)
 - **Subnets:** Dual-homed on `192.168.232.0/24` (`ens33: 192.168.232.162`) and `192.168.56.0/24` (`ens37: 192.168.56.150`).
-- **Roles:**
+- **Core Functions:**
   - **Linux Router:** Kernel IP forwarding enabled (`sysctl net.ipv4.ip_forward=1`).
-  - **Perimeter NIDS:** Suricata 8.0.6 operating with multi-threaded AF-PACKET promiscuous sniffing on `ens37`.
-  - **VPN Client:** WireGuard client interface `wg0` (`10.8.0.2/32`) establishing the encrypted uplink to the cloud hub.
-  - **Log Forwarder:** Wazuh Agent streaming `eve-alert.json` to the cloud Wazuh Manager.
+  - **Perimeter NIDS:** Suricata 8.0.6 running passive AF-PACKET promiscuous capture on `ens37`.
+  - **VPN Client:** WireGuard client interface `wg0` (`10.8.0.2/32`) maintaining the encrypted link to the cloud hub.
+  - **Log Forwarder:** Wazuh Agent reading and shipping `eve-alert.json` to the cloud Wazuh Manager.
 
 ### Zone 3: Victim Network (Isolated Enterprise Subnet)
-- **Subnet:** `192.168.56.0/24` (VMware VMnet2 Host-Only, no direct internet access). Default gateway: `192.168.56.150`.
-- **Hosts:**
+- **Subnet:** `192.168.56.0/24` (VMware VMnet2 Host-Only; completely isolated from the internet). Default gateway is `192.168.56.150`.
+- **Target Hosts:**
   - **Windows Server 2022 (Domain Controller — `192.168.56.10`):** Active Directory Domain Services (`ad.lab`), DNS, Kerberos KDC, Sysmon endpoint logging, Wazuh Agent (`DomainWin10`), Velociraptor client.
   - **Windows 10 Workstation (`192.168.56.20`):** Domain-joined endpoint (`ad\victim`), Sysmon telemetry, Wazuh Agent (`Win10User`), Velociraptor client.
-  - **DVWA Web Server (`192.168.56.30`):** Dual-purpose Linux host functioning as both the external vulnerable web target (Apache/MySQL) and internal adversary pivot. Instrumented with Linux Auditd syscall tracking (`audit.rules`), custom Bash command execution auditing (`bashcmd`), Wazuh Agent (`DVWA`), and Velociraptor client.
+  - **DVWA Web Server (`192.168.56.30`):** Ubuntu Linux host acting as both the perimeter web target (Apache/MySQL) and internal adversary pivot. Monitored with Linux Auditd syscall tracking (`audit.rules`), custom Bash command execution auditing (`bashcmd`), Wazuh Agent (`DVWA`), and Velociraptor client.
 
 ### Cloud SOC Infrastructure (VM1 & VM2)
-- **Private Subnet:** `10.122.0.0/16` (peered cloud virtual network; zero public IP exposure).
+- **Private Subnet:** `10.122.0.0/16` (peered private cloud network; zero public IP exposure).
 - **VM1 — Case Management & Hub (`10.122.0.4`):**
   - WireGuard VPN Server listening on `UDP 51820` (`wg0: 10.8.0.1/24`).
   - TheHive 5 incident response platform backed by Apache Cassandra 4.x and Elasticsearch 8.x.
-  - Nginx Proxy Manager terminating TLS and routing `*.lab` requests to internal services.
-  - Velociraptor 0.77 digital forensics and endpoint response server.
-- **VM2 — Wazuh SIEM & Integration (`10.122.0.5`):**
-  - Wazuh Manager 4.x (analysis engine, custom XML decoders/rules).
-  - Wazuh Indexer (OpenSearch-based distributed storage and indexing).
+  - Nginx Proxy Manager routing friendly `.lab` domain names to internal services, with the admin UI secured at `https://10.122.0.4:81`.
+  - Velociraptor 0.77 digital forensics server.
+- **VM2 — Wazuh SIEM & Integration (`10.122.1.4`):**
+  - Wazuh Manager 4.x (rule engine and decoders).
+  - Wazuh Indexer (OpenSearch-based search and indexing).
   - Wazuh Dashboard (`5601/TCP`).
   - `custom-thehive.py` correlation engine + `thehive-flush.service` background daemon.
 
@@ -116,7 +130,7 @@ The architecture spans four clearly bounded security zones:
 
 ## High-Level Automation & Response Flow
 
-The end-to-end pipeline moves from adversary wire execution to formal SOC case resolution in 7 distinct steps:
+The entire detection pipeline operates in 7 clean steps:
 
 ```
 [Adversary Execution]
@@ -126,7 +140,7 @@ The end-to-end pipeline moves from adversary wire execution to formal SOC case r
        │ (2) Wire inspection on ens37 -> eve-alert.json
        ▼
 [WireGuard VPN Tunnel]
-       │ (3) Suricata & host agent events streamed via UDP 51820 to 10.122.0.5:1514
+       │ (3) Suricata & host agent events streamed via UDP 51820 to 10.122.1.4:1514
        ▼
 [Wazuh Manager (VM2)]
        │ (4) Rule engine evaluates logs; Level >= 8 alerts queued into SQLite WAL
@@ -160,20 +174,20 @@ The end-to-end pipeline moves from adversary wire execution to formal SOC case r
 | **WireGuard Tunnel** | `10.8.0.0/24` | Tunnel / `wg0` | Encrypted tunnel linking Security Gateway (`.2`) to Cloud Hub (`.1`) |
 | **Cloud Subnet (VM1 & VM2)** | `10.122.0.0/16` | Private Cloud VNet | Peered private cloud network for SOC services (zero public IPs) |
 | **Cloud VM1 (TheHive / Hub)** | `10.122.0.4` | Private Cloud / `eth0` | TheHive 5, Cassandra, Elasticsearch, Velociraptor, NPM, WireGuard Server |
-| **Cloud VM2 (Wazuh SIEM)** | `10.122.0.5` | Private Cloud / `eth0` | Wazuh Manager, Indexer, Dashboard, `custom-thehive` flush daemon |
+| **Cloud VM2 (Wazuh SIEM)** | `10.122.1.4` | Private Cloud / `eth0` | Wazuh Manager, Indexer, Dashboard, `custom-thehive` flush daemon |
 
 ### Key Port Allocations
 
-| Service / Component | Port | Protocol | Direction | Ingress Boundary |
+| Service / Component | Port | Protocol | Direction | Access & Exposure |
 |---|---|---|---|---|
 | **WireGuard VPN** | `51820` | UDP | Inbound to VM1 | **Only public internet port open** |
-| **Wazuh Agent $\rightarrow$ Manager** | `1514` | TCP | Local $\rightarrow$ Cloud (VM2) | Internal WireGuard tunnel |
+| **Wazuh Agent $\rightarrow$ Manager** | `1514` | TCP | Local $\rightarrow$ Cloud (VM2) | Internal WireGuard tunnel (`10.122.1.4:1514`) |
 | **Wazuh Agent Enrollment** | `1515` | TCP | Local $\rightarrow$ Cloud (VM2) | Internal WireGuard tunnel |
 | **Wazuh REST API** | `55000` | TCP | Local/Cloud $\rightarrow$ VM2 | Internal WireGuard tunnel |
-| **Wazuh Dashboard** | `5601` | HTTPS | VPN Client $\rightarrow$ VM2 | Internal WireGuard tunnel (`https://wazuh.lab`) |
-| **TheHive Web UI** | `80` / `443` | TCP / HTTPS | VPN Client $\rightarrow$ VM1 | Internal WireGuard tunnel (`https://thehive.lab`) |
-| **Velociraptor GUI** | `8889` | HTTPS | VPN Client $\rightarrow$ VM1 | Internal WireGuard tunnel (`https://velo.lab`) |
-| **Nginx Proxy Manager** | `80` / `443` | TCP / HTTPS | VPN Client $\rightarrow$ VM1 | Internal WireGuard tunnel (`https://npm.lab`) |
+| **Wazuh Dashboard** | `5601` / `443` | HTTPS | VPN Client $\rightarrow$ VM2 | Internal WireGuard tunnel (`https://wazuh.lab`) |
+| **TheHive Web UI** | `9000` / `443` | TCP / HTTPS | VPN Client $\rightarrow$ VM1 | Internal WireGuard tunnel (`https://thehive.lab`) |
+| **Velociraptor GUI** | `8889` / `443` | HTTPS | VPN Client $\rightarrow$ VM1 | Internal WireGuard tunnel (`https://velo.lab`) |
+| **Nginx Proxy Manager Admin** | `81` | HTTPS | VPN Client $\rightarrow$ VM1 | Internal WireGuard tunnel (`https://10.122.0.4:81` with custom TLS cert/key) |
 
 ---
 
@@ -203,7 +217,7 @@ Each host has a dedicated, reproducible build specification:
 | **[Local/win10.md](Local/win10.md)** | **Domain Workstation** | `192.168.56.20/24` (VMnet2) | Windows 10 Pro N, Sysmon modular config, Wazuh Agent, Velociraptor client |
 | **[Local/dc-ad.md](Local/dc-ad.md)** | **Domain Controller** | `192.168.56.10/24` (VMnet2) | Windows Server 2022, Active Directory Domain Services, DNS, Sysmon, Wazuh Agent |
 | **[Cloud/thehive.md](Cloud/thehive.md)** | **Ingress & Case Hub (VM1)** | `10.122.0.4/16` (Cloud VNet) | TheHive 5, Cassandra 4.x, Elasticsearch 8.x, Velociraptor Server, WireGuard, NPM |
-| **[Cloud/wazuh.md](Cloud/wazuh.md)** | **SIEM & Analytics (VM2)** | `10.122.0.5/16` (Cloud VNet) | Wazuh Manager 4.x, Wazuh Indexer, Dashboard, `custom-thehive` correlation daemon |
+| **[Cloud/wazuh.md](Cloud/wazuh.md)** | **SIEM & Analytics (VM2)** | `10.122.1.4/16` (Cloud VNet) | Wazuh Manager 4.x, Wazuh Indexer, Dashboard, `custom-thehive` correlation daemon |
 
 ---
 
@@ -218,7 +232,7 @@ sudo wg show wg0
 
 # 2. Test ping reachability across the encrypted tunnel
 ping -c 3 10.8.0.1
-ping -c 3 10.122.0.5
+ping -c 3 10.122.1.4
 
 # 3. Confirm Linux kernel IP forwarding is active on the Gateway
 sysctl net.ipv4.ip_forward
@@ -231,7 +245,10 @@ sudo /var/ossec/bin/agent_control -l    # (Run on Wazuh Manager)
 # 5. Check TheHive correlation flush daemon status on Wazuh VM
 sudo systemctl status thehive-flush.service --no-pager
 
-# 6. Verify web dashboards over VPN (resolving *.lab via local hosts or NPM)
+# 6. Verify Nginx Proxy Manager admin UI (secured over HTTPS on port 81)
+curl -k -I https://10.122.0.4:81
+
+# 7. Verify internal web dashboards over VPN
 curl -k -I https://wazuh.lab
 curl -k -I https://thehive.lab
 curl -k -I https://velo.lab

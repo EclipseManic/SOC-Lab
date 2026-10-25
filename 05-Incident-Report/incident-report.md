@@ -33,7 +33,7 @@ The detection architecture successfully detected **16 of 20 stages (80.0%)**, wi
 | **Win10** (`Win10User`) | Windows 10 Enterprise | `192.168.56.20` | Domain Workstation | Compromised: LLMNR credential harvesting, Pass-the-Hash remote logon, defacement. |
 | **PC-DC** (`DomainWin10`) | Windows Server 2022 | `192.168.56.10` | Domain Controller (AD DS / DNS) | Compromised: DCSync replication, Golden Ticket forgery, backdoor Domain Admin creation. |
 | **Suricata Gateway** | Ubuntu 24.04 LTS | `192.168.56.1` / `10.122.0.x` | Dual-Homed Gateway / WireGuard Hub | Uncompromised: Monitored traffic and forwarded NIDS alerts to Cloud SIEM. |
-| **Cloud SOC** | Ubuntu 24.04 LTS | `10.122.0.4` / `10.122.0.5` | TheHive 5 / Wazuh Manager | Uncompromised: Ingested, correlated, and alerted on incident telemetry in real time. |
+| **Cloud SOC** | Ubuntu 24.04 LTS | `10.122.0.4` / `10.122.1.4` | TheHive 5 / Wazuh Manager | Uncompromised: Ingested, correlated, and alerted on incident telemetry in real time. |
 
 ---
 

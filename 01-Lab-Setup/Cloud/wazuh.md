@@ -11,7 +11,8 @@
 | **OS** | Ubuntu 24.04.4 LTS |
 | **RAM** | 8 GB |
 | **vCPU** | 2 |
-| **Cloud network** | `10.122.0.0/24` private subnet (within `10.122.0.0/16` VPC) |
+| **Cloud network** | `10.122.1.0/24` private subnet (within `10.122.0.0/16` VPC) |
+| **Private IP** | `10.122.1.4` |
 | **Public IP** | None |
 | **Public listeners** | None |
 | **Access method** | VNet peering from TheHive VM; analyst access via WireGuard + NPM (`wazuh.lab`) |
@@ -52,7 +53,7 @@ Each agent's `ossec.conf` points to the Wazuh Manager's private cloud IP over po
 <ossec_config>
   <client>
     <server>
-      <address>10.122.0.x</address>
+      <address>10.122.1.4</address>
       <port>1514</port>
       <protocol>tcp</protocol>
     </server>
@@ -138,7 +139,7 @@ To allow Wazuh Manager to respond to agents on `192.168.56.0/24` without NAT (pr
 sudo ip route add 192.168.56.0/24 via 10.122.0.4
 
 # Verified agent enrollment command executed on Linux victim hosts:
-WAZUH_MANAGER="10.122.0.5" sudo -E apt-get install wazuh-agent
+WAZUH_MANAGER="10.122.1.4" sudo -E apt-get install wazuh-agent
 sudo systemctl enable --now wazuh-agent
 ```
 
