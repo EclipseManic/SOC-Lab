@@ -25,7 +25,7 @@ I built a small company network in a hybrid cloud lab, executed an end-to-end 20
 The attacker starts outside the network on an isolated subnet. Every perimeter probe crosses a Linux router running a **Suricata** network intrusion detection system (NIDS). Inside the victim network, endpoints run **Wazuh** agents, **Sysmon**, and **Auditd**. All telemetry is forwarded over an encrypted WireGuard VPN to a cloud-hosted SOC stack running **Wazuh SIEM** and **TheHive 5** case management.
 
 > [!TIP]
-> Looking for detailed network addressing, routing tables, and interface diagrams? See [01-Lab-Setup/architecture.md](01-Lab-Setup/architecture.md).
+> Looking for detailed network addressing, routing tables, and interface diagrams? See [01-Lab-Setup/README.md](01-Lab-Setup/README.md).
 
 ### Repository Directory Index
 
