@@ -10,9 +10,9 @@
 
 | Field | Value |
 |---|---|
-| **Alert ID** | `wzb-33519c2c62` |
-| **Rule ID** | `Suricata SID 2000545 via Wazuh 86601 (Level 8)` |
-| **Source** | Suricata on gateway (ens37 promiscuous capture) |
+| **Alert ID** | `wzb-3152e3ed59`, `wzb-f87fab3eda`, `wzb-de91bad685` |
+| **Rule ID** | Suricata SIDs `3400001`, `3400002`, `3400020` on `ens37` via Wazuh `86601` |
+| **Source** | Suricata Network IDS (`ens37` promiscuous capture) |
 | **Severity** | High |
 | **TLP / PAP** | `TLP:AMBER / PAP:AMBER` |
 
@@ -20,7 +20,7 @@
 
 ## What was detected
 
-Suricata network IDS captured port sweep traffic across internal subnet 192.168.56.0/24 originating from the DVWA pivot host (192.168.56.30), probing ports 88, 139, 445, and 389.
+Adversary executed internal network reconnaissance sweeps from the DVWA pivot against `192.168.56.0/24`. Suricata listening in AF-PACKET promiscuous mode on `ens37` captured 14 victim-to-victim alerts including Nmap probe signatures (SIDs 3400001/3400002) and Metasploit scans (SID 3400020), which escalated to TheHive.
 
 ---
 
@@ -46,9 +46,9 @@ Suricata network IDS captured port sweep traffic across internal subnet 192.168.
 
 ## Evidence
 
-- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/29.png`](../../02-Attack-Simulation/Attack-Screenshots/29.png)
+- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/21.png`](../../02-Attack-Simulation/Attack-Screenshots/21.png)
 - **Alert Evidence:** [`../../03-Detection-Engineering/TheHive_Alert-ScreenShot/8.png`](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/8.png)
-- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv) and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
+- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv), [`Wazuh-Raw-Alerts.csv`](../../06-Resources/Alerts/Wazuh-Raw-Alerts.csv), and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
 
 ---
 
@@ -64,7 +64,7 @@ Suricata network IDS captured port sweep traffic across internal subnet 192.168.
 
 ## Detection assessment
 
-- **Status:** Detected (Network Alerted)
+- **Status:** Detected (Network Alerted; DG-09)
 - **Gap ID:** DG-09
 - **Engineering Assessment:** DG-09 Documented: Intra-subnet layer 2 packets did not cross gateway IP stack, but promiscuous capture on ens37 caught multi-host sweep traffic.
 

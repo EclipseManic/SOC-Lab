@@ -10,9 +10,9 @@
 
 | Field | Value |
 |---|---|
-| **Alert ID** | `wzb-4174e3672e / wzb-846468a306` |
-| **Rule ID** | `Wazuh 5715 (Level 8)` |
-| **Source** | Wazuh SSHD on DVWA pivot |
+| **Alert ID** | `wzb-4174e3672e` |
+| **Rule ID** | Wazuh `5715` (Elevated Level 8 - Pivot SSH root logon) |
+| **Source** | Linux SSHD (Pivot Host DVWA) |
 | **Severity** | High |
 | **TLP / PAP** | `TLP:AMBER / PAP:AMBER` |
 
@@ -20,7 +20,7 @@
 
 ## What was detected
 
-Wazuh Rule 5715 alerted on root SSH session on DVWA pivot (192.168.56.30) executing Impacket secretsdump.py to replicate Active Directory directory objects over DRSUAPI.
+Adversary utilized Impacket `secretsdump.py` via DRSUAPI directory replication against Domain Controller `PC-DC` (`192.168.56.10`), extracting all domain password hashes. Wazuh Rule 5715 captured the pivot execution session.
 
 ---
 
@@ -46,9 +46,9 @@ Wazuh Rule 5715 alerted on root SSH session on DVWA pivot (192.168.56.30) execut
 
 ## Evidence
 
-- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/46.png`](../../02-Attack-Simulation/Attack-Screenshots/46.png)
+- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/45.png`](../../02-Attack-Simulation/Attack-Screenshots/45.png)
 - **Alert Evidence:** [`../../03-Detection-Engineering/TheHive_Alert-ScreenShot/12.png`](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/12.png)
-- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv) and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
+- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv), [`Wazuh-Raw-Alerts.csv`](../../06-Resources/Alerts/Wazuh-Raw-Alerts.csv), and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
 
 ---
 
@@ -65,7 +65,7 @@ Wazuh Rule 5715 alerted on root SSH session on DVWA pivot (192.168.56.30) execut
 ## Detection assessment
 
 - **Status:** Detected (Pivot Alerted)
-- **Gap ID:** None
+- **Gap ID:** Pivot Telemetry
 - **Engineering Assessment:** Pivot SSH activity alerted in TheHive. DC-side EID 4662 logged locally. Raising EID 4662 rule level provides direct target alerting.
 
 ---

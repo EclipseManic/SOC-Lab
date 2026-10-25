@@ -10,9 +10,9 @@
 
 | Field | Value |
 |---|---|
-| **Alert ID** | `wzb-1d2d7fb4b8 / wzb-c1e2642eb2` |
-| **Rule ID** | `Suricata SID 2019922 via Wazuh 86601 + Wazuh 5715` |
-| **Source** | Suricata (ens37 promiscuous capture) + Wazuh SSHD |
+| **Alert ID** | `wzb-1d2d7fb4b8`, `wzb-c1e2642eb2` |
+| **Rule ID** | Suricata SID `2019922` (ET Open Kerberos TGS-REQ) via `86601` + Wazuh `5715` |
+| **Source** | Suricata Network IDS / Linux SSHD |
 | **Severity** | High |
 | **TLP / PAP** | `TLP:AMBER / PAP:AMBER` |
 
@@ -20,7 +20,7 @@
 
 ## What was detected
 
-Suricata captured unrouted Kerberos traffic on VMnet2 (192.168.56.30:33986 -> 192.168.56.10:88) triggering SID 2019922 (ET EXPLOIT Possible MS14-068 GoldenPac). In parallel, Wazuh Rule 5715 alerted on pivot SSH activity.
+Adversary requested a Kerberos service ticket (TGS-REQ) for service account `HANK_SHERMAN` to extract its crackable ticket. Suricata on `ens37` flagged the Kerberos wire activity on port 88 (SID 2019922), and Wazuh Rule 5715 captured the pivot session.
 
 ---
 
@@ -48,7 +48,7 @@ Suricata captured unrouted Kerberos traffic on VMnet2 (192.168.56.30:33986 -> 19
 
 - **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/41.png`](../../02-Attack-Simulation/Attack-Screenshots/41.png)
 - **Alert Evidence:** [`../../03-Detection-Engineering/TheHive_Alert-ScreenShot/11.png`](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/11.png)
-- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv) and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
+- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv), [`Wazuh-Raw-Alerts.csv`](../../06-Resources/Alerts/Wazuh-Raw-Alerts.csv), and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
 
 ---
 
@@ -65,7 +65,7 @@ Suricata captured unrouted Kerberos traffic on VMnet2 (192.168.56.30:33986 -> 19
 ## Detection assessment
 
 - **Status:** Detected (Network & Pivot Alerted)
-- **Gap ID:** None
+- **Gap ID:** Pivot Telemetry
 - **Engineering Assessment:** Suricata caught the Kerberos request via VMnet2 promiscuous sniffing; Wazuh alerted on the pivot session. DC Event 4769 was logged locally.
 
 ---

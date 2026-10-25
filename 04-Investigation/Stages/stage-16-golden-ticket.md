@@ -10,9 +10,9 @@
 
 | Field | Value |
 |---|---|
-| **Alert ID** | `wzb-8d45b2d236 / wzb-846468a306` |
-| **Rule ID** | `Wazuh 5715 (Level 8)` |
-| **Source** | Wazuh SSHD on DVWA pivot |
+| **Alert ID** | `wzb-8d45b2d236` |
+| **Rule ID** | Wazuh `5715` (Elevated Level 8 - Pivot SSH root logon) |
+| **Source** | Linux SSHD (Pivot Host DVWA) |
 | **Severity** | High |
 | **TLP / PAP** | `TLP:AMBER / PAP:AMBER` |
 
@@ -20,7 +20,7 @@
 
 ## What was detected
 
-Wazuh Rule 5715 alerted on root SSH session on DVWA pivot executing Impacket ticketer.py to forge a Kerberos Ticket-Granting Ticket (TGT) using the dumped krbtgt NTLM hash.
+Adversary forged an unauthorized Kerberos Ticket-Granting Ticket (Golden Ticket) using the compromised `krbtgt` hash. The command was executed through the DVWA pivot, where Wazuh Rule 5715 escalated the administrative session.
 
 ---
 
@@ -46,9 +46,9 @@ Wazuh Rule 5715 alerted on root SSH session on DVWA pivot executing Impacket tic
 
 ## Evidence
 
-- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/54.png`](../../02-Attack-Simulation/Attack-Screenshots/54.png)
+- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/49.png`](../../02-Attack-Simulation/Attack-Screenshots/49.png)
 - **Alert Evidence:** [`../../03-Detection-Engineering/TheHive_Alert-ScreenShot/14.png`](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/14.png)
-- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv) and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
+- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv), [`Wazuh-Raw-Alerts.csv`](../../06-Resources/Alerts/Wazuh-Raw-Alerts.csv), and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
 
 ---
 
@@ -65,7 +65,7 @@ Wazuh Rule 5715 alerted on root SSH session on DVWA pivot executing Impacket tic
 ## Detection assessment
 
 - **Status:** Detected (Pivot Alerted)
-- **Gap ID:** None
+- **Gap ID:** Pivot Telemetry
 - **Engineering Assessment:** Pivot SSH activity alerted in TheHive. Target DC logged Kerberos service requests locally.
 
 ---

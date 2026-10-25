@@ -10,9 +10,9 @@
 
 | Field | Value |
 |---|---|
-| **Alert ID** | `wzb-bbf93049b4` |
-| **Rule ID** | `Wazuh 100214 / Auditd File Watch` |
-| **Source** | Wazuh (Apache) / Linux Auditd on DVWA |
+| **Alert ID** | `wzb-61ed72e937`, `wzb-e9a1797ac4` |
+| **Rule ID** | Suricata SID `2019284` (`ET ATTACK_RESPONSE Output of id command`) via `86601` / Wazuh `100214` (Level 12) / Auditd `web_process_creation` |
+| **Source** | Suricata Network IDS / Wazuh / Linux Auditd |
 | **Severity** | High |
 | **TLP / PAP** | `TLP:AMBER / PAP:AMBER` |
 
@@ -20,7 +20,7 @@
 
 ## What was detected
 
-Wazuh Rule 100214 triggered on DVWA web upload directory monitoring. Auditd file watch (-w /var/www/html/hackable/uploads/ -p wa) generated a file creation event for executable PHP script shell.php.
+Adversary uploaded an executable PHP web shell to `/var/www/html/hackable/uploads/shell.php` and executed commands. Linux Auditd logged process execution under uid 33 (`web_process_creation`), Wazuh Rule 100214 alerted on webshell activity, and Suricata SID 2019284 flagged the HTTP response returning `uid=33(www-data)`.
 
 ---
 
@@ -46,9 +46,9 @@ Wazuh Rule 100214 triggered on DVWA web upload directory monitoring. Auditd file
 
 ## Evidence
 
-- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/16.png`](../../02-Attack-Simulation/Attack-Screenshots/16.png)
+- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/12.png`](../../02-Attack-Simulation/Attack-Screenshots/12.png)
 - **Alert Evidence:** [`../../03-Detection-Engineering/TheHive_Alert-ScreenShot/4.png`](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/4.png)
-- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv) and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
+- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv), [`Wazuh-Raw-Alerts.csv`](../../06-Resources/Alerts/Wazuh-Raw-Alerts.csv), and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
 
 ---
 

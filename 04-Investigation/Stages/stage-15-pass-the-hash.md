@@ -10,9 +10,9 @@
 
 | Field | Value |
 |---|---|
-| **Alert ID** | `wzb-c1e2642eb2 / wzb-4624-pth` |
-| **Rule ID** | `Wazuh Rule 60122 (Windows EID 4624) + Suricata 86601` |
-| **Source** | Wazuh Windows Agent on DomainWin10 |
+| **Alert ID** | `wzb-b7f91cd3ab`–`ccff195e0c` & 24x CSV |
+| **Rule ID** | Windows EID `4624` (24x in CSV: 15 on Win10User, 9 on DomainWin10) / Wazuh `100613` (WMI Fan-out) |
+| **Source** | Windows Security Log / Wazuh Process Correlation |
 | **Severity** | High |
 | **TLP / PAP** | `TLP:AMBER / PAP:AMBER` |
 
@@ -20,7 +20,7 @@
 
 ## What was detected
 
-Wazuh Rule 60122 triggered 24+ times on DomainWin10 (192.168.56.20): 'Successful Remote Logon Detected - User:\Administrator - NTLM authentication, possible pass-the-hash attack.' Logon Type 3 via NtLmSsp from DVWA (192.168.56.30).
+Adversary executed Pass-the-Hash remote logons over SMB using NTLM authentication, logging 24 instances of Windows Event ID 4624 Logon Type 3 across both `Win10User` (15 events) and `DomainWin10` (9 events). In TheHive, Impacket WMI fan-out commands escalated under Wazuh Rule 100613.
 
 ---
 
@@ -46,9 +46,9 @@ Wazuh Rule 60122 triggered 24+ times on DomainWin10 (192.168.56.20): 'Successful
 
 ## Evidence
 
-- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/50.png`](../../02-Attack-Simulation/Attack-Screenshots/50.png)
+- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/48.png`](../../02-Attack-Simulation/Attack-Screenshots/48.png)
 - **Alert Evidence:** [`../../03-Detection-Engineering/TheHive_Alert-ScreenShot/13.png`](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/13.png)
-- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv) and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
+- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv), [`Wazuh-Raw-Alerts.csv`](../../06-Resources/Alerts/Wazuh-Raw-Alerts.csv), and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
 
 ---
 
@@ -65,7 +65,7 @@ Wazuh Rule 60122 triggered 24+ times on DomainWin10 (192.168.56.20): 'Successful
 
 ## Detection assessment
 
-- **Status:** Detected
+- **Status:** Detected (Host & Pivot Alerted)
 - **Gap ID:** None
 - **Engineering Assessment:** Wazuh Rule 60122 specifically detects NTLM network logons for administrative accounts, generating strong empirical evidence in alerts CSV.
 

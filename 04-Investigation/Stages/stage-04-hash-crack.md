@@ -10,9 +10,9 @@
 
 | Field | Value |
 |---|---|
-| **Alert ID** | `None (Offline Activity)` |
-| **Rule ID** | `N/A` |
-| **Source** | Offline computation on Kali Linux |
+| **Alert ID** | *None (Offline Activity)* |
+| **Rule ID** | *N/A (DG-04)* |
+| **Source** | Attacker GPU (Hashcat on Kali) |
 | **Severity** | Informational |
 | **TLP / PAP** | `TLP:WHITE` |
 
@@ -20,7 +20,7 @@
 
 ## What was detected
 
-Zero host or network alerts generated. Hashcat mode 0 (MD5) was executed locally on the adversary's Kali Linux workstation against the dumped DVWA password hashes.
+Adversary performed offline cryptographic cracking of the extracted MD5 administrative password hash on local Kali Linux hardware using Hashcat. No network traffic or target endpoint execution occurred.
 
 ---
 
@@ -46,9 +46,9 @@ Zero host or network alerts generated. Hashcat mode 0 (MD5) was executed locally
 
 ## Evidence
 
-- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/13.png`](../../02-Attack-Simulation/Attack-Screenshots/13.png)
-- **Alert Evidence:** [`None (Inherent offline gap)`](None (Inherent offline gap))
-- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv) and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
+- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/10.png`](../../02-Attack-Simulation/Attack-Screenshots/10.png)
+- **Alert Evidence:** *None (Offline Activity)*
+- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv), [`Wazuh-Raw-Alerts.csv`](../../06-Resources/Alerts/Wazuh-Raw-Alerts.csv), and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
 
 ---
 
@@ -63,7 +63,7 @@ Zero host or network alerts generated. Hashcat mode 0 (MD5) was executed locally
 
 ## Detection assessment
 
-- **Status:** Detection gap
+- **Status:** Detection Gap (Offline)
 - **Gap ID:** DG-04
 - **Engineering Assessment:** Inherent offline gap. SOC defenses must focus on prevention (preventing database exfiltration) and post-crack credential use alerting.
 

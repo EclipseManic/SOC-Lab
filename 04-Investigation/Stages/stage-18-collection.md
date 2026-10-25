@@ -10,9 +10,9 @@
 
 | Field | Value |
 |---|---|
-| **Alert ID** | `wzb-aa66cb916a / wzb-ed666653f7` |
-| **Rule ID** | `Wazuh 100613 / Wazuh 100602` |
-| **Source** | Wazuh Windows Agent & Linux Auditd |
+| **Alert ID** | `wzb-aa66cb916a`, `wzb-96e8d5856b`, `wzb-ed666653f7` |
+| **Rule ID** | Wazuh `100613` (Process Fan-out: `cmd.exe /Q /c whoami`, `net user`, `net group`) |
+| **Source** | Windows Security / Sysmon EID 1 / Wazuh |
 | **Severity** | High |
 | **TLP / PAP** | `TLP:AMBER / PAP:AMBER` |
 
@@ -20,7 +20,7 @@
 
 ## What was detected
 
-Wazuh process fan-out rule 100613 alerted on rapid reconnaissance commands via wmiexec on Windows hosts (whoami, net user, systeminfo), while Auditd on DVWA detected tar archive staging (/tmp/data.tar.gz).
+Adversary executed automated data harvesting commands across `DomainWin10` and `Win10User` using Impacket `wmiexec`. Wazuh Rule 100613 alerted on rapid child process fan-outs spawning `whoami`, `net user`, and `net group` from parent PID 4432 / 4008.
 
 ---
 
@@ -46,9 +46,9 @@ Wazuh process fan-out rule 100613 alerted on rapid reconnaissance commands via w
 
 ## Evidence
 
-- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/62.png`](../../02-Attack-Simulation/Attack-Screenshots/62.png)
+- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/54.png`](../../02-Attack-Simulation/Attack-Screenshots/54.png)
 - **Alert Evidence:** [`../../03-Detection-Engineering/TheHive_Alert-ScreenShot/16.png`](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/16.png)
-- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv) and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
+- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv), [`Wazuh-Raw-Alerts.csv`](../../06-Resources/Alerts/Wazuh-Raw-Alerts.csv), and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
 
 ---
 

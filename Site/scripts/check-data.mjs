@@ -20,7 +20,7 @@ const reportBlock = source.slice(
   source.indexOf("export const evidenceItems"),
 );
 
-const stageIds = [...stagesBlock.matchAll(/id: "(\d{2})",\n    slug:/g)].map(
+const stageIds = [...stagesBlock.matchAll(/id: "(\d{2})",\r?\n\s*slug:/g)].map(
   (match) => match[1],
 );
 if (stageIds.length !== 20) {

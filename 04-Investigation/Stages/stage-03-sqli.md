@@ -10,9 +10,9 @@
 
 | Field | Value |
 |---|---|
-| **Alert ID** | `wzb-c276fcddb8` |
-| **Rule ID** | `Suricata SID 2010938 / Wazuh 86601` |
-| **Source** | Suricata Network IDS via Wazuh integration |
+| **Alert ID** | `wzb-10160d36c2` |
+| **Rule ID** | Wazuh `31153` (Level 10 - Sensitive file /etc/passwd in URL parameter) |
+| **Source** | Wazuh (Apache Access Logs) |
 | **Severity** | High |
 | **TLP / PAP** | `TLP:AMBER / PAP:AMBER` |
 
@@ -20,7 +20,7 @@
 
 ## What was detected
 
-Suricata signature SID 2010938 (ET WEB_SERVER Possible SQL Injection - UNION SELECT) fired on inbound HTTP GET traffic containing SQL syntax (' UNION SELECT user, password FROM users --) destined for DVWA.
+Wazuh flagged an SQL injection and path traversal parameter pattern in Apache access logs attempting to access `/etc/passwd` via URL injection, triggering watchlist Rule 31153 and escalating to TheHive.
 
 ---
 
@@ -46,9 +46,9 @@ Suricata signature SID 2010938 (ET WEB_SERVER Possible SQL Injection - UNION SEL
 
 ## Evidence
 
-- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/09.png`](../../02-Attack-Simulation/Attack-Screenshots/09.png)
+- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/8.png`](../../02-Attack-Simulation/Attack-Screenshots/8.png)
 - **Alert Evidence:** [`../../03-Detection-Engineering/TheHive_Alert-ScreenShot/3.png`](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/3.png)
-- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv) and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
+- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv), [`Wazuh-Raw-Alerts.csv`](../../06-Resources/Alerts/Wazuh-Raw-Alerts.csv), and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
 
 ---
 
@@ -66,7 +66,7 @@ Suricata signature SID 2010938 (ET WEB_SERVER Possible SQL Injection - UNION SEL
 
 - **Status:** Detected
 - **Gap ID:** None
-- **Engineering Assessment:** NIDS signature SID 2010938 matched cleanly on unencrypted HTTP traffic. For TLS deployments, WAF or TLS termination inspection is required.
+- **Engineering Assessment:** Wazuh Rule 31153 flagged sensitive /etc/passwd parameter access from Apache access logs with zero latency. For TLS deployments, WAF or TLS termination inspection is required.
 
 ---
 

@@ -9,7 +9,7 @@
 
 ## Summary
 
-Armed with the dumped domain NTLM hashes from DCSync, the adversary executed Pass-the-Hash lateral movement over SMB (`445/TCP`) to compromise `DomainWin10` (`192.168.56.20`), generating 24+ high-fidelity Windows Security Event ID 4624 Type 3 NTLM logon alerts in Wazuh. The adversary then forged an unauthorized Kerberos Ticket-Granting Ticket (Golden Ticket) using the compromised `krbtgt` key. To maintain persistent administrative access, the attacker created a rogue domain user (`backdoor_admin`) via Impacket `wmiexec` on `PC-DC` (`192.168.56.10`) and added the user to `Domain Admins`. Automated collection commands harvested sensitive system configurations into `/tmp/data.tar.gz`, which was rapidly exfiltrated back to Kali via SCP. Finally, the adversary deployed internal defacement commands modifying desktop wallpaper across domain workstations to assert total compromise.
+Armed with the dumped domain NTLM hashes from DCSync, the adversary executed Pass-the-Hash lateral movement over SMB (`445/TCP`) to compromise `Win10User` (`192.168.56.20`) and `DomainWin10` (`192.168.56.10`), generating 24+ high-fidelity Windows Security Event ID 4624 Type 3 NTLM logon alerts in Wazuh. The adversary then forged an unauthorized Kerberos Ticket-Granting Ticket (Golden Ticket) using the compromised `krbtgt` key. To maintain persistent administrative access, the attacker created a rogue domain user (`backdoor_admin`) via Impacket `wmiexec` on `PC-DC` (`192.168.56.10`) and added the user to `Domain Admins`. Automated collection commands harvested sensitive system configurations into `/tmp/data.tar.gz`, which was rapidly exfiltrated back to Kali via SCP. Finally, the adversary deployed internal defacement commands modifying desktop wallpaper across domain workstations to assert total compromise.
 
 ---
 
@@ -17,7 +17,7 @@ Armed with the dumped domain NTLM hashes from DCSync, the adversary executed Pas
 
 | Stage | Attack | Investigation | Detection Status |
 |---|---|---|---|
-| 15 | [Pass-the-Hash](../../02-Attack-Simulation/Stages/stage-15-pass-the-hash.md) | [stage-15](../Stages/stage-15-pass-the-hash.md) | **Detected** (Wazuh Rule 60122 / EID 4624 - 24x in CSV) |
+| 15 | [Pass-the-Hash](../../02-Attack-Simulation/Stages/stage-15-pass-the-hash.md) | [stage-15](../Stages/stage-15-pass-the-hash.md) | **Detected** (Windows EID 4624 (24x in CSV) / Wazuh Rule 100613) |
 | 16 | [Golden Ticket](../../02-Attack-Simulation/Stages/stage-16-golden-ticket.md) | [stage-16](../Stages/stage-16-golden-ticket.md) | **Detected** (Wazuh Rule 5715 pivot logon alerted in TheHive) |
 | 17 | [DC persistence](../../02-Attack-Simulation/Stages/stage-17-dc-persistence.md) | [stage-17](../Stages/stage-17-dc-persistence.md) | **Detected** (Wazuh Rule 100613 fan-out, EID 4720/4728) |
 | 18 | [Collection](../../02-Attack-Simulation/Stages/stage-18-collection.md) | [stage-18](../Stages/stage-18-collection.md) | **Detected** (Wazuh Rule 100613 fan-out & Auditd archive staging) |
@@ -42,12 +42,12 @@ Armed with the dumped domain NTLM hashes from DCSync, the adversary executed Pas
 
 | Time | Event | Source | Evidence |
 |---|---|---|---|
-| T+45m | Pass-the-Hash remote logon Type 3 via NtLmSsp to DomainWin10 | Wazuh (Win10) | [Attack 50](../../02-Attack-Simulation/Attack-Screenshots/50.png) · [Alert 13](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/13.png) |
-| T+48m | Forged Kerberos TGT (Golden Ticket) generated on pivot host | Wazuh SSHD | [Attack 54](../../02-Attack-Simulation/Attack-Screenshots/54.png) · [Alert 14](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/14.png) |
-| T+52m | Rogue user `backdoor_admin` created and added to Domain Admins | Wazuh (PC-DC) | [Attack 58](../../02-Attack-Simulation/Attack-Screenshots/58.png) · [Alert 15](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/15.png) |
-| T+55m | Automated host data collection commands and tar archive staging | Wazuh / Sysmon | [Attack 62](../../02-Attack-Simulation/Attack-Screenshots/62.png) · [Alert 16](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/16.png) |
-| T+58m | Rapid administrative SSH burst exfiltrating /tmp/data.tar.gz via SCP | Wazuh SSHD | [Attack 66](../../02-Attack-Simulation/Attack-Screenshots/66.png) · [Alert 17](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/17.png) |
-| T+62m | Impacket wmiexec fan-out altering desktop wallpaper registry keys | Wazuh / Sysmon | [Attack 70](../../02-Attack-Simulation/Attack-Screenshots/70.png) · [Alert 18](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/18.png) |
+| T+45m | Pass-the-Hash remote logon Type 3 via NtLmSsp to DomainWin10 | Wazuh (Win10) | [Attack 50](../../02-Attack-Simulation/Attack-Screenshots/48.png) · [Alert 13](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/13.png) |
+| T+48m | Forged Kerberos TGT (Golden Ticket) generated on pivot host | Wazuh SSHD | [Attack 54](../../02-Attack-Simulation/Attack-Screenshots/49.png) · [Alert 14](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/14.png) |
+| T+52m | Rogue user `backdoor_admin` created and added to Domain Admins | Wazuh (PC-DC) | [Attack 58](../../02-Attack-Simulation/Attack-Screenshots/52.png) · [Alert 15](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/15.png) |
+| T+55m | Automated host data collection commands and tar archive staging | Wazuh / Sysmon | [Attack 62](../../02-Attack-Simulation/Attack-Screenshots/54.png) · [Alert 16](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/16.png) |
+| T+58m | Rapid administrative SSH burst exfiltrating /tmp/data.tar.gz via SCP | Wazuh SSHD | [Attack 66](../../02-Attack-Simulation/Attack-Screenshots/56.png) · [Alert 17](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/17.png) |
+| T+62m | Impacket wmiexec fan-out altering desktop wallpaper registry keys | Wazuh / Sysmon | [Attack 70](../../02-Attack-Simulation/Attack-Screenshots/57.png) · [Alert 18](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/18.png) |
 
 ---
 

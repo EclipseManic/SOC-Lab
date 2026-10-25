@@ -17,13 +17,13 @@ The adversary initiated an external attack campaign targeting the public-facing 
 
 | Stage | Attack | Investigation | Detection Status |
 |---|---|---|---|
-| 01 | [Reconnaissance](../../02-Attack-Simulation/Stages/stage-01-recon.md) | [stage-01](../Stages/stage-01-recon.md) | **Detected** (Suricata SID 2000545 & Wazuh Rule 100410) |
+| 01 | [Reconnaissance](../../02-Attack-Simulation/Stages/stage-01-recon.md) | [stage-01](../Stages/stage-01-recon.md) | **Detected** (Suricata SID 3400001, 3400002 & Wazuh Rule 100410) |
 | 02 | [Brute force](../../02-Attack-Simulation/Stages/stage-02-bruteforce.md) | [stage-02](../Stages/stage-02-bruteforce.md) | **Detected** (Wazuh Rule 100213 & Suricata SID 2000547) |
-| 03 | [SQL injection](../../02-Attack-Simulation/Stages/stage-03-sqli.md) | [stage-03](../Stages/stage-03-sqli.md) | **Detected** (Suricata SID 2010938 via Wazuh 86601) |
+| 03 | [SQL injection](../../02-Attack-Simulation/Stages/stage-03-sqli.md) | [stage-03](../Stages/stage-03-sqli.md) | **Detected** (Wazuh Rule 31153 (passwd watchlist)) |
 | 04 | [Hash cracking](../../02-Attack-Simulation/Stages/stage-04-hash-crack.md) | [stage-04](../Stages/stage-04-hash-crack.md) | **Detection gap** (DG-04: Inherent offline cracking) |
-| 05 | [Web shell upload](../../02-Attack-Simulation/Stages/stage-05-webshell.md) | [stage-05](../Stages/stage-05-webshell.md) | **Detected** (Wazuh Rule 100214 & Auditd File Watch) |
-| 06 | [Reverse shell](../../02-Attack-Simulation/Stages/stage-06-reverse-shell.md) | [stage-06](../Stages/stage-06-reverse-shell.md) | **Detected** (Wazuh Rule 100602 via bashcmd decoder) |
-| 07 | [Privilege escalation](../../02-Attack-Simulation/Stages/stage-07-privesc.md) | [stage-07](../Stages/stage-07-privesc.md) | **Detected** (Wazuh Rule 100603 via SUID execve audit) |
+| 05 | [Web shell upload](../../02-Attack-Simulation/Stages/stage-05-webshell.md) | [stage-05](../Stages/stage-05-webshell.md) | **Detected** (Suricata SID 2019284 / Wazuh Rule 100214 / Auditd) |
+| 06 | [Reverse shell](../../02-Attack-Simulation/Stages/stage-06-reverse-shell.md) | [stage-06](../Stages/stage-06-reverse-shell.md) | **Detected** (Suricata SID 3400020 & Wazuh Rule 100199) |
+| 07 | [Privilege escalation](../../02-Attack-Simulation/Stages/stage-07-privesc.md) | [stage-07](../Stages/stage-07-privesc.md) | **Detected** (Wazuh Rule 5402 (PAM) & Auditd web_process_creation) |
 
 ---
 
@@ -31,7 +31,7 @@ The adversary initiated an external attack campaign targeting the public-facing 
 
 | Source | What it contributed |
 |---|---|
-| **Suricata** | External network edge IDS flagged Nmap port sweeps (SID 2000545), Hydra HTTP brute-force bursts (SID 2000547), and SQL injection UNION SELECT signatures (SID 2010938). |
+| **Suricata** | External network edge IDS flagged Nmap port sweeps (SID 2000545), Hydra HTTP brute-force bursts (SID 2000547), and SQL injection / sensitive parameter access (Wazuh Rule 31153 watchlist). |
 | **Wazuh** | Apache access log analysis flagged HTTP 4xx scanning floods (Rule 100410) and 401 Unauthorized bursts (Rule 100213). Linux Auditd integration alerted on web shell file drops (Rule 100214), reverse shell execution (Rule 100602), and SUID privilege escalation (Rule 100603). |
 | **TheHive** | Aggregated multiple correlated alerts into unified triage incidents (`tool_campaign`, `process_chain`). |
 | **Velociraptor** | Host forensic artifact triage: extracted process tree (`apache2` -> `sh` -> `python3`), verified web shell on disk, and identified modified SUID binaries. |
@@ -42,13 +42,13 @@ The adversary initiated an external attack campaign targeting the public-facing 
 
 | Time | Event | Source | Evidence |
 |---|---|---|---|
-| T0 | External port scan and directory fuzzing from 192.168.232.135 | Suricata / Wazuh | [Attack 01](../../02-Attack-Simulation/Attack-Screenshots/01.png) · [Alert 01](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/1.png) |
-| T+2m | Hydra HTTP basic authentication burst against /dvwa/login.php | Suricata / Wazuh | [Attack 05](../../02-Attack-Simulation/Attack-Screenshots/05.png) · [Alert 02](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/2.png) |
-| T+5m | SQL injection payload submitted dumping credentials | Suricata | [Attack 09](../../02-Attack-Simulation/Attack-Screenshots/09.png) · [Alert 03](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/3.png) |
-| T+8m | Offline Hashcat MD5 password cracking on Kali | Offline GPU | [Attack 13](../../02-Attack-Simulation/Attack-Screenshots/13.png) · DG-04 |
-| T+11m | Malicious PHP file uploaded to /var/www/html/hackable/uploads/ | Wazuh / Auditd | [Attack 16](../../02-Attack-Simulation/Attack-Screenshots/16.png) · [Alert 04](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/4.png) |
-| T+13m | Python reverse shell spawned to 192.168.232.135:4444 | Wazuh Auditd | [Attack 19](../../02-Attack-Simulation/Attack-Screenshots/19.png) · [Alert 05](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/5.png) |
-| T+16m | SUID find execution granting effective root and reading /etc/shadow | Wazuh Auditd | [Attack 23](../../02-Attack-Simulation/Attack-Screenshots/23.png) · [Alert 06](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/6.png) |
+| T0 | External port scan and directory fuzzing from 192.168.232.135 | Suricata / Wazuh | [Attack 01](../../02-Attack-Simulation/Attack-Screenshots/1.png) · [Alert 01](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/1.png) |
+| T+2m | Hydra HTTP basic authentication burst against /dvwa/login.php | Suricata / Wazuh | [Attack 05](../../02-Attack-Simulation/Attack-Screenshots/6.png) · [Alert 02](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/2.png) |
+| T+5m | SQL injection payload submitted dumping credentials | Suricata | [Attack 09](../../02-Attack-Simulation/Attack-Screenshots/8.png) · [Alert 03](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/3.png) |
+| T+8m | Offline Hashcat MD5 password cracking on Kali | Offline GPU | [Attack 13](../../02-Attack-Simulation/Attack-Screenshots/10.png) · DG-04 |
+| T+11m | Malicious PHP file uploaded to /var/www/html/hackable/uploads/ | Wazuh / Auditd | [Attack 16](../../02-Attack-Simulation/Attack-Screenshots/12.png) · [Alert 04](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/4.png) |
+| T+13m | Python reverse shell spawned to 192.168.232.135:4444 | Wazuh Auditd | [Attack 19](../../02-Attack-Simulation/Attack-Screenshots/15.png) · [Alert 05](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/5.png) |
+| T+16m | SUID find execution granting effective root and reading /etc/shadow | Wazuh Auditd | [Attack 23](../../02-Attack-Simulation/Attack-Screenshots/17.png) · [Alert 06](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/6.png) |
 
 ---
 
