@@ -10,8 +10,8 @@
 
 | Field | Value |
 |---|---|
-| **Alert ID** | `wzb-71ef983ad8`, `wzb-1f43c1540f`, `wzb-ddc9d1a730` |
-| **Rule ID** | Wazuh `100613` (Process Fan-out) / Sysmon EID 1 (`cmd.exe /Q /c`) |
+| **Alert ID** | `wzb-71ef983ad8`, `wzb-1f43c1540f`, `wzb-ddc9d1a730`, `wzb-7a4a134d1b` |
+| **Rule ID** | Wazuh `100613` (WMI Fan-out) / Sysmon EID 1 / Suricata SIDs `2067085`–`2067087` |
 | **Source** | Windows Security / Sysmon EID 1 / Wazuh |
 | **Severity** | High |
 | **TLP / PAP** | `TLP:AMBER / PAP:AMBER` |
@@ -20,7 +20,7 @@
 
 ## What was detected
 
-Adversary deployed defacement commands across domain endpoints via Impacket `wmiexec`, altering desktop wallpaper registry keys. Wazuh Rule 100613 alerted on high-frequency child process spawning (9 child processes each on DC and workstation), escalating immediately to TheHive.
+The adversary deployed defacement commands across domain endpoints via Impacket `wmiexec`, altering desktop wallpaper registry keys. Wazuh Rule 100613 alerted on high-frequency child process spawning (9 child processes each on DC and workstation), escalating immediately to TheHive (`wzb-71ef983ad8`, `wzb-1f43c1540f`). Concurrently on `ens37`, Suricata flagged the remote SMB NTLM Session Setup activity to Win10 at 12:53:59 under signature SIDs 2067085–2067087 (`wzb-7a4a134d1b`).
 
 ---
 

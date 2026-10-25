@@ -22,7 +22,7 @@ Armed with the dumped domain NTLM hashes from DCSync, the adversary executed Pas
 | 17 | [DC persistence](../../02-Attack-Simulation/Stages/stage-17-dc-persistence.md) | [stage-17](../Stages/stage-17-dc-persistence.md) | **Detected** (Wazuh Rule 100613 fan-out (net user /add, net localgroup)) |
 | 18 | [Collection](../../02-Attack-Simulation/Stages/stage-18-collection.md) | [stage-18](../Stages/stage-18-collection.md) | **Detected** (Wazuh Rule 100613 fan-out & Auditd archive staging) |
 | 19 | [Exfiltration](../../02-Attack-Simulation/Stages/stage-19-exfiltration.md) | [stage-19](../Stages/stage-19-exfiltration.md) | **Detected** (Wazuh Rule 5715 rapid SSH burst: 6 sessions/1s; DG-19) |
-| 20 | [Impact](../../02-Attack-Simulation/Stages/stage-20-impact.md) | [stage-20](../Stages/stage-20-impact.md) | **Detected** (Wazuh Rule 100613 process fan-out & Sysmon EID 1/13) |
+| 20 | [Impact](../../02-Attack-Simulation/Stages/stage-20-impact.md) | [stage-20](../Stages/stage-20-impact.md) | **Detected** (Wazuh Rule 100613 fan-out, Sysmon EID 1, & Suricata SIDs 2067085–87) |
 
 ---
 

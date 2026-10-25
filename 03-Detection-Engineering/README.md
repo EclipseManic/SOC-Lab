@@ -90,7 +90,7 @@ This matrix maps each of the 20 attack stages in the campaign to its correspondi
 | **17** | DC Persistence | `T1136.002` | Sysmon / Security / WMI | Impacket wmiexec fan-out / Rogue user added to DA | Wazuh `100613`, `60109`, `4728` | **Detected** | - | `wzb-26b4d06a63`, `wzb-299a007168` (`17.png`) |
 | **18** | Data Collection | `T1005` | Sysmon Process Monitoring | Impacket wmiexec fan-out (`whoami`, `net user`) | Wazuh `100613` (Process Fan-out) | **Detected** | - | `wzb-aa66cb916a`, `wzb-ed666653f7` (`18.png`) |
 | **19** | Exfiltration | `T1041` | Linux Auth (Pivot Host) | Rapid administrative SSH burst (6 sessions / 1s) | Wazuh `5715` (Elevated Level 8) | **Detected** | [DG-19](#dg-19--encrypted-exfiltration-inspection-stage-19) | `wzb-34f34a857c` (`19.png`) |
-| **20** | Impact (Defacement) | `T1491.001` | Sysmon / Process / WMI | Impacket wmiexec fan-out registry autostart commands | Wazuh `100613` (Process Fan-out) | **Detected** | - | `wzb-71ef983ad8`, `wzb-1f43c1540f` (`20.png`) |
+| **20** | Impact (Defacement) | `T1491.001` | Sysmon / Security / IDS | Impacket wmiexec fan-out, defacement, SMB NTLM setup | Wazuh `100613` / Suricata SIDs `2067085`–`2067087` | **Detected** | - | `wzb-71ef983ad8`, `wzb-1f43c1540f`, `wzb-7a4a134d1b` (`20.png`) |
 
 ---
 

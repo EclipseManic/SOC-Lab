@@ -19,7 +19,7 @@ Following root privilege escalation on the DVWA host (`192.168.56.30`), the adve
 |---|---|---|---|
 | 08 | [SSH persistence](../../02-Attack-Simulation/Stages/stage-08-ssh-persistence.md) | [stage-08](../Stages/stage-08-ssh-persistence.md) | **Detected** (Wazuh Rule 5715 Level 8 & Rule 100215) |
 | 09 | [Internal discovery](../../02-Attack-Simulation/Stages/stage-09-internal-discovery.md) | [stage-09](../Stages/stage-09-internal-discovery.md) | **Logging gap** (Suricata SID 3400001, 3400002 on ens37; DG-09) |
-| 10 | [Responder poisoning](../../02-Attack-Simulation/Stages/stage-10-responder.md) | [stage-10](../Stages/stage-10-responder.md) | **Detected** (Wazuh bashcmd (uid:0 Responder.py) & Suricata SID 2067085–2067087) |
+| 10 | [Responder poisoning](../../02-Attack-Simulation/Stages/stage-10-responder.md) | [stage-10](../Stages/stage-10-responder.md) | **Detected** (Wazuh bashcmd (uid:0 Responder.py execution on pivot)) |
 | 11 | [NTLMv2 cracking](../../02-Attack-Simulation/Stages/stage-11-ntlmv2-crack.md) | [stage-11](../Stages/stage-11-ntlmv2-crack.md) | **Detection gap** (DG-11: Inherent offline cracking) |
 | 12 | [BloodHound enumeration](../../02-Attack-Simulation/Stages/stage-12-bloodhound.md) | [stage-12](../Stages/stage-12-bloodhound.md) | **Detected** (Wazuh Rule 5715 pivot logon alerted; DG-12) |
 | 13 | [Kerberoasting](../../02-Attack-Simulation/Stages/stage-13-kerberoasting.md) | [stage-13](../Stages/stage-13-kerberoasting.md) | **Detected** (Suricata SID 2019922 wire alert & Wazuh Rule 5715) |
