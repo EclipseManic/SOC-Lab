@@ -2,17 +2,18 @@
 
 | Property | Value |
 |----------|-------|
-| **OS** | Windows Server 2022 Standard, Build 20348.587 |
+| **OS** | Windows Server 2022 Standard Evaluation, Build 10.0.20348.587 |
 | **Role** | Domain Controller · DNS Server · Kerberos KDC |
 | **Hostname** | `PC-DC` |
 | **FQDN** | `PC-DC.ad.lab` |
 | **Address** | `192.168.56.10/24` |
-| **Default gateway** | `192.168.56.150` |
+| **Default gateway** | `192.168.56.150` (Suricata Gateway) |
 | **Domain** | `ad.lab` |
 | **Roles** | Active Directory Domain Services (AD DS), DNS |
-| **Resources** | 2 vCPU · 4 GB RAM |
-| **Wazuh agent** | `DomainWin10` (Agent ID: `003`) |
+| **Resources** | 2 vCPU · 4 GB RAM · 40 GB NVMe |
+| **Wazuh agent** | `DomainWin10` (Agent ID: `004`) |
 | **Velociraptor** | Client v0.77.1 |
+| **SSH Management** | None (Windows endpoint — managed via WinRM / local console) |
 
 ---
 
@@ -68,7 +69,7 @@ The baseline domain is provisioned with high-value accounts that serve as target
 | Account | Type | Baseline Configuration & Target Role |
 |---------|------|--------------------------------------|
 | `Administrator` | Built-in Domain Admin | High-value credential target for DRSUAPI domain replication ([Stage 14 — DCSync](../../02-Attack-Simulation/Stages/stage-14-dcsync.md)) |
-| `HANK_SHERMAN` | Domain Admin & Service Account | Populated by BadBlood with SPN `CIFS/AWSWAPPS1000000.ad.lab`, weak password `<REDACTED>`, and `PasswordNeverExpires: True` (target for [Stage 13 — Kerberoasting](../../02-Attack-Simulation/Stages/stage-13-kerberoasting.md)) |
+| `HANK_SHERMAN` | Domain Admin & Service Account | Populated by BadBlood with SPN `CIFS/AWSWAPPS1000000.ad.lab`, weak password `Password123`, and `PasswordNeverExpires: True` (target for [Stage 13 — Kerberoasting](../../02-Attack-Simulation/Stages/stage-13-kerberoasting.md)) |
 
 ```powershell
 # Ensure the Service Principal Name (SPN) is registered for HANK_SHERMAN

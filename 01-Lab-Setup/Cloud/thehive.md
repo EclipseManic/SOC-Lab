@@ -190,11 +190,17 @@ TheHive receives incoming alerts pushed directly from the Wazuh Manager VM over 
 |------|----------|---------|----------|
 | `51820` | UDP | WireGuard | **Public** (only public port) |
 | `9000` | TCP | TheHive | VPN / Peered VNet (`10.122.0.4`) |
+| `7000`, `9042` | TCP | Apache Cassandra 4.1.12 | Localhost / Peered VNet (TheHive Backend) |
+| `9200`, `9300` | TCP | Elasticsearch 8.19.23 | Localhost / Peered VNet (TheHive Search Engine) |
 | `8889` | TCP | Velociraptor GUI | VPN only |
 | `8000` | TCP | Velociraptor frontend | VPN only (client-initiated) |
+| `8001`, `8003` | TCP | Velociraptor internal API | Localhost only |
 | `443` | TCP | Nginx Proxy Manager (HTTPS) | VPN only |
 | `81` | TCP | Nginx Proxy Manager (Admin HTTPS: `https://10.122.0.4:81`) | VPN only (custom TLS cert/key) |
 | `80` | TCP | Nginx Proxy Manager (HTTP redirect) | VPN only |
+
+> [!NOTE]
+> **Caldera Installation Note:** MITRE Caldera is installed at `/opt/caldera-venv/` with listeners on ports `8888`, `2222`, `8022`, `7012`, `7010`. In this campaign, all 20 adversary stages were executed manually via authentic red-team tradecraft from Kali and DVWA, so Caldera remained unutilized during active simulation runs.
 
 ---
 

@@ -8,7 +8,7 @@
 | **Resources** | 2–3 vCPU · 3 GB RAM |
 | **Suricata Engine** | Version 8.0.6 (AF-PACKET passive IDS mode on victim interface `ens37`) |
 | **Wazuh Agent** | `Suricata` |
-| **SSH Management** | `analyst@soc-workstation` (Public Key Authentication) |
+| **SSH Management** | Host laptop key (`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5... manichand gupta@ManicLenovo`) |
 
 ---
 
@@ -146,15 +146,22 @@ sudo add-apt-repository ppa:oisf/suricata-stable -y
 sudo apt-get update
 sudo apt-get install -y suricata jq
 
-# Update Emerging Threats Open signatures
+# Update rule sources (ET Open and Nmap ruleset)
+sudo suricata-update enable-source aleksibovellan/nmap
 sudo suricata-update
 ```
 
 ### Signature Provisioning & Thresholding
 
-Deploy the project's production rule sets:
+The production rule baseline pulls from two active rule sources:
+1. **`et/open`** — Emerging Threats Open ruleset.
+2. **`aleksibovellan/nmap`** — Targeted Nmap scanning and OS probe detection rules.
+
+Tuning and suppression files deployed:
 - Custom detection rules: [`custom.rules`](../../03-Detection-Engineering/Suricata/custom.rules) $\rightarrow$ `/etc/suricata/rules/custom.rules`
 - Alert rate-limiting & suppression: [`threshold.config`](../../03-Detection-Engineering/Suricata/threshold.config) $\rightarrow$ `/etc/suricata/rules/threshold.config`
+- Class suppression (`disable.conf`): Suppresses noisy `protocol-command-decode` classtype events.
+- Signature modification (`modify.conf`): Modifies SID 3400004 to monitor port 1514 (Wazuh event transport) alongside 51820 (WireGuard).
 
 ### Sensor Configuration (`/etc/suricata/suricata.yaml`)
 
