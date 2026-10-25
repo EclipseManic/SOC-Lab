@@ -601,7 +601,7 @@ export const chapters = [
       hiring:
         "This chapter shows network segmentation, VPN ingress, private cloud peering, and a visibility boundary documented before it became a convenient excuse.",
     },
-    proof: "01-Lab-Setup/architecture.md · 01-Lab-Setup/README.md",
+    proof: "01-Lab-Setup/README.md",
   },
   {
     n: "02",
@@ -783,7 +783,7 @@ export const evidenceItems = [
     value: "Captured",
     tone: "teal",
     note: "Unified 3-tier model, segments, flows, ports, and the Suricata visibility boundary.",
-    path: "01-Lab-Setup/architecture.md",
+    path: "01-Lab-Setup/README.md",
   },
   {
     label: "Attack screenshots",
