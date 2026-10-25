@@ -2,6 +2,8 @@
 
 I built a small company network in a hybrid cloud lab, executed an end-to-end 20-stage attack campaign—spanning external reconnaissance, web application exploitation, Linux host privilege escalation, network credential theft, and Active Directory domain compromise—and recorded which steps my security tools caught.
 
+[![SOC Lab Complete Architecture](06-Resources/Diagrams/SOC_Lab_Architecture.png)](06-Resources/Diagrams/SOC_Lab_Architecture.png)
+
 **Live interactive report:** <https://soc-lab.eclipsemanic.me/>
 
 ---
