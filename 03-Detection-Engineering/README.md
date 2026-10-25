@@ -21,7 +21,7 @@ This section details the detection engineering architecture, custom rule definit
 
 | Component | Documentation | Active Configuration / Baseline | Host / Location | Purpose |
 |---|---|---|---|---|
-| **Wazuh Engine** | [`Wazuh/README.md`](Wazuh/README.md) | [`Wazuh/local_rules.xml`](Wazuh/local_rules.xml)<br>[`Wazuh/local_decoder.xml`](Wazuh/local_decoder.xml) | Wazuh Manager (`10.122.0.5`) | Custom rules (wmiexec, LOLBins, privesc, 87 suppressions) & `bashcmd` decoder |
+| **Wazuh Engine** | [`Wazuh/README.md`](Wazuh/README.md) | [`Wazuh/local_rules.xml`](Wazuh/local_rules.xml)<br>[`Wazuh/local_decoder.xml`](Wazuh/local_decoder.xml) | Wazuh Manager (`10.122.1.4`) | Custom rules (wmiexec, LOLBins, privesc, 87 suppressions) & `bashcmd` decoder |
 | **Suricata NIDS** | [`Suricata/README.md`](Suricata/README.md) | [`Suricata/custom.rules`](Suricata/custom.rules)<br>[`Suricata/threshold.config`](Suricata/threshold.config) | Suricata Gateway (`.56.150` / `.232.162`) | Passive AF-PACKET IDS sniffing, scan fingerprinting, and rate limiting |
 | **Sysmon Baseline** | [`Sysmon/README.md`](Sysmon/README.md) | [`Sysmon/sysmonconfig.xml`](Sysmon/sysmonconfig.xml) | DC (`.56.10`) & Win10 (`.56.20`) | Endpoint telemetry: EID 1 (Process), EID 3 (Network), EID 11 (File), EID 13 (Registry), EID 17/18 (Pipes) |
 | **Linux Auditd** | [`Auditd/README.md`](Auditd/README.md) | [`Auditd/audit.rules`](Auditd/audit.rules) | DVWA (`.56.30`) | Kernel syscall tracing (`execve`), SUID creation (`chmod +s`), and identity file watches |

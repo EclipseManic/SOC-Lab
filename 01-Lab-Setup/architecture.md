@@ -17,7 +17,7 @@ Suricata is deployed in **passive IDS mode** via AF-PACKET capture on the gatewa
 |------|---------|-------|----------|
 | **Attack** | `192.168.232.0/24` (VMware VMnet8 NAT) | Kali `192.168.232.135` | Reaches victims only through the gateway router |
 | **Victim** | `192.168.56.0/24` (VMware VMnet2 Host-Only) | DC `.10`, Win10 `.20`, DVWA `.30` | Default gateway `192.168.56.150` (`ens37`) |
-| **Cloud SOC** | Peered VNets within `10.122.0.0/16` | Wazuh VM (`.0.5`), TheHive/Hub VM (`.0.4`) | Ingress restricted to WireGuard `51820/UDP` |
+| **Cloud SOC** | Peered VNets within `10.122.0.0/16` | Wazuh VM (`.1.4`), TheHive/Hub VM (`.0.4`) | Ingress restricted to WireGuard `51820/UDP` |
 
 ---
 
@@ -43,7 +43,7 @@ flowchart LR
 
     subgraph CLOUD["CLOUD — Private Peered VNets"]
         HUB["TheHive / VPN Hub VM\nPrivate: 10.122.0.4\nwg0: 10.8.0.1/24\nTheHive 5 + NPM + WireGuard"]
-        WZ["Wazuh SIEM VM\nPrivate: 10.122.0.5\nManager + Indexer + Dashboard"]
+        WZ["Wazuh SIEM VM\nPrivate: 10.122.1.4\nManager + Indexer + Dashboard"]
 
         HUB <-->|"VNet peering (10.122.0.0/16)"| WZ
     end
@@ -64,7 +64,7 @@ flowchart LR
 | **Domain Controller** | Windows Server 2022 | `Ethernet0`: `192.168.56.10/24` | `192.168.56.150` | AD DS, DNS, Kerberos KDC (`ad.lab`) | Wazuh Agent `DomainWin10` + Sysmon |
 | **Windows 10** | Windows 10 Pro N | `Ethernet0`: `192.168.56.20/24` | `192.168.56.150` | Domain workstation target | Wazuh Agent `Win10User` + Sysmon |
 | **DVWA** | Ubuntu 24.04 LTS | `ens33`: `192.168.56.30/24` | `192.168.56.150` | Web application target + internal pivot | Wazuh Agent `DVWA` + Auditd + `bashcmd` |
-| **Wazuh VM** | Ubuntu 24.04 LTS (Cloud) | `eth0`: `10.122.0.5/24` (Private VNet) | Cloud Gateway | SIEM Manager, Indexer, Dashboard, thecustomhive | Local SQLite queue + `custom-thehive.py` |
+| **Wazuh VM** | Ubuntu 24.04 LTS (Cloud) | `eth0`: `10.122.1.4/24` (Private VNet) | Cloud Gateway | SIEM Manager, Indexer, Dashboard, thecustomhive | Local SQLite queue + `custom-thehive.py` |
 | **TheHive VM** | Ubuntu 24.04 LTS (Cloud) | `eth0`: `10.122.0.4/24` (Private VNet)<br>`wg0`: `10.8.0.1/24` | Cloud Gateway | TheHive 5, WireGuard Hub, NGINX Reverse Proxy | Incident cases, alerts, triage queue |
 
 ---
@@ -101,8 +101,8 @@ All administrative interfaces (Wazuh Dashboard at `443/TCP`, TheHive at `9000/TC
 | # | Flow | Path | Purpose | Suricata Visibility |
 |---|------|------|---------|---------------------|
 | **1** | Kali $\rightarrow$ Victim | `192.168.232.135` $\rightarrow$ `ens33` $\rightarrow$ `ens37` $\rightarrow$ `.56.x` | Attack payloads & scanning | ✅ **Yes** — Crosses gateway routing path |
-| **2** | Victim $\rightarrow$ Cloud SIEM | `.56.x` $\rightarrow$ `ens37` $\rightarrow$ `wg0` $\rightarrow$ `10.8.0.1` $\rightarrow$ `10.122.0.5:1514` | Wazuh agent events | ✅ **Yes** — Transits gateway uplink to tunnel |
-| **3** | Wazuh $\rightarrow$ TheHive | `10.122.0.5` $\rightarrow$ VNet peering $\rightarrow$ `10.122.0.4:9000/api/v1` | Batched alert synchronization | ❌ **No** — Internal cloud VNet peering |
+| **2** | Victim $\rightarrow$ Cloud SIEM | `.56.x` $\rightarrow$ `ens37` $\rightarrow$ `wg0` $\rightarrow$ `10.8.0.1` $\rightarrow$ `10.122.1.4:1514` | Wazuh agent events | ✅ **Yes** — Transits gateway uplink to tunnel |
+| **3** | Wazuh $\rightarrow$ TheHive | `10.122.1.4` $\rightarrow$ VNet peering $\rightarrow$ `10.122.0.4:9000/api/v1` | Batched alert synchronization | ❌ **No** — Internal cloud VNet peering |
 | **4** | Victim $\leftrightarrow$ Victim | `.56.30` (DVWA) $\leftrightarrow$ `.56.10` (DC) / `.56.20` (Win10) | Lateral movement & AD requests | ⚠️ **Partial** — AF-PACKET promiscuous mode on `ens37` observes broadcast, multicast, and gateway-routed frames (e.g. Kerberos TGS-REQ in Stage 13); unrouted unicast frames rely on **Wazuh + Sysmon** endpoint telemetry |
 
 ---
@@ -116,7 +116,7 @@ All administrative interfaces (Wazuh Dashboard at `443/TCP`, TheHive at `9000/TC
 | **thecustomhive** | Wazuh VM | Native Python script + systemd unit | Durable SQLite ingestion queue & async flush daemon |
 | **TheHive 5.x** | TheHive VM | Native Debian package | Security incident response and case management |
 | **Cassandra 4.x / Elasticsearch 8.x** | TheHive VM | Native packages | Distributed database and search backend for TheHive 5 |
-| **Nginx Proxy Manager** | TheHive VM | Docker container | TLS termination and reverse proxy for VPN-only web UIs |
+| **Nginx Proxy Manager** | TheHive VM | Docker container | TLS reverse proxy for `*.lab` web UIs; admin console on `https://10.122.0.4:81` (custom TLS cert/key) |
 | **Velociraptor 0.77** | TheHive VM | Native systemd service | Endpoint digital forensics and artifact collection |
 | **WireGuard** | TheHive VM & Gateway | Native kernel module | Encrypted site-to-cloud transport tunnel |
 
@@ -134,9 +134,9 @@ sysctl net.ipv4.ip_forward
 # Output: net.ipv4.ip_forward = 1
 
 # Check static routing to cloud network
-ip route get 10.122.0.5
-# Output: 10.122.0.5 dev wg0 src 10.8.0.2
+ip route get 10.122.1.4
+# Output: 10.122.1.4 dev wg0 src 10.8.0.2
 
 # Verify VNet peering reachability from TheHive to Wazuh Manager
-curl -k -I https://10.122.0.5:55000
+curl -k -I https://10.122.1.4:55000
 ```

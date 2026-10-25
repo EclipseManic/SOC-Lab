@@ -126,7 +126,7 @@ AllowedIPs          = 10.8.0.0/24, 10.122.0.0/16
 PersistentKeepalive = 25
 ```
 
-The tunnel carries Wazuh agent events from on-prem hosts to the cloud Wazuh manager (`10.122.0.5`), connects to TheHive (`10.122.0.4`), and allows Velociraptor clients to reach the cloud frontend.
+The tunnel carries Wazuh agent events from on-prem hosts to the cloud Wazuh manager (`10.122.1.4`), connects to TheHive (`10.122.0.4`), and allows Velociraptor clients to reach the cloud frontend.
 
 ## Verification Commands
 
