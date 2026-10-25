@@ -64,7 +64,7 @@ Adversary executed internal network reconnaissance sweeps from the DVWA pivot ag
 
 ## Detection assessment
 
-- **Status:** Detected (Network Alerted; DG-09)
+- **Status:** Logging Gap (Network Alerted; DG-09)
 - **Gap ID:** DG-09
 - **Engineering Assessment:** DG-09 Documented: Intra-subnet layer 2 packets did not cross gateway IP stack, but promiscuous capture on ens37 caught multi-host sweep traffic.
 

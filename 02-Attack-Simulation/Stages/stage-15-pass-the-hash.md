@@ -63,12 +63,12 @@ With full interactive command execution confirmed on `PC-DC`, the adversary esta
 
 | Source | Rule | Rule ID | TheHive Alert | Severity | Status |
 |---|---|---|---|---|---|
-| Wazuh (Windows Agent) | Successful Remote Logon Detected - User:\Administrator - NTLM authentication, possible pass-the-hash attack | Rule 60122 / Win Event 4624 | 24x in `Wazuh-Raw-Alerts.csv` (EID 4624) & `wzb-b7f91cd3ab` | High (3) | DETECTED |
+| Wazuh (Windows Agent) | Successful Remote Logon Detected - User:\Administrator - NTLM authentication, possible pass-the-hash attack | Windows Security Event ID 4624 (Logon Type 3 NTLM) | 24x in `Wazuh-Raw-Alerts.csv` (EID 4624) & `wzb-b7f91cd3ab` | High (3) | DETECTED |
 | Suricata / Wazuh | ET EXPLOIT Possible MS14-068 GoldenPac Priv Esc in-use | Rule 86601 / SID 2019922 | `[1x] [Suricata] Suricata: Alert - ET EXPLOIT Possible GoldenPac Priv Esc in-use` | Medium (2) | DETECTED |
 
 ### Detection Analysis
 
-- **Primary Endpoint Detection (Wazuh Rule 60122):** The definitive empirical detection for Pass-the-Hash in this lab is recorded in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv), where Wazuh Rule 60122 fired over 24 times on `DomainWin10` (`192.168.56.20`). The rule specifically alerts on Windows Security Event ID 4624 with Logon Type 3 (Network) where `AuthenticationPackageName` is `NtLmSsp` for administrative accounts (`Administrator`), diagnosing lateral movement over SMB without Kerberos pre-authentication.
+- **Primary Endpoint Detection (Windows Event ID 4624 (Logon Type 3 NTLM)):** The definitive empirical detection for Pass-the-Hash in this lab is recorded in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv), where Windows Event ID 4624 (Logon Type 3 NTLM) fired over 24 times on `DomainWin10` (`192.168.56.20`). The rule specifically alerts on Windows Security Event ID 4624 with Logon Type 3 (Network) where `AuthenticationPackageName` is `NtLmSsp` for administrative accounts (`Administrator`), diagnosing lateral movement over SMB without Kerberos pre-authentication.
 - **Network Telemetry Context (SID 2019922):** Suricata on the router host (`ens37` promiscuous capture) simultaneously triggered signature `ET EXPLOIT Possible MS14-068 GoldenPac` (Rule 86601). While GoldenPac signatures match generic Kerberos ASN.1 structures on port 88 during associated ticket requests, the true protocol detection for PtH remains the endpoint NTLM Security Event ID 4624.
 - **Correlated Host Telemetry on Target Workstation & Domain Controller:**
   - **Windows Security Event ID 4624 (Logon Type 3 / Network):**

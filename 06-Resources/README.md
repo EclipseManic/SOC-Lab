@@ -33,7 +33,8 @@ The core scripts located in [`Scripts/`](Scripts/) power the alert bridge betwee
 The raw data files in [`Alerts/`](Alerts/) provide direct empirical proof of the detection pipeline execution across all 20 campaign stages:
 
 - **[`thehive_alerts.json`](Alerts/thehive_alerts.json):** 46 correlated alerts synchronized to TheHive 5. Includes full JSON payloads, correlation group types (`tool_campaign`, `process_fanout`, `logon_group`, `activity_burst`, `watchlist_group`), alert sourceRefs (`wzb-3a8045a03c`, `wzb-34f34a857c`, `wzb-71ef983ad8`, etc.), and timeline telemetry.
-- **[`wazuh_alerts.csv`](Alerts/wazuh_alerts.csv):** 808 raw Wazuh alert log records exported directly from the Wazuh Manager, containing rule descriptions, agent names (`Suricata`, `DVWA`, `Win10User`, `DomainWin10`), and complete JSON payloads (`full_log`) for Suricata IDS events, Apache access logs, Linux PAM/Auditd events, and Windows Sysmon/Security event channels.
+- **[`Wazuh-Raw-Alerts.csv`](Alerts/Wazuh-Raw-Alerts.csv):** Complete 9,567-row raw telemetry dataset containing every event captured across DVWA, Suricata, DomainWin10, and Win10User.
+- **[`wazuh_alerts.csv`](Alerts/wazuh_alerts.csv):** Curated 808-row filtered incident analysis set preserving multi-level alert activity across the campaign, containing rule descriptions, agent names (`Suricata`, `DVWA`, `Win10User`, `DomainWin10`), and complete JSON payloads (`full_log`) for Suricata IDS events, Apache access logs, Linux PAM/Auditd events, and Windows Sysmon/Security event channels.
 
 ## Diagram Rules
 

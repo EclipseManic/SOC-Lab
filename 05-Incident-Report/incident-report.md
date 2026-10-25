@@ -49,7 +49,7 @@ Partial / Protocol Logging Gaps:         2  (10.0% - Stages 09, 12)
 Encrypted Transport Gap:                 1  (DG-19: Documented / Pivot Alerted)
 Rule Failures:                           0   (0.0%)
 Total Raw Alerts Exported in CSV:      9,567 rows (Wazuh-Raw-Alerts.csv)
-High-Severity Escalations (>= 8):      808 rows (wazuh_alerts.csv)
+Filtered Incident Analysis Set:        808 rows (wazuh_alerts.csv)
 Correlated Incidents Created in Hive:   46 actionable alerts (thehive_alerts.json)
 Mean Time to Detect (MTTD):             < 15 seconds for online telemetry
 ```
@@ -58,9 +58,9 @@ Mean Time to Detect (MTTD):             < 15 seconds for online telemetry
 
 | Sensor | Key Contributions |
 |---|---|
-| **Suricata NIDS** | Inbound port scanning (SIDs 3400001/3400002), Hydra HTTP brute-force (SID 2000547), web shell id response (SID 2019284), reverse shell connection (SID 3400020), internal subnet sweep on `ens37` (14 alerts in raw CSV), NTLM Session Setup over SMB (SIDs 2067085–2067087), and Kerberos TGS-REQ wire frames (SID 2019922). |
+| **Suricata NIDS** | Inbound port scanning (SIDs 3400001/3400002), Hydra HTTP brute-force (SID 2000547), SQL injection UNION SELECT (SID 2010963), web shell id response (SID 2019284), reverse shell connection (SID 3400020), internal subnet sweep on `ens37` (14 alerts in raw CSV), NTLM Session Setup over SMB (SIDs 2067085–2067087), and Kerberos TGS-REQ wire frames (SID 2019922). |
 | **Wazuh Host Agent** | Apache web server scanning thresholds (Rule 100410, 100213, 31153 passwd watchlist), Auditd `web_process_creation` (execve monitoring), reverse shell spawn (Rule 100199), SUID privilege escalation (Rule 5402 PAM), Syscheck FIM authorized_keys (Rule 550), and administrative SSH root logins and rapid exfiltration bursts (Rule 5715 elevated to Level 8). |
-| **Wazuh Windows Agent** | Pass-the-Hash NTLM Logon Type 3 detection (EID 4624, 24 events in CSV: 15 on Win10User, 9 on DomainWin10), rogue Domain Admin account creation (Rule 60108/60109, EID 4720/4728), Impacket `wmiexec` process fan-out correlation (Rule 100613). |
+| **Wazuh Windows Agent** | Pass-the-Hash NTLM Logon Type 3 detection (EID 4624, 24 events in CSV: 15 on Win10User, 9 on DomainWin10), rogue Domain Admin account creation via Impacket WMI fan-out (Rule 100613), Impacket `wmiexec` process fan-out correlation (Rule 100613). |
 | **Sysmon** | Process creation parent-child tracking (`wmiprvse.exe` -> `cmd.exe /Q /c`), command-line argument auditing, registry modification auditing. |
 
 ---

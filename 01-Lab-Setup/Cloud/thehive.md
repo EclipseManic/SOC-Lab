@@ -157,6 +157,11 @@ This VM doubles as a software router, forwarding Wazuh agent traffic arriving on
 net.ipv4.ip_forward = 1
 ```
 
+
+### Routing & NAT Architecture (Agent IP Preservation)
+- **Agent Source IP Preservation:** Wazuh agents running on `192.168.56.0/24` forward telemetry over the WireGuard tunnel (`wg0`) to the Wazuh Manager at `10.122.0.5`. On the Wazuh VM, a static return route (`ip route add 192.168.56.0/24 via 10.122.0.4`) routes replies back to the TheHive gateway without applying NAT. This ensures that agent source IPs (`192.168.56.10`, `.20`, `.30`) remain intact in the Wazuh dashboard rather than collapsing into a single gateway address.
+- **MASQUERADE Scope:** The `POSTROUTING -o eth0 -j MASQUERADE` iptables rule on this host is scoped for outbound internet traffic originating from the VPN client pool (`10.8.0.0/24`), ensuring analyst internet traffic can egress while inter-VNet agent flows preserve their original addressing.
+
 ### Return Routes
 
 | Destination | Next Hop |

@@ -1,6 +1,6 @@
 # 01 – Lab Setup
 
-Everything needed to reproduce the SOC Lab from scratch — architecture, network topology, and per-host build guides.
+Reference architecture, network topology, and host configuration profiles for the SOC Lab environment.
 
 ## Document Index
 
@@ -60,7 +60,7 @@ What Suricata **can** and **cannot** inspect:
 ## What Belongs Here
 
 - **Architecture & topology** — the single [architecture.md](architecture.md) covers all network, addressing, and design decisions.
-- **Host build guides** — one document per VM/host under `Local/` or `Cloud/`, covering installation, configuration, and service hardening.
+- **Host configuration profiles** — one reference document per VM/host under `Local/` or `Cloud/`, detailing roles, network interfaces, service configurations, and verification commands.
 
 ## What Does NOT Belong Here
 
