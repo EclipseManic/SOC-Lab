@@ -7,7 +7,7 @@
 | **Address** | `192.168.232.135/24` (VMware VMnet8 — NAT) |
 | **Resources** | 6 vCPU · 6 GB RAM |
 | **Default gateway** | `192.168.232.2` (VMnet8 NAT gateway) |
-| **SSH key** | `manichand gupta@ManicLenovo` |
+| **SSH key** | `analyst@soc-workstation` |
 
 ## Network Position
 

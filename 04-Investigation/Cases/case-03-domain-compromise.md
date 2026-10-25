@@ -32,7 +32,7 @@ Armed with the dumped domain NTLM hashes from DCSync, the adversary executed Pas
 |---|---|
 | **Wazuh** | Windows Agent on DomainWin10 alerted on Pass-the-Hash NTLM Type 3 logons (Event ID 4624, 24+ events). Windows Agent on PC-DC alerted on rogue user creation (Rule 60108, EID 4720) and Domain Admins membership addition (Rule 60109, EID 4728). Process fan-out correlation (Rule 100613) grouped Impacket wmiexec commands. Linux SSH logon rate correlation (Rule 5715) detected rapid exfiltration burst (6 sessions in 1s). |
 | **Sysmon** | Process creation monitoring (EID 1) traced `wmiprvse.exe` -> `cmd.exe /Q /c` fan-outs. Registry modification monitoring (EID 13) recorded desktop wallpaper tampering. |
-| **Suricata** | Monitored perimeter network sessions and inter-subnet SMB/RPC traffic. |
+| **Suricata** | Monitored perimeter network sessions and inter-subnet SMB/RPC traffic; promiscuous capture on `ens37` flagged SMB NTLM Session Setup negotiations (SIDs 2067085–2067087, alert `wzb-7a4a134d1b`) during Stage 20 remote execution against Win10. |
 | **TheHive** | Aggregated correlated security events into actionable incident tasks and timeline observables. |
 | **Velociraptor** | Performed forensic timeline recovery of rogue user creation, registry values, and file exfiltration staging paths. |
 

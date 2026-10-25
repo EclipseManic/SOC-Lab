@@ -86,7 +86,10 @@ win10::AD:112233***8899:b4a78***e31
 
 | Source | Rule / Signature | Rule ID | TheHive Alert | Severity | Status |
 |---|---|---|---|---|---|
-| Suricata / Wazuh | LLMNR / NBT-NS Poisoning Activity / Suspicious Multicast Response | Suricata IDS / Wazuh Ruleset | Alert 9 (`9.png`, `9.1.png`, `9.2.png`, `9.3.png`) | High | Detected |
+| Linux Auth / Pivot Host (DVWA) | Wazuh bashcmd logging (uid:0 Responder.py execution) | Wazuh `bashcmd` | Pivot Logged (Sheet Row 9233 / CSV Row 9231) (`9.png`–`9.3.png`) | High | **Detected (Pivot Logged)** |
+
+> [!NOTE]
+> **Telemetry Attribution:** Responder was launched interactively on the DVWA pivot (`python3 Responder.py -I ens33 -wd`), logged locally via Wazuh `bashcmd` at Level 5 without SIEM-to-SOAR escalation. The separate SMB NTLM session setup alerts (`wzb-7a4a134d1b`, SIDs 2067085–2067087) occurred at 12:53:59 during Stage 20 remote execution.
 
 ## MITRE ATT&CK
 

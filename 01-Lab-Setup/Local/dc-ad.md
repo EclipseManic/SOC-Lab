@@ -47,12 +47,29 @@ This scale provides realistic BloodHound enumeration results and attack path dis
 
 ## Sysmon 15.20
 
-Sysmon is configured with an adapted **sysmon-modular** baseline, identical to the Win10 workstation:
-- Process creation (Event ID 1) — includes WmiPrvSE parent tracking and ADMIN$ redirection commands
-- Network connections (Event ID 3) — ports 445, 135, 389, 636, 88
-- File creation (Event ID 11) — executable and script staging
-- Registry modifications (Event ID 12/13) — autostart and service persistence
-- Named pipes (Event ID 17/18) — `spoolss`, `atsvc`, `svcctl`, `wmiexec`
+Sysmon is deployed using the tailored 90-line baseline ([`sysmonconfig.xml`](../../03-Detection-Engineering/Sysmon/sysmonconfig.xml)), identical across all Windows targets:
+- **Process Creation (Event ID 1):** Tracks parent `WmiPrvSE.exe` and `cmd.exe /Q /c` with `\ADMIN$\__` output redirection, alongside 13 LOLBins (`net.exe`, `nltest.exe`, `whoami.exe`, `certutil.exe`, `reg.exe`, `dsquery.exe`, etc.).
+- **Network Connections (Event ID 3):** Monitors connection attempts across ports 445 (SMB), 135 (RPC), 389/636 (LDAP), 5985/5986 (WinRM), and 88 (Kerberos).
+- **File Creation (Event ID 11):** Monitors executable and script drops in staging folders (`C:\Users\Public\`, `\Temp\`).
+- **Registry Modifications (Event ID 12/13):** Audits persistence keys (`Run`, `RunOnce`, `Winlogon`, `Services`, `IFEO`).
+- **Named Pipes (Event ID 17/18):** Audits connections to pipes `spoolss`, `atsvc`, and `svcctl`.
+
+> [!NOTE]
+> **Impacket `wmiexec` Telemetry Reality:** Impacket executes remote commands over WMI/DCOM via `Win32_Process.Create` and redirects standard output to a temporary file on the `ADMIN$` share (`\\127.0.0.1\ADMIN$\__<timestamp>`). It does **not** create a named pipe. Detection is provided by Sysmon Event ID 1 (`WmiPrvSE.exe` -> `cmd.exe /Q /c ... \ADMIN$\__`) mapped to Wazuh Rule `100613`.
+
+### Verification Commands
+
+```powershell
+# 1. Verify Sysmon service health and configuration schema
+Get-Service Sysmon64
+sysmon64 -c
+
+# 2. Query recent Kerberos ticket events (Event ID 4769)
+Get-WinEvent -LogName "Security" -MaxEvents 5 | Where-Object { $_.Id -eq 4769 } | Format-List TimeCreated, Message
+
+# 3. Verify Wazuh agent connection status
+& "C:\Program Files (x86)\ossec-agent\wazuh-agent.exe" status
+```
 
 ## Advanced Audit Policies
 

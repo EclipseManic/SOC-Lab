@@ -49,11 +49,16 @@ Analysis of the 9,567 raw alerts in [`06-Resources/Alerts/Wazuh-Raw-Alerts.csv`]
 | SID | Signature Message | Stage | Target Protocol | Detection Mechanism & TheHive Alert |
 |---|---|---|---|---|
 | `3400001` / `3400002` | `POSSBL PORT SCAN (NMAP -sS)` / `ET SCAN NMAP OS Detection Probe` | 01 (Recon) & 09 (Internal Disc) | TCP SYN / Probe Flags | Inbound port sweep (`wzb-3a8045a03c`) and internal pivot sweep (`wzb-3152e3ed59`) |
-| `2001569` | `ET INFO User-Agent (python-requests) Inbound to Webserver` | 02 (Brute Force) | HTTP User-Agent | Automated brute force tool hitting `/login.php` (`wzb-6a22425401`, Rule 100600) |
+| `2017515` | `ET INFO User-Agent (python-requests) Inbound to Webserver` | 02 (Brute Force) | HTTP User-Agent | Automated brute-force tool hitting `/login.php` (`wzb-6a22425401`, Rule 100600) |
+| `2010960` | `ET SCAN WhatWeb Web Application Fingerprint Scanner Default User-Agent Detected` | 01 / 02 (Recon) | HTTP User-Agent | Automated web discovery probe hitting `/` and `/login.php` (Row 9058 in raw CSV) |
+| `2010963` | `ET WEB_SERVER SELECT USER SQL Injection Attempt in URI` | 03 (SQLi) | HTTP URI | UNION SELECT SQL injection targeting `/vulnerabilities/sqli/` (Row 9108 in raw CSV) |
 | `2019284` | `ET ATTACK_RESPONSE Output of id command from HTTP server` | 05 (Webshell) | HTTP Server Response | Response payload containing `uid=33(www-data)` (`wzb-e9a1797ac4`) |
 | `3400020` | `POSSBL SCAN SHELL M-SPLOIT TCP` | 06 (RevShell) & 09 (Internal Disc) | TCP Port 4444 | Outbound reverse shell connection (`wzb-81bb1f83f7`) and internal sweep (`wzb-f87fab3eda`) |
-| `2067085`–`2067087` | `ET INFO NTLM Session Setup Request - Negotiate / Challenge / Auth` | 10 (Responder) | SMB / NTLM | NTLMSSP authentication negotiation over SMB (`wzb-7a4a134d1b`) |
 | `2019922` | `ET EXPLOIT Possible MS14-068 GoldenPac Priv Esc in-use` | 13 (Kerberoasting) | TCP Port 88 (Kerberos) | Kerberos TGS-REQ wire frame captured on VMnet2 (`wzb-c1e2642eb2`) |
+| `2067085`–`2067087` | `ET INFO NTLM Session Setup Request - Negotiate / Challenge / Auth` | 20 (Impact / SMB Exec) | SMB / NTLM | NTLMSSP authentication negotiation over SMB at 12:53:59 (`wzb-7a4a134d1b`) |
+
+> [!NOTE]
+> **Stage 10 Telemetry Attribution:** Stage 10 (Responder) was executed locally on the DVWA pivot host (`python3 Responder.py -I ens33 -wd`). It was captured through endpoint bash command logging (Wazuh `bashcmd`, Level 5, CSV row 9231) and did not generate a network alert on the gateway wire. The SMB NTLM session alerts (SIDs `2067085`–`2067087`, `wzb-7a4a134d1b`) occurred at 12:53:59 during Stage 20 remote execution against Win10.
 
 > [!NOTE]
 > **Stage 13 Protocol Note:** Kerberoasting involves requesting a Kerberos service ticket (**TGS-REQ**), not an AS-REQ. In this campaign, the unrouted Kerberos traffic between DVWA (`192.168.56.30:33986`) and Domain Controller (`192.168.56.10:88`) triggered community signature `SID 2019922` on port 88. Custom rule `SID 2015862` did not fire.
@@ -78,14 +83,22 @@ This empirical evidence demonstrates that network sensors deployed in promiscuou
 
 ## 5. Noise Reduction & Rate Limiting (`threshold.config`)
 
-To prevent alert fatigue and pipeline saturation during high-volume scans, [`threshold.config`](threshold.config) implements rate limiting:
+To prevent alert fatigue and pipeline saturation during high-volume scans without blinding the sensor to the attacker, [`threshold.config`](threshold.config) implements rate limiting:
 
 ```text
-# Rate-limit high-volume port scan alerts: 1 alert per 10s per source IP
-suppress gen_id 1, sig_id 2000537, track by_src, ip 192.168.232.135
-suppress gen_id 1, sig_id 3400001, track by_src, ip 192.168.232.135
-suppress gen_id 1, sig_id 3400002, track by_src, ip 192.168.232.135
+# Rate limit Nmap OS detection probe to 1 event per source IP per 60 seconds
+threshold gen_id 1, sig_id 3400002, type both, track by_src, count 1, seconds 60
 
-# Rate-limit HTTP scanner user-agents to 1 alert per 30s
-threshold gen_id 1, sig_id 2001569, type both, track by_src, count 5, seconds 30
+# Rate limit multi-port database probes to 5 events per source IP per 60 seconds
+threshold gen_id 1, sig_id 2010937, type both, track by_src, count 5, seconds 60
+
+# Rate limit generic SYN portscan signature to 1 event per source IP per 30 seconds
+threshold gen_id 1, sig_id 2000537, type both, track by_src, count 1, seconds 30
+
+# Rate limit internal reconnaissance sweep alerts on pivot subnet
+threshold gen_id 1, sig_id 2000545, type both, track by_src, count 2, seconds 60
 ```
+
+> [!IMPORTANT]
+> **Engineering Rationale: Rate-Limiting vs. Suppression:**
+> Notice that `threshold.config` uses `type both` rate limiting rather than `suppress` directives against Kali's IP (`192.168.232.135`). Suppressing an attacker's IP would completely blind the IDS to malicious traffic. Rate limiting allows the initial intrusion detection alerts to pass to Wazuh while preventing thousands of redundant alerts during continuous scans from saturating the pipeline.
