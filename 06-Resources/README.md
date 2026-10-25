@@ -8,6 +8,7 @@ Supporting reference material, core automation scripts, server configurations, a
 |---|---|---|
 | [attack-chain-full.pdf](attack-chain-full.pdf) | Master Blueprint | Definitive 20-stage attack simulation and campaign reference document |
 | [Diagrams/SOC_Lab_Architecture.png](Diagrams/SOC_Lab_Architecture.png) | Architecture Diagram | High-resolution master architecture diagram covering local zones, WireGuard tunnel, and split-cloud SOC VMs |
+| [Diagrams/Secure%20Network%20Topology%20Infographic.png](Diagrams/Secure%20Network%20Topology%20Infographic.png) | Architecture Diagram | End-to-end routing blueprint showing Kali static route, dual-homed gateway, and zero-NAT WireGuard tunnel |
 | [Diagrams/Neon%20Cybersecurity%20Network%20Architecture%20Diagram.png](Diagrams/Neon%20Cybersecurity%20Network%20Architecture%20Diagram.png) | Architecture Diagram | High-level 3-tier lab topology conceptual overview |
 | [Diagrams/Neon%20Cybersecurity%20Lab%20Network%20Diagram.png](Diagrams/Neon%20Cybersecurity%20Lab%20Network%20Diagram.png) | Architecture Diagram | Detailed 4-zone network segmentation & WireGuard tunnel addressing |
 | [Diagrams/Neon%20SOC%20Network%20Architecture%20Diagram.png](Diagrams/Neon%20SOC%20Network%20Architecture%20Diagram.png) | Architecture Diagram | Complete interface routing, VNet peering, and IP configuration flow |
@@ -29,7 +30,7 @@ Supporting reference material, core automation scripts, server configurations, a
 
 ## Architecture References
 
-The high-level diagram is linked from [README.md](../README.md) and [01-Lab-Setup/architecture.md](../01-Lab-Setup/architecture.md). Detailed configuration tables and traffic flows in [01-Lab-Setup/architecture.md](../01-Lab-Setup/architecture.md) remain the authoritative reference for network addressing, routing, and trust boundaries.
+The high-level diagram is linked from [README.md](../README.md) and [01-Lab-Setup/README.md](../01-Lab-Setup/README.md). Detailed configuration tables and traffic flows in [01-Lab-Setup/README.md](../01-Lab-Setup/README.md) remain the authoritative reference for network addressing, routing, and trust boundaries.
 
 ## Automation & Integration Pipeline
 
@@ -53,4 +54,4 @@ Any diagram added here must:
 - Show functional roles and private subnets (`192.168.232.0/24`, `192.168.56.0/24`, `10.8.0.0/24`, and `10.122.0.0/16`).
 - Have all public IPs, provider hostnames, API keys, and VPN credentials redacted or omitted.
 - Mark or document the Suricata blind spot for intra-subnet Layer 2 victim-to-victim traffic.
-- Be linked from [01-Lab-Setup/architecture.md](../01-Lab-Setup/architecture.md) rather than duplicated across multiple sections.
+- Be linked from [01-Lab-Setup/README.md](../01-Lab-Setup/README.md) rather than duplicated across multiple sections.

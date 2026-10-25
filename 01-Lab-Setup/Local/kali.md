@@ -126,5 +126,5 @@ wc -l /usr/share/wordlists/rockyou.txt
 
 - [Suricata Gateway](suricata-gateway.md) — Perimeter router & IDS sensor bridging Kali to victims
 - [DVWA Web Target & Pivot](dvwa.md) — Initial access web target and internal pivot host
-- [Lab Architecture](../architecture.md) — Complete 8-machine network topology
+- [Lab Setup & Architecture](../README.md) — Complete 8-machine network topology and routing
 - [Attack Simulation Directory](../../02-Attack-Simulation/README.md) — 20-stage attack campaign

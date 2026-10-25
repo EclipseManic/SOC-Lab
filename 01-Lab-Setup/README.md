@@ -80,6 +80,8 @@ Routing in this hybrid lab coordinates three distinct traffic paths: attacker tr
 - **How we fixed it:** We disabled NAT masquerading for all victim traffic entering the WireGuard tunnel (`wg0`). On the cloud hub (`10.8.0.1`), we added a static kernel return route directing `192.168.56.0/24` back through `10.8.0.2`.
 - **The payoff:** Wazuh Manager sees and registers the authentic IP address of every victim host (`192.168.56.10`, `.20`, `.30`). Every alert, correlation rule, and investigation artifact maps cleanly to the exact compromised machine.
 
+[![Secure Network Topology Infographic](../06-Resources/Diagrams/Secure%20Network%20Topology%20Infographic.png)](../06-Resources/Diagrams/Secure%20Network%20Topology%20Infographic.png)
+
 ---
 
 ## Lab Segmentation & Network Zones
@@ -178,13 +180,27 @@ Understanding where security sensors have full visibility versus where blind spo
 
 ---
 
+## Software Component Deployment Model
+
+| Component | Host | Deployment Method | Role & Operational Function |
+|---|---|---|---|
+| **Suricata 8.0.6** | Suricata Gateway | Native package (`ppa:oisf/suricata-stable`) | Passive IDS engine with AF-PACKET capture on `ens37` |
+| **Wazuh Manager 4.x** | Wazuh SIEM VM | Native package | Analysis engine, decoders, rule matching, alerts log |
+| **thecustomhive** | Wazuh SIEM VM | Native Python script + systemd unit | Durable SQLite ingestion queue & async flush daemon |
+| **TheHive 5.x** | TheHive Hub VM | Native Debian package | Security incident response and case management |
+| **Cassandra 4.x / Elasticsearch 8.x** | TheHive Hub VM | Native packages | Distributed database and search backend for TheHive 5 |
+| **Nginx Proxy Manager** | TheHive Hub VM | Docker container | TLS reverse proxy for `*.lab` web UIs; admin console on `https://10.122.0.4:81` (custom TLS cert/key) |
+| **Velociraptor 0.77** | TheHive Hub VM | Native systemd service | Endpoint digital forensics and artifact collection server |
+| **WireGuard** | TheHive Hub & Gateway | Native kernel module | Encrypted site-to-cloud transport tunnel |
+
+---
+
 ## Detailed Host Profiles & Technical Specifications
 
 Each host has a dedicated, reproducible build specification:
 
 | Document | Host / Role | Network Placement | Primary Software & Telemetry Stack |
 |---|---|---|---|
-| **[architecture.md](architecture.md)** | **Master Architecture Reference** | All Segments | Authoritative reference for topology, routing tables, and trust boundaries |
 | **[Local/kali.md](Local/kali.md)** | **Attacker Workstation** | `192.168.232.135/24` (VMnet8) | Kali Linux 2024.x, full red-team toolchain, custom routing tables |
 | **[Local/suricata-gateway.md](Local/suricata-gateway.md)** | **Security Gateway & NIDS** | Dual-NIC (`.232.162` / `.56.150`) | Ubuntu 24.04 LTS, Suricata 8.0.6 (AF-PACKET), WireGuard client, Wazuh Agent |
 | **[Local/dvwa.md](Local/dvwa.md)** | **Web Target & Pivot** | `192.168.56.30/24` (VMnet2) | Ubuntu 24.04 LTS, Apache/MySQL, Linux Auditd (`audit.rules`), `bashcmd` decoder |
