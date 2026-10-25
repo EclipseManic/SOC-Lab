@@ -36,6 +36,18 @@ The attacker starts outside the network on an isolated subnet. Every perimeter p
 > [!TIP]
 > Looking for detailed network addressing, routing tables, and interface diagrams? See [01-Lab-Setup/architecture.md](01-Lab-Setup/architecture.md).
 
+### Repository Directory Index
+
+| Directory / Section | Primary Document | Core Contents |
+|---|---|---|
+| **01 — Lab Setup** | [`01-Lab-Setup/README.md`](01-Lab-Setup/README.md) | Network topology, WireGuard VPN configuration, and host build profiles (Kali, DC, Win10, DVWA, Wazuh, TheHive) |
+| **02 — Attack Simulation** | [`02-Attack-Simulation/README.md`](02-Attack-Simulation/README.md) | Complete 20-stage attack playbook: terminal commands, execution tradecraft, and 62 attacker screenshots |
+| **03 — Detection Engineering** | [`03-Detection-Engineering/README.md`](03-Detection-Engineering/README.md) | Custom Wazuh rules (`local_rules.xml`), Suricata NIDS rules, Sysmon/Auditd baselines, and `thecustomhive` SOAR pipeline |
+| **04 — Investigation** | [`04-Investigation/README.md`](04-Investigation/README.md) | Step-by-step analyst triage notes for all 20 stages, raw event correlations, and 3 multi-stage TheHive cases |
+| **05 — Incident Report** | [`05-Incident-Report/README.md`](05-Incident-Report/README.md) | Executive incident report, end-to-end chronological timeline, complete IOC tables, and remediation backlog |
+| **06 — Resources** | [`06-Resources/README.md`](06-Resources/README.md) | Raw telemetry CSVs (9,567 rows), TheHive JSON export (46 alerts), automation scripts, and master PDF blueprint |
+| **Master Index** | [`INDEX.md`](INDEX.md) | Master traceability matrix mapping every stage to ATT&CK techniques, detection rules, alert IDs, and evidence |
+
 ---
 
 ## The Attack Story in Three Acts
