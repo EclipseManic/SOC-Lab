@@ -31,22 +31,29 @@ Win10 broadcasts LLMNR and NBT-NS queries for nonexistent hostnames, which Respo
 
 ## Sysmon 15.20
 
-Sysmon is configured with an adapted **sysmon-modular** baseline, providing granular visibility into:
+Sysmon is configured with a tailored 90-line telemetry baseline ([`sysmonconfig.xml`](../../03-Detection-Engineering/Sysmon/sysmonconfig.xml)) designed to capture critical post-exploitation events without exhausting VM memory:
 
-- Process creation (Event ID 1) — parent process name/PID, command line, process hashes
-- Network connections (Event ID 3) — SMB, RPC, and Kerberos ports
-- File creation (Event ID 11) — executable, script, and image drops in Temp/Public
-- Registry modifications (Event ID 12/13) — autostart keys, Winlogon, wallpaper modifications
-- Named pipe activity (Event ID 17/18) — `spoolss`, `atsvc`, `svcctl`, `wmiexec`
+- **Process Creation (Event ID 1):** Explicitly tracks 13 LOLBins and execution binaries (`cmd.exe`, `powershell.exe`, `pwsh.exe`, `whoami.exe`, `net.exe`, `net1.exe`, `nltest.exe`, `dsquery.exe`, `klist.exe`, `reg.exe`, `schtasks.exe`, `certutil.exe`, `rundll32.exe`), parent tracking for `WmiPrvSE.exe`, and command lines referencing `\ADMIN$\__`.
+- **Network Connections (Event ID 3):** Monitors connection attempts across ports 445 (SMB), 135 (RPC), 389/636 (LDAP), 5985/5986 (WinRM), and 88 (Kerberos).
+- **File Creation (Event ID 11):** Monitors executable, script, and image drops (`.exe`, `.ps1`, `.vbs`, `.bmp`) in `C:\Users\Public\` and `\Temp\`.
+- **Registry Modifications (Event ID 12/13):** Audits persistence keys (`\CurrentVersion\Run`, `RunOnce`, `Winlogon`, `Services`, `IFEO`, and `Control Panel\Desktop\Wallpaper`).
+- **Named Pipes (Event ID 17/18):** Audits connections to pipes `spoolss`, `atsvc`, and `svcctl`.
 
-### Verification
+> [!NOTE]
+> **Impacket `wmiexec` Telemetry Reality:** Impacket's `wmiexec.py` executes commands remotely by invoking the WMI `Win32_Process.Create` method over DCOM/RPC (`135/TCP` + ephemeral ports). The WMI service host (`WmiPrvSE.exe`) executes `cmd.exe /Q /c <command> &> \\127.0.0.1\ADMIN$\__<timestamp> 2>&1` and transfers output back over SMB (`445/TCP`). Impacket does **not** create a named pipe. Detection is reliably achieved through Sysmon Event ID 1 (parent `WmiPrvSE.exe` spawning `cmd.exe` with `\ADMIN$\__` redirection), mapped to Wazuh Rule `100613`.
+
+### Verification Commands
 
 ```powershell
+# 1. Verify Sysmon service health and configuration schema
 Get-Service Sysmon64
-# Status: Running
-
 sysmon64 -c
-# Displays active configuration schema and hash
+
+# 2. Inspect recently captured Sysmon process creation events
+Get-WinEvent -LogName "Microsoft-Windows-Sysmon/Operational" -MaxEvents 5 | Where-Object { $_.Id -eq 1 } | Format-List TimeCreated, Message
+
+# 3. Verify Wazuh agent connection status
+& "C:\Program Files (x86)\ossec-agent\wazuh-agent.exe" status
 ```
 
 ## Windows Audit Policies

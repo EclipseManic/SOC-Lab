@@ -9,7 +9,7 @@
 | **Resources** | 2 vCPU · 4 GB RAM |
 | **Wazuh agent** | `DVWA` |
 | **Velociraptor** | Client v0.77.1 |
-| **SSH key** | `manichand gupta@ManicLenovo` |
+| **SSH key** | `analyst@soc-workstation` |
 
 ## Why This Host Matters Twice
 
@@ -44,32 +44,58 @@ DVWA serves a **dual role** in the attack chain:
 | `/etc/passwd` chmod 666 | Writable by any user — allows account creation |
 | No WAF in front of the application | All payloads reach Apache unfiltered |
 
-> [!CAUTION]
-> These weaknesses are **intentional** for the lab. Every one maps to a specific attack stage and a corresponding detection rule.
+> [!NOTE]
+> These vulnerabilities were deliberately configured to evaluate web application and endpoint detection engineering under realistic post-exploitation conditions.
 
 ## Auditd Configuration
 
-Nextron-adapted auditd rules provide comprehensive syscall auditing across the host.
-The ruleset is loaded from `/etc/audit/rules.d/audit.rules` and includes watches for identity files (`/etc/passwd`, `/etc/shadow`), execution from `/tmp` and `/opt`, and SUID creation (`chmod +s`).
+A targeted 58-line auditd baseline ([`audit.rules`](../../03-Detection-Engineering/Auditd/audit.rules)) is deployed to `/etc/audit/rules.d/audit.rules`. Rather than running a bulky, generic syscall ruleset that would saturate disk I/O on a 4 GB RAM VM, the configuration focuses tightly on high-signal operational indicators:
+- **Web Service Execution:** Traces all `execve` invocations initiated by user `www-data` (`uid=33`) under key `web_process_creation`.
+- **Staging Directory Execution:** Traces binary execution originating from `/tmp` and `/opt`.
+- **Privilege Changes & SUID Backdoors:** Tracks `setuid`/`setgid` calls and SUID bit modifications (`chmod +s`).
+- **Identity & Persistence Watches:** Monitors write access to `/etc/passwd`, `/etc/shadow`, `/etc/sudoers`, and `/root/.ssh`.
+- **Kernel Immutability (`-e 2`):** Locks the audit configuration into kernel memory until the next full system reboot.
 
 ```bash
-# Check loaded audit rules
+# Load audit rules and verify status
+sudo augenrules --load
 sudo auditctl -l
 ```
 
-Custom web-specific rules monitor Apache and PHP process activity, capturing file access patterns and command execution by the `www-data` user.
-
 ## Custom Bash Command Logging
 
-All bash commands executed by `root` and `www-data` are captured to `/var/log/bashcmd.log` using a shell prompt hook (`PROMPT_COMMAND`):
+All bash commands executed by `root` and `www-data` are captured to `/var/log/bashcmd.log` using a shell prompt hook (`PROMPT_COMMAND`) deployed in `/etc/bash.bashrc`:
 ```bash
-# Format in /var/log/bashcmd.log:
-# uid:<uid> user:<user> pwd:<dir> cmd:<command>
+# Hook in /etc/bash.bashrc:
+export PROMPT_COMMAND='logger -p local0.notice -t bashcmd "uid:$(id -u) user:$(id -un) pwd:$(pwd) cmd:$(history 1 | sed "s/^[ ]*[0-9]*[ ]*//")"'
 ```
-This provides a structured audit trail of every interactive and scripted shell command on the host.
+This produces structured audit records:
+```text
+uid:<uid> user:<user> pwd:<dir> cmd:<command>
+```
+A custom Wazuh decoder (`bashcmd`) parses these log entries into structured fields (`uid`, `user`, `pwd`, `command`) in [`local_decoder.xml`](../../03-Detection-Engineering/Wazuh/local_decoder.xml).
 
-A custom Wazuh decoder (`bashcmd`) parses these log entries into structured alerts.
-See [Detection Engineering — Wazuh README](../../03-Detection-Engineering/Wazuh/README.md#3-decoders-catalog-local_decoderxml) for the decoder configuration.
+## Host Provisioning & Verification
+
+```bash
+# 1. Install core web and auditing packages
+sudo apt-get update && sudo apt-get install -y apache2 php php-mysqli mariadb-server auditd audispd-plugins
+
+# 2. Deploy audit rules and reload
+sudo cp /path/to/audit.rules /etc/audit/rules.d/audit.rules
+sudo augenrules --load
+
+# 3. Verify audit subsystem status
+sudo auditctl -s
+# enabled 2 flag 1 pid ...
+
+# 4. Test bashcmd logging pipeline
+logger -p local0.notice -t bashcmd "uid:0 user:root pwd:/root cmd:id"
+tail -n 1 /var/log/bashcmd.log
+
+# 5. Verify Wazuh agent connection
+sudo /var/ossec/bin/wazuh-control status
+```
 
 ## Telemetry Sources
 

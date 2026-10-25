@@ -6,7 +6,7 @@
 | **Role** | Router · IDS sensor · WireGuard VPN client |
 | **Resources** | 2–3 vCPU · 3 GB RAM |
 | **Suricata** | 8.0.6 (AF-PACKET passive IDS mode on routing host) |
-| **SSH key** | `manichand gupta@ManicLenovo` |
+| **SSH key** | `analyst@soc-workstation` |
 
 ## Role
 
@@ -25,12 +25,12 @@ It performs three jobs simultaneously:
 | `ens37` | `192.168.56.150/24` | VMware VMnet2 (Host-Only) | Victim network gateway |
 | `wg0` | `10.8.0.2/32` | WireGuard tunnel | Site-to-cloud VPN connecting to hub `10.8.0.1` |
 
-## Architecture: Inline Router with Passive IDS Sniffing
+## Architecture: Gateway Router with Passive Suricata IDS
 
 Suricata is deployed on the router host rather than an out-of-band SPAN tap.
-- **Routing:** Linux kernel handles IP forwarding between `ens33` and `ens37` with standard routing (`net.ipv4.ip_forward = 1`).
-- **Sniffing:** Suricata runs as a passive IDS engine using AF-PACKET on the network interfaces. It generates alerts without modifying or dropping packets inline.
-- **No NAT on Victim Traffic:** To ensure the cloud Wazuh SIEM receives genuine endpoint IP addresses (`192.168.56.10`, `.20`, `.30`), static routes are configured on the cloud WireGuard hub pointing `192.168.56.0/24` to `10.8.0.2`. Masquerade (SNAT) is not applied to victim telemetry.
+- **Routing:** Linux kernel handles IP forwarding between `ens33` (external NAT) and `ens37` (internal victim subnet) with standard routing (`net.ipv4.ip_forward = 1`).
+- **Sniffing:** Suricata runs as a passive IDS engine using AF-PACKET promiscuous capture on interface `ens37`. It inspects packets crossing the router boundary without modifying or dropping frames inline.
+- **No NAT on Victim Traffic:** To ensure the cloud Wazuh SIEM receives genuine endpoint IP addresses (`192.168.56.10`, `.20`, `.30`), static routes are configured on the cloud WireGuard hub pointing `192.168.56.0/24` to `10.8.0.2`. Masquerade (SNAT) is intentionally not applied to victim telemetry traversing the gateway.
 
 ## Configuration
 
@@ -49,16 +49,24 @@ network:
       addresses: [192.168.56.150/24]
 ```
 
-### Kernel Forwarding & Firewall
+### Persistent Kernel Forwarding & Firewall
+
+To ensure routing and firewall policies persist across system reboots without manual intervention:
 
 ```bash
-# Enable IP forwarding persistently in /etc/sysctl.conf
-sysctl -w net.ipv4.ip_forward=1
+# 1. Enable IP forwarding persistently via sysctl.d drop-in
+sudo bash -c 'cat <<EOF > /etc/sysctl.d/99-ipforward.conf
+net.ipv4.ip_forward = 1
+EOF'
+sudo sysctl -p /etc/sysctl.d/99-ipforward.conf
 
-# Allow forwarding across interfaces
-iptables -P FORWARD ACCEPT
+# 2. Configure default forwarding policy and save with iptables-persistent
+sudo iptables -P FORWARD ACCEPT
+sudo apt-get install -y iptables-persistent
+sudo netfilter-persistent save
+# Saves active rules to /etc/iptables/rules.v4
 
-# Verify routing table
+# 3. Verify active routing table
 ip route show
 # default via 192.168.232.2 dev ens33 proto static
 # 10.8.0.0/24 dev wg0 proto kernel scope link src 10.8.0.2
@@ -93,7 +101,7 @@ af-packet:
 
 Suricata listens on **`ens37`** using `af-packet` in promiscuous mode:
 - **Cross-Segment Traffic:** All routed traffic passing between Kali (`192.168.232.135`) and the victim network (`192.168.56.0/24`) is inspected.
-- **Intra-Segment Observation:** Because AF-PACKET enables promiscuous mode on VMware VMnet2, multicast, broadcast, and segment-level traffic directed toward or traversing the gateway can be observed (e.g., the Kerberos AS-REQ exchange between DVWA and the Domain Controller in Stage 13).
+- **Intra-Segment Observation:** Because AF-PACKET enables promiscuous mode on VMware VMnet2, multicast, broadcast, and segment-level traffic directed toward or traversing the gateway can be observed (e.g., the Kerberos TGS-REQ exchange between DVWA and the Domain Controller in Stage 13).
 - **Unicast Blind Spot:** Direct Layer 2 host-to-host unicast switching between virtual machines that does not traverse the gateway interface is not guaranteed to be captured on the wire, making endpoint agents (Wazuh & Sysmon) the authoritative detection layer for lateral movement.
 
 ### Output Files

@@ -25,11 +25,11 @@
 | **RAM** | 16 GB |
 | **vCPU** | 4 |
 | **Disk** | 123 GB |
-| **Cloud network** | `10.122.0.0/16` (one of two peered `/24` VNets) |
+| **Cloud network** | `10.122.0.0/24` private subnet (within `10.122.0.0/16` VPC) |
 | **VPN address** | `10.8.0.1/24` |
 | **Public exposure** | `51820/UDP` only |
 | **Public IP** | Dynamic (not published) |
-| **SSH key** | `manichand gupta@ManicLenovo` |
+| **SSH key** | `analyst@soc-workstation` |
 
 ---
 
@@ -113,8 +113,8 @@ Address    = 10.8.0.1/24
 ListenPort = 51820
 PrivateKey = <REDACTED>
 MTU        = 1420
-PostUp     = iptables -A FORWARD -i wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-PostDown   = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
+PostUp     = iptables -A FORWARD -i wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o eth0 -j MASQUERADE
+PostDown   = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -s 10.8.0.0/24 -o eth0 -j MASQUERADE
 
 [Peer]
 # Suricata gateway

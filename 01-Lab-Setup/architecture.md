@@ -4,7 +4,10 @@
 
 ## Purpose
 
-Build a realistic, end-to-end SOC pipeline: an adversary attacks a local Active Directory network from an isolated NAT subnet, telemetry is captured by an inline Suricata sensor and Wazuh endpoint agents, alerts are normalized and evaluated against custom rules, and correlated incident cases reach TheHive automatically across private cloud networking.
+Build a realistic, end-to-end SOC pipeline: an adversary attacks a local Active Directory network from an isolated NAT subnet, telemetry is captured by a passive Suricata IDS on the gateway router and Wazuh endpoint agents, alerts are normalized and evaluated against custom rules, and correlated incident cases reach TheHive automatically across private cloud networking.
+
+### Architectural Philosophy: Passive IDS vs. Inline IPS
+Suricata is deployed in **passive IDS mode** via AF-PACKET capture on the gateway's victim-facing interface (`ens37`), rather than in inline IPS mode (NFQUEUE or bridged inline filtering). This engineering decision avoids introducing packet forwarding jitter or unintended drops during high-volume attack phases (e.g. Nikto web fuzzing or Nmap timing sweeps), ensuring authentic adversary traffic behavior while generating high-fidelity wire alerts.
 
 ---
 
@@ -56,7 +59,7 @@ flowchart LR
 
 | Host | OS | Interfaces & Addresses | Default Gateway | Role | Primary Telemetry |
 |------|----|------------------------|-----------------|------|-------------------|
-| **Kali** | Kali Linux 2024.x | `ens33`: `192.168.232.135/24` | `192.168.232.2` (NAT) | Attacker workstation | Offline attack commands |
+| **Kali** | Kali Linux 2024.x | `eth0`: `192.168.232.135/24` | `192.168.232.2` (NAT) | Attacker workstation | Offline attack commands |
 | **Suricata Gateway** | Ubuntu 24.04 LTS | `ens33`: `192.168.232.162/24`<br>`ens37`: `192.168.56.150/24`<br>`wg0`: `10.8.0.2/32` | `192.168.232.2` (NAT) | Linux Router + AF-PACKET IDS + VPN Client | `eve-alert.json` → Wazuh |
 | **Domain Controller** | Windows Server 2022 | `Ethernet0`: `192.168.56.10/24` | `192.168.56.150` | AD DS, DNS, Kerberos KDC (`ad.lab`) | Wazuh Agent `DomainWin10` + Sysmon |
 | **Windows 10** | Windows 10 Pro N | `Ethernet0`: `192.168.56.20/24` | `192.168.56.150` | Domain workstation target | Wazuh Agent `Win10User` + Sysmon |
@@ -70,8 +73,8 @@ flowchart LR
 
 | Segment | Range | Purpose | Sensor Scope | Routing / NAT Policy |
 |---------|-------|---------|--------------|----------------------|
-| **Attack Plane** | `192.168.232.0/24` (VMnet8) | Kali and gateway external NIC | Sniffed on `ens33` | Standard VMware NAT to physical host |
-| **Victim Plane** | `192.168.56.0/24` (VMnet2) | DC, Win10, DVWA | Sniffed on `ens37` | Routed via gateway `.150`; no NAT |
+| **Attack Plane** | `192.168.232.0/24` (VMnet8) | Kali and gateway external NIC | Forwarded across router to `ens37` | Standard VMware NAT to physical host |
+| **Victim Plane** | `192.168.56.0/24` (VMnet2) | DC, Win10, DVWA | Sniffed on `ens37` (AF-PACKET promiscuous mode) | Routed via gateway `.150`; no NAT |
 | **WireGuard VPN** | `10.8.0.0/24` | Encrypted tunnel linking lab to cloud | Tunnel interface `wg0` | Point-to-point WireGuard routing |
 | **Cloud SOC** | `10.122.0.0/16` (Peered `/24`s) | Wazuh and TheHive private cloud | Unmonitored (Internal cloud) | Cloud VNet peering; private IPs |
 
@@ -100,7 +103,7 @@ All administrative interfaces (Wazuh Dashboard at `443/TCP`, TheHive at `9000/TC
 | **1** | Kali $\rightarrow$ Victim | `192.168.232.135` $\rightarrow$ `ens33` $\rightarrow$ `ens37` $\rightarrow$ `.56.x` | Attack payloads & scanning | ✅ **Yes** — Crosses gateway routing path |
 | **2** | Victim $\rightarrow$ Cloud SIEM | `.56.x` $\rightarrow$ `ens37` $\rightarrow$ `wg0` $\rightarrow$ `10.8.0.1` $\rightarrow$ `10.122.0.5:1514` | Wazuh agent events | ✅ **Yes** — Transits gateway uplink to tunnel |
 | **3** | Wazuh $\rightarrow$ TheHive | `10.122.0.5` $\rightarrow$ VNet peering $\rightarrow$ `10.122.0.4:9000/api/v1` | Batched alert synchronization | ❌ **No** — Internal cloud VNet peering |
-| **4** | Victim $\leftrightarrow$ Victim | `.56.30` (DVWA) $\leftrightarrow$ `.56.10` (DC) / `.56.20` (Win10) | Lateral movement & AD requests | ⚠️ **Partial** — AF-PACKET promiscuous mode on `ens37` observes broadcast, multicast, and gateway-routed frames (e.g. Kerberos AS-REQ in Stage 13); unrouted unicast frames rely on **Wazuh + Sysmon** endpoint telemetry |
+| **4** | Victim $\leftrightarrow$ Victim | `.56.30` (DVWA) $\leftrightarrow$ `.56.10` (DC) / `.56.20` (Win10) | Lateral movement & AD requests | ⚠️ **Partial** — AF-PACKET promiscuous mode on `ens37` observes broadcast, multicast, and gateway-routed frames (e.g. Kerberos TGS-REQ in Stage 13); unrouted unicast frames rely on **Wazuh + Sysmon** endpoint telemetry |
 
 ---
 
@@ -110,9 +113,9 @@ All administrative interfaces (Wazuh Dashboard at `443/TCP`, TheHive at `9000/TC
 |---|---|---|---|
 | **Suricata 8.0.6** | Suricata Gateway | Native package (`ppa:oisf/suricata-stable`) | Passive IDS engine with AF-PACKET capture on `ens37` |
 | **Wazuh Manager 4.x** | Wazuh VM | Native package | Analysis engine, decoders, rule matching, alerts log |
-| **thecustomhive** | Wazuh VM | Native Python script + systemd unit | O(1) SQLite ingestion queue & async flush daemon |
+| **thecustomhive** | Wazuh VM | Native Python script + systemd unit | Durable SQLite ingestion queue & async flush daemon |
 | **TheHive 5.x** | TheHive VM | Native Debian package | Security incident response and case management |
-| **Cassandra / OpenSearch** | TheHive VM | Native packages | Distributed database and search backend for TheHive |
+| **Cassandra 4.x / Elasticsearch 8.x** | TheHive VM | Native packages | Distributed database and search backend for TheHive 5 |
 | **Nginx Proxy Manager** | TheHive VM | Docker container | TLS termination and reverse proxy for VPN-only web UIs |
 | **Velociraptor 0.77** | TheHive VM | Native systemd service | Endpoint digital forensics and artifact collection |
 | **WireGuard** | TheHive VM & Gateway | Native kernel module | Encrypted site-to-cloud transport tunnel |

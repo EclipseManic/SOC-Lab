@@ -39,7 +39,9 @@ Kali ──attack──▶ Suricata Gateway ──route──▶ Victims (DC, Wi
         (SIEM stack)     (cases + automation)
 ```
 
-All attack traffic crosses the Suricata gateway, giving the IDS full visibility of adversary-to-victim flows. Agent telemetry exits the lab over WireGuard to the cloud SIEM. Alerts are pulled from Wazuh and pushed into TheHive as cases.
+Adversary perimeter attack traffic (Stages 01–08) enters from Kali across the Suricata gateway router (`ens33` → `ens37`), providing network IDS inspection over inbound adversary-to-victim flows. Once the adversary compromises DVWA and establishes an internal pivot (Stages 09–20), lateral movement and credential attacks execute directly inside the victim subnet (`192.168.56.0/24`). While Suricata's AF-PACKET promiscuous listener on `ens37` captures broadcast, multicast, and switched frames traversing the virtual switch (recording 14 intra-subnet alerts in raw telemetry), endpoint telemetry (Sysmon, Wazuh agent, Auditd) provides authoritative visibility over internal lateral movement.
+
+Host and sensor telemetry exits the lab over WireGuard to the cloud SIEM stack. High-severity alerts (Wazuh rule level ≥ 8) are queued locally in SQLite WAL by `custom-thehive` and synchronized asynchronously into TheHive 5 as actionable incident cases.
 
 ---
 

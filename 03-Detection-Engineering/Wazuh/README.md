@@ -113,7 +113,7 @@ Detects lateral movement and privilege abuse involving domain machine accounts (
 ---
 
 ### Rules 100100–100104 — Registry Persistence & Service Hijack
-Monitors Sysmon Event ID 13 (Registry Value Set) for attacker persistence across reboots:
+Monitors Sysmon Event ID 13 (Registry Value Set) for adversary persistence across reboots:
 
 ```xml
 <group name="sysmon,registry_persistence,">
@@ -138,6 +138,13 @@ Monitors Sysmon Event ID 13 (Registry Value Set) for attacker persistence across
     <mitre><id>T1546.012</id></mitre>
   </rule>
 
+  <rule id="100103" level="10">
+    <if_group>sysmon_eid13_detections</if_group>
+    <field name="win.eventdata.targetObject" type="pcre2">(?i)\\Explorer\\(Shell Folders|User Shell Folders)</field>
+    <description>Persistence: Shell Folders registry modified - $(win.eventdata.details)</description>
+    <mitre><id>T1547.001</id></mitre>
+  </rule>
+
   <rule id="100104" level="10">
     <if_group>sysmon_eid13_detections</if_group>
     <field name="win.eventdata.targetObject" type="pcre2">(?i)\\Services\\.*\\Parameters\\ServiceDll</field>
@@ -146,6 +153,56 @@ Monitors Sysmon Event ID 13 (Registry Value Set) for attacker persistence across
   </rule>
 </group>
 ```
+
+---
+
+### Rules 100199, 100217, 100218 — Linux Host & Auditd Integrity Rules
+Monitors Linux Auditd kernel syscalls (`execve`) and sensitive file watches on DVWA:
+
+```xml
+<!-- Custom Rule 100199: High-risk command invocation under auditd -->
+<rule id="100199" level="10">
+  <if_sid>80700</if_sid>
+  <field name="audit.syscall">59</field>
+  <match type="pcre2">comm="(whoami|id|nc|ncat|netcat)"|a0="sudo"[\s\S]*?a1="-l"|a0="bash"[\s\S]*?a1="-i"</match>
+  <description>Auditd: blacklisted/suspicious command executed - $(audit.exe)</description>
+  <group>blacklist_command,</group>
+</rule>
+
+<!-- Custom Rules 100217 & 100218: Sensitive identity file access -->
+<rule id="100217" level="12">
+  <if_sid>80700</if_sid>
+  <decoded_as>auditd</decoded_as>
+  <field name="audit.key">identity</field>
+  <description>Auditd: sensitive file accessed - $(audit.file.name) by uid=$(audit.uid)</description>
+</rule>
+
+<rule id="100218" level="12">
+  <if_sid>80700</if_sid>
+  <decoded_as>auditd</decoded_as>
+  <field name="audit.key">cat_sensitive_file</field>
+  <description>Auditd: cat used on sensitive file - $(audit.file.name) by uid=$(audit.uid) auid=$(audit.auid)</description>
+</rule>
+```
+
+---
+
+### Rule 100300 — Masquerading & Parent-Process Integrity
+Detects defense evasion where malware mimics Windows system tasks:
+- **Rule 100299 (Level 0):** Suppresses legitimate `rundll32.exe` SysMain tasks when spawned by `svchost.exe` under `SYSTEM`.
+- **Rule 100300 (Level 12):** Triggers a critical alert if `rundll32.exe` invokes a SysMain task parameter but the parent process is **not** `svchost.exe`, exposing process masquerading.
+
+---
+
+### DVWA Web Application Rule Family (100200–100214)
+Processes Apache access logs decoded by custom web parsers:
+- **Rule 100200 (Level 3):** Baseline decoder match for web requests.
+- **Rules 100201–100205 (Level 7):** Signature matching for SQLi, XSS, LFI, Command Injection, and Open Redirect syntax.
+- **Rule 100206 (Level 5):** Login page access tracking.
+- **Rule 100207 (Level 10):** Web brute-force authentication thresholding.
+- **Rule 100208 (Level 5):** File upload endpoint access tracking (Stage 05 webshell staging).
+- **Rule 100213 (Level 10):** 30+ 4xx errors in 15 seconds (fuzzing/enumeration).
+- **Rule 100214 (Level 12):** 15+ 5xx server errors in 15 seconds (application exploit attempts).
 
 ---
 
@@ -187,22 +244,38 @@ uid:0 user:root pwd:/root/.ssh cmd:echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA...
 
 ## 4. The 87 Suppressions & Noise Reduction Architecture
 
-Of the 133 rules in `local_rules.xml`, **87 are Level 0 suppressions**. Rather than letting high-volume benign OS events flood the SIEM and exhaust analyst attention, noise is silenced at the earliest stage:
+Of the 133 rules in `local_rules.xml`, **87 are Level 0 suppressions**. Rather than letting high-volume benign OS events flood the SIEM and exhaust analyst attention, noise is silenced at the earliest evaluation stage. Each suppression rule is safe by design:
 
 1. **Machine Account Logons (32 rules):** Silences routine background authentications from domain machine accounts (`WIN10$`, `PC-DC$`), Type 3/5 service authentications, and routine Kerberos TGS renewals for local computer services (`100610`, `100611`, `100287`, `100288`).
-2. **PowerShell Diagnostic Checks (14 rules):** Suppresses internal Windows AppLocker `PSScriptPolicyTest` probe executions (`100286`, `100170`), prompt rendering events (`100276`), and CIM module autoloading (`100328`).
-3. **Hypervisor & VM Noise (12 rules):** Filters out background VMware Tools execution scripts (`suspend-vm-default.bat`, `resume-vm-default.bat`, `vgauthservice.exe`) (`100167`, `100169`, `100350`, `100351`).
-4. **Wazuh Agent Self-Noise (18 rules):** Whitelists the Wazuh Agent's own SCA compliance queries (`100318`, `100319`) and File Integrity Monitoring file reads (`100160`).
-5. **Suricata Gateway Internal Diagnostics (11 rules):** Silences non-actionable signatures originating from internal interface broadcast polling (`100250`, `100252`).
+   - *Why it is safe:* Suppressions require the username to terminate in `$` (domain computer accounts) and originate from local or DC addresses. Non-machine accounts and machine accounts logging on from anomalous or non-local IP addresses remain fully alertable via Rules `100601`, `100602`, and `100603`.
+2. **PowerShell Diagnostic Checks (14 rules):** Suppresses internal Windows AppLocker `PSScriptPolicyTest` probe executions (`100286`), prompt rendering events (`100276`), and split inline fragments (`100295`).
+   - *Why it is safe:* Windows PowerShell automatically drops transient `__PSScriptPolicyTest_*.ps1` files to test execution policy on startup; suppressing this specific filename eliminates thousands of false positives while leaving genuine user ScriptBlock executions (EID 4104 / Rule `100271`) completely untouched.
+3. **Hypervisor & VM Noise (12 rules):** Filters out background VMware Tools execution scripts (`suspend-vm-default.bat`, `resume-vm-default.bat`, `vgauthservice.exe`) and virtual disk retrim warnings (`100244`).
+4. **Wazuh Agent Self-Noise (18 rules):** Whitelists the Wazuh Agent's own SCA compliance queries and internal inventory file reads (`100216`, `100280`).
+5. **Background OS Services & Utilities (11 rules):** Suppresses routine Disk Cleanup (`cleanmgr.exe`, `100230`), BITS Windows Update re-registrations (`100243`), and legitimate `rundll32.exe` SysMain tasks launched by `svchost.exe` under `SYSTEM` (`100299`).
+   - *Defense-in-depth guarantee:* If `rundll32.exe` executes a SysMain task but its parent process is **not** `svchost.exe`, Rule `100300` fires at Level 12 for process masquerading.
 
 ---
 
 ## 5. Severity Overrides for TheHive
 
-Wazuh's integration daemon evaluates `<level>8</level>` in `ossec.conf` before passing alerts to `custom-thehive`. To ensure critical authentication anomalies reach TheHive, key built-in rules were explicitly overridden with elevated severity:
+Wazuh's integration daemon evaluates `<level>8</level>` in `ossec.conf` before passing alerts to `custom-thehive`. To bridge network IDS alerts and critical authentication events into TheHive without manual polling, key built-in rules were explicitly overridden with elevated severity in `local_rules.xml`:
+
+### The Critical Bridge: Rule 86601 Override (Level 8)
+In Wazuh's default ruleset (`0025-suricata_rules.xml`), Rule `86601` (`Suricata: Alert - $(alert.signature)`) evaluates at **Level 3**. Because `custom-thehive` only forwards events with level $\ge 8$, default Wazuh configurations will drop all Suricata network alerts at the integration boundary. Overwriting Rule `86601` to Level 8 is the essential engineering bridge enabling Suricata alerts to cross into TheHive 5:
 
 ```xml
-<!-- sshd authentication success elevated to level 8 for TheHive forwarding -->
+<!-- Suricata NIDS alerts elevated from default Level 3 to Level 8 for TheHive forwarding -->
+<rule id="86601" level="8" overwrite="yes">
+  <if_sid>86600</if_sid>
+  <field name="event_type">^alert$</field>
+  <description>Suricata: Alert - $(alert.signature)</description>
+</rule>
+```
+
+### Authentication & Privilege Overrides
+```xml
+<!-- sshd authentication success elevated from Level 3 to Level 8 -->
 <rule id="5715" level="8" overwrite="yes">
   <if_sid>5700</if_sid>
   <match>^Accepted|authenticated.$</match>
@@ -210,12 +283,27 @@ Wazuh's integration daemon evaluates `<level>8</level>` in `ossec.conf` before p
   <mitre><id>T1078</id><id>T1021</id></mitre>
 </rule>
 
-<!-- Windows Logon Failure elevated to level 8 for brute force tracking -->
+<!-- sshd authentication failed elevated from Level 5 to Level 8 -->
+<rule id="5716" level="8" overwrite="yes">
+  <if_sid>5700</if_sid>
+  <match>^Failed|^failure</match>
+  <description>sshd: authentication failed.</description>
+  <mitre><id>T1110.001</id></mitre>
+</rule>
+
+<!-- Windows Logon Failure (Event ID 4625/529) elevated from Level 5 to Level 8 -->
 <rule id="60105" level="8" overwrite="yes">
   <if_sid>60104</if_sid>
   <field name="win.system.eventID">^529$|^530$|^531$|^532$|^533$|^534$|^535$|^536$|^537$|^539$|^4625$</field>
   <description>Windows Logon Failure</description>
   <mitre><id>T1078</id></mitre>
+</rule>
+
+<rule id="60122" level="8" overwrite="yes">
+  <if_sid>60105</if_sid>
+  <field name="win.system.eventID">^529$|^4625$</field>
+  <description>Logon Failure - Unknown user or bad password</description>
+  <mitre><id>T1531</id></mitre>
 </rule>
 ```
 

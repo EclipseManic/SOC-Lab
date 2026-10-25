@@ -36,11 +36,11 @@ The adversary launched Responder on the DVWA pivot at $T_0 + 26m$ (`17:36:26+05:
 
 ## Investigation steps
 
-1. Verified Suricata fast.log for SIDs 2067085–2067087 on SMB traffic between 192.168.56.20 and 192.168.56.30.
-2. Confirmed NTLMSSP negotiation packet structure in network capture.
-3. Correlated with Responder logs on DVWA showing capture of win10 user NetNTLMv2 hash.
-4. Noted that Suricata alerted on the NTLM session setup request rather than raw LLMNR UDP.
-5. Escalated case for potential domain credential compromise.
+1. Identified interactive Responder launch in `/var/log/bashcmd.log` on DVWA (`python3 /opt/Responder/Responder.py -I ens33 -wd`).
+2. Confirmed extraction of captured NetNTLMv2 hash to `/tmp/win10.hash` via shell command logging at 17:38:29.
+3. Noted that raw LLMNR/NBT-NS multicast frames did not trigger a high-severity alert on the gateway wire. (The separate SMB NTLM Session Setup alerts, SIDs 2067085–2067087 / `wzb-7a4a134d1b`, occurred later at 12:53:59 during Stage 20 remote execution).
+4. Correlated host command history with downstream offline cracking attempts (Stage 11) and domain authentication.
+5. Escalated incident case for potential domain credential compromise.
 
 ---
 

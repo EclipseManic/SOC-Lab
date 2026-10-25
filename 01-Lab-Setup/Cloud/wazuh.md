@@ -11,11 +11,11 @@
 | **OS** | Ubuntu 24.04.4 LTS |
 | **RAM** | 8 GB |
 | **vCPU** | 2 |
-| **Cloud network** | `10.122.0.0/16` (second of two peered `/24` VNets) |
+| **Cloud network** | `10.122.0.0/24` private subnet (within `10.122.0.0/16` VPC) |
 | **Public IP** | None |
 | **Public listeners** | None |
 | **Access method** | VNet peering from TheHive VM; analyst access via WireGuard + NPM (`wazuh.lab`) |
-| **SSH key** | `manichand gupta@ManicLenovo` |
+| **SSH key** | `analyst@soc-workstation` |
 
 ---
 
@@ -116,16 +116,31 @@ Custom rules, decoders, and integration scripts are deployed directly on this Wa
 
 ### Detection Engineering References
 
-| Document | Content |
-|----------|---------|
-| [rules.md](../../03-Detection-Engineering/Wazuh/README.md) | Custom rules in `local_rules.xml` |
-| [decoders.md](../../03-Detection-Engineering/Wazuh/README.md#3-decoders-catalog-local_decoderxml) | Custom decoders in `local_decoder.xml` |
-| [ossec.conf](../../06-Resources/Configs/ossec.conf) | Wazuh Manager integration configuration |
+| Reference | Content |
+|---|---|
+| [Wazuh Detection Rules](../../03-Detection-Engineering/Wazuh/README.md#2-key-custom-detection-rules) | Custom rules in `local_rules.xml` |
+| [Wazuh Decoders Catalog](../../03-Detection-Engineering/Wazuh/README.md#3-decoders-catalog-local_decoderxml) | Custom decoders in `local_decoder.xml` |
+| [Wazuh Manager Config](../../06-Resources/Configs/ossec.conf) | Wazuh Manager integration configuration |
 | [custom-thehive](../../06-Resources/Scripts/custom-thehive) | POSIX integration wrapper script |
 | [custom-thehive.py](../../06-Resources/Scripts/custom-thehive.py) | Production correlation & flush engine |
 | [thehive-flush.service](../../06-Resources/Scripts/thehive-flush.service) | Systemd unit file for the flush daemon |
-| [false-positives.md](../../03-Detection-Engineering/Wazuh/README.md#4-tuning-false-positives--noise-suppression) | False-positive tuning and exclusions |
-| [README.md#5-thecustomhive-alert-pipeline](../../03-Detection-Engineering/README.md#5-thecustomhive-alert-pipeline) | Alert pipeline architecture documentation |
+| [Wazuh Noise Reduction & Suppressions](../../03-Detection-Engineering/Wazuh/README.md#4-the-87-suppressions--noise-reduction-architecture) | False-positive tuning and exclusions |
+| [thecustomhive Pipeline](../../03-Detection-Engineering/README.md#5-thecustomhive-alert-pipeline) | Alert pipeline architecture documentation |
+
+---
+
+## Static Routing & Agent Enrollment Setup
+
+To allow Wazuh Manager to respond to agents on `192.168.56.0/24` without NAT (preserving original endpoint IP addresses), a persistent return route points to the TheHive VM (`10.122.0.4`):
+
+```bash
+# Configure persistent return route to local victim lab via TheHive cloud router
+sudo ip route add 192.168.56.0/24 via 10.122.0.4
+
+# Verified agent enrollment command executed on Linux victim hosts:
+WAZUH_MANAGER="10.122.0.5" sudo -E apt-get install wazuh-agent
+sudo systemctl enable --now wazuh-agent
+```
 
 ---
 
@@ -174,7 +189,7 @@ nc -vz 10.122.0.4 9000
 | Document | Description |
 |----------|-------------|
 | [thehive.md](thehive.md) | TheHive VM — VPN, routing, case management |
-| [rules.md](../../03-Detection-Engineering/Wazuh/README.md) | Custom Wazuh detection rules |
-| [decoders.md](../../03-Detection-Engineering/Wazuh/README.md#3-decoders-catalog-local_decoderxml) | Custom Wazuh decoders |
-| [false-positives.md](../../03-Detection-Engineering/Wazuh/README.md#4-tuning-false-positives--noise-suppression) | False-positive tuning |
-| [README.md#5-thecustomhive-alert-pipeline](../../03-Detection-Engineering/README.md#5-thecustomhive-alert-pipeline) | Alert pipeline (Wazuh → TheHive) |
+| [Wazuh Detection Rules](../../03-Detection-Engineering/Wazuh/README.md#2-key-custom-detection-rules) | Custom Wazuh detection rules |
+| [Wazuh Decoders Catalog](../../03-Detection-Engineering/Wazuh/README.md#3-decoders-catalog-local_decoderxml) | Custom Wazuh decoders |
+| [Wazuh Noise Reduction & Suppressions](../../03-Detection-Engineering/Wazuh/README.md#4-the-87-suppressions--noise-reduction-architecture) | False-positive tuning & suppressions |
+| [thecustomhive Alert Pipeline](../../03-Detection-Engineering/README.md#5-thecustomhive-alert-pipeline) | Alert pipeline (Wazuh → TheHive) |

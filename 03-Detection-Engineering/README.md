@@ -41,12 +41,12 @@ Local Infrastructure (01-Lab-Setup)         Detection Engineering (03-Detection-
 ===================================         ================================================
 Suricata Gateway (Dual-NIC Router)   ----->  Passive AF-PACKET IDS (Suricata/custom.rules)
                                              Rate-limiting & Suppression (Suricata/threshold.config)
-                                             Suricata JSON Decoder (Wazuh/local_decoder.xml)
+                                             Wazuh Built-in Suricata Decoders (0025-suricata_decoders.xml)
 
 DVWA Target (/var/log/bashcmd.log)   ----->  Custom bashcmd Decoder (Wazuh/local_decoder.xml)
                                              Kernel Syscall Auditing (Auditd/audit.rules)
 
-Windows 10 / DC (Sysmon & Security)  ----->  Adapted sysmon-modular Baseline (Sysmon/sysmonconfig.xml)
+Windows 10 / DC (Sysmon & Security)  ----->  Tailored 90-line Sysmon Baseline (Sysmon/sysmonconfig.xml)
                                              Wazuh Rules: wmiexec, Pass-the-Hash, Registry (Wazuh/local_rules.xml)
 
 Private Wazuh SIEM (Cloud VM 2)      ----->  Wazuh Engine & Local Rules (Wazuh/local_rules.xml)
@@ -73,23 +73,23 @@ This matrix maps each of the 20 attack stages in the campaign to its correspondi
 |---|---|---|---|---|---|---|---|---|
 | **01** | Reconnaissance | `T1595.001` | Network Flow / IDS | ET SCAN NMAP OS Detection Probe / Portscan | `86601` / SID `3400002` | **Detected** | - | `wzb-3a8045a03c` (`1.png`–`1.3.png`) |
 | **02** | Web Brute Force | `T1110.001` | Web Server Access Logs | Multiple common web attacks & 4xx burst | Wazuh `31153`, `31151`, `100410` | **Detected** | - | `wzb-81becfcc8d` (`2.png`–`2.7.png`) |
-| **03** | SQL Injection | `T1190` | Web Logs / Access Watchlist | Sensitive file (/etc/passwd) access in URL parameter | Wazuh `31153` (Level 10) | **Detected** | - | `wzb-10160d36c2` (`3.png`) |
+| **03** | SQL Injection | `T1190` | Network Flow & Web Access | ET WEB_SERVER SELECT USER / Web attack returned 200 | Suricata SID `2010963` / Wazuh `31106` | **Detected (Telemetry Verified)** | - | Suricata wire alert (Sheet Row 9110 / CSV Row 9108) (`3.png`) |
 | **04** | Hash Cracking | `T1110.002` | *Offline (Attacker)* | *None (Local GPU Hashcat Execution)* | *N/A* | **Detection gap** | [DG-04](#dg-04--dg-11--offline-cryptographic-cracking-stages-04--11) | *Offline Activity (No Telemetry)* |
 | **05** | Web Shell Upload | `T1505.003` | Network IDS / Auditd | ET ATTACK_RESPONSE id command output / execve | Wazuh `86601` / SID `2019284` | **Detected** | - | `wzb-e9a1797ac4`, `wzb-61ed72e937` (`4.png`, `4.1.png`) |
 | **06** | Reverse Shell | `T1059.004` | Network Connection / IDS | POSSBL SCAN SHELL M-SPLOIT TCP / shell spawn | Wazuh `86601` / SID `3400020` | **Detected** | - | `wzb-ccae331b77`, `wzb-81bb1f83f7` (`5.png`) |
-| **07** | Privilege Escalation | `T1548.003` | Linux Auth / Auditd | Sudo command execution & SUID bash invocation | Wazuh `5402` (PAM) / `web_process_creation` | **Detected** | - | Logged in CSV (12x Rule `5402`) (`6.png`–`6.3.png`) |
+| **07** | Privilege Escalation | `T1548.003` | Linux Auth / Auditd | Sudo command execution & SUID bash invocation | Wazuh `5402` (PAM) / `web_process_creation` | **Detected (Host Alerted)** | - | Logged in CSV (12x Rule `5402`) (`6.png`–`6.3.png`) |
 | **08** | SSH Persistence | `T1098.004` | FIM / Linux Auth | Administrative SSH login / authorized_keys | Wazuh `550` (Syscheck) / `5715` | **Detected** | - | `wzb-1208f0ea54` (`7.png`, `7.1.png`) |
-| **09** | Internal Discovery | `T1018` | Network IDS (ens37) | Nmap scan / Metasploit tool probes on ens37 | Wazuh `86601` / SID `3400001`, `3400002` | **Detected (Network Alerted; DG-09)** | [DG-09](#dg-09--intra-subnet-layer-2-visibility-stage-09) | `wzb-3152e3ed59`, `wzb-f87fab3eda` (`8.png`, `8.1.png`) |
-| **10** | Responder Poisoning | `T1557.001` | Network IDS | ET INFO NTLM Session Setup Request - Negotiate | Wazuh `86601` / SID `2067085`–`2067087` | **Detected** | - | `wzb-7a4a134d1b` (`9.png`–`9.3.png`) |
+| **09** | Internal Discovery | `T1018` | Network IDS (ens37) | Nmap scan / Metasploit tool probes on ens37 | Wazuh `86601` / SID `3400001`, `3400002` | **Logging gap (Network Alerted; DG-09)** | [DG-09](#dg-09--intra-subnet-layer-2-visibility-stage-09) | `wzb-3152e3ed59`, `wzb-f87fab3eda` (`8.png`, `8.1.png`) |
+| **10** | Responder Poisoning | `T1557.001` | Linux Auth / Pivot Host | Wazuh bashcmd logging (uid:0 Responder.py execution on pivot) | Wazuh `bashcmd` | **Detected (Pivot Logged)** | - | Sheet Row 9233 / CSV Row 9231 (`9.png`–`9.3.png`) |
 | **11** | NTLMv2 Cracking | `T1110.002` | *Offline (Attacker)* | *None (Local Hashcat on Kali)* | *N/A* | **Detection gap** | [DG-11](#dg-04--dg-11--offline-cryptographic-cracking-stages-04--11) | *Offline Activity (No Telemetry)* |
 | **12** | BloodHound AD Recon | `T1087.002` | Linux Auth (Pivot Host) | Pivot SSH root logon session launching SharpHound | Wazuh `5715` (Elevated Level 8) | **Logging gap (Pivot Alerted; DG-12)** | [DG-12](#dg-12--active-directory-ldap-query-volume-stage-12) | `wzb-dbf3197ceb`, `wzb-1c8dc0ab5d` (`10.png`, `10.1.png`) |
-| **13** | Kerberoasting | `T1558.003` | Network IDS / Pivot Auth | Kerberos TGS-REQ wire alert & Pivot SSH logon | Wazuh `86601` (SID `2019922`) / `5715` | **Detected** | [Pivot Telemetry](#pivot-telemetry-vs-target-endpoint-analytics) | `wzb-1d2d7fb4b8`, `wzb-c1e2642eb2` (`11.png`, `13.png`) |
+| **13** | Kerberoasting | `T1558.003` | Network IDS / Pivot Auth | Kerberos TGS-REQ wire alert & Pivot SSH logon | Wazuh `86601` (SID `2019922`) / `5715` | **Detected (Network & Pivot Alerted)** | [Pivot Telemetry](#pivot-telemetry-vs-target-endpoint-analytics) | `wzb-1d2d7fb4b8`, `wzb-c1e2642eb2` (`11.png`, `13.png`) |
 | **14** | DCSync | `T1003.006` | Linux Auth (Pivot Host) | Pivot SSH root logon session launching secretsdump | Wazuh `5715` (Elevated Level 8) | **Detected (Pivot Alerted)** | [Pivot Telemetry](#pivot-telemetry-vs-target-endpoint-analytics) | `wzb-4174e3672e` (`12.png`) |
-| **15** | Pass-the-Hash | `T1550.002` | Windows Security / WMI | NTLM Logon Type 3 / Impacket WMI fan-out | EID `4624` (24x in CSV) / Wazuh `100613` | **Detected** | - | `wzb-b7f91cd3ab`–`ccff195e0c` & 24x CSV (`13.png`) |
-| **16** | Golden Ticket | `T1558.001` | Linux Auth (Pivot Host) | Pivot SSH root logon session executing ticketer | Wazuh `5715` (Elevated Level 8) | **Detected** | [Pivot Telemetry](#pivot-telemetry-vs-target-endpoint-analytics) | `wzb-8d45b2d236` (`16.png`, `16.5.png`) |
+| **15** | Pass-the-Hash | `T1550.002` | Windows Security / WMI | NTLM Logon Type 3 / Impacket WMI fan-out | EID `4624` (24x in CSV) / Wazuh `100613` | **Detected (Host & Pivot Alerted)** | - | `wzb-b7f91cd3ab`–`ccff195e0c` & 24x CSV (`13.png`) |
+| **16** | Golden Ticket | `T1558.001` | Linux Auth (Pivot Host) | Pivot SSH root logon session executing ticketer | Wazuh `5715` (Elevated Level 8) | **Detected (Pivot Alerted)** | [Pivot Telemetry](#pivot-telemetry-vs-target-endpoint-analytics) | `wzb-8d45b2d236` (`16.png`, `16.5.png`) |
 | **17** | DC Persistence | `T1136.002` | Sysmon / Security / WMI | Impacket wmiexec fan-out / Rogue user added to DA | Wazuh `100613`, `60109`, `4728` | **Detected** | - | `wzb-26b4d06a63`, `wzb-299a007168` (`17.png`) |
 | **18** | Data Collection | `T1005` | Sysmon Process Monitoring | Impacket wmiexec fan-out (`whoami`, `net user`) | Wazuh `100613` (Process Fan-out) | **Detected** | - | `wzb-aa66cb916a`, `wzb-ed666653f7` (`18.png`) |
-| **19** | Exfiltration | `T1041` | Linux Auth (Pivot Host) | Rapid administrative SSH burst (6 sessions / 1s) | Wazuh `5715` (Elevated Level 8) | **Detected** | [DG-19](#dg-19--encrypted-exfiltration-inspection-stage-19) | `wzb-34f34a857c` (`19.png`) |
+| **19** | Exfiltration | `T1041` | Linux Auth (Pivot Host) | Rapid administrative SSH burst (6 sessions / 1s) | Wazuh `5715` (Elevated Level 8) | **Detected (Pivot Alerted; DG-19)** | [DG-19](#dg-19--encrypted-exfiltration-inspection-stage-19) | `wzb-34f34a857c` (`19.png`) |
 | **20** | Impact (Defacement) | `T1491.001` | Sysmon / Security / IDS | Impacket wmiexec fan-out, defacement, SMB NTLM setup | Wazuh `100613` / Suricata SIDs `2067085`–`2067087` | **Detected** | - | `wzb-71ef983ad8`, `wzb-1f43c1540f`, `wzb-7a4a134d1b` (`20.png`) |
 
 ---
@@ -138,6 +138,16 @@ A core engineering principle of this lab is: **document the blind spot**. A real
 ## 5. thecustomhive Alert Pipeline
 
 `thecustomhive` implements an asynchronous, batched, correlation-driven pipeline between Wazuh and TheHive 5.
+
+### Engineering Backstory: Why Shuffle Was Replaced
+During initial prototyping, [Shuffle SOAR](https://shuffler.io/) was tested as the alert integration bridge between Wazuh and TheHive via incoming webhooks. However, high-volume attack bursts (such as Nikto web fuzzing in Stage 02 and Nmap port sweeps in Stage 01) exposed severe operational bottlenecks:
+1. **Webhook Saturation & Packet Loss:** When hundreds of alert events fired in rapid succession, webhook receivers dropped incoming HTTP requests or hit timeout thresholds.
+2. **Synchronous Fork Bottlenecks:** Wazuh's default integration script model forks an external process per alert. Executing synchronous HTTP POST calls inside each forked process created backlog queuing in `wazuh-analysisd`.
+3. **Alert Floods in TheHive:** Each raw alert generated an isolated case, burying analysts under hundreds of redundant alerts for a single scan.
+
+To solve this, **`thecustomhive`** was engineered as a resilient two-tier pipeline:
+- **Tier 1 (Fast Durable Ingest):** `/var/ossec/integrations/custom-thehive` is a lightweight POSIX wrapper that reads the alert JSON and appends it directly to a local SQLite database in Write-Ahead Logging (WAL) mode. This executes locally in sub-millisecond time with zero HTTP overhead.
+- **Tier 2 (Async Correlation & Batched Flush):** A standalone systemd daemon (`thehive-flush.service`) running `custom-thehive.py --flush-daemon` executes an asynchronous 5-second polling loop. It acquires atomic leases on queued records, applies regex tool fingerprinting (Nmap, sqlmap, Nikto, ffuf, Hydra), groups related events by campaign, process tree, or logon burst, and syncs aggregated Markdown alerts to TheHive 5 REST API across private cloud networking. If TheHive VM is temporarily restarted or unreachable, events remain securely buffered on disk.
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────────────────┐
@@ -236,20 +246,19 @@ The repository provides two empirical alert export datasets:
 3. **Actionable TheHive Incidents ([`06-Resources/Alerts/thehive_alerts.json`](../06-Resources/Alerts/thehive_alerts.json)):** Contains **46 actionable correlated incident alerts** in TheHive 5.
 
 1. **Wazuh Integration Gate:** The `<level>8</level>` filter in `ossec.conf` passes only high-severity events to `/var/ossec/integrations/custom-thehive`. Lower-level baseline events (e.g. Rule 5402 at level 3, Rule 60122 at level 5) remain indexed in the Wazuh Dashboard and CSV exports for triage queries but do not trigger integration fork/exec calls.
-2. **Correlation Engine Compression:** `custom-thehive.py` aggregates hundreds of repetitive events into unified incident groups (`tool_campaign`, `process_fanout`, `logon_group`, `watchlist_group`), producing **46 actionable incident alerts** in TheHive 5 with zero alert fatigue.
+2. **Correlation Engine Compression:** `custom-thehive.py` aggregates hundreds of repetitive events into unified incident groups (`tool_campaign`, `process_fanout`, `logon_group`, `watchlist_group`), producing **46 actionable incident alerts** in TheHive 5, preventing case management saturation while preserving high-fidelity forensic context.
 
 ```text
 Total Attack Stages Executed:           20
 Verified Detections with Alerts:        16  (80.0%)
 Inherent Offline Gaps (No Telemetry):    2  (10.0% - Stages 04, 11)
-Partial / Protocol Logging Gaps:         2  (10.0% - Stages 07, 12)
+Target Logging Gaps (Pivot Alerted):     2  (10.0% - Stages 09, 12)
 Rule Failures:                           0   (0.0%)
 ```
 
 ### Telemetry Pipeline Throughput
-| Metric | Measured Value |
-|---|---|
-| Total Raw Host & Network Events Ingested | ~145,000 |
-| Total Raw Wazuh Alerts (`Wazuh-Raw-Alerts.csv`) | **9,567 records** |
-| Filtered Analysis Alert Export (`wazuh_alerts.csv`) | **808 records** |
-| Correlated Incident Alerts Created in TheHive 5 | **46 actionable alerts** |
+| Pipeline Stage | Telemetry Volume | Description |
+|---|---|---|
+| Complete Raw Wazuh Alerts (`Wazuh-Raw-Alerts.csv`) | **9,567 records** | All alert events generated across 4 agents (`DVWA`: 8,114, `Suricata`: 1,168, `DomainWin10`: 168, `Win10User`: 117) |
+| Curated Analysis Export (`wazuh_alerts.csv`) | **808 records** | Filtered dataset preserving multi-level alert activity across the attack chain |
+| Correlated Incident Alerts Created in TheHive 5 | **46 actionable alerts** | Distinct incident alerts delivered to analyst triage queues after correlation and batching |
