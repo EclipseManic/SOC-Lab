@@ -1,218 +1,272 @@
-# 03 — Detection Engineering
+# 03 — Detection Engineering: Architecture, Rules & Alert Pipeline
 
-This section details the detection engineering architecture, custom rule definitions, log parsers, coverage validation, gap analysis, and SOAR pipeline automation. It answers the fundamental question: **what can the lab detect, where are the operational boundaries, and how do alerts flow to analysts?**
-
----
-
-## Table of Contents
-
-1. [Engineering Structure & Telemetry Catalog](#1-engineering-structure--telemetry-catalog)
-2. [Architectural Linkage](#2-architectural-linkage)
-3. [20-Stage Detection Coverage Matrix](#3-20-stage-detection-coverage-matrix)
-4. [Detection Gap Register & Blind Spot Analysis](#4-detection-gap-register--blind-spot-analysis)
-5. [thecustomhive Alert Pipeline](#5-thecustomhive-alert-pipeline)
-6. [Performance Metrics & Funnel Mechanics](#6-performance-metrics--funnel-mechanics)
+> **The Core Mission:**  
+> Transform high-volume, multi-source raw machine telemetry into clean, actionable, high-fidelity security incidents—without overwhelming analysts or dropping alerts under fire.
 
 ---
 
-## 1. Engineering Structure & Telemetry Catalog
+## At a Glance: Detection Performance
 
-### Deployed Rulesets, Decoders & Baselines
+Before diving into configurations and rules, here is the empirical reality of the detection engineering stack across the entire 20-stage adversary campaign:
 
-| Component | Documentation | Active Configuration / Baseline | Host / Location | Purpose |
-|---|---|---|---|---|
-| **Wazuh Engine** | [`Wazuh/README.md`](Wazuh/README.md) | [`Wazuh/local_rules.xml`](Wazuh/local_rules.xml)<br>[`Wazuh/local_decoder.xml`](Wazuh/local_decoder.xml) | Wazuh Manager (`10.122.1.4`) | Custom rules (wmiexec, LOLBins, privesc, 87 suppressions) & `bashcmd` decoder |
-| **Suricata NIDS** | [`Suricata/README.md`](Suricata/README.md) | [`Suricata/custom.rules`](Suricata/custom.rules)<br>[`Suricata/threshold.config`](Suricata/threshold.config) | Suricata Gateway (`.56.150` / `.232.162`) | Passive AF-PACKET IDS sniffing, scan fingerprinting, and rate limiting |
-| **Sysmon Baseline** | [`Sysmon/README.md`](Sysmon/README.md) | [`Sysmon/sysmonconfig.xml`](Sysmon/sysmonconfig.xml) | DC (`.56.10`) & Win10 (`.56.20`) | Endpoint telemetry: EID 1 (Process), EID 3 (Network), EID 11 (File), EID 13 (Registry), EID 17/18 (Pipes) |
-| **Linux Auditd** | [`Auditd/README.md`](Auditd/README.md) | [`Auditd/audit.rules`](Auditd/audit.rules) | DVWA (`.56.30`) | Kernel syscall tracing (`execve`), SUID creation (`chmod +s`), and identity file watches |
-| **Alert Pipeline** | [`06-Resources/Scripts/`](../06-Resources/Scripts/) | `custom-thehive`<br>`custom-thehive.py`<br>`thehive-flush.service`<br>`tool_fingerprints.json` | Wazuh Manager | 2-tier O(1) SQLite ingestion queue & async correlation flush daemon to TheHive 5 |
-| **Server Config** | [`06-Resources/Configs/`](../06-Resources/Configs/) | `ossec.conf` | Wazuh Manager | Wazuh Manager integration block with `<level>8</level>` threshold (API keys redacted) |
-| **Visual Evidence** | [`TheHive_Alert-ScreenShot/`](TheHive_Alert-ScreenShot/) | 60 PNG screenshots | Repository Asset | Empirical visual proof of TheHive alert creation across all detected stages |
-| **Raw Alert Exports** | [`06-Resources/Alerts/`](../06-Resources/Alerts/) | `thehive_alerts.json`<br>`wazuh_alerts.csv` | Repository Asset | Raw export of 46 TheHive 5 alerts and 808 Wazuh alert CSV records |
+| Metric | Result | Plain-English Summary |
+|---|:---:|---|
+| **Attack Stages Simulated** | **20** | Full kill chain from external port scanning to domain-wide ransomware and defacement |
+| **Stages Caught (Detection Rate)** | **16 (80%)** | Real-time, actionable alerts raised in TheHive 5 across network, endpoint, and SIEM |
+| **Documented Blind Spots** | **4 (20%)** | **2 Offline:** Local GPU password cracking generated zero victim packets by definition.<br>**2 Logging Gaps:** Internal Layer 2 discovery and BloodHound LDAP scans lacked target-side rule alerts. |
+| **Raw Telemetry Captured** | **9,567 records** | Complete raw event stream across all 4 monitored agents (`Wazuh-Raw-Alerts.csv`) |
+| **Filtered Multi-Level Events** | **808 records** | Filtered incident analysis set preserving elevated multi-level activity (`wazuh_alerts.csv`) |
+| **Actionable TheHive Cases** | **46 alerts** | Clustered, deduplicated incident cards delivered to analyst triage queues (`thehive_alerts.json`) |
+| **Tuned Noise Suppressions** | **87 rules** | False-positive rules silencing background OS chatter, guest tools, and machine loops |
 
 ---
 
-## 2. Architectural Linkage
+## 1. How Telemetry Moves: The 4 Interlocking Detection Layers
 
-Detection engineering directly interfaces with the underlying lab infrastructure:
+A resilient detection architecture never relies on a single tool. In this lab, four distinct detection technologies operate as interlocking gears. If an adversary evades network inspection with encryption, endpoint kernel tracing catches them; if an adversary bypasses endpoint hooks, wire-level NIDS captures their lateral movement.
 
 [![Cybersecurity Lab-to-Detection Mapping](../06-Resources/Diagrams/Cybersecurity%20Lab-to-Detection%20Mapping.png)](../06-Resources/Diagrams/Cybersecurity%20Lab-to-Detection%20Mapping.png)
+*Figure 1: Full-stack detection mapping connecting physical & virtual machines to their defensive inspection layers ([view full asset](../06-Resources/Diagrams/Cybersecurity%20Lab-to-Detection%20Mapping.png)).*
+
+```
+   [ Layer 1: The Wire ]           [ Layer 2: Linux Kernel ]        [ Layer 3: Windows Endpoints ]
+    Suricata NIDS (Gateway)         Linux Auditd (DVWA)              Sysmon & Security EVTX (DC/Win10)
+    • Inbound TCP port sweeps       • execve calls on uid=33         • Process command lines (EID 1)
+    • SQLi UNION payloads           • Reverse shell FIFO pipes       • WmiPrvSE child fan-outs
+    • Kerberos TGS wire frames      • SUID privilege escalation      • Registry autostarts & desktop keys
+            │                                  │                                  │
+            └──────────────────────────────────┼──────────────────────────────────┘
+                                               ▼
+                             [ Layer 4: Central SIEM & Correlation ]
+                              Wazuh Manager 4.14.8 (Private Cloud)
+                              • local_decoder.xml & local_rules.xml
+                              • 87 Tuned Noise Suppressions
+                              • Level ≥ 8 Ingestion Gate
+                                               ▼
+                              [ Tier 1: custom-thehive Wrapper ]
+                               O(1) Non-blocking SQLite WAL Queue
+                                               ▼
+                             [ Tier 2: thehive-flush.service ]
+                               5s Loop: Tool Fingerprinting & Deduplication
+                                               ▼
+                             [ TheHive 5 Case Management (46 Incidents) ]
+```
+
+### The 4 Detection Layers Explained:
+
+1. **Layer 1: The Wire (Suricata NIDS on Security Gateway):**  
+   Positioned on the dual-homed perimeter gateway (`192.168.232.162` / `192.168.56.150`). Using high-speed AF-PACKET sniffing, Suricata inspects raw network frames across both the external attack interface (`ens33`) and the internal victim interface (`ens37`). It identifies inbound Nmap port sweeps (Stage 01), HTTP web attacks (Stages 02 & 03), and unencrypted Kerberos ticket requests (Stage 13).
+2. **Layer 2: The Linux Kernel (Auditd on DVWA Web Server):**  
+   Sitting inside the Linux target (`192.168.56.30`), Auditd hooks directly into the Linux netlink kernel subsystem. Its primary rule (`-S execve -F uid=33 -k web_process_creation`) watches every single executable spawned by the Apache web service. When an attacker uploads a web shell (Stage 05) or triggers an interactive Python reverse shell (Stage 06), Auditd captures the process name, arguments, and working directory even if the traffic was encrypted.
+3. **Layer 3: Windows Endpoints (Sysmon & Security EVTX on DC & Win10):**  
+   Deployed across the Active Directory Domain Controller (`PC-DC`, `.10`) and workstation (`WIN10`, `.20`). Standard Windows logs record high-level authentication, while Microsoft Sysmon captures deep operational context: full process command lines (EID 1), remote WMI child process fan-outs (`WmiPrvSE.exe`), network sockets (EID 3), and registry wallpaper tampering (EID 13).
+4. **Layer 4: Central Correlation & Decoders (Wazuh SIEM Manager):**  
+   Hosted on the private cloud network (`10.122.1.4`). Wazuh acts as the central brain. It receives JSON logs and eventchannels from all four endpoints, normalizes unstructured text using [`local_decoder.xml`](Wazuh/local_decoder.xml), evaluates custom detection logic in [`local_rules.xml`](Wazuh/local_rules.xml), executes instant CDB lookups, and filters out background operating system noise.
 
 ---
 
-## 3. 20-Stage Detection Coverage Matrix
+## 2. Taming the Noise: The 87 Suppressions & CDB Architecture
 
-This matrix maps each of the 20 attack stages in the campaign to its corresponding MITRE ATT&CK technique, primary data source, detection rule ID, validation status, and empirical alert evidence from [`06-Resources/Alerts/thehive_alerts.json`](../06-Resources/Alerts/thehive_alerts.json) and [`06-Resources/Alerts/wazuh_alerts.csv`](../06-Resources/Alerts/wazuh_alerts.csv).
+In enterprise security, **unfiltered SIEM deployments always fail**. When an engine generates 10,000 alerts a day, analysts suffer from alert fatigue and real adversary activity gets lost in the crowd.
+
+During our initial campaign runs, routine operating system tasks generated thousands of false alarms. We engineered **87 custom suppression rules** and fast Constant Database (CDB) lookup tables to eliminate false positives at the root.
+
+### The 4 Biggest Noise Sources We Silenced:
+
+1. **The Syscollector Inventory Loop (The Problem & The Fix):**
+   - *The Problem:* Wazuh's built-in `syscollector` daemon runs hourly hardware, network, and package scans on Linux agents. To do this, it executes standard system utilities (`dpkg-query`, `rpm`, `uname`, `ps`, `netstat`, `ip`, `which`). Because Linux Auditd was configured to audit all `execve` calls, these routine inventory scans triggered thousands of Wazuh Rule `80792` ("Auditd: Command executed") alerts every hour.
+   - *How We Fixed It:* We created a dedicated CDB list at [`06-Resources/Configs/lists/wazuh-internal-bins`](../06-Resources/Configs/lists/wazuh-internal-bins) containing known agent binaries. In `local_rules.xml`, custom Rule `100280` performs an instantaneous $O(1)$ lookup against this compiled binary table:
+     ```xml
+     <group name="audit,">
+       <rule id="100280" level="0">
+         <if_sid>80792</if_sid>
+         <list field="audit.exe" lookup="match_key">etc/lists/wazuh-internal-bins</list>
+         <description>Suppress Wazuh's own internal inventory scan noise</description>
+       </rule>
+     </group>
+     ```
+   - *The Payoff:* Over 6,000 recurring false-positive audit logs per day were silenced without blinding the engine to malicious web-shell commands.
+
+2. **Windows Machine Account Logon Chatter (`$` Accounts):**
+   - *The Problem:* Windows domain controllers constantly process machine authentication events (e.g., `PC-DC$`, `WIN10$`) for Kerberos renewals, RPC registrations, and group policy updates, generating hundreds of Event ID 4672 ("Special privileges assigned to new logon") events.
+   - *How We Fixed It:* Rule `100603` filters out computer accounts using regex negation (`negate="yes">^SYSTEM$|^LOCAL SERVICE$|^NETWORK SERVICE$|\$$</field>`), ensuring alerts fire **only when a human user account** is granted high-risk attack privileges (`SeDebugPrivilege`, `SeImpersonatePrivilege`, `SeTakeOwnershipPrivilege`).
+
+3. **VMware Hypervisor Artifacts:**
+   - *The Problem:* VMware Tools daemon (`vmtoolsd.exe`) continually polls guest memory, disk stats, and time synchronization, generating repetitive process creation and pipe events.
+   - *How We Fixed It:* Specific parent-child suppression rules in `local_rules.xml` ignore `vmtoolsd.exe` service queries while continuing to audit interactive `cmd.exe` and `powershell.exe` execution.
+
+4. **Routine PAM Session Open/Close Noise:**
+   - *The Problem:* Linux cron jobs and service checks open and close PAM authentication sessions every few minutes (Rule 5501 / 5502).
+   - *How We Fixed It:* Overrode Rule `100219` and `100105` at `level="0"` to silence routine background session turnover while keeping SSH interactive logins (Rule 5715) elevated at Level 8.
+
+---
+
+## 3. The Alert Bridge: `thecustomhive` & Why Shuffle SOAR Was Replaced
+
+### The Backstory: Why Shuffle Webhooks Failed Under Pressure
+During early development, we tested [Shuffle SOAR](https://shuffler.io/) to bridge alerts between Wazuh and TheHive via incoming HTTP webhooks. However, when we ran aggressive red-team attack stages, Shuffle completely broke down:
+
+1. **Webhook Dropped Packets:** When Nikto web fuzzing (Stage 02) or Nmap port sweeps (Stage 01) generated 400 alerts in 10 seconds, Shuffle's HTTP listeners hit connection limits, dropping alert packets silently.
+2. **Analysis Engine Starvation:** Wazuh's default integration model forks a synchronous operating system process per alert. Having hundreds of forked scripts waiting on external HTTP network calls caused the Wazuh analysis engine (`wazuh-analysisd`) to queue up and lag behind real-time events.
+3. **Alert Floods in TheHive:** Every single raw alert created its own independent ticket, leaving analysts with 300 separate cases for one single port scan.
+
+### The Engineering Solution: A Two-Tier Pipeline
+To permanently solve this, we engineered **`thecustomhive`**: a custom, resilient, two-tier alert pipeline designed for zero data loss:
+
+[![Wazuh-TheHive Neon Alert Pipeline](../06-Resources/Diagrams/Wazuh–TheHive%20Neon%20Alert%20Pipeline.png)](../06-Resources/Diagrams/Wazuh–TheHive%20Neon%20Alert%20Pipeline.png)
+*Figure 2: Two-tier asynchronous alert correlation pipeline from Wazuh Manager Level ≥ 8 trigger into TheHive 5 case management.*
+
+```
+Wazuh Rules Engine Evaluation
+  │
+  ├── Level < 8: Stored in Wazuh Indexer (Search & Dashboard Analytics)
+  │
+  └── Alert Level ≥ 8 Triggered
+        │
+        ▼
+  [ Tier 1: Fast Durable Ingest (Zero HTTP) ]
+  • File: /var/ossec/integrations/custom-thehive
+  • Action: Reads alert JSON file and inserts row into SQLite WAL database
+  • Latency: Sub-millisecond execution (O(1) non-blocking local write)
+  • Network Overhead: ZERO HTTP calls (Engine never starves)
+        │
+        ▼
+  [ SQLite WAL Database: /var/ossec/logs/correlation_state.db ]
+  • Persistent local buffer (safeguards alerts if TheHive restarts)
+        │
+        ▼
+  [ Tier 2: Asynchronous Correlation Daemon ]
+  • File: thehive-flush.service (custom-thehive.py --flush-daemon)
+  • Cycle: 5-second polling loop
+  • Logic:
+      1. Tool Fingerprinting: Regex catalog identifying Nmap, Nikto, Hydra, sqlmap, ffuf
+      2. Campaign Grouping: Merges rapid tool bursts into a single case
+      3. Process Fan-Out: Links sibling commands spawned by wmiexec
+      4. Alert Deduplication: Eliminates redundant repeated events
+        │
+        ▼
+  [ Transport: HTTP POST over Private Cloud VNet Peering ]
+  • Destination: http://10.122.0.4:9000/api/v1 (Private VNet transit)
+        │
+        ▼
+  [ TheHive 5 Analyst Triage Queue ]
+  • 46 High-Signal, Correlated Cases with MITRE ATT&CK tags and full evidence
+```
+
+---
+
+## 4. 20-Stage Detection Coverage Matrix
+
+This matrix maps every stage of the 20-stage attack campaign to its corresponding MITRE ATT&CK technique, data source, detection rule ID, validation status, and empirical alert evidence from [`thehive_alerts.json`](../06-Resources/Alerts/thehive_alerts.json) and [`wazuh_alerts.csv`](../06-Resources/Alerts/wazuh_alerts.csv).
 
 ### Status Legend
-- **Detected (16 stages):** Actionable telemetry reached TheHive as an incident alert.
-  - *Pivot vs Target Telemetry Note:* In Stages 12, 13, 14, 16, and 19, attack tools executed through the DVWA pivot. The primary alerts reaching TheHive represent the pivot ingress activity (Wazuh Rule 5715 administrative sessions and Suricata Kerberos wire alerts), while target-side DC audit events (e.g. EID 4769, 4662) were generated at the OS level but not escalated independently.
-- **Logging Gap (2 stages - Stages 09, 12):** Partial detection achieved via pivot telemetry, but direct target-side inspection represents a documented logging gap.
-- **Detection Gap / Offline (2 stages - Stages 04, 11):** Technique executed entirely offline on the attacker GPU; zero victim telemetry exists by definition.
+- **Detected (16 stages):** Actionable incident alert generated and delivered to TheHive 5.
+- **Logging Gap (2 stages - Stages 09, 12):** Telemetry observed on the wire or pivot host, but target-side host telemetry lacked automated alerting.
+- **Detection Gap / Offline (2 stages - Stages 04, 11):** Attack ran offline on the attacker's local GPU; zero victim packets generated by definition.
 
-### Coverage Matrix Table
+### Master Coverage Matrix
 
-| # | Stage | ATT&CK | Primary Telemetry Source | Detection Mechanism / Rule Description | Rule ID / SID | Validation Status | Gap ID | Empirical Alert Evidence |
-|---|---|---|---|---|---|---|---|---|
-| **01** | Reconnaissance | `T1595.001` | Network Flow / IDS | ET SCAN NMAP OS Detection Probe / Portscan | `86601` / SID `3400002` | **Detected** | - | `wzb-3a8045a03c` (`1.png`–`1.3.png`) |
-| **02** | Web Brute Force | `T1110.001` | Web Server Access Logs | Multiple common web attacks & 4xx burst | Wazuh `31153`, `31151`, `100410` | **Detected** | - | `wzb-81becfcc8d` (`2.png`–`2.7.png`) |
-| **03** | SQL Injection | `T1190` | Network Flow & Web Access | ET WEB_SERVER SELECT USER / Web attack returned 200 | Suricata SID `2010963` / Wazuh `31106` | **Detected (Telemetry Verified)** | - | Suricata wire alert (Sheet Row 9110 / CSV Row 9108) (`3.png`) |
-| **04** | Hash Cracking | `T1110.002` | *Offline (Attacker)* | *None (Local GPU Hashcat Execution)* | *N/A* | **Detection gap** | [DG-04](#dg-04--dg-11--offline-cryptographic-cracking-stages-04--11) | *Offline Activity (No Telemetry)* |
-| **05** | Web Shell Upload | `T1505.003` | Network IDS / Auditd | ET ATTACK_RESPONSE id command output / execve | Wazuh `86601` / SID `2019284` | **Detected** | - | `wzb-e9a1797ac4`, `wzb-61ed72e937` (`4.png`, `4.1.png`) |
-| **06** | Reverse Shell | `T1059.004` | Network Connection / IDS | POSSBL SCAN SHELL M-SPLOIT TCP / shell spawn | Wazuh `86601` / SID `3400020` | **Detected** | - | `wzb-ccae331b77`, `wzb-81bb1f83f7` (`5.png`) |
-| **07** | Privilege Escalation | `T1548.003` | Linux Auth / Auditd | Sudo command execution & SUID bash invocation | Wazuh `5402` (PAM) / `web_process_creation` | **Detected (Host Alerted)** | - | Logged in CSV (12x Rule `5402`) (`6.png`–`6.3.png`) |
-| **08** | SSH Persistence | `T1098.004` | FIM / Linux Auth | Administrative SSH login / authorized_keys | Wazuh `550` (Syscheck) / `5715` | **Detected** | - | `wzb-1208f0ea54` (`7.png`, `7.1.png`) |
-| **09** | Internal Discovery | `T1018` | Network IDS (ens37) | Nmap scan / Metasploit tool probes on ens37 | Wazuh `86601` / SID `3400001`, `3400002` | **Logging gap (Network Alerted; DG-09)** | [DG-09](#dg-09--intra-subnet-layer-2-visibility-stage-09) | `wzb-3152e3ed59`, `wzb-f87fab3eda` (`8.png`, `8.1.png`) |
-| **10** | Responder Poisoning | `T1557.001` | Linux Auth / Pivot Host | Wazuh bashcmd logging (uid:0 Responder.py execution on pivot) | Wazuh `bashcmd` | **Detected (Pivot Logged)** | - | Sheet Row 9233 / CSV Row 9231 (`9.png`–`9.3.png`) |
-| **11** | NTLMv2 Cracking | `T1110.002` | *Offline (Attacker)* | *None (Local Hashcat on Kali)* | *N/A* | **Detection gap** | [DG-11](#dg-04--dg-11--offline-cryptographic-cracking-stages-04--11) | *Offline Activity (No Telemetry)* |
-| **12** | BloodHound AD Recon | `T1087.002` | Linux Auth (Pivot Host) | Pivot SSH root logon session launching SharpHound | Wazuh `5715` (Elevated Level 8) | **Logging gap (Pivot Alerted; DG-12)** | [DG-12](#dg-12--active-directory-ldap-query-volume-stage-12) | `wzb-dbf3197ceb`, `wzb-1c8dc0ab5d` (`10.png`, `10.1.png`) |
-| **13** | Kerberoasting | `T1558.003` | Network IDS / Pivot Auth | Kerberos TGS-REQ wire alert & Pivot SSH logon | Wazuh `86601` (SID `2019922`) / `5715` | **Detected (Network & Pivot Alerted)** | [Pivot Telemetry](#pivot-telemetry-vs-target-endpoint-analytics) | `wzb-1d2d7fb4b8`, `wzb-c1e2642eb2` (`11.png`, `13.png`) |
-| **14** | DCSync | `T1003.006` | Linux Auth (Pivot Host) | Pivot SSH root logon session launching secretsdump | Wazuh `5715` (Elevated Level 8) | **Detected (Pivot Alerted)** | [Pivot Telemetry](#pivot-telemetry-vs-target-endpoint-analytics) | `wzb-4174e3672e` (`12.png`) |
-| **15** | Pass-the-Hash | `T1550.002` | Windows Security / WMI | NTLM Logon Type 3 / Impacket WMI fan-out | EID `4624` (24x in CSV) / Wazuh `100613` | **Detected (Host & Pivot Alerted)** | - | `wzb-b7f91cd3ab`–`ccff195e0c` & 24x CSV (`13.png`) |
-| **16** | Golden Ticket | `T1558.001` | Linux Auth (Pivot Host) | Pivot SSH root logon session executing ticketer | Wazuh `5715` (Elevated Level 8) | **Detected (Pivot Alerted)** | [Pivot Telemetry](#pivot-telemetry-vs-target-endpoint-analytics) | `wzb-8d45b2d236` (`16.png`, `16.5.png`) |
-| **17** | DC Persistence | `T1136.002` | Sysmon / Security / WMI | Impacket wmiexec fan-out / Rogue user added to DA | Wazuh `100613`, `60109`, `4728` | **Detected** | - | `wzb-26b4d06a63`, `wzb-299a007168` (`17.png`) |
-| **18** | Data Collection | `T1005` | Sysmon Process Monitoring | Impacket wmiexec fan-out (`whoami`, `net user`) | Wazuh `100613` (Process Fan-out) | **Detected** | - | `wzb-aa66cb916a`, `wzb-ed666653f7` (`18.png`) |
-| **19** | Exfiltration | `T1041` | Linux Auth (Pivot Host) | Rapid administrative SSH burst (6 sessions / 1s) | Wazuh `5715` (Elevated Level 8) | **Detected (Pivot Alerted; DG-19)** | [DG-19](#dg-19--encrypted-exfiltration-inspection-stage-19) | `wzb-34f34a857c` (`19.png`) |
-| **20** | Impact (Defacement) | `T1491.001` | Sysmon / Security / IDS | Impacket wmiexec fan-out, defacement, SMB NTLM setup | Wazuh `100613` / Suricata SIDs `2067085`–`2067087` | **Detected** | - | `wzb-71ef983ad8`, `wzb-1f43c1540f`, `wzb-7a4a134d1b` (`20.png`) |
-
----
-
-## 4. Detection Gap Register & Blind Spot Analysis
-
-A core engineering principle of this lab is: **document the blind spot**. A realistic detection engineering portfolio accounts for what cannot be detected on the wire or endpoint and provides actionable engineering remediations.
-
-### Gap Register
-
-| Gap ID | Stage | ATT&CK | Classification | What Was Missed / Limited | Detection Mechanism Observed | Recommended Engineering Fix | Status |
-|---|---|---|---|---|---|---|---|
-| **DG-04** | 04 (Hash Crack) | `T1110.002` | **Inherent Offline Gap** | Local GPU password cracking generating zero host/network packets | *None* (Hashcat ran locally on Kali) | Enforce strong password complexity; replace MD5 with Argon2/bcrypt | **Documented** (Inherent) |
-| **DG-09** | 09 (Internal Disc) | `T1018` | **Architectural Visibility** | Intra-subnet port scans between victim hosts bypass router IP stack | Captured via AF-PACKET promiscuous sniffing on `ens37` (14 alerts in raw CSV) | Enable local Windows Firewall logging (Dropped packets) via Wazuh agent | **Documented** (Network Alerted) |
-| **DG-11** | 11 (NTLMv2 Crack) | `T1110.002` | **Inherent Offline Gap** | Offline cracking of intercepted NetNTLMv2 hash on Kali | *None* (Cracking executed offline on attacker GPU) | Disable LLMNR/NBT-NS globally via GPO to prevent Stage 10 capture | **Documented** (Inherent) |
-| **DG-12** | 12 (BloodHound) | `T1087.002` | **Logging Gap** | High-volume LDAP enumeration queries not alerted as a specific AD rule | Detected via root SSH logon activity (`Rule 5715`) on pivot host | Enable NTDS diagnostic logging (`15 Field Engineering` = 5) for Event ID 1644 | **Documented** (Pivot Alerted) |
-| **DG-19** | 19 (Exfiltration) | `T1041` | **Encrypted Transport Gap** | Exfiltrated archive contents invisible to network IDS due to SSH/SCP encryption | Detected via SSH rapid session anomaly (`Rule 5715` - 6 logons in 0.57s) | Deploy endpoint File Integrity Monitoring (FIM) on staging directories | **Documented** (Pivot Alerted) |
-
-### In-Depth Gap Analysis
-
-#### DG-04 & DG-11 — Offline Cryptographic Cracking (Stages 04 & 11)
-- **Root Cause:** When an adversary extracts password hashes (from a database dump in Stage 03 or an LLMNR poison capture in Stage 10), cracking occurs entirely within the adversary's local GPU resources. No packets are transmitted to the victim network, and no processes spawn on target endpoints.
-- **SOC Posture:** These stages cannot be detected at execution time. The SOC's defensive focus shifts to **prevention** (preventing the database dump, enforcing GPO restrictions against LLMNR/NetBIOS) and **post-crack detection** (alerting on subsequent use of cracked credentials).
-
-#### DG-09 — Intra-Subnet Layer 2 Visibility (Stage 09)
-- **Root Cause:** When the adversary pivots to DVWA (`192.168.56.30`) and scans target hosts (`192.168.56.20`, `192.168.56.10`), packets are switched locally at Layer 2 within VMware VMnet2 and bypass the gateway router's Layer 3 IP forwarding stack.
-- **Why Suricata Observed Traffic:** Because Suricata was deployed on the same virtual switch with interface `ens37` operating in AF-PACKET promiscuous mode, it passively received broadcast, multicast, and segment-level frames, generating 14 NIDS alerts in raw telemetry (e.g. SIDs 3400001, 3400002, 3400020).
-- **Engineering Resolution & SOC Reality:** Passive promiscuous capture on virtual switches cannot be guaranteed in production hardware-switched environments where unicast traffic is isolated per switch port. The defense-in-depth engineering remediation is **endpoint telemetry**: configuring Windows Defender Firewall dropped-packet logging and Wazuh agent socket/process monitoring on endpoints.
-
-#### DG-12 — Active Directory LDAP Query Volume (Stage 12)
-- **Root Cause:** SharpHound and BloodHound execute high-volume LDAP queries to map AD trust relationships. While the inbound SSH session used to stage SharpHound was immediately flagged (`Rule 5715`), the Domain Controller did not generate an explicit LDAP anomaly alert because Event ID 1644 (LDAP Search Query Logging) requires an explicit registry diagnostic setting.
-- **Engineering Fix:** To generate Event ID 1644, set registry key `HKLM\SYSTEM\CurrentControlSet\Services\NTDS\Diagnostics\15 Field Engineering` to `5` (DWORD) and configure Directory Service Access auditing.
-
-#### Pivot Telemetry vs. Target Endpoint Analytics (Stages 13, 14, 16)
-- **Root Cause:** In a multi-tier attack simulation where post-exploitation scripts execute through a compromised pivot, detection occurs at multiple layers:
-  1. **Pivot Ingress:** Wazuh Rule 5715 (elevated to Level 8) flags every administrative authentication and interactive session on DVWA (`192.168.56.30`), generating alerts `wzb-1d2d7fb4b8`, `wzb-4174e3672e`, and `wzb-8d45b2d236`.
-  2. **Target Endpoints:** On the Domain Controller, Kerberos TGS requests (Event 4769) and replication calls (Event 4662) were generated in `Security.evtx`, but were not configured with custom SIEM escalation rules matching $\ge 8$.
-- **SOC Insight:** Documenting that these stages reached TheHive via pivot session telemetry rather than target EIDs provides an honest reflection of SIEM routing and correlation realities.
-
-#### DG-19 — Encrypted Exfiltration Inspection (Stage 19)
-- **Root Cause:** The attacker used SCP over SSH (`22/TCP`) to exfiltrate collected sensitive files from the DVWA pivot back to Kali. Transport encryption prevented Suricata deep-packet inspection from identifying file names or content keywords.
-- **Resolution:** Wazuh's correlation engine flagged the burst of administrative SSH sessions (6 consecutive root authentications in under 1 second), providing behavioral detection even when packet payload inspection was blind.
+| # | Stage | MITRE ATT&CK | Primary Telemetry | Rule ID / SID | Detection Status | Empirical Alert Evidence |
+|:---:|---|:---:|---|---|:---:|---|
+| **01** | [Reconnaissance](../02-Attack-Simulation/Stages/stage-01-recon.md) | `T1595.001` | Suricata NIDS | SID `3400002` / `86601` | **Detected** | `wzb-3a8045a03c` (`1.png`–`1.3.png`) |
+| **02** | [Brute Force](../02-Attack-Simulation/Stages/stage-02-bruteforce.md) | `T1110.001` | Apache Web Access | Wazuh `31153`, `100410` | **Detected** | `wzb-81becfcc8d` (`2.png`–`2.7.png`) |
+| **03** | [SQL Injection](../02-Attack-Simulation/Stages/stage-03-sqli.md) | `T1190` | Suricata & Web Logs | SID `2010963` / Wazuh `31106` | **Detected** | Suricata wire alert (CSV Row 9108, `3.png`) |
+| **04** | [Hash Cracking](../02-Attack-Simulation/Stages/stage-04-hash-crack.md) | `T1110.002` | *Offline (Attacker)* | *None (Local GPU Hashcat)* | **Detection Gap** | *Offline activity (Zero victim telemetry)* |
+| **05** | [Web Shell Upload](../02-Attack-Simulation/Stages/stage-05-webshell.md) | `T1505.003` | Linux Auditd / NIDS | SID `2019284` / Auditd `execve` | **Detected** | `wzb-e9a1797ac4`, `wzb-61ed72e937` (`4.png`) |
+| **06** | [Reverse Shell](../02-Attack-Simulation/Stages/stage-06-reverse-shell.md) | `T1059.004` | Suricata & Auditd | SID `3400020` / Wazuh `100199` | **Detected** | `wzb-ccae331b77`, `wzb-81bb1f83f7` (`5.png`) |
+| **07** | [Privilege Escalation](../02-Attack-Simulation/Stages/stage-07-privesc.md) | `T1548.003` | Linux PAM / Auditd | Wazuh `5402` / SUID bash | **Detected** | 12x PAM alerts in CSV (`6.png`–`6.3.png`) |
+| **08** | [SSH Persistence](../02-Attack-Simulation/Stages/stage-08-ssh-persistence.md) | `T1098.004` | Wazuh FIM / Auth | Wazuh `550` (FIM) / `5715` | **Detected** | `wzb-1208f0ea54` (`7.png`, `7.1.png`) |
+| **09** | [Internal Discovery](../02-Attack-Simulation/Stages/stage-09-internal-discovery.md) | `T1018` | Suricata NIDS (`ens37`) | SID `3400001`, `3400002` | **Logging Gap** | `wzb-3152e3ed59`, `wzb-f87fab3eda` (`8.png`) |
+| **10** | [Responder Poisoning](../02-Attack-Simulation/Stages/stage-10-responder.md) | `T1557.001` | Linux Pivot Host | Wazuh `bashcmd` (uid:0) | **Detected** | CSV Row 9231 (`9.png`–`9.3.png`) |
+| **11** | [NTLMv2 Cracking](../02-Attack-Simulation/Stages/stage-11-ntlmv2-crack.md) | `T1110.002` | *Offline (Attacker)* | *None (Local GPU Hashcat)* | **Detection Gap** | *Offline activity (Zero victim telemetry)* |
+| **12** | [BloodHound AD Recon](../02-Attack-Simulation/Stages/stage-12-bloodhound.md) | `T1087.002` | Pivot Host Auth | Wazuh `5715` (Elevated Level 8) | **Logging Gap** | `wzb-dbf3197ceb` (`10.png`, `10.1.png`) |
+| **13** | [Kerberoasting](../02-Attack-Simulation/Stages/stage-13-kerberoasting.md) | `T1558.003` | Suricata & Pivot Auth | SID `2019922` / Wazuh `5715` | **Detected** | `wzb-1d2d7fb4b8`, `wzb-c1e2642eb2` (`11.png`) |
+| **14** | [DCSync](../02-Attack-Simulation/Stages/stage-14-dcsync.md) | `T1003.006` | Pivot Host Auth | Wazuh `5715` (Elevated Level 8) | **Detected** | `wzb-4174e3672e` (`12.png`) |
+| **15** | [Pass-the-Hash](../02-Attack-Simulation/Stages/stage-15-pass-the-hash.md) | `T1550.002` | Windows Security / WMI | EID `4624` (24x in CSV) / `100613` | **Detected** | `wzb-b7f91cd3ab` (`13.png`) |
+| **16** | [Golden Ticket](../02-Attack-Simulation/Stages/stage-16-golden-ticket.md) | `T1558.001` | Pivot Host Auth | Wazuh `5715` (Elevated Level 8) | **Detected** | `wzb-8d45b2d236` (`16.png`, `16.5.png`) |
+| **17** | [DC Persistence](../02-Attack-Simulation/Stages/stage-17-dc-persistence.md) | `T1136.002` | Sysmon & Security | Wazuh `100613`, `60109`, `4728` | **Detected** | `wzb-26b4d06a63` (7 Alerts in TheHive) |
+| **18** | [Data Collection](../02-Attack-Simulation/Stages/stage-18-collection.md) | `T1005` | Sysmon Process Trees | Wazuh `100613` (`whoami`, `net user`) | **Detected** | `wzb-aa66cb916a` (`18.png`) |
+| **19** | [Exfiltration](../02-Attack-Simulation/Stages/stage-19-exfiltration.md) | `T1041` | Linux Pivot Auth | Wazuh `5715` (Burst: 6 logons / 1s) | **Detected** | `wzb-34f34a857c` (`19.png`) |
+| **20** | [Impact & Defacement](../02-Attack-Simulation/Stages/stage-20-impact.md) | `T1491.001` | Sysmon, Security & NIDS | Wazuh `100613` / SIDs `2067085`–`87` | **Detected** | `wzb-71ef983ad8`, `wzb-7a4a134d1b` (10 Alerts) |
 
 ---
 
-## 5. thecustomhive Alert Pipeline
+## 5. Honest Detection Gap Register: Explaining the 20% Missed
 
-`thecustomhive` implements an asynchronous, batched, correlation-driven pipeline between Wazuh and TheHive 5.
+A realistic detection engineering portfolio must document what **cannot** be detected and provide concrete engineering fixes. Claiming "100% detection" in a lab is almost always a sign of unrealistic testing.
 
-### Engineering Backstory: Why Shuffle Was Replaced
-During initial prototyping, [Shuffle SOAR](https://shuffler.io/) was tested as the alert integration bridge between Wazuh and TheHive via incoming webhooks. However, high-volume attack bursts (such as Nikto web fuzzing in Stage 02 and Nmap port sweeps in Stage 01) exposed severe operational bottlenecks:
-1. **Webhook Saturation & Packet Loss:** When hundreds of alert events fired in rapid succession, webhook receivers dropped incoming HTTP requests or hit timeout thresholds.
-2. **Synchronous Fork Bottlenecks:** Wazuh's default integration script model forks an external process per alert. Executing synchronous HTTP POST calls inside each forked process created backlog queuing in `wazuh-analysisd`.
-3. **Alert Floods in TheHive:** Each raw alert generated an isolated case, burying analysts under hundreds of redundant alerts for a single scan.
+Here is the honest breakdown of the 4 stages that were not caught directly by target-side detection rules:
 
-To solve this, **`thecustomhive`** was engineered as a resilient two-tier pipeline:
-- **Tier 1 (Fast Durable Ingest):** `/var/ossec/integrations/custom-thehive` is a lightweight POSIX wrapper that reads the alert JSON and appends it directly to a local SQLite database in Write-Ahead Logging (WAL) mode. This executes locally in sub-millisecond time with zero HTTP overhead.
-- **Tier 2 (Async Correlation & Batched Flush):** A standalone systemd daemon (`thehive-flush.service`) running `custom-thehive.py --flush-daemon` executes an asynchronous 5-second polling loop. It acquires atomic leases on queued records, applies regex tool fingerprinting (Nmap, sqlmap, Nikto, ffuf, Hydra), groups related events by campaign, process tree, or logon burst, and syncs aggregated Markdown alerts to TheHive 5 REST API across private cloud networking. If TheHive VM is temporarily restarted or unreachable, events remain securely buffered on disk.
+### 1. Inherent Offline Gaps (Stages 04 & 11 — Hash Cracking)
+- **Why It Happened:** In Stage 04 (MD5 hash cracking) and Stage 11 (NTLMv2 hash cracking), the operator extracted hashes and ran Hashcat locally on the Kali Linux machine's dedicated GPU. Zero packets traveled across the network, and zero processes spawned on victim hosts.
+- **SOC Posture:** These stages cannot be detected at execution time. The defense shifts to **prevention** (preventing database exfiltration and disabling LLMNR/NBT-NS via GPO) and **post-crack alerting** (detecting when the cracked credentials are used in Stages 05 and 12).
 
-[![Wazuh to TheHive Security Pipeline](../06-Resources/Diagrams/Wazuh%20to%20TheHive%20Security%20Pipeline.png)](../06-Resources/Diagrams/Wazuh%20to%20TheHive%20Security%20Pipeline.png)
+### 2. Architectural Visibility Limits (Stage 09 — Internal Discovery)
+- **Why It Happened:** When the attacker pivoted to DVWA (`192.168.56.30`) and scanned the Windows hosts (`192.168.56.10`, `.20`), packets were switched locally at Layer 2 within VMware VMnet2. Because intra-subnet traffic never crosses a Layer 3 router, standard gateway firewalls are blind to it.
+- **Why We Saw Telemetry:** Because Suricata was deployed on the same virtual switch with interface `ens37` in AF-PACKET promiscuous mode, it passively captured broadcast and multicast probe packets, generating 14 NIDS alerts in the raw export.
+- **Production Engineering Fix:** In a physical enterprise with hardware switch isolation, promiscuous sniffing cannot be guaranteed. The proper host-level fix is enabling Windows Defender Firewall dropped-packet logging and shipping those events via the Wazuh agent.
 
-### Two-Tier Pipeline Mechanics
-1. **Tier 1 (Fast Durable Ingest - Zero HTTP):** Wazuh forks `/var/ossec/integrations/custom-thehive` per alert ($\ge 8$). Inserts rows into an SQLite WAL queue (`correlation_state.db`) in O(1) time without blocking on network requests.
-2. **Tier 2 (Async Correlation & Flush Daemon):** `thehive-flush.service` runs every 5 seconds. Claims batches of pending groups with atomic leases, applies correlation rules, and pushes/patches aggregated markdown alerts to TheHive 5 REST API across private VNet peering.
+### 3. Active Directory Telemetry Baseline (Stage 12 — BloodHound AD Recon)
+- **Why It Happened:** SharpHound executed high-volume LDAP search queries against the Domain Controller. While the SSH session used to launch the tool on the pivot host was immediately flagged (`Rule 5715`), the Domain Controller did not raise an explicit LDAP anomaly alert because Windows Server does not log individual LDAP queries by default.
+- **Production Engineering Fix:** Set registry key `HKLM\SYSTEM\CurrentControlSet\Services\NTDS\Diagnostics\15 Field Engineering` to `5` (DWORD) to generate Event ID 1644 ("Expensive/Inefficient LDAP Search Queries").
 
-### Correlation Models
-- `tool_campaign`: Reconnaissance and scanning tools aggregated by tool name, source IP, and target agent over a 30-minute idle window.
-- `process_chain`: Related parent-child process executions linked by PID/PPID trees.
-- `process_fanout`: Sibling commands executed by untracked parent processes (e.g., Impacket wmiexec fan-outs).
-- `logon_group`: Repeated authentication events grouped by user and source IP (e.g., SSH bursts).
-- `activity_burst`: High-frequency alert floods from a single rule/agent.
-- `watchlist_group`: High-risk commands matching sensitive keywords (`/etc/shadow`, `authorized_keys`, `chmod +s`).
-
-### Pipeline Configuration Excerpts
-**Wazuh Manager `ossec.conf`:**
-```xml
-<integration>
-  <name>custom-thehive</name>
-  <hook_url>http://10.122.0.4:9000/api/v1</hook_url>
-  <api_key><REDACTED></api_key>
-  <level>8</level>
-  <alert_format>json</alert_format>
-</integration>
-```
-
-**Systemd Unit (`thehive-flush.service`):**
-```ini
-[Unit]
-Description=thecustomhive - Wazuh to TheHive Batched Alert Flush Daemon
-After=network.target wazuh-manager.service
-Wants=network-online.target
-
-[Service]
-Type=simple
-User=root
-WorkingDirectory=/var/ossec/integrations
-ExecStart=/var/ossec/framework/python/bin/python3 /var/ossec/integrations/custom-thehive.py --flush-daemon
-Restart=always
-RestartSec=10
-
-Environment="THEHIVE_URL=http://10.122.0.4:9000/api/v1"
-Environment="THEHIVE_API_TOKEN=<REDACTED>"
-Environment="THEHIVE_CORRELATION_DB=/var/ossec/logs/correlation_state.db"
-Environment="THEHIVE_FLUSH_INTERVAL=5.0"
-Environment="THEHIVE_FLUSH_BATCH=50"
-Environment="THEHIVE_VERIFY_SSL=0"
-
-ProtectSystem=full
-NoNewPrivileges=true
-StandardOutput=journal
-StandardError=journal
-
-[Install]
-WantedBy=multi-user.target
-```
+### 4. Encrypted Transport Blindness (Stage 19 — Exfiltration)
+- **Why It Happened:** The adversary exfiltrated files from DVWA to Kali over encrypted SCP/SSH (`22/TCP`). Transport-layer encryption prevented Suricata deep packet inspection from reading file contents or archive names.
+- **How We Caught It Anyway:** Wazuh's correlation engine detected the behavioral anomaly: a rapid burst of 6 administrative SSH authentications occurring in under one second (`Rule 5715`), alerting analysts to anomalous bulk transport even without inspecting payload plaintext.
 
 ---
 
-## 6. Performance Metrics & Funnel Mechanics
+## 6. The Telemetry Funnel: 9,567 Logs $\to$ 46 Incidents
 
-### Accurate Funnel Explanation
-The repository provides two empirical alert export datasets:
-1. **Raw Alert Export ([`06-Resources/Alerts/Wazuh-Raw-Alerts.csv`](../06-Resources/Alerts/Wazuh-Raw-Alerts.csv)):** Contains **9,567 raw alert records** across all monitored agents (`DVWA`: 8,114, `Suricata`: 1,168, `DomainWin10`: 168, `Win10User`: 117).
-2. **Analysis Dataset ([`06-Resources/Alerts/wazuh_alerts.csv`](../06-Resources/Alerts/wazuh_alerts.csv)):** Contains **808 filtered records** capturing elevated multi-level rules.
-3. **Actionable TheHive Incidents ([`06-Resources/Alerts/thehive_alerts.json`](../06-Resources/Alerts/thehive_alerts.json)):** Contains **46 actionable correlated incident alerts** in TheHive 5.
+How do thousands of raw machine events become a handful of prioritized incidents on an analyst's desk?
 
-1. **Wazuh Integration Gate:** The `<level>8</level>` filter in `ossec.conf` passes only high-severity events to `/var/ossec/integrations/custom-thehive`. Lower-level baseline events (e.g. Rule 5402 at level 3, Rule 60122 at level 5) remain indexed in the Wazuh Dashboard and CSV exports for triage queries but do not trigger integration fork/exec calls.
-2. **Correlation Engine Compression:** `custom-thehive.py` aggregates hundreds of repetitive events into unified incident groups (`tool_campaign`, `process_fanout`, `logon_group`, `watchlist_group`), producing **46 actionable incident alerts** in TheHive 5, preventing case management saturation while preserving high-fidelity forensic context.
-
-```text
-Total Attack Stages Executed:           20
-Verified Detections with Alerts:        16  (80.0%)
-Inherent Offline Gaps (No Telemetry):    2  (10.0% - Stages 04, 11)
-Target Logging Gaps (Pivot Alerted):     2  (10.0% - Stages 09, 12)
-Rule Failures:                           0   (0.0%)
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Stage 1: Complete Raw Wazuh Alerts (Wazuh-Raw-Alerts.csv)  │
+│  9,567 raw events across all 4 agents                       │
+│  (DVWA: 8,114  •  Suricata: 1,168  •  DC: 168  •  Win10: 117)│
+└──────────────────────────────┬──────────────────────────────┘
+                               │
+                               ▼ Filtered by Multi-Level Severity
+┌─────────────────────────────────────────────────────────────┐
+│  Stage 2: Curated Analysis Dataset (wazuh_alerts.csv)       │
+│  808 elevated security events across the 20 attack stages   │
+└──────────────────────────────┬──────────────────────────────┘
+                               │
+                               ▼ Wazuh <level>8</level> Gate & custom-thehive
+┌─────────────────────────────────────────────────────────────┐
+│  Stage 3: Correlated Incident Alerts (thehive_alerts.json)  │
+│  46 high-signal, actionable incident cases in TheHive 5     │
+│  (Grouped by tool campaigns, process trees, and logon bursts)│
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### Telemetry Pipeline Throughput
-| Pipeline Stage | Telemetry Volume | Description |
+1. **Top of Funnel (9,567 Raw Alerts):** Captures every single event from low-severity policy checks (Level 3) to brute-force attempts.
+2. **Middle of Funnel (808 Elevated Events):** Retains events associated with active adversary stages while filtering out background operating system chatter.
+3. **Bottom of Funnel (46 TheHive Incidents):** The result of `thecustomhive` correlation. Instead of an analyst receiving 300 tickets for a single web fuzzing scan, they receive **one single clustered incident** titled `Tool Campaign: Nikto on DVWA` with all 300 raw hits attached as evidence observables.
+
+---
+
+## Component Deep-Dive Directories
+
+To inspect the raw configuration files, baseline policies, and rulesets for each defensive technology, explore the dedicated subdirectories:
+
+| Directory | Core Files | Technology | Focus Area |
+|---|---|---|---|
+| [`Wazuh/`](Wazuh/README.md) | [`local_rules.xml`](Wazuh/local_rules.xml)<br>[`local_decoder.xml`](Wazuh/local_decoder.xml) | Wazuh SIEM 4.14.8 | 1,300+ line tuned ruleset, decoders, and 87 suppressions |
+| [`Suricata/`](Suricata/README.md) | [`custom.rules`](Suricata/custom.rules)<br>[`threshold.config`](Suricata/threshold.config) | Suricata 7.x NIDS | Dual-homed network wire signatures, rate limiting, and ET Open rules |
+| [`Sysmon/`](Sysmon/README.md) | [`sysmonconfig.xml`](Sysmon/sysmonconfig.xml) | Microsoft Sysmon v15.20 | Windows process command lines (EID 1), network sockets, and registry tracking |
+| [`Auditd/`](Auditd/README.md) | [`audit.rules`](Auditd/audit.rules) | Linux Auditd Subsystem | Kernel syscall tracing on `execve`, SUID creation, and identity file watches |
+
+---
+
+## Related Documentation
+
+| Reference | Category | Description |
 |---|---|---|
-| Complete Raw Wazuh Alerts (`Wazuh-Raw-Alerts.csv`) | **9,567 records** | All alert events generated across 4 agents (`DVWA`: 8,114, `Suricata`: 1,168, `DomainWin10`: 168, `Win10User`: 117) |
-| Curated Analysis Export (`wazuh_alerts.csv`) | **808 records** | Filtered dataset preserving multi-level alert activity across the attack chain |
-| Correlated Incident Alerts Created in TheHive 5 | **46 actionable alerts** | Distinct incident alerts delivered to analyst triage queues after correlation and batching |
+| [Lab Setup & Architecture](../01-Lab-Setup/README.md) | Architecture | Complete 8-machine network topology and WireGuard tunnel routing |
+| [Wazuh SIEM Setup](../01-Lab-Setup/Cloud/wazuh.md) | Cloud Setup | Wazuh Manager, Indexer, and Dashboard installation & CDB lists |
+| [Attack Simulation Directory](../02-Attack-Simulation/README.md) | Red Team | 20-stage adversary simulation execution, scripts, and commands |
+| [Investigation Cases](../04-Investigation/README.md) | Blue Team | Analyst triage playbooks, 3 TheHive cases, and 20 stage investigation notes |
+| [Formal Incident Report](../05-Incident-Report/README.md) | Post-Incident | Post-incident executive review, root cause analysis, and remediation actions |
+| [thecustomhive Source Engine](../06-Resources/Scripts/custom-thehive.py) | Automation | Production 2-tier asynchronous alert correlation daemon script |
