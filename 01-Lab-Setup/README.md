@@ -44,19 +44,41 @@ Most hacked cloud servers are breached because an administrative port (like an S
   - The Nginx Proxy Manager administration console is accessed directly by IP and port at **`https://10.122.0.4:81`** using a custom-generated TLS certificate and private key (strictly HTTPS; unencrypted HTTP is disabled).
 - **The payoff:** To anyone scanning from the public internet, the entire cloud SOC is a brick wall with no open web ports, no exposed databases, and zero attack surface.
 
-### 3. Dual-Homed Gateway: Why Passive IDS Instead of Active Blocking
+### 3. Dual-Homed Gateway: Active Routing & Passive Wire-Level IDS
 
-Security teams often argue over whether to run an inline IPS (which actively drops attacks in real time) or a passive IDS (which listens and alerts without blocking).
-- **The problem:** If we ran Suricata inline in IPS mode (using NFQUEUE or bridge filtering), an aggressive Nmap scan or timing-sensitive exploit might trigger an immediate connection reset or introduce packet jitter. That would artificially break the attacker's tools halfway through and prevent us from testing multi-stage lateral movement.
-- **How we fixed it:** We set up an Ubuntu Server as a dual-homed Layer 3 router bridging Kali (`ens33: 192.168.232.162`) to the victim subnet (`ens37: 192.168.56.150`). Standard Linux kernel routing (`net.ipv4.ip_forward = 1`) forwards attack traffic smoothly. Then, we configured Suricata 8.0.6 to run in **passive AF-PACKET promiscuous mode** sniffing the victim interface (`ens37`).
-- **The payoff:** Attack traffic reaches its targets exactly as it would in a real adversary breach. At the same time, Suricata passively inspects every packet on the wire and generates rich network alerts in `eve-alert.json` without interfering with attack tradecraft.
+To simulate an authentic enterprise boundary where the attacker and victims reside on distinct subnets, the Security Gateway is dual-homed with two dedicated network adapters:
+- **`ens33` (`192.168.232.162`):** Faces the external attack segment (`192.168.232.0/24`, VMware VMnet8 NAT).
+- **`ens37` (`192.168.56.150`):** Faces the internal enterprise victim network (`192.168.56.0/24`, VMware VMnet2 Host-Only).
 
-### 4. Preserving Real Victim IP Addresses (No NAT on the Tunnel)
+#### Why Passive IDS Instead of Active Inline Blocking?
+Security teams often debate whether to run an inline IPS (which actively drops or resets suspicious packets) or a passive IDS (which sniffs and alerts without interfering).
+- **The problem:** Running Suricata inline in IPS mode (using NFQUEUE or bridge filtering) can introduce packet jitter, reset TCP handshakes during aggressive Nmap scans, or drop payload fragments during web exploits. That would break red-team tools artificially halfway through and prevent testing multi-stage lateral movement.
+- **How we fixed it:** The gateway acts as an active Layer 3 router (`net.ipv4.ip_forward = 1`) that routes packets cleanly between segments. Suricata 8.0.6 runs in **passive AF-PACKET promiscuous mode** sniffing interface `ens37`.
+- **The payoff:** Attack traffic reaches victims with zero packet distortion, exactly like a genuine intrusion, while Suricata passively inspects the wire and generates rich network alerts (`eve-alert.json`).
 
-When packets travel across routers and VPN tunnels, routers typically apply NAT (Network Address Translation, or `MASQUERADE`) to replace the sender's original IP with the router's IP.
-- **The problem:** If our gateway applied NAT to telemetry entering the WireGuard tunnel, every single alert arriving at Wazuh in the cloud would appear to come from the gateway's tunnel IP (`10.8.0.2`). You would lose all visibility into which machine was actually attacked—the Domain Controller (`.10`), Windows 10 (`.20`), or DVWA (`.30`).
-- **How we fixed it:** We disabled NAT masquerading for all victim traffic traveling through the WireGuard tunnel (`wg0`). On the cloud side, we added a static return route directing `192.168.56.0/24` back through `10.8.0.2`.
-- **The payoff:** Wazuh Manager sees and registers the real, authentic IP address of every victim host (`192.168.56.10`, `.20`, `.30`). Every alert and investigation artifact maps cleanly to the exact compromised machine.
+### 4. How Traffic Routes & Preserving Real Victim IPs (No NAT on the Tunnel)
+
+Routing in this hybrid lab coordinates three distinct traffic paths: attacker traffic, victim telemetry, and cloud management:
+
+#### A. Attacker Traffic Flow (Kali's Single Adapter & Static Route)
+- Kali Linux operates with a **single network adapter** (`eth0: 192.168.232.135/24` on VMware VMnet8 NAT).
+- Because Kali is an attacker platform, it requires standard outbound internet access to install tools, pull updates, and download wordlists. Its default route (`0.0.0.0/0 via 192.168.232.2`) handles all general outbound traffic.
+- Kali uses **only one static route** specifically for attacking the internal victim network:
+  ```text
+  up ip route add 192.168.56.0/24 via 192.168.232.162 dev eth0
+  ```
+- When Kali targets any internal host (`192.168.56.10`, `.20`, `.30`), its packets hit Suricata's external adapter (`192.168.232.162`), are routed across the kernel forwarding engine, are passively inspected by Suricata on `ens37`, and land directly on the victim machine.
+
+#### B. Victim Telemetry Flow (Default Gateway `.150` & WireGuard VPN)
+- Every host on the internal victim network (`192.168.56.0/24`) sets its default gateway to **`192.168.56.150`** (Suricata's internal adapter `ens37`).
+- When endpoints generate telemetry—such as Wazuh agent logs on port `1514/TCP` or Velociraptor client connections on port `8000/TCP`—they send these packets to `192.168.56.150`.
+- The Security Gateway acts as the router, forwarding these packets into its **WireGuard VPN tunnel interface (`wg0: 10.8.0.2/32`)** on the dedicated `10.8.0.0/24` VPN transit network.
+- The VPN tunnel delivers the packets across the encrypted link (`UDP 51820`) directly to Cloud VM1 (`10.8.0.1`), which forwards them over private VNet peering (`10.122.0.0/16`) to the Wazuh SIEM (`10.122.1.4`) or TheHive/Velociraptor (`10.122.0.4`).
+
+#### C. Preserving Real Victim IP Addresses (Zero NAT Masquerading)
+- **The problem:** Routers typically apply NAT (Network Address Translation, or `MASQUERADE`) to traffic entering a VPN tunnel, replacing the sender's original IP with the router's tunnel IP. If our gateway applied NAT, every alert arriving at Wazuh in the cloud would appear to originate from `10.8.0.2` (the gateway's tunnel IP). You would lose all visibility into which machine was compromised—the Domain Controller (`.10`), Windows 10 (`.20`), or DVWA (`.30`).
+- **How we fixed it:** We disabled NAT masquerading for all victim traffic entering the WireGuard tunnel (`wg0`). On the cloud hub (`10.8.0.1`), we added a static kernel return route directing `192.168.56.0/24` back through `10.8.0.2`.
+- **The payoff:** Wazuh Manager sees and registers the authentic IP address of every victim host (`192.168.56.10`, `.20`, `.30`). Every alert, correlation rule, and investigation artifact maps cleanly to the exact compromised machine.
 
 ---
 
