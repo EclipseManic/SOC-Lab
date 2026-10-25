@@ -1,19 +1,19 @@
-# TheHive / Automation VM
+# TheHive / Automation VM — Case Management, DFIR & Cloud Gateway
 
-> Central hub for case management, DFIR tooling, VPN gateway, and internal reverse proxy.  
-> This VM consolidates five core roles to keep the cloud footprint lean while remaining functionally segmented.
+> Central cloud hub for security incident case management, DFIR live response, encrypted WireGuard VPN ingress, and internal reverse proxying.  
+> This host consolidates five core roles onto a single 16 GB instance (`10.122.0.4`), keeping the cloud footprint lean while preserving functional segmentation.
 
 ---
 
 ## Role Summary
 
-| # | Service | Purpose | Listening Port(s) |
-|---|---------|---------|-------------------|
-| 1 | **TheHive 5.7.5-1** | Case & alert management | `9000/TCP` |
-| 2 | **Velociraptor 0.77.3** | Endpoint forensics & live response | `8000/TCP` (frontend), `8889/TCP` (GUI) |
-| 3 | **WireGuard** | Encrypted tunnel — only public entry point | `51820/UDP` |
-| 4 | **Nginx Proxy Manager** | Internal reverse proxy (VPN-only domains) | `80`, `81`, `443/TCP` |
-| 5 | **IP Forwarding / Cloud Router** | Routes agent traffic to Wazuh VM via VNet peering | — |
+| # | Service | Purpose | Listening Port(s) | Management / Auth |
+|---|---------|---------|-------------------|-------------------|
+| 1 | **TheHive 5.7.5-1** | Case & alert management | `9000/TCP` | Native service · Cassandra + Elasticsearch |
+| 2 | **Velociraptor 0.77.3** | Endpoint DFIR & live response | `8000/TCP` (frontend), `8889/TCP` (GUI) | Native systemd service · client-initiated |
+| 3 | **WireGuard VPN** | Encrypted tunnel — only public entry point | `51820/UDP` | Kernel module · key-based auth |
+| 4 | **Nginx Proxy Manager** | Internal reverse proxy (VPN-only domains) | `80`, `81`, `443/TCP` | Docker container · custom TLS |
+| 5 | **Cloud Router** | IP forwarding for agent logs to Wazuh | — | Kernel forwarding (`net.ipv4.ip_forward = 1`) |
 
 ---
 
@@ -21,91 +21,214 @@
 
 | Property | Value |
 |----------|-------|
-| **OS** | Ubuntu 24.04.4 LTS |
+| **Hostname** | `thehive-core` |
+| **OS** | Ubuntu 24.04.4 LTS (Noble Numbat) |
 | **RAM** | 16 GB |
 | **vCPU** | 4 |
-| **Disk** | 123 GB |
-| **Cloud network** | `10.122.0.0/24` private subnet (within `10.122.0.0/16` VPC) |
-| **VPN address** | `10.8.0.1/24` |
-| **Public exposure** | `51820/UDP` only |
-| **Public IP** | Dynamic (not published) |
-| **SSH key** | `analyst@soc-workstation` |
+| **Disk** | 123 GB SSD |
+| **Cloud Subnet** | `10.122.0.0/24` private subnet (within `10.122.0.0/16` VPC) |
+| **Private IP** | `10.122.0.4` |
+| **VPN Address** | `10.8.0.1/24` (`wg0`) |
+| **Public Exposure** | `51820/UDP` only (WireGuard) |
+| **Public IP** | Dynamic (not published; VPN access only) |
+| **SSH Management** | Host laptop key (`analyst@soc-workstation`) |
 
 ---
 
-## 1 — TheHive 5.7.5-1 (Case Management)
+## 1. TheHive 5.7.5-1 (Case Management & Database Stack)
 
-Native install (not Docker). Backend powered by Cassandra and Elasticsearch.
+TheHive runs as a native systemd service supported by Apache Cassandra for graph/metadata storage and Elasticsearch for fast full-text searching.
 
-| Component | Version |
-|-----------|---------|
-| TheHive | 5.7.5-1 |
-| Cassandra | 4.1.12 |
-| Elasticsearch | 8.19.23 |
+### Architecture Components
 
-- **Listen:** `9000/TCP` — reachable only over the WireGuard VPN
-- **Organisation:** `SOC-Lab`
-- **API key:** `<REDACTED>` (exported as env var `THEHIVE_API_KEY`)
-- **Observable types:** IP, domain, file, hash, user, URL
-
-### Case Structure
-
-| Case | Title | Attack Stages |
-|------|-------|---------------|
-| Case 01 | Web compromise | Stages 01 – 07 |
-| Case 02 | Lateral movement | Stages 08 – 14 |
-| Case 03 | Domain compromise | Stages 15 – 20 |
+| Component | Version | Port | Purpose |
+|-----------|---------|------|---------|
+| **TheHive** | 5.7.5-1 | `9000/TCP` | Analyst UI, REST API, alert ingestion |
+| **Apache Cassandra** | 4.1.12 | `7000`, `9042/TCP` | Distributed NoSQL database (JanusGraph backend) |
+| **Elasticsearch** | 8.19.23 | `9200`, `9300/TCP` | Alert indexing and full-text search engine |
 
 ---
 
-## 2 — Velociraptor 0.77.3 (DFIR)
+### Step 1: Cassandra 4.1.12 Provisioning
 
-Native systemd service providing endpoint forensics and live-response capabilities.
+```bash
+# 1. Install Java 17 prerequisite and Cassandra dependencies
+sudo apt-get update && sudo apt-get install -y openjdk-17-jre-headless apt-transport-https gnupg
 
-| Parameter | Value |
-|-----------|-------|
-| **Frontend (client connections)** | `8000/TCP` |
-| **GUI (analyst access)** | `8889/TCP` (VPN only) |
-| **Connection model** | Client-initiated — victim hosts dial the server |
+# 2. Add Cassandra official repository
+echo "deb https://debian.cassandra.apache.org 41x main" | sudo tee /etc/apt/sources.list.d/cassandra.sources.list
+curl -s https://downloads.apache.org/cassandra/KEYS | sudo gpg --no-default-keyring --keyring gnupg-ring:/usr/share/keyrings/cassandra.gpg --import && sudo chmod 644 /usr/share/keyrings/cassandra.gpg
 
-### Enrolled Clients
+sudo apt-get update
+sudo apt-get install -y cassandra=4.1.12
+```
 
-| Host | OS | Velociraptor Client Version |
-|------|----|-----------------------------|
-| DVWA (Ubuntu) | Ubuntu 24.04 | 0.77.1 |
-| Windows 10 | Windows 10 Pro N | 0.77.1 |
-| Domain Controller | Windows Server 2022 | 0.77.1 |
+Configure `/etc/cassandra/cassandra.yaml`:
+```yaml
+cluster_name: 'thp'
+listen_address: 10.122.0.4
+rpc_address: 10.122.0.4
+seed_provider:
+  - class_name: org.apache.cassandra.locator.SimpleSeedProvider
+    parameters:
+      - seeds: "10.122.0.4"
+```
 
-### Collected Artifacts
-
-- Process listing
-- Network connections
-- Persistence checks
-- File collection
-- User accounts
+Start and verify Cassandra cluster:
+```bash
+sudo systemctl enable --now cassandra
+nodetool status
+# Status=Up/State=Normal (UN) 10.122.0.4
+```
 
 ---
 
-## 3 — WireGuard VPN Server
+### Step 2: Elasticsearch 8.19.23 Provisioning
 
-The **only publicly exposed service** in the entire lab. All analyst and agent traffic enters through this tunnel.
+```bash
+# 1. Install Elasticsearch 8
+wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo gpg --dearmor -o /usr/share/keyrings/elasticsearch-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/8.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-8.x.list
+sudo apt-get update && sudo apt-get install -y elasticsearch=8.19.23
+```
 
-| Parameter | Value |
-|-----------|-------|
-| **Interface** | `wg0` |
-| **Address** | `10.8.0.1/24` |
-| **Listen port** | `51820/UDP` |
-| **MTU** | 1420 |
-| **NAT** | Masquerade on `eth0` |
+Configure `/etc/elasticsearch/elasticsearch.yml`:
+```yaml
+cluster.name: thehive
+network.host: 127.0.0.1
+http.port: 9200
+discovery.type: single-node
+xpack.security.enabled: false
+```
 
-### Peers
+Start Elasticsearch:
+```bash
+sudo systemctl enable --now elasticsearch
+curl -s http://127.0.0.1:9200 | grep "number"
+# "number" : "8.19.23"
+```
 
-| Peer | Tunnel Address | Role |
-|------|----------------|------|
-| Suricata gateway | `10.8.0.2/32` | VPN client carrying agent logs + SOC access |
-| Host laptop | `10.8.0.3/32` | Analyst direct access |
+---
 
-### Server Configuration — `/etc/wireguard/wg0.conf`
+### Step 3: TheHive 5.7.5 Application Configuration (`/etc/thehive/application.conf`)
+
+Install TheHive repository and package:
+```bash
+# 1. Add StrangeBee repository
+curl -fsSL https://deb.strangebee.com/keys/strangebee.gpg | sudo gpg --dearmor -o /usr/share/keyrings/strangebee-archive-keyring.gpg
+echo 'deb [signed-by=/usr/share/keyrings/strangebee-archive-keyring.gpg] https://deb.strangebee.com thehive-5.2 main' | sudo tee /etc/apt/sources.list.d/strangebee.list
+
+sudo apt-get update && sudo apt-get install -y thehive=5.7.5-1
+```
+
+Configure `/etc/thehive/application.conf`:
+```hocon
+# Local file storage location for evidence attachments
+storage {
+  provider = localfs
+  localfs.location = "/opt/thp/files"
+}
+
+# Database backend connection to Cassandra
+db.janusgraph {
+  storage {
+    backend = cql
+    hostname = ["10.122.0.4"]
+    cql {
+      cluster-name = "thp"
+      keyspace = "thehive"
+    }
+  }
+}
+
+# Index engine connection to Elasticsearch
+search {
+  provider = elasticsearch
+  elasticsearch {
+    hosts = ["http://127.0.0.1:9200"]
+    index-prefix = "thehive"
+  }
+}
+```
+
+Enable and start TheHive:
+```bash
+sudo mkdir -p /opt/thp/files && sudo chown -R thehive:thehive /opt/thp
+sudo systemctl enable --now thehive
+```
+
+### Initial Administrative Setup & Case Templates
+- **Organisation Created:** `SOC-Lab`
+- **Analyst Role:** `org-admin` (`analyst@soc-workstation`)
+- **API Key Generated:** Exported to `/var/ossec/integrations/custom-thehive` on Wazuh VM as `THEHIVE_API_KEY`
+- **Case Hierarchy:**
+  - `Case 01 — Web Compromise`: Stages 01 – 07 (Recon, SQLi, web shell, root privesc)
+  - `Case 02 — Lateral Movement`: Stages 08 – 14 (SSH persistence, pivot, Responder, BloodHound, Kerberoasting)
+  - `Case 03 — Domain Compromise`: Stages 15 – 20 (DCSync, pass-the-hash, Golden Ticket, persistence, exfil, impact)
+
+---
+
+## 2. Velociraptor 0.77.3 (DFIR & Live Forensics)
+
+Velociraptor runs as a native systemd server providing endpoint hunting, live artifact collection, and triage.
+
+### Server Provisioning
+
+```bash
+# 1. Download official Velociraptor binary
+sudo wget -O /usr/local/bin/velociraptor https://github.com/Velocidex/velociraptor/releases/download/v0.77.3/velociraptor-v0.77.3-linux-amd64
+sudo chmod +x /usr/local/bin/velociraptor
+
+# 2. Generate initial server configuration
+mkdir -p /etc/velociraptor
+sudo /usr/local/bin/velociraptor config generate > /etc/velociraptor/velociraptor.config.yaml
+```
+
+Tune `/etc/velociraptor/velociraptor.config.yaml`:
+- **Frontend (Agent Comm):** `0.0.0.0:8000/TCP` (reachable via WireGuard)
+- **GUI (Analyst Web Console):** `10.8.0.1:8889/TCP` (restricted to VPN pool)
+
+Create systemd service `/etc/systemd/system/velociraptor_server.service`:
+```ini
+[Unit]
+Description=Velociraptor DFIR Server
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/local/bin/velociraptor --config /etc/velociraptor/velociraptor.config.yaml frontend
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Start the service and extract the client configuration:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now velociraptor_server
+
+# Generate client onboarding configuration
+sudo /usr/local/bin/velociraptor --config /etc/velociraptor/velociraptor.config.yaml config client > /etc/velociraptor/client.config.yaml
+```
+
+### Enrolled Clients & Artifact Collection
+
+| Endpoint Host | Operating System | Client Version | Client ID |
+|---------------|------------------|----------------|-----------|
+| **DVWA** | Ubuntu 24.04 LTS | 0.77.1 | `C.34fd07e6c2ec0623` |
+| **Windows 10** | Windows 10 Pro N (22H2) | 0.77.1 | Active enrollment |
+| **Domain Controller** | Windows Server 2022 | 0.77.1 | Active enrollment |
+
+---
+
+## 3. WireGuard VPN Server (`51820/UDP`)
+
+WireGuard provides the single secure public entrance to the entire lab environment. All external telemetry, red-team victim responses, and analyst management traffic enter through this encrypted UDP tunnel.
+
+### Configuration (`/etc/wireguard/wg0.conf`)
 
 ```ini
 [Interface]
@@ -117,125 +240,146 @@ PostUp     = iptables -A FORWARD -i wg0 -j ACCEPT; iptables -t nat -A POSTROUTIN
 PostDown   = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -s 10.8.0.0/24 -o eth0 -j MASQUERADE
 
 [Peer]
-# Suricata gateway
+# Suricata Gateway (Carries on-prem victim traffic and logs)
 PublicKey    = <REDACTED>
 AllowedIPs   = 10.8.0.2/32, 192.168.232.0/24, 192.168.56.0/24
 PersistentKeepalive = 25
 
 [Peer]
-# Host laptop
+# Analyst Laptop (Direct management access)
 PublicKey    = <REDACTED>
 AllowedIPs   = 10.8.0.3/32
 PersistentKeepalive = 25
 ```
 
-The Suricata peer's `AllowedIPs` include both on-prem subnets (`192.168.232.0/24` and `192.168.56.0/24`) so that return traffic for Wazuh agent enrollment and event shipping can route back through the tunnel.
-
----
-
-## 4 — Nginx Proxy Manager (Internal Reverse Proxy)
-
-Runs as a Docker container. Provides friendly domain names for internal services, accessible **only over WireGuard** — no public DNS record, no public listener.
-
-| Internal Domain | Backend | Proxy Port | Notes |
-|-----------------|---------|------------|-------|
-| `thehive.lab` | `localhost:9000` | `443` | TheHive 5 analyst web UI |
-| `wazuh.lab` | `10.122.1.4:443` | `443` | Wazuh Dashboard |
-| `velo.lab` | `localhost:8889` | `443` | Velociraptor DFIR console |
-
-The Nginx Proxy Manager administration interface is accessed directly by IP and port at **`https://10.122.0.4:81`**, configured with a custom-generated TLS certificate and private key (strictly HTTPS; plain HTTP is disabled).
-
-Container ports: `80`, `81`, `443/TCP`.
-
----
-
-## 5 — Cloud Router (IP Forwarding)
-
-This VM doubles as a software router, forwarding Wazuh agent traffic arriving on `wg0` to the Wazuh VM over VNet peering.
-
+Enable and start the WireGuard interface:
 ```bash
-# Kernel forwarding
+sudo systemctl enable --now wg-quick@wg0
+sudo wg show
+# interface: wg0
+#   public key: ...
+#   listening port: 51820
+```
+
+---
+
+## 4. Nginx Proxy Manager (Internal TLS Reverse Proxy)
+
+Runs in Docker to provide friendly internal hostnames with valid TLS certificates for analyst access over the VPN. No public DNS or public listeners exist.
+
+### Docker Compose Configuration (`/opt/npm/docker-compose.yml`)
+
+```yaml
+version: '3.8'
+services:
+  app:
+    image: 'jc21/nginx-proxy-manager:latest'
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '81:81'
+      - '443:443'
+    volumes:
+      - ./data:/data
+      - ./letsencrypt:/etc/letsencrypt
+```
+
+Deploy the container:
+```bash
+cd /opt/npm && sudo docker compose up -d
+```
+
+### Configured Internal Hostnames
+
+| Internal Domain | Destination Backend | HTTPS Port | Purpose |
+|-----------------|---------------------|:---:|---------|
+| `thehive.lab` | `http://localhost:9000` | `443` | TheHive 5 Analyst Web UI |
+| `wazuh.lab` | `https://10.122.1.4:443` | `443` | Wazuh Dashboard Web Interface |
+| `velo.lab` | `https://localhost:8889` | `443` | Velociraptor Forensics Console |
+
+The NPM web administration console is accessed strictly at **`https://10.122.0.4:81`** using custom-generated TLS certificates.
+
+---
+
+## 5. Cloud Router & Zero-NAT IP Preservation
+
+This VM acts as a central cloud router forwarding on-prem agent traffic arriving on `wg0` to the Wazuh SIEM VM over VNet peering (`10.122.0.0/16`).
+
+### Kernel Forwarding (`/etc/sysctl.conf`)
+
+```ini
 net.ipv4.ip_forward = 1
 ```
 
+Activate immediately:
+```bash
+sudo sysctl -p
+```
 
-### Routing & NAT Architecture (Agent IP Preservation)
-- **Agent Source IP Preservation:** Wazuh agents running on `192.168.56.0/24` forward telemetry over the WireGuard tunnel (`wg0`) to the Wazuh Manager at `10.122.1.4`. On the Wazuh VM, a static return route (`ip route add 192.168.56.0/24 via 10.122.0.4`) routes replies back to the TheHive gateway without applying NAT. This ensures that agent source IPs (`192.168.56.10`, `.20`, `.30`) remain intact in the Wazuh dashboard rather than collapsing into a single gateway address.
-- **MASQUERADE Scope:** The `POSTROUTING -o eth0 -j MASQUERADE` iptables rule on this host is scoped for outbound internet traffic originating from the VPN client pool (`10.8.0.0/24`), ensuring analyst internet traffic can egress while inter-VNet agent flows preserve their original addressing.
+### Preserving Authentic Source IPs
 
-### Return Routes
-
-| Destination | Next Hop |
-|-------------|----------|
-| `192.168.56.0/24` | via `wg0` |
-| `192.168.232.0/24` | via `wg0` |
-
-Traffic flow: on-prem agents → Suricata gateway → WireGuard tunnel → this VM (`10.8.0.1`) → VNet peering → Wazuh VM `1514/TCP`.
-
----
-
-## 6 — Alert Ingestion (TheHive Endpoint)
-
-TheHive receives incoming alerts pushed directly from the Wazuh Manager VM over private VNet peering.
-
-- **Ingestion Hook:** Wazuh Manager pushes correlated batches to `http://10.122.0.4:9000/api/v1`
-- **Automation Engine:** Powered by `thecustomhive` (running on the Wazuh VM via `thehive-flush.service`)
-- **Full Architecture & Source Code:** See [README.md#5-thecustomhive-alert-pipeline](../../03-Detection-Engineering/README.md#5-thecustomhive-alert-pipeline) and [`03-Detection-Engineering/Wazuh/`](../../03-Detection-Engineering/Wazuh/)
+- **Zero-NAT on Transit:** When on-prem agents on `192.168.56.0/24` ship logs over `wg0`, packets pass through this VM without undergoing source NAT.
+- **Static Return Routes:** TheHive VM routes responses back to `wg0`:
+  ```bash
+  sudo ip route add 192.168.56.0/24 dev wg0
+  sudo ip route add 192.168.232.0/24 dev wg0
+  ```
+- **Result:** Wazuh Manager sees the true endpoint IP (`192.168.56.10`, `.20`, `.30`) rather than `10.8.0.2` or `10.122.0.4`, ensuring exact source attribution in all alerts.
 
 ---
 
-## Consolidated Services & Ports
+## 6. Alert Ingestion & API Security
 
-| Port | Protocol | Service | Exposure |
-|------|----------|---------|----------|
-| `51820` | UDP | WireGuard | **Public** (only public port) |
-| `9000` | TCP | TheHive | VPN / Peered VNet (`10.122.0.4`) |
-| `7000`, `9042` | TCP | Apache Cassandra 4.1.12 | Localhost / Peered VNet (TheHive Backend) |
-| `9200`, `9300` | TCP | Elasticsearch 8.19.23 | Localhost / Peered VNet (TheHive Search Engine) |
-| `8889` | TCP | Velociraptor GUI | VPN only |
-| `8000` | TCP | Velociraptor frontend | VPN only (client-initiated) |
-| `8001`, `8003` | TCP | Velociraptor internal API | Localhost only |
-| `443` | TCP | Nginx Proxy Manager (HTTPS) | VPN only |
-| `81` | TCP | Nginx Proxy Manager (Admin HTTPS: `https://10.122.0.4:81`) | VPN only (custom TLS cert/key) |
-| `80` | TCP | Nginx Proxy Manager (HTTP redirect) | VPN only |
+Correlated alert batches are pushed directly from Wazuh Manager to TheHive REST API across private VNet peering:
+
+- **Ingestion Hook:** `http://10.122.0.4:9000/api/v1`
+- **Engine:** Powered by `thecustomhive` (running via `thehive-flush.service` on Wazuh VM)
+- **Batch Processing:** 5-second polling loop delivering burst-correlated cases
+- **Documentation:** [README.md#5-thecustomhive-alert-pipeline](../../03-Detection-Engineering/README.md#5-thecustomhive-alert-pipeline)
+
+---
+
+## 7. Service Port Matrix
+
+| Port | Protocol | Service | Exposure | Purpose |
+|------|----------|---------|----------|---------|
+| `51820` | UDP | WireGuard | **Public** | Encrypted tunnel entry |
+| `9000` | TCP | TheHive 5 | VPN / Peered VNet | Case management & API |
+| `7000`, `9042` | TCP | Apache Cassandra | Localhost / Peered VNet | Metadata graph storage |
+| `9200`, `9300` | TCP | Elasticsearch | Localhost | Alert indexing & search |
+| `8889` | TCP | Velociraptor GUI | VPN only | Live response web console |
+| `8000` | TCP | Velociraptor Frontend | VPN only | Client communications |
+| `443` | TCP | Nginx Proxy Manager | VPN only | HTTPS reverse proxy |
+| `81` | TCP | NPM Admin Console | VPN only | Proxy configuration (`https://10.122.0.4:81`) |
+| `80` | TCP | Nginx Proxy Manager | VPN only | HTTP to HTTPS redirect |
 
 > [!NOTE]
 > **Caldera Installation Note:** MITRE Caldera is installed at `/opt/caldera-venv/` with listeners on ports `8888`, `2222`, `8022`, `7012`, `7010`. In this campaign, all 20 adversary stages were executed manually via authentic red-team tradecraft from Kali and DVWA, so Caldera remained unutilized during active simulation runs.
 
 ---
 
-## Why These Roles Share One VM
-
-Consolidating these services on a single host is a deliberate engineering trade-off for a lean lab environment:
-
-- **Cost efficiency** — one 16 GB VM avoids multi-node cloud overhead.
-- **Routing simplicity** — a single WireGuard endpoint avoids split-tunnel routing complexity.
-- **Low throughput** — lab traffic volumes never stress shared system resources.
-
-### Single Point of Failure
-
-If this VM goes down, gateway connectivity, case management, and forensics are interrupted. The Wazuh VM continues ingesting telemetry and buffering alerts locally in SQLite WAL until TheHive becomes reachable again.
-
----
-
-## Verification Commands
+## 8. Verification & Diagnostics Commands
 
 ```bash
-# Check all listening sockets
+# 1. Check all listening sockets
 sudo ss -ltnup
 
-# WireGuard tunnel status
+# 2. WireGuard tunnel handshake and peers
 sudo wg show
 
-# Service health
-systemctl status thehive
-systemctl status velociraptor_server
-systemctl status wg-quick@wg0
-docker ps                              # NPM container
+# 3. Check health of core systemd services
+sudo systemctl status thehive --no-pager
+sudo systemctl status cassandra --no-pager
+sudo systemctl status elasticsearch --no-pager
+sudo systemctl status velociraptor_server --no-pager
+sudo systemctl status wg-quick@wg0 --no-pager
 
-# Connectivity to Wazuh VM over VNet peering
-nc -vz <wazuh-vm-private> 1514
-nc -vz <wazuh-vm-private> 443
+# 4. Check Docker Nginx Proxy Manager container
+sudo docker ps
+
+# 5. Verify connectivity to Wazuh SIEM over VNet peering
+nc -zv 10.122.1.4 1514
+nc -zv 10.122.1.4 443
 ```
 
 ---
@@ -244,6 +388,6 @@ nc -vz <wazuh-vm-private> 443
 
 | Document | Description |
 |----------|-------------|
-| [wazuh.md](wazuh.md) | Wazuh SIEM VM — rules, agents, indexer |
-| [README.md#5-thecustomhive-alert-pipeline](../../03-Detection-Engineering/README.md#5-thecustomhive-alert-pipeline) | Alert pipeline (Wazuh → TheHive) |
-| [rules.md](../../03-Detection-Engineering/Wazuh/README.md) | Custom Wazuh detection rules |
+| [wazuh.md](wazuh.md) | Wazuh SIEM VM — rules, CDB lists, agent ingestion, indexer |
+| [thecustomhive Pipeline](../../03-Detection-Engineering/README.md#5-thecustomhive-alert-pipeline) | Alert pipeline architecture (Wazuh → TheHive) |
+| [Wazuh Detection Rules](../../03-Detection-Engineering/Wazuh/README.md) | Custom Wazuh detection rules & suppressions |

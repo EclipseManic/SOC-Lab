@@ -22,6 +22,7 @@ Supporting reference material, core automation scripts, server configurations, a
 | [Scripts/custom-thehive.py](Scripts/custom-thehive.py) | Automation Engine | Production 2-tier correlation & batched flush daemon (zero-HTTP ingest, recon tool fingerprinting, TheHive 5 sync) |
 | [Scripts/thehive-flush.service](Scripts/thehive-flush.service) | Systemd Unit | Background service unit running `custom-thehive.py --flush-daemon` |
 | [Configs/ossec.conf](Configs/ossec.conf) | Server Configuration | Wazuh Manager configuration defining the `custom-thehive` integration block (API keys redacted) |
+| [Configs/lists/wazuh-internal-bins](Configs/lists/wazuh-internal-bins) | CDB Lookup List | Binary lookup table compiled via `wazuh-makelists` to suppress syscollector scan noise (Rule 100280) |
 | [Alerts/thehive_alerts.json](Alerts/thehive_alerts.json) | Empirical Evidence | Raw JSON export of 46 TheHive 5 alerts produced by the `custom-thehive` correlation engine |
 | [Alerts/Wazuh-Raw-Alerts.csv](Alerts/Wazuh-Raw-Alerts.csv) | Raw Telemetry | 9,567 raw alerts across all 4 agents and log levels exported from Wazuh |
 | [Alerts/wazuh_alerts.csv](Alerts/wazuh_alerts.csv) | Curated Analysis Set | 808-row filtered incident analysis set across all stages (Suricata, Apache, Sysmon, Auditd) |
