@@ -64,7 +64,7 @@ ip route show
 
 ### Telemetry Forwarding Topology
 
-[![Agent Forwarding & Network Transit Pipeline](../../06-Resources/Diagrams/Secure%20Network%20Topology%20Infographic.png)](../../06-Resources/Diagrams/Secure%20Network%20Topology%20Infographic.png)
+[![On-Prem to Cloud Telemetry Flow](../../06-Resources/Diagrams/On-Prem%20to%20Cloud%20Telemetry%20Flow.png)](../../06-Resources/Diagrams/On-Prem%20to%20Cloud%20Telemetry%20Flow.png)
 *Figure 1: On-prem agent telemetry transit through the Suricata Gateway, WireGuard tunnel, and private VNet peering into Wazuh Manager.*
 
 ```
@@ -340,7 +340,7 @@ sudo /var/ossec/bin/wazuh-logtest
 
 ## 7. Two-Tier Asynchronous TheHive Integration (`thecustomhive`)
 
-[![Wazuh to TheHive Security Pipeline](../../06-Resources/Diagrams/Wazuh%20to%20TheHive%20Security%20Pipeline.png)](../../06-Resources/Diagrams/Wazuh%20to%20TheHive%20Security%20Pipeline.png)
+[![Wazuh–TheHive Neon Alert Pipeline](../../06-Resources/Diagrams/Wazuh–TheHive%20Neon%20Alert%20Pipeline.png)](../../06-Resources/Diagrams/Wazuh–TheHive%20Neon%20Alert%20Pipeline.png)
 *Figure 2: Two-tier asynchronous alert correlation pipeline from Wazuh Manager Level ≥ 8 trigger into TheHive 5 case management.*
 
 ```
