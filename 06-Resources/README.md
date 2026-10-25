@@ -7,7 +7,7 @@ Supporting reference material, core automation scripts, server configurations, a
 | Path | Category | Purpose |
 |---|---|---|
 | [attack-chain-full.pdf](attack-chain-full.pdf) | Master Blueprint | Definitive 20-stage attack simulation and campaign reference document |
-| [Diagrams/soc-lab.png](Diagrams/soc-lab.png) | Architecture Diagram | High-level 3-tier lab topology visual overview |
+| [Diagrams/SOC_Lab_Architecture.png](Diagrams/SOC_Lab_Architecture.png) | Architecture Diagram | High-resolution master architecture diagram covering local zones, WireGuard tunnel, and split-cloud SOC VMs |
 | [Scripts/custom-thehive](Scripts/custom-thehive) | Automation Script | POSIX wrapper invoked by Wazuh per alert on `/var/ossec/integrations/` |
 | [Scripts/custom-thehive.py](Scripts/custom-thehive.py) | Automation Engine | Production 2-tier correlation & batched flush daemon (zero-HTTP ingest, recon tool fingerprinting, TheHive 5 sync) |
 | [Scripts/thehive-flush.service](Scripts/thehive-flush.service) | Systemd Unit | Background service unit running `custom-thehive.py --flush-daemon` |
