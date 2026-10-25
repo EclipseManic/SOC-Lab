@@ -10,6 +10,11 @@
 | **Static Route** | `192.168.56.0/24` via `192.168.232.162` (Suricata Gateway) |
 | **SSH Management** | Host laptop key (`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFImUu819rU/dVwoUxcH2WnR10MGqK5tlNDMp7U4so68 manichand gupta@ManicLenovo`) |
 
+> [!IMPORTANT]
+> **Implementation Notice — Reference Architecture vs. Blind Copy-Paste:**
+> The commands, network parameters, and configuration snippets in this guide reflect the **exact reference implementation** used in this laboratory. They serve as an architectural and technical reference showing *how* and *what* was configured.  
+> Do not blindly copy-paste partial snippets or commands over full configuration files without understanding their context. Practitioners replicating this environment should adapt interface names (`eth0`, `ens33`), network subnets, and credentials to match their own specific virtualization environment.
+
 ---
 
 ## 1. Network Position & Permanent Static Routing
@@ -59,7 +64,7 @@ To execute the 20-stage attack simulation seamlessly, the following tools and wo
 | **Adversary-in-the-Middle** | `responder` (source at `/usr/share/responder/`) | LLMNR/NBT-NS poisoning tool (transferred to DVWA for internal execution in Stage 10) |
 | **Remote Access & Staging** | `ssh`, `scp` | Interactive management, persistence verification (Stage 08), staging tools to DVWA |
 
-### Wordlists Configuration
+### Wordlists Configuration & Fast-Cracking Optimization
 
 The standard penetration testing wordlists are prepared and uncompressed:
 ```bash
@@ -68,6 +73,22 @@ sudo gzip -d /usr/share/wordlists/rockyou.txt.gz
 
 # Confirm directory discovery wordlists
 ls -la /usr/share/wordlists/dirb/common.txt
+```
+
+#### Cracking Strategy for Unique Lab Passwords (Top 1,000 Lines Injection)
+
+During the attack campaign, Hashcat and John the Ripper are used to crack captured hashes:
+- **Stage 11 — NTLMv2 Hash (`win10` account):** The Windows 10 workstation user password (e.g., `Secur3Lab!`) is complex and unique. If you run a default, unmodified `rockyou.txt` wordlist, Hashcat will **never crack it** because the unique password does not exist in standard wordlists. You **must append the `win10` password** into `rockyou.txt`.
+- **Speed Optimization (Top 1,000 Lines):** To keep the attack simulation fast and avoid waiting hours for Hashcat to chew through 14.3 million entries, insert the unique lab password within the **top 1,000 lines** (e.g., at line 50). This guarantees Hashcat cracks the hash within seconds during simulation runs.
+- **Stage 13 — Kerberoastable TGS Ticket (`HANK_SHERMAN`):** If Hank Sherman's service account password is deliberately configured as an easy dictionary password (such as `Password123` or `password`), it already exists in standard `rockyou.txt` and manual insertion is **not necessary**. However, if you choose a custom, unique password for Hank Sherman or both accounts have unique passwords, make sure to insert them into the top of the wordlist as well.
+
+```bash
+# Example: Inject unique lab passwords near the top of rockyou.txt (e.g. line 50) for rapid Hashcat cracking
+sudo sed -i '50i Secur3Lab!' /usr/share/wordlists/rockyou.txt
+sudo sed -i '51i Password123' /usr/share/wordlists/rockyou.txt
+
+# Verify injection in the top lines
+head -n 55 /usr/share/wordlists/rockyou.txt | tail -n 10
 ```
 
 ---
@@ -89,8 +110,23 @@ bloodhound-start
 
 ## 4. Pre-Simulation Staging Artifacts
 
-Certain high-impact attack artifacts are staged prior to simulation runs:
-- **Defacement Wallpaper (`hacked.bmp`):** Generated on the analyst host laptop and placed at `/tmp/hacked.bmp` on Kali. During [Stage 20 — Impact & Defacement](../../02-Attack-Simulation/Stages/stage-20-impact.md), Kali transfers `hacked.bmp` to the DVWA pivot via SCP, from which it is pushed across domain endpoints over SMB.
+Certain attack simulation artifacts are prepared prior to running the adversary stages:
+
+### Defacement Wallpaper Artifact (`hacked.bmp`)
+
+During [Stage 20 — Impact & Defacement](../../02-Attack-Simulation/Stages/stage-20-impact.md), Kali transfers a defacement bitmap wallpaper to the DVWA pivot via SCP, from which it is pushed across domain endpoints over SMB to replace the user desktop background.
+
+- **Any Valid BMP Image Works:** There is **no requirement to use any specific or proprietary image**. Any valid 24-bit bitmap (`.bmp`) file—whether drawn in MS Paint, exported from GIMP, or converted from an existing PNG/JPEG—will function properly for the Windows desktop wallpaper update mechanism.
+- **Quick Test Image Generation:** You can quickly generate a test bitmap directly on Kali using ImageMagick (`convert`) or Python:
+  ```bash
+  # Generate a 1920x1080 test bitmap directly on Kali
+  sudo apt-get install -y imagemagick
+  convert -size 1920x1080 xc:black -fill red -pointsize 72 -gravity center -draw "text 0,0 'SYSTEM COMPROMISED'" /tmp/hacked.bmp
+
+  # Verify valid BMP header format
+  file /tmp/hacked.bmp
+  # Output: /tmp/hacked.bmp: PC bitmap, Windows 3.x format, 1920 x 1080 x 24...
+  ```
 
 ---
 

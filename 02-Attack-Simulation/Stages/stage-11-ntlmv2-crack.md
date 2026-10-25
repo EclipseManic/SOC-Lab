@@ -23,6 +23,10 @@ scp root@192.168.56.30:/tmp/win10.hash /tmp/win10.hash
 hashcat -m 5600 /tmp/win10.hash /usr/share/wordlists/rockyou.txt --force
 ```
 
+> [!TIP]
+> **Wordlist Fast-Cracking Optimization:**  
+> Because the `win10` account password (`Secur3Lab!`) is complex and unique, it must be appended to `rockyou.txt` prior to cracking. For fast simulation turnaround, insert it within the **top 1,000 lines** (e.g., `sudo sed -i '50i Secur3Lab!' /usr/share/wordlists/rockyou.txt`), allowing Hashcat to resolve the hash in seconds rather than grinding through all 14.3 million entries.
+
 ---
 
 ## What happened
