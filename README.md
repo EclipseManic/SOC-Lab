@@ -38,15 +38,15 @@ The attacker starts outside the network on an isolated subnet. Every perimeter p
 
 ### Repository Directory Index
 
-| Directory / Section | Primary Document | Core Contents |
+| Section | Primary Document | Description |
 |---|---|---|
-| **01 — Lab Setup** | [`01-Lab-Setup/README.md`](01-Lab-Setup/README.md) | Network topology, WireGuard VPN configuration, and host build profiles (Kali, DC, Win10, DVWA, Wazuh, TheHive) |
-| **02 — Attack Simulation** | [`02-Attack-Simulation/README.md`](02-Attack-Simulation/README.md) | Complete 20-stage attack playbook: terminal commands, execution tradecraft, and 62 attacker screenshots |
-| **03 — Detection Engineering** | [`03-Detection-Engineering/README.md`](03-Detection-Engineering/README.md) | Custom Wazuh rules (`local_rules.xml`), Suricata NIDS rules, Sysmon/Auditd baselines, and `thecustomhive` SOAR pipeline |
-| **04 — Investigation** | [`04-Investigation/README.md`](04-Investigation/README.md) | Step-by-step analyst triage notes for all 20 stages, raw event correlations, and 3 multi-stage TheHive cases |
-| **05 — Incident Report** | [`05-Incident-Report/README.md`](05-Incident-Report/README.md) | Executive incident report, end-to-end chronological timeline, complete IOC tables, and remediation backlog |
-| **06 — Resources** | [`06-Resources/README.md`](06-Resources/README.md) | Raw telemetry CSVs (9,567 rows), TheHive JSON export (46 alerts), automation scripts, and master PDF blueprint |
-| **Master Index** | [`INDEX.md`](INDEX.md) | Master traceability matrix mapping every stage to ATT&CK techniques, detection rules, alert IDs, and evidence |
+| **01 — Lab Setup** | [`01-Lab-Setup/README.md`](01-Lab-Setup/README.md) | Complete hybrid cloud architecture, network segmentation, WireGuard VPN configuration, and reproducible host build profiles for all 6 systems. |
+| **02 — Attack Simulation** | [`02-Attack-Simulation/README.md`](02-Attack-Simulation/README.md) | The 20-stage red-team playbook with exact terminal commands, execution tradecraft, and 62 attacker-side terminal proof screenshots. |
+| **03 — Detection Engineering** | [`03-Detection-Engineering/README.md`](03-Detection-Engineering/README.md) | Custom Wazuh detection rules (`local_rules.xml`), Suricata NIDS signatures, Sysmon/Auditd telemetry baselines, and the `thecustomhive` SQLite WAL SOAR daemon. |
+| **04 — Investigation** | [`04-Investigation/README.md`](04-Investigation/README.md) | SOC analyst triage notes for all 20 stages, raw-to-alert event correlations, and 3 comprehensive multi-stage TheHive incident cases. |
+| **05 — Incident Report** | [`05-Incident-Report/README.md`](05-Incident-Report/README.md) | Formal executive incident report, full chronological attack timeline, complete IOC tables, and remediation engineering backlog. |
+| **06 — Resources** | [`06-Resources/README.md`](06-Resources/README.md) | Raw telemetry CSVs (9,567 raw alerts), TheHive JSON export (46 alerts), automation scripts, and master campaign PDF blueprint. |
+| **Master Index** | [`INDEX.md`](INDEX.md) | Master traceability matrix mapping every stage to MITRE ATT&CK techniques, detection rules, alert IDs, and raw evidence files. |
 
 ---
 
@@ -99,12 +99,6 @@ Using the mapped path, the attacker requests a Kerberos service ticket for a pri
   - [Stage 10 — Responder Poisoning](04-Investigation/Stages/stage-10-responder.md) (Network MitM: Link-local broadcast poisoning & NTLMv2 hash interception)
   - [Stage 13 — Kerberoasting](04-Investigation/Stages/stage-13-kerberoasting.md) (Active Directory exploitation: Kerberos TGS-REQ wire frame vs. target logging)
   - [Stage 15 — Pass-the-Hash](04-Investigation/Stages/stage-15-pass-the-hash.md) (Lateral movement: NTLM Logon Type 3 & WMI process creation)
-- **Deep dive:**
-  - **[01-Lab-Setup](01-Lab-Setup/README.md) & [architecture.md](01-Lab-Setup/architecture.md)** — Complete network topology, addressing tables, WireGuard VPN configuration, and host profiles.
-  - **[03-Detection-Engineering](03-Detection-Engineering/README.md)** — Custom Wazuh XML rules, Suricata signatures, Sysmon/Auditd baselines, noise-reduction suppressions, and the `thecustomhive` SOAR automation pipeline.
-  - **[04-Investigation](04-Investigation/README.md)** — Analyst investigation records and the 3 multi-stage TheHive cases.
-  - **[05-Incident-Report](05-Incident-Report/README.md)** — Executive incident report, unified chronological timeline, full IOC inventory, and defensive recommendations.
-  - **[INDEX.md](INDEX.md)** — Master traceability matrix cross-referencing every stage, MITRE ATT&CK technique, rule ID, alert ID, and raw evidence file.
 
 ---
 
