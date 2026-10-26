@@ -2,6 +2,11 @@
 
 Single source of truth for the lab. Update this table whenever a stage, alert, rule, investigation note, or case changes.
 
+> [!NOTE]
+> **Project Lifecycle & Section Status:**  
+> - **Sections 01–03:** Fully finalized, verified, and reconciled with empirical telemetry and rulesets.
+> - **Sections 04 (Investigation) & 05 (Incident Report):** Marked as **In Progress (Active Analyst Review & Draft Hardening)** while incident response notes and post-incident deliverables undergo peer review.
+
 ## Detection Status Legend & Ground Truth Metrics
 
 | Classification | Meaning & Scope | Stages Caught / Proportion |
@@ -18,7 +23,7 @@ Single source of truth for the lab. Update this table whenever a stage, alert, r
 
 | # | Stage | Suggested ATT&CK | Attack Doc | Alert Observed | Rule / Alert ID | Investigation | TheHive Case | Detection Status |
 |---|---|---|---|---|---|---|---|---|
-| 01 | Reconnaissance | T1595.001 | [stage-01](02-Attack-Simulation/Stages/stage-01-recon.md) | `wzb-3a8045a03c`, `wzb-6a39ab2a3d`, `wzb-4de933ca95` (`1.png`–`1.3.png`) | Wazuh `100410` (Level 10) / Suricata SID `3400001`, `3400002` (via `86601`) | [stage-01](04-Investigation/Stages/stage-01-recon.md) | Case 01 | **Direct Detection** |
+| 01 | Reconnaissance | T1595.001 | [stage-01](02-Attack-Simulation/Stages/stage-01-recon.md) | `wzb-3a8045a03c`, `wzb-6a39ab2a3d`, `wzb-4de933ca95` (`1.png`–`1.3.png`) | Wazuh `100410` (Level 10) / Suricata SID `2018489`, `3400001`, `3400002` (via `86601`) | [stage-01](04-Investigation/Stages/stage-01-recon.md) | Case 01 | **Direct Detection** |
 | 02 | Brute Force | T1110.001 | [stage-02](02-Attack-Simulation/Stages/stage-02-bruteforce.md) | `wzb-81becfcc8d`, `wzb-6a22425401`, `wzb-8b2c36ea17` (`2.png`–`2.7.png`) | Wazuh `100213` (Level 10), Wazuh `31153` / Suricata SID `2000547` | [stage-02](04-Investigation/Stages/stage-02-bruteforce.md) | Case 01 | **Direct Detection** |
 | 03 | SQL Injection | T1190 | [stage-03](02-Attack-Simulation/Stages/stage-03-sqli.md) | Suricata wire alert (Sheet Row 9110 / CSV Row 9108) | Suricata SID `2010963` (`ET WEB_SERVER SELECT USER`) / Wazuh `31106` | [stage-03](04-Investigation/Stages/stage-03-sqli.md) | Case 01 | **Direct Detection** |
 | 04 | Hash Cracking | T1110.002 | [stage-04](02-Attack-Simulation/Stages/stage-04-hash-crack.md) | *None (Offline Activity)* | *N/A (DG-04)* | [stage-04](04-Investigation/Stages/stage-04-hash-crack.md) | Case 01 | **Offline Gap (DG-04)** |

@@ -1,6 +1,6 @@
 # Investigation — Stage 01 — Reconnaissance
 
-> **Status:** Completed  
+> **Status:** In Progress  
 > **Attack stage:** [Stage 01](../../02-Attack-Simulation/Stages/stage-01-recon.md)  
 > **TheHive case:** [Web Application Compromise](../Cases/case-01-web-compromise.md)  
 
@@ -11,7 +11,7 @@
 | Field | Value |
 |---|---|
 | **Alert ID** | `wzb-3a8045a03c`, `wzb-6a39ab2a3d`, `wzb-4de933ca95` |
-| **Rule ID** | Wazuh `100410` (Level 10) / Suricata SID `3400001`, `3400002` (via `86601`) |
+| **Rule ID** | Wazuh `100410` (Level 10) / Suricata SID `2018489`, `3400001`, `3400002` (via `86601`) |
 | **Source** | Wazuh (Apache) / Suricata (Network IDS) |
 | **Severity** | High |
 | **TLP / PAP** | `TLP:AMBER / PAP:AMBER` |

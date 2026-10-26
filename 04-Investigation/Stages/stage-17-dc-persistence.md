@@ -1,6 +1,6 @@
 # Investigation — Stage 17 — DC Persistence
 
-> **Status:** Completed  
+> **Status:** In Progress  
 > **Attack stage:** [Stage 17](../../02-Attack-Simulation/Stages/stage-17-dc-persistence.md)  
 > **TheHive case:** [Domain Compromise and Impact](../Cases/case-03-domain-compromise.md)  
 

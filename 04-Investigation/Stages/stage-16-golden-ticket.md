@@ -1,6 +1,6 @@
 # Investigation — Stage 16 — Golden Ticket
 
-> **Status:** Completed  
+> **Status:** In Progress  
 > **Attack stage:** [Stage 16](../../02-Attack-Simulation/Stages/stage-16-golden-ticket.md)  
 > **TheHive case:** [Domain Compromise and Impact](../Cases/case-03-domain-compromise.md)  
 

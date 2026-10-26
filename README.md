@@ -24,8 +24,8 @@ The attacker starts outside the network on an isolated subnet. Every perimeter p
 | **01 — Lab Setup** | [`01-Lab-Setup/README.md`](01-Lab-Setup/README.md) | Complete hybrid cloud architecture, network segmentation, WireGuard VPN configuration, and reproducible host build profiles for all 6 systems. |
 | **02 — Attack Simulation** | [`02-Attack-Simulation/README.md`](02-Attack-Simulation/README.md) | The 20-stage red-team playbook with exact terminal commands, execution tradecraft, and 62 attacker-side terminal proof screenshots. |
 | **03 — Detection Engineering** | [`03-Detection-Engineering/README.md`](03-Detection-Engineering/README.md) | Custom Wazuh detection rules (`local_rules.xml`), Suricata NIDS signatures, Sysmon/Auditd telemetry baselines, and the `thecustomhive` SQLite WAL SOAR daemon. |
-| **04 — Investigation** | [`04-Investigation/README.md`](04-Investigation/README.md) | SOC analyst triage notes for all 20 stages, raw-to-alert event correlations, and 3 comprehensive multi-stage TheHive incident cases. |
-| **05 — Incident Report** | [`05-Incident-Report/README.md`](05-Incident-Report/README.md) | Formal executive incident report, full chronological attack timeline, complete IOC tables, and remediation engineering backlog. |
+| **04 — Investigation** | [`04-Investigation/README.md`](04-Investigation/README.md) | **In Progress (Active Analyst Review):** SOC analyst triage notes for all 20 stages, raw-to-alert event correlations, and 3 comprehensive multi-stage TheHive incident cases. |
+| **05 — Incident Report** | [`05-Incident-Report/README.md`](05-Incident-Report/README.md) | **In Progress (Post-Incident Draft Hardening):** Formal executive incident report, full chronological attack timeline, complete IOC tables, and remediation engineering backlog. |
 | **06 — Resources** | [`06-Resources/README.md`](06-Resources/README.md) | Telemetry datasets (9,567 raw baseline alerts, 808 analyst-curated records, 46 TheHive incident cases), automation scripts, and master campaign PDF. |
 | **Master Index** | [`INDEX.md`](INDEX.md) | Master traceability matrix mapping every stage to MITRE ATT&CK techniques, detection rules, alert IDs, and raw evidence files. |
 
@@ -44,7 +44,7 @@ Using the mapped path, the attacker requests a Kerberos service ticket for a pri
 
 ### The Defensive Counterpart: How Detection Engineering Intercepted the Chain
 While the adversary advanced through these three acts, the defensive stack operated as an interlocking, multi-layered mesh:
-- **At the Perimeter & Wire:** Dual-homed **Suricata NIDS** (sniffing `ens33` and `ens37`) caught inbound Nmap OS sweeps, Hydra brute-force floods, SQL injection payloads, and intra-subnet Kerberos ticket requests.
+- **At the Perimeter & Wire:** Dual-homed **Suricata NIDS** (sniffing ingress `ens33` and internal `ens37`) caught inbound Nmap OS fingerprint probes, automated Python brute-force authentication floods, SQL injection payloads, and intra-subnet Kerberos ticket requests.
 - **In the Linux Kernel:** **Linux Auditd** intercepted system calls (`execve`) executed by the web server user (`uid=33`), exposing the PHP web shell commands and reverse shell spawn regardless of transport encryption.
 - **On the Windows Endpoints:** **Microsoft Sysmon & Windows Security Logs** caught Pass-the-Hash NTLM Type 3 logons (EID 4624), rogue account additions to `Domain Admins`, and Impacket's `wmiexec` process tree fan-out (`WmiPrvSE.exe` $\to$ `cmd.exe /Q /c`).
 - **In the Cloud SIEM & SOAR Pipeline:** **Wazuh SIEM** evaluated all feeds against 148 rule definitions and 87 noise suppressions. Alerts meeting the $\ge \text{Level 8}$ threshold triggered `custom-thehive`, an asynchronous two-tier SOAR engine using local SQLite WAL queues and a 5-second flush daemon to cluster alert floods into **46 high-fidelity incident cases in TheHive 5**—achieving an **80% overall detection rate (16 of 20 stages caught)** while shielding analysts from alert fatigue.

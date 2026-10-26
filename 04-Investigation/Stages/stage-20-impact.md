@@ -1,6 +1,6 @@
 # Investigation — Stage 20 — Impact
 
-> **Status:** Completed  
+> **Status:** In Progress  
 > **Attack stage:** [Stage 20](../../02-Attack-Simulation/Stages/stage-20-impact.md)  
 > **TheHive case:** [Domain Compromise and Impact](../Cases/case-03-domain-compromise.md)  
 

@@ -1,6 +1,6 @@
 # Investigation — Stage 11 — NTLMv2 Cracking
 
-> **Status:** Completed  
+> **Status:** In Progress  
 > **Attack stage:** [Stage 11](../../02-Attack-Simulation/Stages/stage-11-ntlmv2-crack.md)  
 > **TheHive case:** [Lateral Movement and Credential Access](../Cases/case-02-lateral-movement.md)  
 

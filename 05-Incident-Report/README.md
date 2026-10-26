@@ -19,4 +19,4 @@ This section documents the formal Incident Response documentation for the comple
 
 ## Verification Status
 
-All reports in this directory are fully populated based on empirical telemetry captured during the 20-stage simulation, referencing exported alert datasets in [`06-Resources/Alerts/`](../06-Resources/Alerts/) and alert captures in [`03-Detection-Engineering/TheHive_Alert-ScreenShot/`](../03-Detection-Engineering/TheHive_Alert-ScreenShot/).
+**In Progress (Post-Incident Review & Draft Hardening):** The reports in this directory represent active post-incident deliverables compiled from the 20-stage simulation telemetry. They remain in progress under structured peer review to validate remediation recommendations and root cause findings against exported alert sets.

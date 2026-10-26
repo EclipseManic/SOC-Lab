@@ -6,7 +6,7 @@
 | **Role** | Dual-homed perimeter router · NIDS sensor · WireGuard VPN gateway |
 | **Hostname** | `suricata-gateway` |
 | **Resources** | 2–3 vCPU · 3 GB RAM |
-| **Suricata Engine** | Version 8.0.6 (AF-PACKET passive IDS mode on victim interface `ens37`) |
+| **Suricata Engine** | Version 8.0.6 (AF-PACKET passive IDS mode on dual interfaces: external `ens33` & internal `ens37`) |
 | **Wazuh Agent** | `Suricata` |
 | **SSH Management** | Dedicated administrative key (`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5...<REDACTED_MANAGEMENT_KEY>... soc-analyst@management`) |
 
@@ -17,7 +17,7 @@
 The Security Gateway serves as the **single physical and logical network chokepoint** between the adversary on the external NAT subnet and the victim hosts on the isolated internal network:
 
 1. **Perimeter Layer 3 Router:** Forwards IP traffic between the external adversary segment (`192.168.232.0/24`, `ens33`) and the internal victim segment (`192.168.56.0/24`, `ens37`) using native Linux kernel forwarding.
-2. **Passive Network IDS Sensor:** Runs Suricata 8.0.6 in AF-PACKET promiscuous mode on interface `ens37`. It inspects all packets traversing the routing boundary and sniffing promiscuously on the victim segment without altering or delaying packet flow.
+2. **Passive Network IDS Sensor:** Runs Suricata 8.0.6 in AF-PACKET promiscuous mode across dual interfaces (`ens33` and `ens37`). It inspects all perimeter ingress packets arriving from the attacker on `ens33` as well as routed traffic and promiscuously sniffed intra-subnet frames on `ens37` without altering or delaying packet flow.
 3. **Site-to-Cloud WireGuard Client:** Establishes a persistent encrypted UDP tunnel (`wg0: 10.8.0.2/32`) back to Cloud VM1 (`10.8.0.1`), routing all victim endpoint telemetry to the Cloud Wazuh SIEM (`10.122.1.4`) and TheHive (`10.122.0.4`).
 4. **Log Telemetry Forwarder:** Runs a Wazuh Linux agent that monitors `/var/log/suricata/eve-alert.json` and forwards real-time network intrusion alerts to the cloud analysis engine.
 
@@ -182,10 +182,16 @@ rule-files:
 
 threshold-file: /etc/suricata/rules/threshold.config
 
-# AF-PACKET Passive Promiscuous Sniffing on Victim Interface
+# AF-PACKET Dual-Interface Promiscuous Sniffing (Perimeter Ingress & Victim Segment)
 af-packet:
-  - interface: ens37
+  - interface: ens33
     cluster-id: 99
+    cluster-type: cluster_flow
+    defrag: yes
+    use-mmsg: yes
+    ring-size: 2048
+  - interface: ens37
+    cluster-id: 98
     cluster-type: cluster_flow
     defrag: yes
     use-mmsg: yes
@@ -232,12 +238,12 @@ sudo systemctl enable suricata
 
 ---
 
-## 6. Capture Scope & Intra-Subnet Visibility
+## 6. Capture Scope & Dual-Interface Visibility
 
-Suricata listens on **`ens37`** using AF-PACKET promiscuous capture:
-- **Cross-Segment Traffic:** All routed traffic passing between Kali (`192.168.232.135`) and the victim network (`192.168.56.0/24`) is inspected.
-- **Intra-Segment Promiscuous Observation:** Because AF-PACKET enables promiscuous mode on VMware VMnet2, broadcast, multicast, and segment-level traffic directed toward or traversing the gateway interface can be observed (e.g., Kerberos TGS-REQ wire frames between DVWA and the Domain Controller in Stage 13).
-- **Unicast Blind Spot:** Direct Layer 2 host-to-host unicast traffic that does not touch the gateway interface cannot be guaranteed on the wire, making endpoint agents (Wazuh & Sysmon) the authoritative detection layer for lateral movement.
+Suricata listens on dual interfaces—**`ens33`** (external perimeter ingress) and **`ens37`** (internal victim segment)—using AF-PACKET promiscuous capture:
+- **Perimeter Ingress (`ens33`):** Captures incoming scans, exploits, and brute-force probes arriving from Kali (`192.168.232.135`), logging alerts with `in_iface: ens33` (e.g., Nmap SYN scans and OS detection probes in Stage 01).
+- **Cross-Segment & Intra-Subnet (`ens37`):** All routed traffic delivered into the victim network (`192.168.56.0/24`) is inspected. Furthermore, promiscuous mode on VMware VMnet2 allows broadcast, multicast, and segment-level traffic directed toward or traversing the gateway interface to be observed (e.g., Kerberos TGS-REQ wire frames between DVWA and the Domain Controller in Stage 13).
+- **Unicast Layer 2 Blind Spot:** Direct Layer 2 host-to-host unicast traffic that does not touch the gateway interface cannot be guaranteed on the wire, making endpoint agents (Wazuh & Sysmon) the authoritative detection layer for lateral movement.
 
 ---
 
