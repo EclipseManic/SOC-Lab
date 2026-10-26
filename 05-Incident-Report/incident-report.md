@@ -48,9 +48,9 @@ Inherent Offline Gaps (Zero Telemetry):  2  (10.0% - Stages 04, 11)
 Partial / Protocol Logging Gaps:         2  (10.0% - Stages 09, 12)
 Encrypted Transport Gap:                 1  (DG-19: Documented / Pivot Alerted)
 Rule Failures:                           0   (0.0%)
-Total Raw Alerts Exported in CSV:      9,567 rows (Wazuh-Raw-Alerts.csv)
-Filtered Incident Analysis Set:        808 rows (wazuh_alerts.csv)
-Correlated Incidents Created in Hive:   46 actionable alerts (thehive_alerts.json)
+Total Baseline Raw Alerts in OpenSearch: 9,567 rows (Wazuh-Raw-Alerts.csv)
+Analyst Curated Forensic Set:            808 rows (wazuh_alerts.csv - 11 Dashboard Filters)
+Live SOAR Incidents Created in TheHive:  46 actionable alerts (thehive_alerts.json - Level >= 8)
 Mean Time to Detect (MTTD):             < 15 seconds for online telemetry
 ```
 

@@ -26,7 +26,7 @@ The attacker starts outside the network on an isolated subnet. Every perimeter p
 | **03 — Detection Engineering** | [`03-Detection-Engineering/README.md`](03-Detection-Engineering/README.md) | Custom Wazuh detection rules (`local_rules.xml`), Suricata NIDS signatures, Sysmon/Auditd telemetry baselines, and the `thecustomhive` SQLite WAL SOAR daemon. |
 | **04 — Investigation** | [`04-Investigation/README.md`](04-Investigation/README.md) | SOC analyst triage notes for all 20 stages, raw-to-alert event correlations, and 3 comprehensive multi-stage TheHive incident cases. |
 | **05 — Incident Report** | [`05-Incident-Report/README.md`](05-Incident-Report/README.md) | Formal executive incident report, full chronological attack timeline, complete IOC tables, and remediation engineering backlog. |
-| **06 — Resources** | [`06-Resources/README.md`](06-Resources/README.md) | Raw telemetry CSVs (9,567 raw alerts), TheHive JSON export (46 alerts), automation scripts, and master campaign PDF blueprint. |
+| **06 — Resources** | [`06-Resources/README.md`](06-Resources/README.md) | Telemetry datasets (9,567 raw baseline alerts, 808 analyst-curated records, 46 TheHive incident cases), automation scripts, and master campaign PDF. |
 | **Master Index** | [`INDEX.md`](INDEX.md) | Master traceability matrix mapping every stage to MITRE ATT&CK techniques, detection rules, alert IDs, and raw evidence files. |
 
 ---
