@@ -17,6 +17,9 @@ This section documents the 20-stage adversary campaign executed against the lab 
 
 ## Campaign Structure & Cases
 
+[![Attack Simulation 20-Stage Kill Chain Roadmap](../06-Resources/Diagrams/Attack%20Simulation%2020-Stage%20Kill%20Chain%20Roadmap.png)](../06-Resources/Diagrams/Attack%20Simulation%2020-Stage%20Kill%20Chain%20Roadmap.png)
+*Figure 1: Full 20-stage attack simulation lifecycle mapped across the 3 investigation cases, showing detection statuses and tool vectors ([view full asset](../06-Resources/Diagrams/Attack%20Simulation%2020-Stage%20Kill%20Chain%20Roadmap.png)).*
+
 The 20 attack simulation stages are grouped into three distinct investigative cases:
 
 - **[Case 01 — Web Application Compromise & Local Escalation](../04-Investigation/Cases/case-01-web-compromise.md) (Stages 01–07):**

@@ -1,5 +1,8 @@
 # Consolidated Incident Timeline
 
+[![Consolidated Incident Response 74-Minute Timeline](../06-Resources/Diagrams/Consolidated%20Incident%20Response%2074-Minute%20Timeline.png)](../06-Resources/Diagrams/Consolidated%20Incident%20Response%2074-Minute%20Timeline.png)
+*Figure 1: Full chronological incident timeline spanning 74 minutes ($T_0$ to $T_0 + 74\text{m}$), correlating attacker milestones (top) against blue-team detection alerts across Suricata, Auditd, Wazuh, Sysmon, and TheHive (bottom) ([view full asset](../06-Resources/Diagrams/Consolidated%20Incident%20Response%2074-Minute%20Timeline.png)).*
+
 All timestamps represent elapsed simulation time from campaign initiation ($T_0$ = `11:40:09` UTC).
 
 | Elapsed Time | Stage | Phase | Telemetry Event | Source Sensor | Evidence Reference |

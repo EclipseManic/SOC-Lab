@@ -90,6 +90,9 @@ No single security tool can see everything. In this lab, four complementary dete
 
 To see how all these pieces fit together in real life, let's trace **Stage 05 (Web Shell Upload & Command Execution)** step-by-step from the attacker's keyboard to the analyst's screen:
 
+[![Life of an Alert End-to-End Walkthrough](../06-Resources/Diagrams/Life%20of%20an%20Alert%20End-to-End%20Walkthrough.png)](../06-Resources/Diagrams/Life%20of%20an%20Alert%20End-to-End%20Walkthrough.png)
+*Figure 2: End-to-end detection pipeline tracing Stage 05 web shell execution from adversary command execution across multi-sensor capture, WireGuard transit, Wazuh decoding, SQLite WAL buffering, to TheHive 5 incident case ([view full asset](../06-Resources/Diagrams/Life%20of%20an%20Alert%20End-to-End%20Walkthrough.png)).*
+
 ```
 [ Step 1: Attacker Action ]
 Attacker on Kali (192.168.232.135) uploads cmd.php to DVWA and runs: "id"
@@ -156,7 +159,7 @@ Here are the three biggest challenges we tackled:
 ### Challenge 2: The Webhook Bottleneck (Why Shuffle SOAR Was Replaced)
 
 [![Wazuh Log Ingestion to TheHive Flow](../06-Resources/Diagrams/Wazuh%20Log%20Ingestion%20to%20TheHive%20Flow.png)](../06-Resources/Diagrams/Wazuh%20Log%20Ingestion%20to%20TheHive%20Flow.png)
-*Figure 2: Multi-source log ingestion, decoders, and Level 8 threshold gate ([view full asset](../06-Resources/Diagrams/Wazuh%20Log%20Ingestion%20to%20TheHive%20Flow.png)).*
+*Figure 3: Multi-source log ingestion, decoders, and Level 8 threshold gate ([view full asset](../06-Resources/Diagrams/Wazuh%20Log%20Ingestion%20to%20TheHive%20Flow.png)).*
 
 - **The Problem:** We originally used [Shuffle SOAR](https://shuffler.io/) to receive alerts from Wazuh via webhooks and push them to TheHive. But when we simulated aggressive attacks (like Nikto web fuzzing or rapid Nmap port scans), Shuffle completely collapsed:
   1. *Dropped Packets:* Floods of 400 webhooks in 10 seconds overwhelmed Shuffle's HTTP listeners, silently dropping critical alerts.
@@ -236,6 +239,9 @@ Here is the complete traceability matrix mapping all 20 adversary stages across 
 ## 5. Telemetry Architecture: Live SOAR Ingestion vs. Analyst Dashboard Triage
 
 A critical architectural distinction in this SOC lab is understanding **how the numbers 9,567, 808, and 46 actually relate to each other**. They are **not** a single linear waterfall; rather, they represent **two distinct operational pathways** originating from the same baseline telemetry stream:
+
+[![SOC Telemetry Dual-Pathway Architecture](../06-Resources/Diagrams/SOC%20Telemetry%20Dual-Pathway%20Architecture.png)](../06-Resources/Diagrams/SOC%20Telemetry%20Dual-Pathway%20Architecture.png)
+*Figure 4: The dual-pathway telemetry architecture showing the central 9,567 raw alert stream splitting into real-time Level >= 8 SOAR case creation (46 TheHive cases) and post-simulation analyst dashboard triage (808 curated forensic records via 11 exclusion filters) ([view full asset](../06-Resources/Diagrams/SOC%20Telemetry%20Dual-Pathway%20Architecture.png)).*
 
 ```
                               [ Wazuh SIEM Telemetry Ingestion ]
