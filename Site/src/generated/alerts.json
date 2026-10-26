@@ -1,0 +1,881 @@
+{
+  "source": "06-Resources/Alerts/thehive_alerts.json",
+  "count": 46,
+  "timeToDetect": {
+    "unit": "milliseconds",
+    "verifiedAgainstTimestamps": true,
+    "min": 1357,
+    "max": 30736,
+    "median": 4573.5
+  },
+  "severityCounts": {
+    "MEDIUM": 41,
+    "HIGH": 4,
+    "CRITICAL": 1
+  },
+  "alerts": [
+    {
+      "id": "~41414704",
+      "sourceRef": "wzb-1834f3248e",
+      "title": "[1x] [DomainWin10] Logon activity: BACKDOOR @ local",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792328794825,
+      "newDate": 1792328797033,
+      "timeToDetectMs": 2208,
+      "tags": [
+        "T1098",
+        "account_changed",
+        "agent:DomainWin10",
+        "logon_group",
+        "stages:1",
+        "windows",
+        "windows_security"
+      ]
+    },
+    {
+      "id": "~475160",
+      "sourceRef": "wzb-d22fa8d83f",
+      "title": "[FANOUT x1] [Win10User] parent PID 3880",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792328058075,
+      "newDate": 1792328062736,
+      "timeToDetectMs": 4661,
+      "tags": [
+        "T1027",
+        "T1112",
+        "agent:Win10User",
+        "process_fanout",
+        "stages:1",
+        "sysmon",
+        "sysmon_eid1_detections",
+        "windows"
+      ]
+    },
+    {
+      "id": "~41386024",
+      "sourceRef": "wzb-15ffcdec4f",
+      "title": "[FANOUT x1] [Win10User] parent PID 1724",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792328052832,
+      "newDate": 1792328057719,
+      "timeToDetectMs": 4887,
+      "tags": [
+        "T1027",
+        "T1112",
+        "agent:Win10User",
+        "process_fanout",
+        "stages:1",
+        "sysmon",
+        "sysmon_eid1_detections",
+        "windows"
+      ]
+    },
+    {
+      "id": "~41381928",
+      "sourceRef": "wzb-7a4a134d1b",
+      "title": "[3x] [Suricata] Suricata: Alert - ET INFO NTLM Session Setup Request - Negotiate",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792328039926,
+      "newDate": 1792328046973,
+      "timeToDetectMs": 7047,
+      "tags": [
+        "activity_burst",
+        "agent:Suricata",
+        "ids",
+        "stages:3",
+        "suricata"
+      ]
+    },
+    {
+      "id": "~41451664",
+      "sourceRef": "wzb-1f43c1540f",
+      "title": "[FANOUT x9] [Win10User] parent PID 4008",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792328039627,
+      "newDate": 1792328041963,
+      "timeToDetectMs": 2336,
+      "tags": [
+        "T1047",
+        "agent:Win10User",
+        "local",
+        "process_fanout",
+        "shell_and_lolbin_all",
+        "stages:9"
+      ]
+    },
+    {
+      "id": "~41468000",
+      "sourceRef": "wzb-ddc9d1a730",
+      "title": "[FANOUT x1] [DomainWin10] parent PID 4980",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792327811673,
+      "newDate": 1792327817534,
+      "timeToDetectMs": 5861,
+      "tags": [
+        "T1027",
+        "T1112",
+        "agent:DomainWin10",
+        "process_fanout",
+        "stages:1",
+        "sysmon",
+        "sysmon_eid1_detections",
+        "windows"
+      ]
+    },
+    {
+      "id": "~41435280",
+      "sourceRef": "wzb-80288ff075",
+      "title": "[FANOUT x1] [DomainWin10] parent PID 6500",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792327805445,
+      "newDate": 1792327811931,
+      "timeToDetectMs": 6486,
+      "tags": [
+        "T1027",
+        "T1112",
+        "agent:DomainWin10",
+        "process_fanout",
+        "stages:1",
+        "sysmon",
+        "sysmon_eid1_detections",
+        "windows"
+      ]
+    },
+    {
+      "id": "~41431160",
+      "sourceRef": "wzb-71ef983ad8",
+      "title": "[FANOUT x9] [DomainWin10] parent PID 4432",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792327789673,
+      "newDate": 1792327791945,
+      "timeToDetectMs": 2272,
+      "tags": [
+        "T1047",
+        "agent:DomainWin10",
+        "local",
+        "process_fanout",
+        "shell_and_lolbin_all",
+        "stages:9"
+      ]
+    },
+    {
+      "id": "~462872",
+      "sourceRef": "wzb-8d45b2d236",
+      "title": "[2x] [DVWA] Logon activity: ROOT @ 192.168.232.135",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792327742462,
+      "newDate": 1792327746948,
+      "timeToDetectMs": 4486,
+      "tags": [
+        "T1021",
+        "T1078",
+        "agent:DVWA",
+        "authentication_success",
+        "local",
+        "logon_group",
+        "sshd_thehive2",
+        "stages:2"
+      ]
+    },
+    {
+      "id": "~41427088",
+      "sourceRef": "wzb-34f34a857c",
+      "title": "[6x] [DVWA] Logon activity: ROOT @ 192.168.232.135",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792327650437,
+      "newDate": 1792327652388,
+      "timeToDetectMs": 1951,
+      "tags": [
+        "T1021",
+        "T1078",
+        "agent:DVWA",
+        "authentication_success",
+        "local",
+        "logon_group",
+        "sshd_thehive2",
+        "stages:6"
+      ]
+    },
+    {
+      "id": "~82325536",
+      "sourceRef": "wzb-ed666653f7",
+      "title": "[FANOUT x3] [Win10User] parent PID 4008",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792327498677,
+      "newDate": 1792327501903,
+      "timeToDetectMs": 3226,
+      "tags": [
+        "T1047",
+        "agent:Win10User",
+        "local",
+        "process_fanout",
+        "shell_and_lolbin_all",
+        "stages:3"
+      ]
+    },
+    {
+      "id": "~41377840",
+      "sourceRef": "wzb-96e8d5856b",
+      "title": "[FANOUT x2] [DomainWin10] parent PID 4432",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792327438457,
+      "newDate": 1792327441917,
+      "timeToDetectMs": 3460,
+      "tags": [
+        "T1047",
+        "agent:DomainWin10",
+        "local",
+        "process_fanout",
+        "shell_and_lolbin_all",
+        "stages:2"
+      ]
+    },
+    {
+      "id": "~41369640",
+      "sourceRef": "wzb-084193beae",
+      "title": "[2x] [DomainWin10] Logon activity: BACKDOOR @ local",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792327168557,
+      "newDate": 1792327172206,
+      "timeToDetectMs": 3649,
+      "tags": [
+        "T1098",
+        "account_changed",
+        "agent:DomainWin10",
+        "logon_group",
+        "stages:2",
+        "windows",
+        "windows_security"
+      ]
+    },
+    {
+      "id": "~475192",
+      "sourceRef": "wzb-4125e4ac63",
+      "title": "[1x] [DomainWin10] Logon activity: DOMAIN ADMINS @ local",
+      "severity": 3,
+      "severityLabel": "HIGH",
+      "date": 1792327145274,
+      "newDate": 1792327151863,
+      "timeToDetectMs": 6589,
+      "tags": [
+        "T1484",
+        "agent:DomainWin10",
+        "group_changed",
+        "logon_group",
+        "stages:1",
+        "win_group_changed",
+        "windows",
+        "windows_security"
+      ]
+    },
+    {
+      "id": "~471096",
+      "sourceRef": "wzb-aa66cb916a",
+      "title": "[FANOUT x3] [DomainWin10] parent PID 4432",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792327145163,
+      "newDate": 1792327146873,
+      "timeToDetectMs": 1710,
+      "tags": [
+        "T1047",
+        "agent:DomainWin10",
+        "local",
+        "process_fanout",
+        "shell_and_lolbin_all",
+        "stages:3"
+      ]
+    },
+    {
+      "id": "~41451616",
+      "sourceRef": "wzb-5f5a18ce46",
+      "title": "[1x] [DomainWin10] Logon activity: ADMINISTRATORS @ local",
+      "severity": 3,
+      "severityLabel": "HIGH",
+      "date": 1792327107678,
+      "newDate": 1792327112143,
+      "timeToDetectMs": 4465,
+      "tags": [
+        "T1484",
+        "agent:DomainWin10",
+        "group_changed",
+        "logon_group",
+        "stages:1",
+        "win_group_changed",
+        "windows",
+        "windows_security"
+      ]
+    },
+    {
+      "id": "~82317344",
+      "sourceRef": "wzb-26b4d06a63",
+      "title": "[3x] [DomainWin10] Logon activity: BACKDOOR @ local",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792327102052,
+      "newDate": 1792327107122,
+      "timeToDetectMs": 5070,
+      "tags": [
+        "T1098",
+        "account_changed",
+        "adduser",
+        "agent:DomainWin10",
+        "logon_group",
+        "stages:3",
+        "windows",
+        "windows_security"
+      ]
+    },
+    {
+      "id": "~41414776",
+      "sourceRef": "wzb-299a007168",
+      "title": "[FANOUT x3] [DomainWin10] parent PID 4432",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792327101859,
+      "newDate": 1792327106863,
+      "timeToDetectMs": 5004,
+      "tags": [
+        "T1047",
+        "agent:DomainWin10",
+        "local",
+        "process_fanout",
+        "shell_and_lolbin_all",
+        "stages:3"
+      ]
+    },
+    {
+      "id": "~41373744",
+      "sourceRef": "wzb-c200f52606",
+      "title": "[FANOUT x2] [DomainWin10] parent PID 4432",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792327046134,
+      "newDate": 1792327051867,
+      "timeToDetectMs": 5733,
+      "tags": [
+        "T1047",
+        "agent:DomainWin10",
+        "local",
+        "process_fanout",
+        "shell_and_lolbin_all",
+        "stages:2"
+      ]
+    },
+    {
+      "id": "~434312",
+      "sourceRef": "wzb-ccff195e0c",
+      "title": "[FANOUT x2] [DomainWin10] parent PID 4432",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792327013488,
+      "newDate": 1792327016851,
+      "timeToDetectMs": 3363,
+      "tags": [
+        "T1047",
+        "agent:DomainWin10",
+        "local",
+        "process_fanout",
+        "shell_and_lolbin_all",
+        "stages:2"
+      ]
+    },
+    {
+      "id": "~41361448",
+      "sourceRef": "wzb-eb083a8537",
+      "title": "[FANOUT x2] [DomainWin10] parent PID 4432",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792326943753,
+      "newDate": 1792326946841,
+      "timeToDetectMs": 3088,
+      "tags": [
+        "T1047",
+        "agent:DomainWin10",
+        "local",
+        "process_fanout",
+        "shell_and_lolbin_all",
+        "stages:2"
+      ]
+    },
+    {
+      "id": "~430216",
+      "sourceRef": "wzb-b7f91cd3ab",
+      "title": "[FANOUT x2] [DomainWin10] parent PID 4432",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792326887130,
+      "newDate": 1792326891852,
+      "timeToDetectMs": 4722,
+      "tags": [
+        "T1047",
+        "agent:DomainWin10",
+        "local",
+        "process_fanout",
+        "shell_and_lolbin_all",
+        "stages:2"
+      ]
+    },
+    {
+      "id": "~41410680",
+      "sourceRef": "wzb-4174e3672e",
+      "title": "[2x] [DVWA] Logon activity: ROOT @ 192.168.232.135",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792326832204,
+      "newDate": 1792326837022,
+      "timeToDetectMs": 4818,
+      "tags": [
+        "T1021",
+        "T1078",
+        "agent:DVWA",
+        "authentication_success",
+        "local",
+        "logon_group",
+        "sshd_thehive2",
+        "stages:2"
+      ]
+    },
+    {
+      "id": "~41377896",
+      "sourceRef": "wzb-c1e2642eb2",
+      "title": "[1x] [Suricata] Suricata: Alert - ET EXPLOIT Possible GoldenPac Priv Esc in-use",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792326678217,
+      "newDate": 1792326681819,
+      "timeToDetectMs": 3602,
+      "tags": [
+        "activity_burst",
+        "agent:Suricata",
+        "ids",
+        "stages:1",
+        "suricata"
+      ]
+    },
+    {
+      "id": "~82305056",
+      "sourceRef": "wzb-1d2d7fb4b8",
+      "title": "[2x] [DVWA] Logon activity: ROOT @ 192.168.232.135",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792326662069,
+      "newDate": 1792326666845,
+      "timeToDetectMs": 4776,
+      "tags": [
+        "T1021",
+        "T1078",
+        "agent:DVWA",
+        "authentication_success",
+        "local",
+        "logon_group",
+        "sshd_thehive2",
+        "stages:2"
+      ]
+    },
+    {
+      "id": "~417928",
+      "sourceRef": "wzb-1c8dc0ab5d",
+      "title": "[2x] [DVWA] Logon activity: ROOT @ 192.168.232.135",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792325386786,
+      "newDate": 1792325392771,
+      "timeToDetectMs": 5985,
+      "tags": [
+        "T1021",
+        "T1078",
+        "agent:DVWA",
+        "authentication_success",
+        "local",
+        "logon_group",
+        "sshd_thehive2",
+        "stages:2"
+      ]
+    },
+    {
+      "id": "~82292768",
+      "sourceRef": "wzb-dbf3197ceb",
+      "title": "[4x] [DVWA] Logon activity: ROOT @ 192.168.232.135",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792325067655,
+      "newDate": 1792325072705,
+      "timeToDetectMs": 5050,
+      "tags": [
+        "T1021",
+        "T1078",
+        "agent:DVWA",
+        "authentication_success",
+        "local",
+        "logon_group",
+        "sshd_thehive2",
+        "stages:4"
+      ]
+    },
+    {
+      "id": "~41398392",
+      "sourceRef": "wzb-de91bad685",
+      "title": "[TOOL:unknown-scanner x14] [Suricata] 192.168.56.30",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792324936000,
+      "newDate": 1792324942638,
+      "timeToDetectMs": 6638,
+      "tags": [
+        "agent:Suricata",
+        "ids",
+        "src_ip:192.168.56.30",
+        "stages:14",
+        "suricata",
+        "tool:unknown-scanner",
+        "tool_campaign"
+      ]
+    },
+    {
+      "id": "~438296",
+      "sourceRef": "wzb-f87fab3eda",
+      "title": "[5x] [Suricata] Suricata: Alert - POSSBL SCAN SHELL M-SPLOIT TCP",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792324851133,
+      "newDate": 1792324857525,
+      "timeToDetectMs": 6392,
+      "tags": [
+        "activity_burst",
+        "agent:Suricata",
+        "ids",
+        "stages:5",
+        "suricata"
+      ]
+    },
+    {
+      "id": "~82284576",
+      "sourceRef": "wzb-3152e3ed59",
+      "title": "[TOOL:Nmap x9] [Suricata] 192.168.56.30",
+      "severity": 3,
+      "severityLabel": "HIGH",
+      "date": 1792324849137,
+      "newDate": 1792324851644,
+      "timeToDetectMs": 2507,
+      "tags": [
+        "agent:Suricata",
+        "ids",
+        "src_ip:192.168.56.30",
+        "stages:9",
+        "suricata",
+        "tool:Nmap",
+        "tool_campaign"
+      ]
+    },
+    {
+      "id": "~41357416",
+      "sourceRef": "wzb-1208f0ea54",
+      "title": "[2x] [DVWA] Logon activity: ROOT @ 192.168.232.135",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792324783531,
+      "newDate": 1792324787485,
+      "timeToDetectMs": 3954,
+      "tags": [
+        "T1021",
+        "T1078",
+        "agent:DVWA",
+        "authentication_success",
+        "local",
+        "logon_group",
+        "sshd_thehive2",
+        "stages:2"
+      ]
+    },
+    {
+      "id": "~421944",
+      "sourceRef": "wzb-81bb1f83f7",
+      "title": "[5x] [Suricata] Suricata: Alert - POSSBL SCAN SHELL M-SPLOIT TCP",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792324443272,
+      "newDate": 1792324446582,
+      "timeToDetectMs": 3310,
+      "tags": [
+        "activity_burst",
+        "agent:Suricata",
+        "ids",
+        "stages:5",
+        "suricata"
+      ]
+    },
+    {
+      "id": "~41386104",
+      "sourceRef": "wzb-ccae331b77",
+      "title": "[FANOUT x1] [DVWA] parent PID 17562",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792324443524,
+      "newDate": 1792324444881,
+      "timeToDetectMs": 1357,
+      "tags": [
+        "agent:DVWA",
+        "audit_process",
+        "blacklist_command",
+        "local",
+        "process_fanout",
+        "stages:1"
+      ]
+    },
+    {
+      "id": "~41357456",
+      "sourceRef": "wzb-e9a1797ac4",
+      "title": "[1x] [Suricata] Suricata: Alert - ET ATTACK_RESPONSE Output of id command from HTTP server",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792324318870,
+      "newDate": 1792324322369,
+      "timeToDetectMs": 3499,
+      "tags": [
+        "activity_burst",
+        "agent:Suricata",
+        "ids",
+        "stages:1",
+        "suricata"
+      ]
+    },
+    {
+      "id": "~421912",
+      "sourceRef": "wzb-61ed72e937",
+      "title": "[FANOUT x1] [DVWA] parent PID 17550",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792324313331,
+      "newDate": 1792324315493,
+      "timeToDetectMs": 2162,
+      "tags": [
+        "agent:DVWA",
+        "audit_process",
+        "blacklist_command",
+        "local",
+        "process_fanout",
+        "stages:1"
+      ]
+    },
+    {
+      "id": "~41341032",
+      "sourceRef": "wzb-6a22425401",
+      "title": "[22x] [Suricata] Suricata: [200] [192.168.232.135] [/login.php] [ET INFO User-Agent (python-requests) Inbound to Webserver]",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792324082658,
+      "newDate": 1792324086550,
+      "timeToDetectMs": 3892,
+      "tags": [
+        "activity_burst",
+        "agent:Suricata",
+        "ids",
+        "stages:22",
+        "suricata"
+      ]
+    },
+    {
+      "id": "~82268192",
+      "sourceRef": "wzb-df413d7c7e",
+      "title": "[4x] [Suricata] Suricata: Alert - GPL EXPLOIT unicode directory traversal attempt",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792323736334,
+      "newDate": 1792323767070,
+      "timeToDetectMs": 30736,
+      "tags": [
+        "activity_burst",
+        "agent:Suricata",
+        "ids",
+        "stages:4",
+        "suricata"
+      ]
+    },
+    {
+      "id": "~41328744",
+      "sourceRef": "wzb-8b2c36ea17",
+      "title": "[26x] [DVWA] Multiple XSS (Cross Site Scripting) attempts from same source ip.",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792323730623,
+      "newDate": 1792323741914,
+      "timeToDetectMs": 11291,
+      "tags": [
+        "T1059",
+        "accesslog",
+        "activity_burst",
+        "agent:DVWA",
+        "attack",
+        "stages:26",
+        "web"
+      ]
+    },
+    {
+      "id": "~41295912",
+      "sourceRef": "wzb-81becfcc8d",
+      "title": "[16x] [DVWA] Multiple common web attacks from same source ip.",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792323729215,
+      "newDate": 1792323736922,
+      "timeToDetectMs": 7707,
+      "tags": [
+        "T1055",
+        "T1083",
+        "accesslog",
+        "activity_burst",
+        "agent:DVWA",
+        "attack",
+        "stages:16",
+        "web"
+      ]
+    },
+    {
+      "id": "~364680",
+      "sourceRef": "wzb-10160d36c2",
+      "title": "[WATCHLIST x14: passwd] [DVWA] 192.168.232.135",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792323729303,
+      "newDate": 1792323735162,
+      "timeToDetectMs": 5859,
+      "tags": [
+        "T1055",
+        "T1083",
+        "accesslog",
+        "agent:DVWA",
+        "attack",
+        "stages:14",
+        "watchlist_group",
+        "web"
+      ]
+    },
+    {
+      "id": "~360584",
+      "sourceRef": "wzb-30ff03b872",
+      "title": "[5x] [DVWA] Shellshock attack detected",
+      "severity": 4,
+      "severityLabel": "CRITICAL",
+      "date": 1792323728647,
+      "newDate": 1792323731839,
+      "timeToDetectMs": 3192,
+      "tags": [
+        "T1068",
+        "T1190",
+        "accesslog",
+        "activity_burst",
+        "agent:DVWA",
+        "attack",
+        "stages:5",
+        "web"
+      ]
+    },
+    {
+      "id": "~356488",
+      "sourceRef": "wzb-6a39ab2a3d",
+      "title": "[1x] [Suricata] Suricata: High-volume HTTP 4xx burst from 192.168.232.135 - possible scan/enumeration (>100 in 60s)",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792323728071,
+      "newDate": 1792323731508,
+      "timeToDetectMs": 3437,
+      "tags": [
+        "activity_burst",
+        "agent:Suricata",
+        "ids",
+        "stages:1",
+        "suricata"
+      ]
+    },
+    {
+      "id": "~352392",
+      "sourceRef": "wzb-4de933ca95",
+      "title": "[2x] [DVWA] DVWA: Multiple 400 errors - [404] [192.168.232.135] [/udOIY0cZ.fhp]",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792323725124,
+      "newDate": 1792323726508,
+      "timeToDetectMs": 1384,
+      "tags": [
+        "T1595.002",
+        "accesslog",
+        "activity_burst",
+        "agent:DVWA",
+        "dvwa",
+        "recon",
+        "stages:2",
+        "web",
+        "web_scan"
+      ]
+    },
+    {
+      "id": "~41336952",
+      "sourceRef": "wzb-b8e41fa081",
+      "title": "[2x] [Suricata] Suricata: Alert - POSSBL SCAN SHELL M-SPLOIT TCP",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792323609913,
+      "newDate": 1792323620525,
+      "timeToDetectMs": 10612,
+      "tags": [
+        "activity_burst",
+        "agent:Suricata",
+        "ids",
+        "stages:2",
+        "suricata"
+      ]
+    },
+    {
+      "id": "~41304208",
+      "sourceRef": "wzb-e076a639a7",
+      "title": "[TOOL:unknown-scanner x17] [Suricata] 192.168.232.135",
+      "severity": 2,
+      "severityLabel": "MEDIUM",
+      "date": 1792323609913,
+      "newDate": 1792323616533,
+      "timeToDetectMs": 6620,
+      "tags": [
+        "agent:Suricata",
+        "ids",
+        "src_ip:192.168.232.135",
+        "stages:17",
+        "suricata",
+        "tool:unknown-scanner",
+        "tool_campaign"
+      ]
+    },
+    {
+      "id": "~41373792",
+      "sourceRef": "wzb-3a8045a03c",
+      "title": "[TOOL:Nmap x3] [Suricata] 192.168.232.135",
+      "severity": 3,
+      "severityLabel": "HIGH",
+      "date": 1792323609913,
+      "newDate": 1792323615129,
+      "timeToDetectMs": 5216,
+      "tags": [
+        "agent:Suricata",
+        "ids",
+        "src_ip:192.168.232.135",
+        "stages:3",
+        "suricata",
+        "tool:Nmap",
+        "tool_campaign"
+      ]
+    }
+  ]
+}

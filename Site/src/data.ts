@@ -1,3 +1,9 @@
+import generatedAlerts from "./generated/alerts.json";
+import generatedMetrics from "./generated/metrics.json";
+import generatedNetwork from "./generated/network.json";
+import generatedStages from "./generated/stages.json";
+import generatedTimeline from "./generated/timeline.json";
+
 export const repoUrl = "https://github.com/EclipseManic/SOC-Lab";
 export const repoBlob = `${repoUrl}/blob/main`;
 
@@ -63,7 +69,7 @@ export const phases: Record<
   },
 };
 
-export const stages: Stage[] = [
+const stageCopy: Stage[] = [
   {
     id: "01",
     slug: "recon",
@@ -586,6 +592,46 @@ export const stages: Stage[] = [
   },
 ];
 
+type GeneratedStage = {
+  id: string;
+  title: string;
+  techniqueId: string;
+  attackPath: string | null;
+  alertObserved: string;
+  ruleAlertId: string;
+  investigationPath: string | null;
+  caseLabel: string;
+  status: StageStatus;
+};
+
+const generatedStageById = new Map(
+  (generatedStages.stages as GeneratedStage[]).map((stage) => [stage.id, stage]),
+);
+
+export const stages: Stage[] = stageCopy.map((stage) => {
+  const generated = generatedStageById.get(stage.id);
+  if (!generated) return stage;
+
+  return {
+    ...stage,
+    title: generated.title,
+    techniqueId: generated.techniqueId,
+    status: generated.status,
+    caseLabel: generated.caseLabel,
+    attackPath: generated.attackPath ?? stage.attackPath,
+    investigationPath: generated.investigationPath ?? stage.investigationPath,
+    ruleId: generated.ruleAlertId || stage.ruleId,
+    alertRef: generated.alertObserved || stage.alertRef,
+  };
+});
+
+export const metrics = generatedMetrics;
+export const timeline = generatedTimeline;
+export const alerts = generatedAlerts;
+export const network = generatedNetwork;
+export const traceability = generatedStages.stages;
+export const reportDocumentStatuses = metrics.reportDocumentStatuses;
+
 export const chapters = [
   {
     n: "01",
@@ -763,6 +809,14 @@ export const reportDocs = [
   },
 ] as const;
 
+export const evidenceReel = [
+  { stageId: "01", attack: "/evidence/01.webp", alert: "/evidence/01-alert.webp", caption: "Recon starts as a packet pattern, then becomes an alert." },
+  { stageId: "03", attack: "/evidence/03.webp", alert: "/evidence/03-alert.webp", caption: "The SQL payload is visible on the wire and in the case record." },
+  { stageId: "07", attack: "/evidence/07.webp", alert: "/evidence/07-alert.webp", caption: "Privilege escalation leaves a PAM and audit trail." },
+  { stageId: "13", attack: "/evidence/13.webp", alert: "/evidence/13-alert.webp", caption: "Kerberoasting is a request, a ticket, and a rule ID." },
+  { stageId: "17", attack: "/evidence/17.webp", alert: "/evidence/17-alert.webp", caption: "A backdoor account lands in the domain logon record." },
+] as const;
+
 export const evidenceItems = [
   {
     label: "Raw Alert Exports",
@@ -832,7 +886,12 @@ export const statusLegend = [
 
 export const stageById = (id: string) => stages.find((stage) => stage.id === id);
 
-export const stageCount = stages.length;
+export const stageCount = metrics.stageCount;
+export const directDetectionCount = metrics.directDetectionCount;
+export const operationalAlertCount = metrics.operationalAlertCount;
+export const offlineGapCount = metrics.offlineGapCount;
+export const loggingGapCount = metrics.targetLoggingGapCount;
+export const ruleFailureCount = metrics.ruleFailureCount;
 export const untestedCount = stages.filter((stage) => stage.status === "Not tested").length;
-export const verifiedCount = stages.filter((stage) => stage.status === "Detected").length;
-export const gapCount = stages.filter((stage) => stage.status === "Detection gap" || stage.status === "Logging gap").length;
+export const verifiedCount = operationalAlertCount;
+export const gapCount = metrics.totalGapCount;

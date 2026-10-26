@@ -2,7 +2,7 @@
 
 The site at <https://soc-lab.eclipsemanic.me/> is a narrative front door to the repository. It is a six-act story: the lab, the build, the attack, the signal, the case, and the record.
 
-The site now covers all six acts: the lab, the build, the attack, the signal, the case, and the record. The attack ledger presents the 20 documented stages with ground-truth metrics (80% operational coverage / 70% direct target detection); the case and report chapters stay explicitly marked as draft.
+The site now covers all six acts: the lab, the build, the attack, the signal, the case, and the record. The truth layer is generated from the repository: 20 stages over 74 minutes, 14 direct-target detections (70.0%), 16 operational alerts (80.0%), 46 TheHive alerts, and 4 named gaps (offline 04/11; logging 09/12). The incident report metadata is `Final / Resolved`; the three investigation case files remain explicitly marked as draft.
 
 The Markdown, logs, cases, and report files are authoritative. This app is a reading layer over them.
 
@@ -39,24 +39,26 @@ npm run preview
 
 | Path | Purpose |
 |---|---|
-| `src/data.ts` | Stage, chapter, case, report, evidence, and status data |
-| `src/components/` | Page sections, navigation, handoffs, and UI primitives |
-| `src/components/story/` | Cold open, all six acts, boundary interlude, and story shell |
-| `src/context/lens-context.tsx` | Executive / Technical / Talent reading lens (legacy chapters) |
+| `src/data.ts` | Stage, chapter, case, report, evidence, status, and generated truth-layer data |
+| `src/components/story/` | Visual hero path, topology, playback, signal heatmap, case lanes, evidence reel, and record |
+| `src/components/ui/` | Small Radix/shadcn-style primitives used by the visual scenes |
 | `src/index.css` | Tailwind theme tokens, base styles, and shared utilities |
+| `scripts/build-data.mjs` | Parses authoritative Markdown/JSON sources into `src/generated/*.json` |
 | `scripts/check-data.mjs` | Content integrity checks |
-| `public/` | CNAME, robots.txt, preview image, and architecture asset |
+| `public/` | CNAME, robots.txt, preview image, and compressed evidence reel assets |
 | `dist/` | Generated production output; do not edit by hand |
 
 ## Content rules
 
-- Keep all 20 stages at `Not tested` until a rule fires for the right reason and the alert is actionable.
-- Keep `verifiedCount` derived from stage status; do not hardcode a detection count.
+- Keep the evidence vocabulary from `INDEX.md`: `Detected`, `Logging gap`, `Detection gap`, `Rule failure`, and `Not tested`.
+- Do not flatten the metrics: 14 direct-target detections (70.0%) and 16 operational alerts (80.0%) are different claims.
+- The two offline stages are 04 and 11; the two target logging gaps are 09 and 12.
+- Keep `verifiedCount` and the hero metrics derived from `src/generated/metrics.json`; do not hardcode a detection count.
 - Treat a missing artifact as a documented gap, not as proof.
 - Attack and alert screenshots are published as captured from the isolated lab.
-- Do not silently rewrite the architecture PNG. Its gateway label is `.1`; the authoritative network record says `.150`.
+- The authoritative gateway address is `192.168.56.150` from `01-Lab-Setup/README.md`. A stale `192.168.56.1` reference remains in `05-Incident-Report/incident-report.md`; the site uses `.150` and records the mismatch in generated data. The architecture PNG is kept for repository documentation and is not used as the site truth layer.
 - Record placeholders (`DG-01` through `DG-20`) stay reserved until validated evidence exists.
-- The report package is a draft. Confirmed facts, hypotheses, and recommended actions remain separate.
+- The incident report is marked `Final / Resolved`; the investigation case files remain `Draft, not yet validated`. Confirmed facts, hypotheses, and recommended actions remain separate.
 
 ## Deployment
 

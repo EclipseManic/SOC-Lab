@@ -108,6 +108,24 @@
   .dialog-content[data-state="open"] {
     animation: dialog-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
   }
+
+  .evidence-reel {
+    scrollbar-width: thin;
+    scrollbar-color: #233044 transparent;
+  }
+
+  .evidence-reel::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  .evidence-reel::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .evidence-reel::-webkit-scrollbar-thumb {
+    border: 0;
+    background: #233044;
+  }
 }
 
 @keyframes overlay-in {
