@@ -301,9 +301,9 @@ The repository provides two empirical alert export datasets in [`06-Resources/Al
 
 | Dataset File | Records | Scope & Content |
 |---|---|---|
-| [`Wazuh-Raw-Alerts.csv`](../../06-Resources/Alerts/Wazuh-Raw-Alerts.csv) | **9,567 rows** | Complete raw alert export across all agents (`DVWA`: 8,114, `Suricata`: 1,168, `DomainWin10`: 168, `Win10User`: 117). Contains raw rule descriptions, agent names, and JSON-encoded event objects in `full_log`. |
-| [`wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv) | **808 rows** | Filtered incident dataset capturing elevated alerts and triage events. |
-| [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json) | **46 alerts** | Actionable incident alerts created in TheHive 5 after correlation and aggregation by `thecustomhive`. |
+| [`Wazuh-Raw-Alerts.csv`](../../06-Resources/Alerts/Wazuh-Raw-Alerts.csv) | **9,567 rows** | Complete baseline raw alert export across all 4 agents (`DVWA`: 8,114, `Suricata`: 1,168, `DomainWin10`: 168, `Win10User`: 117) indexed in OpenSearch following detection rule evaluation. Contains raw rule descriptions, agent names, and JSON-encoded event objects in `full_log`. |
+| [`wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv) | **808 rows** | Analyst-curated forensic analysis dataset. Created by applying 11 OpenSearch `must_not` exclusion filters on the Wazuh Dashboard to strip 404 scan floods, SCA scans, and background services, isolating genuine attack steps for triage. |
+| [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json) | **46 alerts** | Actionable incident cases created LIVE during simulation execution directly from the raw stream via the Wazuh Level >= 8 integration gate and the `thecustomhive` two-tier correlation daemon. |
 
 ### CSV Structure
 Both CSV exports contain three core columns:
