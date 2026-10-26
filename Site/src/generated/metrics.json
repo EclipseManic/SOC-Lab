@@ -1,0 +1,54 @@
+{
+  "sources": {
+    "index": "INDEX.md",
+    "timeline": "05-Incident-Report/timeline.md",
+    "alerts": "06-Resources/Alerts/thehive_alerts.json",
+    "report": "05-Incident-Report/incident-report.md",
+    "reportReadme": "05-Incident-Report/README.md",
+    "labSetup": "01-Lab-Setup/README.md",
+    "preferredNetworkTopology": "01-Lab-Setup/network-topology.md"
+  },
+  "stageCount": 20,
+  "durationMinutes": 74,
+  "directDetectionCount": 14,
+  "directDetectionPercent": 70,
+  "operationalAlertCount": 16,
+  "operationalAlertPercent": 80,
+  "targetLoggingGapCount": 2,
+  "targetLoggingGapPercent": 10,
+  "offlineGapCount": 2,
+  "offlineGapPercent": 10,
+  "ruleFailureCount": 0,
+  "ruleFailurePercent": 0,
+  "totalGapCount": 4,
+  "theHiveAlertCount": 46,
+  "alertSeverityCounts": {
+    "MEDIUM": 41,
+    "HIGH": 4,
+    "CRITICAL": 1
+  },
+  "timeToDetect": {
+    "unit": "milliseconds",
+    "verifiedAgainstTimestamps": true,
+    "min": 1357,
+    "max": 30736,
+    "median": 4573.5
+  },
+  "reportStatus": "Final / Resolved",
+  "reportDocumentStatuses": {
+    "05-Incident-Report/incident-report.md": "Final / Resolved",
+    "05-Incident-Report/timeline.md": "Draft, not yet validated",
+    "05-Incident-Report/iocs.md": "Draft, not yet validated",
+    "05-Incident-Report/mitre-attack-mapping.md": "Draft, not yet validated",
+    "05-Incident-Report/response-actions.md": "Draft, not yet validated",
+    "05-Incident-Report/lessons-learned.md": "Draft, not yet validated"
+  },
+  "gateway": {
+    "internalAddress": "192.168.56.150",
+    "externalAddress": "192.168.232.162",
+    "authoritativeSource": "01-Lab-Setup/README.md",
+    "mismatches": [
+      "05-Incident-Report/incident-report.md references 192.168.56.1"
+    ]
+  }
+}

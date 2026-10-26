@@ -1,0 +1,10 @@
+{
+  "source": "01-Lab-Setup/README.md",
+  "authoritativeSource": "01-Lab-Setup/README.md",
+  "preferredSourceFound": false,
+  "externalAddress": "192.168.232.162",
+  "internalAddress": "192.168.56.150",
+  "mismatches": [
+    "05-Incident-Report/incident-report.md references 192.168.56.1"
+  ]
+}
