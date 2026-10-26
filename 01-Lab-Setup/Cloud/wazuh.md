@@ -340,7 +340,7 @@ sudo /var/ossec/bin/wazuh-logtest
 
 ## 7. Two-Tier Asynchronous TheHive Integration (`thecustomhive`)
 
-[![Wazuh–TheHive Neon Alert Pipeline](../../06-Resources/Diagrams/Wazuh–TheHive%20Neon%20Alert%20Pipeline.png)](../../06-Resources/Diagrams/Wazuh–TheHive%20Neon%20Alert%20Pipeline.png)
+[![Wazuh-TheHive Neon Alert Pipeline](../../06-Resources/Diagrams/Wazuh-TheHive%20Neon%20Alert%20Pipeline.png)](../../06-Resources/Diagrams/Wazuh-TheHive%20Neon%20Alert%20Pipeline.png)
 *Figure 2: Two-tier asynchronous alert correlation pipeline from Wazuh Manager Level ≥ 8 trigger into TheHive 5 case management.*
 
 ```

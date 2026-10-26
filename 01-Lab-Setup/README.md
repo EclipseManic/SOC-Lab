@@ -200,6 +200,69 @@ Understanding where security sensors have full visibility versus where blind spo
 
 ---
 
+## System Build Order & Phased Rollout Sequence
+
+To eliminate circular networking dependencies, broken agent registrations, or tunnel handshake failures, the environment must be provisioned in the following four-phase dependency order:
+
+```mermaid
+flowchart TD
+    subgraph Phase1["Phase 1: Cloud SOC Hub"]
+        P1A["VM1: TheHive & WireGuard (10.122.0.4)"] --> P1B["VM2: Wazuh SIEM (10.122.1.4)"]
+        P1B --> P1C["Establish VNet Peering & Test Ports (9000, 1514)"]
+    end
+
+    subgraph Phase2["Phase 2: Security Gateway"]
+        P2A["Gateway VM (Dual-NIC: .232.162 / .56.150)"] --> P2B["Configure iptables NAT & Kernel IP Forwarding"]
+        P2B --> P2C["Connect WireGuard Client (wg0: 10.8.0.2 -> 10.8.0.1)"]
+        P2C --> P2D["Start Suricata NIDS (AF-PACKET promiscuous on ens37)"]
+    end
+
+    subgraph Phase3["Phase 3: Victim Network Infrastructure"]
+        P3A["DVWA Web Server (192.168.56.30) -> Default GW .150"] --> P3B["Install Auditd netlink rule & Wazuh Agent"]
+        P3C["Domain Controller PC-DC (192.168.56.10) -> Promote AD DS (ad.lab)"] --> P3D["Configure SPN HANK_SHERMAN, Sysmon & Wazuh Agent"]
+        P3E["Domain Workstation WIN10 (192.168.56.20) -> Join ad.lab"] --> P3F["Install Sysmon & Wazuh Agent"]
+    end
+
+    subgraph Phase4["Phase 4: Adversary Platform"]
+        P4A["Kali Linux (192.168.232.135) -> Gateway 192.168.232.2"] --> P4B["Add Static Route: 192.168.56.0/24 via 192.168.232.162"]
+        P4C["Pre-stage Wordlists (rockyou) & BloodHound 4.x GUI"]
+    end
+
+    Phase1 --> Phase2 --> Phase3 --> Phase4
+```
+
+| Phase | System / Host | Step-by-Step Build Order & Critical Tasks |
+|:---:|---|---|
+| **Phase 1** | **Cloud SOC Core**<br>(VM1 & VM2) | 1. Deploy VM1 (`TheHive`, `10.122.0.4`): Install Cassandra, Elasticsearch, TheHive 5, Nginx Proxy Manager, and WireGuard server (`10.8.0.1`).<br>2. Deploy VM2 (`Wazuh SIEM`, `10.122.1.4`): Install Wazuh Manager, Indexer, and Dashboard.<br>3. Peer the cloud VNets; verify bidirectional ping between `10.122.0.4` and `10.122.1.4`.<br>4. Deploy `/var/ossec/integrations/custom-thehive` and enable `thehive-flush.service`. |
+| **Phase 2** | **Security Gateway**<br>(Suricata) | 1. Provision dual-homed Ubuntu VM: `ens33` (`192.168.232.162`, NAT) and `ens37` (`192.168.56.150`, Host-Only).<br>2. Enable IPv4 forwarding (`net.ipv4.ip_forward = 1`) and configure `iptables` NAT routing.<br>3. Install WireGuard client (`wg0`, `10.8.0.2`); verify encrypted handshake with `10.8.0.1`.<br>4. Configure Suricata 8.0.6 for AF-PACKET promiscuous capture on `ens37`; verify `eve-alert.json`.<br>5. Install Wazuh agent; forward Suricata alerts to Wazuh (`Rule 86601` elevation). |
+| **Phase 3** | **Victim Network**<br>(DVWA, DC, WIN10) | 1. **DVWA (`192.168.56.30`):** Set default gateway to `192.168.56.150`. Install Apache, PHP, MariaDB, and DVWA. Deploy Linux Auditd netlink rule (`-S execve -F uid=33 -k web_process_creation`). Configure passwordless sudo Python misconfiguration (`/etc/sudoers.d/dvwa`). Enroll Wazuh agent.<br>2. **PC-DC (`192.168.56.10`):** Install Windows Server 2022. Promote to Active Directory Domain Controller for `ad.lab`. Configure Kerberos SPN for service account `HANK_SHERMAN`. Deploy modular `sysmonconfig.xml` and Wazuh Windows Agent.<br>3. **WIN10 (`192.168.56.20`):** Install Windows 10 Enterprise. Set DNS to `192.168.56.10` and join `ad.lab`. Create local user `win10`. Install Sysmon and Wazuh Windows Agent. |
+| **Phase 4** | **Adversary Platform**<br>(Kali Linux) | 1. Deploy Kali Linux on `192.168.232.135/24` with default gateway `192.168.232.2`.<br>2. Add static route: `ip route add 192.168.56.0/24 via 192.168.232.162` (persist in `/etc/network/interfaces`).<br>3. Verify ICMP reachability to `192.168.56.30` and `192.168.56.10`.<br>4. Uncompress `/usr/share/wordlists/rockyou.txt` and prepare BloodHound 4.x GUI (`bloodhound-start`). |
+
+---
+
+## Hardware Resource Requirements & VM Sizing Matrix
+
+The laboratory requires a multi-threaded physical host (or split cloud hypervisor) capable of sustaining concurrent execution across all virtual machines:
+
+| System / Host | VM Role | OS / Platform | vCPU | RAM | Disk | Network Interfaces |
+|---|---|---|:---:|:---:|:---:|---|
+| **VM1 (Cloud Hub)** | TheHive 5 / WireGuard / NPM | Ubuntu 24.04 LTS | 4 vCPU | 16 GB | 64 GB SSD | `eth0` (`10.122.0.4/16`), `wg0` (`10.8.0.1/24`) |
+| **VM2 (Cloud SIEM)** | Wazuh Manager / OpenSearch | Ubuntu 24.04 LTS | 4 vCPU | 16 GB | 64 GB SSD | `eth0` (`10.122.1.4/16`) |
+| **Security Gateway** | Router & Suricata NIDS | Ubuntu 24.04 LTS | 2 vCPU | 4 GB | 32 GB SSD | `ens33` (`.232.162`), `ens37` (`.56.150`), `wg0` (`10.8.0.2`) |
+| **DVWA Server** | Web Target & Pivot Host | Ubuntu 24.04 LTS | 2 vCPU | 4 GB | 32 GB SSD | `ens33` (`192.168.56.30/24`) |
+| **Domain Controller** | AD DS & DNS Server | Windows Server 2022 | 2 vCPU | 6 GB | 60 GB SSD | `Ethernet0` (`192.168.56.10/24`) |
+| **Windows 10** | Domain Workstation | Windows 10 Enterprise | 2 vCPU | 4 GB | 50 GB SSD | `Ethernet0` (`192.168.56.20/24`) |
+| **Kali Linux** | Attacker Platform | Kali Linux 2024.x | 4 vCPU | 6 GB | 40 GB SSD | `eth0` (`192.168.232.135/24`) |
+| **TOTALS (Combined)** | **7 Dedicated VMs** | **Hybrid Cloud/Local** | **20 vCPU** | **56 GB RAM** | **342 GB SSD** | **4 Network Segments** |
+
+> [!TIP]
+> **Resource Optimization for Personal Hardware:**  
+> If deploying locally on a single physical workstation (e.g., 32 GB RAM / 8 CPU cores):  
+> - Run the two Cloud VMs (`VM1` and `VM2`) in Azure/AWS on free or low-cost credits.  
+> - Run the 5 local VMs (Gateway: 2GB, DVWA: 2GB, DC: 4GB, Win10: 4GB, Kali: 4GB = 16 GB RAM total) comfortably in VMware Workstation or VirtualBox on the host laptop.
+
+---
+
 ## Detailed Host Profiles & Technical Specifications
 
 Each host has a dedicated, reproducible build specification:

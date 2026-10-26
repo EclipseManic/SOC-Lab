@@ -71,7 +71,7 @@ curl -s -b "PHPSESSID=session_token; security=low" \
 
 | Source | Rule / Signature | Rule ID | TheHive alert / Reference | Severity |
 |---|---|---|---|---|
-| Suricata / Wazuh | `Suricata: [200] [192.168.232.135] [/vulnerabilities/sqli/?id=1%27+UNION+SELECT+user...] [ET WEB_SERVER SELECT USER SQL Injection Attempt in URI]` | 100600 / ET 2010937 | Alert 17 (TheHive) | Medium / High (Suricata: 1) |
+| Suricata / Wazuh | `Suricata: [200] [192.168.232.135] [/vulnerabilities/sqli/?id=1%27+UNION+SELECT+user...] [ET WEB_SERVER SELECT USER SQL Injection Attempt in URI]` | 100600 / ET 2010963 | Alert 3 (TheHive) | Medium / High (Suricata: 1) |
 | Suricata / Wazuh | `Suricata: [302] [192.168.232.135] [/] [ET SCAN WhatWeb Web Application Fingerprint Scanner Default User-Agent Detected]` | Wazuh Level 3 | `3.png` | Low (Level 3) |
 | DVWA / Wazuh | `DVWA: [200] [192.168.232.135] [/login.php]` | Wazuh Level 3 | `3.png` | Low (Level 3) |
 

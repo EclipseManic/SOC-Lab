@@ -41,7 +41,7 @@ The 20 attack simulation stages are grouped into three distinct investigative ca
 | **04** | [Hash Cracking](Stages/stage-04-hash-crack.md) | Case 01 | Hashcat mode 0 (MD5) | `T1110.002` | `10.png`, `11.png` | **Not Detected** | Offline Gap (`DG-04`) |
 | **05** | [Web Shell Upload](Stages/stage-05-webshell.md) | Case 01 | PHP web shell upload & RCE | `T1505.003` | `12.png`–`14.png` | **Detected** | Suricata / Wazuh |
 | **06** | [Reverse Shell](Stages/stage-06-reverse-shell.md) | Case 01 | Netcat listener + FIFO reverse shell | `T1059.004` | `15.png`–`17.png` | **Detected** | Wazuh / Suricata |
-| **07** | [Privilege Escalation](Stages/stage-07-privesc.md) | Case 01 | Sudo Python GTFOBins root escape | `T1068` | `17.png` | **Detected** | Wazuh |
+| **07** | [Privilege Escalation](Stages/stage-07-privesc.md) | Case 01 | Sudo Python GTFOBins root escape | `T1548.003` | `17.png` | **Detected** | Wazuh |
 | **08** | [SSH Persistence](Stages/stage-08-ssh-persistence.md) | Case 02 | Ed25519 `authorized_keys` backdoor | `T1098.004` | `18.png`–`20.png` | **Detected** | Wazuh FIM / Syscheck |
 | **09** | [Internal Discovery](Stages/stage-09-internal-discovery.md) | Case 02 | Dual NIC enum, Nmap pivot scans | `T1018` | `21.png`–`27.png` | **Detected** | Suricata / Wazuh |
 | **10** | [Responder Poisoning](Stages/stage-10-responder.md) | Case 02 | LLMNR/mDNS poisoning on `ens33` | `T1557.001` | `28.png`–`30.png` | **Detected** | Suricata / Wazuh |

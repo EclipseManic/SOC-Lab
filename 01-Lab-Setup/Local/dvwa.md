@@ -11,7 +11,7 @@
 | **Resources** | 2 vCPU · 4 GB RAM |
 | **Wazuh agent** | `DVWA` |
 | **Velociraptor** | Client v0.77.1 |
-| **SSH Management** | Host laptop key (`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5... manichand gupta@ManicLenovo`) |
+| **SSH Management** | Dedicated administrative key (`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5...<REDACTED_MANAGEMENT_KEY>... soc-analyst@management`) |
 
 ---
 
