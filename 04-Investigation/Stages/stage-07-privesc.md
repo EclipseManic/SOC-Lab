@@ -1,6 +1,6 @@
 # Investigation — Stage 07 — Privilege Escalation
 
-> **Status:** Completed  
+> **Status:** In Progress  
 > **Attack stage:** [Stage 07](../../02-Attack-Simulation/Stages/stage-07-privesc.md)  
 > **TheHive case:** [Web Application Compromise](../Cases/case-01-web-compromise.md)  
 

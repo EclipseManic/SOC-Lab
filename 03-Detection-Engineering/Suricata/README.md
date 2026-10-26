@@ -34,6 +34,7 @@ Analysis of the 9,567 raw alerts in [`06-Resources/Alerts/Wazuh-Raw-Alerts.csv`]
 | SID | Signature Message | Stage | Target Protocol | Detection Mechanism & TheHive Alert |
 |---|---|---|---|---|
 | `3400001` / `3400002` | `POSSBL PORT SCAN (NMAP -sS)` | 01 (Recon) & 09 (Internal Disc) | TCP SYN / Probe Flags | Inbound port sweep (`wzb-3a8045a03c`) and internal pivot sweep (`wzb-3152e3ed59`) |
+| `2018489` | `ET SCAN NMAP OS Detection Probe` | 01 (Recon) | UDP / Nmap Fingerprint | Inbound OS probe on `ens33` (`wzb-3a8045a03c`, ET Open) |
 | `2017515` | `ET INFO User-Agent (python-requests) Inbound to Webserver` | 02 (Brute Force) | HTTP User-Agent | Automated brute-force tool hitting `/login.php` (`wzb-6a22425401`, Rule 100600) |
 | `2010960` | `ET SCAN WhatWeb Web Application Fingerprint Scanner Default User-Agent Detected` | 01 / 02 (Recon) | HTTP User-Agent | Automated web discovery probe hitting `/` and `/login.php` (Row 9058 in raw CSV) |
 | `2010963` | `ET WEB_SERVER SELECT USER SQL Injection Attempt in URI` | 03 (SQLi) | HTTP URI | UNION SELECT SQL injection targeting `/vulnerabilities/sqli/` (Row 9108 in raw CSV) |
@@ -54,7 +55,7 @@ Analysis of the 9,567 raw alerts in [`06-Resources/Alerts/Wazuh-Raw-Alerts.csv`]
 
 In standard IP routing, traffic exchanged between hosts on the same Layer 2 subnet (`192.168.56.0/24`) is switched directly by the hypervisor virtual switch and does not traverse the router's IP routing stack. 
 
-However, Suricata is configured with **AF-PACKET promiscuous mode** on interface `ens37`. In VMware Workstation VMnet2, promiscuous mode allows the gateway virtual interface to receive broadcast, multicast, and unicast frames switched across the segment.
+While external attack traffic arrives across **`ens33`**, Suricata is additionally configured with **AF-PACKET promiscuous mode** on interface **`ens37`**. In VMware Workstation VMnet2, promiscuous mode allows the gateway virtual interface to receive broadcast, multicast, and unicast frames switched across the segment.
 
 As documented in [`06-Resources/Alerts/Wazuh-Raw-Alerts.csv`](../../06-Resources/Alerts/Wazuh-Raw-Alerts.csv), Suricata generated **14 victim-to-victim alerts** during the campaign:
 1. **Nmap Port Scans:** `192.168.56.30 -> 192.168.56.20` on ports 995, 111, 443 (SIDs `3400001` / `3400002`).

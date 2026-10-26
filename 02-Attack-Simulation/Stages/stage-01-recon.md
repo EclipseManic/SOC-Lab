@@ -75,7 +75,7 @@ gobuster dir -u http://192.168.56.30/ -w /usr/share/wordlists/dirb/common.txt -x
 
 | Source | Rule / Signature | Rule ID | TheHive alert / Reference | Severity |
 |---|---|---|---|---|
-| Suricata / Wazuh | `[TOOL:Nmap x3] [Suricata] 192.168.232.135` (`ET SCAN NMAP OS Detection Probe`, `POSSBL PORT SCAN (NMAP -sS)`) | 86601 / 3400002 | `wzb-3a8045a03c` | High (3) |
+| Suricata / Wazuh | `[TOOL:Nmap x3] [Suricata] 192.168.232.135` (`ET SCAN NMAP OS Detection Probe`, `POSSBL PORT SCAN (NMAP -sS)`) | 86601 / SID `2018489`, `3400001`, `3400002` | `wzb-3a8045a03c` | High (3) |
 | Suricata / Wazuh | `[TOOL:unknown-scanner x7] [Suricata] 192.168.232.135` (`ET SCAN Suspicious inbound to MySQL/MSSQL/PostgreSQL/SSH/VNC/RDP`) | 86601 / 2010937 | `wzb-e076a639a7` | Medium (2) |
 | Suricata / Wazuh | `[2x] [Suricata] Suricata: Alert - POSSBL SCAN SHELL M-SPLOIT TCP` | 86601 | `wzb-b8e41fa081` | Medium (2) |
 

@@ -1,6 +1,6 @@
 # Investigation — Stage 13 — Kerberoasting
 
-> **Status:** Completed  
+> **Status:** In Progress  
 > **Attack stage:** [Stage 13](../../02-Attack-Simulation/Stages/stage-13-kerberoasting.md)  
 > **TheHive case:** [Lateral Movement and Credential Access](../Cases/case-02-lateral-movement.md)  
 

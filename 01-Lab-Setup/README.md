@@ -72,7 +72,7 @@ Routing in this hybrid lab coordinates three distinct traffic paths: attacker tr
   ```text
   up ip route add 192.168.56.0/24 via 192.168.232.162 dev eth0
   ```
-- When Kali targets any internal host (`192.168.56.10`, `.20`, `.30`), its packets hit Suricata's external adapter (`192.168.232.162`), are routed across the kernel forwarding engine, are passively inspected by Suricata on `ens37`, and land directly on the victim machine.
+- When Kali targets any internal host (`192.168.56.10`, `.20`, `.30`), its packets hit Suricata's external adapter (`192.168.232.162`, inspected by Suricata on `ens33`), are routed across the kernel forwarding engine, are passively inspected by Suricata on `ens37`, and land directly on the victim machine.
 
 #### B. Victim Telemetry Flow (Default Gateway `.150` & WireGuard VPN)
 - Every host on the internal victim network (`192.168.56.0/24`) sets its default gateway to **`192.168.56.150`** (Suricata's internal adapter `ens37`).
@@ -105,7 +105,7 @@ The environment is cleanly divided into four zones:
 - **Subnets:** Dual-homed on `192.168.232.0/24` (`ens33: 192.168.232.162`) and `192.168.56.0/24` (`ens37: 192.168.56.150`).
 - **Core Functions:**
   - **Linux Router:** Kernel IP forwarding enabled (`sysctl net.ipv4.ip_forward=1`).
-  - **Perimeter NIDS:** Suricata 8.0.6 running passive AF-PACKET promiscuous capture on `ens37`.
+  - **Perimeter NIDS:** Suricata 8.0.6 running passive AF-PACKET promiscuous capture on dual interfaces (`ens33` external ingress and `ens37` internal victim).
   - **VPN Client:** WireGuard client interface `wg0` (`10.8.0.2/32`) maintaining the encrypted link to the cloud hub.
   - **Log Forwarder:** Wazuh Agent reading and shipping `eve-alert.json` to the cloud Wazuh Manager.
 
@@ -146,8 +146,8 @@ The entire detection pipeline operates in 7 clean steps:
 | Device / Network | IP Address / Range | Subnet / Interface | Purpose & Roles |
 |---|---|---|---|
 | **Kali Linux** | `192.168.232.135/24` | VMnet8 (NAT) / `eth0` | Attacker workstation; default route via `.2`, static route to `.56.0/24` |
-| **Security Gateway (NAT)** | `192.168.232.162/24` | VMnet8 / `ens33` | External gateway interface receiving Kali attack traffic |
-| **Security Gateway (Internal)** | `192.168.56.150/24` | VMnet2 / `ens37` | Default gateway for victim network; Suricata AF-PACKET sensor |
+| **Security Gateway (NAT)** | `192.168.232.162/24` | VMnet8 / `ens33` | External gateway interface receiving Kali attack traffic; Suricata AF-PACKET perimeter ingress sniffing |
+| **Security Gateway (Internal)** | `192.168.56.150/24` | VMnet2 / `ens37` | Default gateway for victim network; Suricata AF-PACKET victim sniffing |
 | **Domain Controller** | `192.168.56.10/24` | VMnet2 / `Ethernet0` | Windows Server 2022: AD DS, DNS, Kerberos KDC, Sysmon, Wazuh Agent |
 | **Windows 10 Workstation** | `192.168.56.20/24` | VMnet2 / `Ethernet0` | Domain-joined client workstation: Sysmon, Wazuh Agent |
 | **DVWA Client** | `192.168.56.30/24` | VMnet2 / `ens33` | Ubuntu 24.04: Vulnerable web app + pivot host; Auditd, `bashcmd`, Wazuh |

@@ -1,6 +1,6 @@
 # Investigation — Stage 02 — Brute Force
 
-> **Status:** Completed  
+> **Status:** In Progress  
 > **Attack stage:** [Stage 02](../../02-Attack-Simulation/Stages/stage-02-bruteforce.md)  
 > **TheHive case:** [Web Application Compromise](../Cases/case-01-web-compromise.md)  
 

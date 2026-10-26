@@ -63,4 +63,4 @@ This gives stage-level traceability without fragmenting one incident into twenty
 
 ## Status
 
-All 20 stage investigation notes and 3 comprehensive case records are fully documented with authentic telemetry IDs, verified triage verdicts, and empirical evidence pointers linking directly to exported alert logs and screenshots.
+**In Progress (Peer Review & Triage Validation):** The 20 stage investigation notes and 3 comprehensive case records are active incident analysis drafts compiled from empirical telemetry. They are actively maintained under peer review to continuously refine correlation notes, query parameters, and artifact links.
