@@ -1,6 +1,6 @@
 # Investigation — Stage 12 — BloodHound AD Recon
 
-> **Status:** In Progress  
+> **Status:** Draft, not yet validated  
 > **Attack stage:** [Stage 12](../../02-Attack-Simulation/Stages/stage-12-bloodhound.md)  
 > **TheHive case:** [Lateral Movement and Credential Access](../Cases/case-02-lateral-movement.md)  
 

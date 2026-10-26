@@ -369,7 +369,7 @@ sudo -u www-data sudo -l
 
 | Source | File / Channel | What it captures |
 |--------|----------------|-----------------|
-| **Apache Access / Error** | `/var/log/apache2/*.log` | Inbound HTTP scans (Nikto), Hydra brute force, SQL injection, webshell requests |
+| **Apache Access / Error** | `/var/log/apache2/*.log` | Inbound HTTP scans (Nikto), Python brute force (`dvwa_bruteforce.py`), SQL injection, webshell requests |
 | **Auditd Syscall Log** | `/var/log/audit/audit.log` | `execve` calls by `www-data` (Rule 100214), SUID changes, `/etc/passwd` modifications |
 | **Bashcmd Log** | `/var/log/bashcmd.log` | Interactive command executions (`whoami`, `Responder.py`, `impacket`) via custom decoder |
 | **Auth Log** | `/var/log/auth.log` | SSH key logins, sudo elevation (`sudo python3`), PAM authentication failures |

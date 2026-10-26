@@ -205,12 +205,12 @@ Here is the complete traceability matrix mapping all 20 adversary stages across 
 | Stage | Technique | What the Attacker Did | Sensor That Caught It | Active Rule / SID | TheHive Verdict |
 |:---:|---|---|---|---|:---:|
 | **01** | Reconnaissance (`T1595.001`) | Nmap OS detection & port sweeps from Kali | Suricata NIDS | SID `3400002` / Wazuh `86601` | **Detected** (`wzb-3a8045a03c`) |
-| **02** | Web Brute Force (`T1110.001`) | Hydra HTTP password flood on `/login.php` | Apache Web Access | Wazuh `31153`, `100410` | **Detected** (`wzb-81becfcc8d`) |
+| **02** | Web Brute Force (`T1110.001`) | Automated Python credential brute force on `/login.php` | Apache Web Access | Wazuh `31153`, `100410` | **Detected** (`wzb-81becfcc8d`) |
 | **03** | SQL Injection (`T1190`) | UNION SELECT payload extracting users table | Suricata NIDS | SID `2010963` / Wazuh `31106` | **Detected** (CSV Row 9108) |
 | **04** | Hash Cracking (`T1110.002`) | Hashcat MD5 password cracking on Kali | *Offline (Kali GPU)* | *None (Zero victim packets)* | **Detection Gap** (Inherent) |
 | **05** | Web Shell (`T1505.003`) | Uploaded PHP backdoor and executed `id` | Linux Auditd & NIDS | SID `2019284` / Auditd `execve` | **Detected** (`wzb-e9a1797ac4`) |
 | **06** | Reverse Shell (`T1059.004`) | Interactive reverse shell to Kali port 4444 | Suricata & Auditd | SID `3400020` / Wazuh `100199` | **Detected** (`wzb-ccae331b77`) |
-| **07** | Privilege Escalation (`T1548.003`)| Sudo Python GTFOBins root escape | Linux PAM / Auditd | Wazuh `5402` / SUID bash | **Detected** (12x PAM alerts) |
+| **07** | Privilege Escalation (`T1548.003`)| Sudo Python GTFOBins root escape | Linux PAM / Auditd | Wazuh `5402` (PAM sudo root) | **Detected** (12x PAM alerts) |
 
 ### Case 02: Pivot, Credential Access & Active Directory Escalation (Stages 08–14)
 | Stage | Technique | What the Attacker Did | Sensor That Caught It | Active Rule / SID | TheHive Verdict |

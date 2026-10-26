@@ -244,6 +244,7 @@ Suricata listens on dual interfaces—**`ens33`** (external perimeter ingress) a
 - **Perimeter Ingress (`ens33`):** Captures incoming scans, exploits, and brute-force probes arriving from Kali (`192.168.232.135`), logging alerts with `in_iface: ens33` (e.g., Nmap SYN scans and OS detection probes in Stage 01).
 - **Cross-Segment & Intra-Subnet (`ens37`):** All routed traffic delivered into the victim network (`192.168.56.0/24`) is inspected. Furthermore, promiscuous mode on VMware VMnet2 allows broadcast, multicast, and segment-level traffic directed toward or traversing the gateway interface to be observed (e.g., Kerberos TGS-REQ wire frames between DVWA and the Domain Controller in Stage 13).
 - **Unicast Layer 2 Blind Spot:** Direct Layer 2 host-to-host unicast traffic that does not touch the gateway interface cannot be guaranteed on the wire, making endpoint agents (Wazuh & Sysmon) the authoritative detection layer for lateral movement.
+- **Dual-Interface Inspection Accounting:** Because both `ens33` and `ens37` are monitored, routed packets crossing the gateway are evaluated upon ingress and again upon egress, producing separate alert records in raw logs (`in_iface: ens33` and `in_iface: ens37`). Operational incident metrics in TheHive are de-duplicated by the correlation pipeline (`custom-thehive`) to ensure cases represent discrete attack actions rather than double-counted packets.
 
 ---
 

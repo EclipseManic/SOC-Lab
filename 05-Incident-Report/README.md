@@ -19,4 +19,4 @@ This section documents the formal Incident Response documentation for the comple
 
 ## Verification Status
 
-**In Progress (Post-Incident Review & Draft Hardening):** The reports in this directory represent active post-incident deliverables compiled from the 20-stage simulation telemetry. They remain in progress under structured peer review to validate remediation recommendations and root cause findings against exported alert sets.
+**Draft, not yet validated:** The reports in this directory represent active post-incident deliverables compiled from the 20-stage simulation telemetry, pending formal verification of remediation recommendations and root cause findings against exported alert sets.

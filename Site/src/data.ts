@@ -99,13 +99,13 @@ export const stages: Stage[] = [
     technique: "Password Guessing",
     techniqueId: "T1110.001",
     plain:
-      "The attacker automates credential guessing with Hydra and web directory fuzzing with Nikto against DVWA.",
+      "The attacker automates credential guessing with a custom Python script and web directory fuzzing with Nikto against DVWA.",
     attacker:
       "Sends high-frequency HTTP POST requests with wordlists to the DVWA login form until finding admin/password.",
     defender:
       "Wazuh Apache access log decoder flags repeated 400 errors (Rule 31151), multi-vector web attacks (Rule 31153), and Shellshock scanner signatures (Rule 31168).",
     evidence:
-      "Hydra terminal success, Apache access.log POST bursts, and TheHive alert wzb-81becfcc8d.",
+      "Python brute-force script terminal success, Apache access.log POST bursts, and TheHive alert wzb-81becfcc8d.",
     telemetry: "Web server access logs",
     gap: "DG-02",
     status: "Detected",
@@ -231,7 +231,7 @@ export const stages: Stage[] = [
     plain:
       "The attacker escalates from service account `www-data` to `root` on DVWA using a misconfigured sudo privilege (`sudo python3`).",
     attacker:
-      "Spawns an interactive root shell via `sudo python3 -c 'import pty;pty.spawn(\"/bin/bash\")'` and establishes SUID bash.",
+      "Spawns an interactive root shell via `sudo python3 -c 'import os;os.system(\"/bin/bash\")'` using GTFOBins sudoers misconfiguration.",
     defender:
       "Linux PAM authentication logs captured by Wazuh Rule 5402 showing sudo execution by service user www-data.",
     evidence:

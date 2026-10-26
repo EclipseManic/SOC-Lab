@@ -63,4 +63,4 @@ This gives stage-level traceability without fragmenting one incident into twenty
 
 ## Status
 
-**In Progress (Peer Review & Triage Validation):** The 20 stage investigation notes and 3 comprehensive case records are active incident analysis drafts compiled from empirical telemetry. They are actively maintained under peer review to continuously refine correlation notes, query parameters, and artifact links.
+**Draft, not yet validated:** The 20 stage investigation notes and 3 comprehensive case records are active incident analysis drafts compiled from empirical telemetry. They are actively maintained to validate correlation notes, query parameters, and artifact links.

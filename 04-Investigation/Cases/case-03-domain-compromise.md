@@ -1,6 +1,6 @@
 # Case 03 — Domain Compromise and Impact
 
-> **Status:** Closed (Resolved)  
+> **Status:** Draft, not yet validated  
 > **TheHive case ID:** `CAS-003-DOMIMP`  
 > **Severity:** Critical  
 > **TLP / PAP:** `TLP:AMBER / PAP:AMBER`  

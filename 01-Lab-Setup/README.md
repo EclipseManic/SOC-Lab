@@ -58,7 +58,7 @@ To simulate an authentic enterprise boundary where the attacker and victims resi
 #### Why Passive IDS Instead of Active Inline Blocking?
 Security teams often debate whether to run an inline IPS (which actively drops or resets suspicious packets) or a passive IDS (which sniffs and alerts without interfering).
 - **The problem:** Running Suricata inline in IPS mode (using NFQUEUE or bridge filtering) can introduce packet jitter, reset TCP handshakes during aggressive Nmap scans, or drop payload fragments during web exploits. That would break red-team tools artificially halfway through and prevent testing multi-stage lateral movement.
-- **How we fixed it:** The gateway acts as an active Layer 3 router (`net.ipv4.ip_forward = 1`) that routes packets cleanly between segments. Suricata 8.0.6 runs in **passive AF-PACKET promiscuous mode** sniffing interface `ens37`.
+- **How we fixed it:** The gateway acts as an active Layer 3 router (`net.ipv4.ip_forward = 1`) that routes packets cleanly between segments. Suricata 8.0.6 runs in **passive AF-PACKET mode** sniffing across dual interfaces (`ens33` external ingress and `ens37` internal victim).
 - **The payoff:** Attack traffic reaches victims with zero packet distortion, exactly like a genuine intrusion, while Suricata passively inspects the wire and generates rich network alerts (`eve-alert.json`).
 
 ### 4. How Traffic Routes & Preserving Real Victim IPs (No NAT on the Tunnel)
@@ -189,7 +189,7 @@ Understanding where security sensors have full visibility versus where blind spo
 
 | Component | Host | Deployment Method | Role & Operational Function |
 |---|---|---|---|
-| **Suricata 8.0.6** | Suricata Gateway | Native package (`ppa:oisf/suricata-stable`) | Passive IDS engine with AF-PACKET capture on `ens37` |
+| **Suricata 8.0.6** | Suricata Gateway | Native package (`ppa:oisf/suricata-stable`) | Passive IDS engine with dual AF-PACKET capture on `ens33` & `ens37` |
 | **Wazuh Manager 4.x** | Wazuh SIEM VM | Native package | Analysis engine, decoders, rule matching, alerts log |
 | **thecustomhive** | Wazuh SIEM VM | Native Python script + systemd unit | Durable SQLite ingestion queue & async flush daemon |
 | **TheHive 5.x** | TheHive Hub VM | Native Debian package | Security incident response and case management |
@@ -214,7 +214,7 @@ flowchart TD
     subgraph Phase2["Phase 2: Security Gateway"]
         P2A["Gateway VM (Dual-NIC: .232.162 / .56.150)"] --> P2B["Configure iptables NAT & Kernel IP Forwarding"]
         P2B --> P2C["Connect WireGuard Client (wg0: 10.8.0.2 -> 10.8.0.1)"]
-        P2C --> P2D["Start Suricata NIDS (AF-PACKET promiscuous on ens37)"]
+        P2C --> P2D["Start Suricata NIDS (dual AF-PACKET capture on ens33 & ens37)"]
     end
 
     subgraph Phase3["Phase 3: Victim Network Infrastructure"]
@@ -234,7 +234,7 @@ flowchart TD
 | Phase | System / Host | Step-by-Step Build Order & Critical Tasks |
 |:---:|---|---|
 | **Phase 1** | **Cloud SOC Core**<br>(VM1 & VM2) | 1. Deploy VM1 (`TheHive`, `10.122.0.4`): Install Cassandra, Elasticsearch, TheHive 5, Nginx Proxy Manager, and WireGuard server (`10.8.0.1`).<br>2. Deploy VM2 (`Wazuh SIEM`, `10.122.1.4`): Install Wazuh Manager, Indexer, and Dashboard.<br>3. Peer the cloud VNets; verify bidirectional ping between `10.122.0.4` and `10.122.1.4`.<br>4. Deploy `/var/ossec/integrations/custom-thehive` and enable `thehive-flush.service`. |
-| **Phase 2** | **Security Gateway**<br>(Suricata) | 1. Provision dual-homed Ubuntu VM: `ens33` (`192.168.232.162`, NAT) and `ens37` (`192.168.56.150`, Host-Only).<br>2. Enable IPv4 forwarding (`net.ipv4.ip_forward = 1`) and configure `iptables` NAT routing.<br>3. Install WireGuard client (`wg0`, `10.8.0.2`); verify encrypted handshake with `10.8.0.1`.<br>4. Configure Suricata 8.0.6 for AF-PACKET promiscuous capture on `ens37`; verify `eve-alert.json`.<br>5. Install Wazuh agent; forward Suricata alerts to Wazuh (`Rule 86601` elevation). |
+| **Phase 2** | **Security Gateway**<br>(Suricata) | 1. Provision dual-homed Ubuntu VM: `ens33` (`192.168.232.162`, NAT) and `ens37` (`192.168.56.150`, Host-Only).<br>2. Enable IPv4 forwarding (`net.ipv4.ip_forward = 1`) and configure `iptables` NAT routing.<br>3. Install WireGuard client (`wg0`, `10.8.0.2`); verify encrypted handshake with `10.8.0.1`.<br>4. Configure Suricata 8.0.6 for dual AF-PACKET capture on `ens33` and `ens37`; verify `eve-alert.json`.<br>5. Install Wazuh agent; forward Suricata alerts to Wazuh (`Rule 86601` elevation). |
 | **Phase 3** | **Victim Network**<br>(DVWA, DC, WIN10) | 1. **DVWA (`192.168.56.30`):** Set default gateway to `192.168.56.150`. Install Apache, PHP, MariaDB, and DVWA. Deploy Linux Auditd netlink rule (`-S execve -F uid=33 -k web_process_creation`). Configure passwordless sudo Python misconfiguration (`/etc/sudoers.d/dvwa`). Enroll Wazuh agent.<br>2. **PC-DC (`192.168.56.10`):** Install Windows Server 2022. Promote to Active Directory Domain Controller for `ad.lab`. Configure Kerberos SPN for service account `HANK_SHERMAN`. Deploy modular `sysmonconfig.xml` and Wazuh Windows Agent.<br>3. **WIN10 (`192.168.56.20`):** Install Windows 10 Enterprise. Set DNS to `192.168.56.10` and join `ad.lab`. Create local user `win10`. Install Sysmon and Wazuh Windows Agent. |
 | **Phase 4** | **Adversary Platform**<br>(Kali Linux) | 1. Deploy Kali Linux on `192.168.232.135/24` with default gateway `192.168.232.2`.<br>2. Add static route: `ip route add 192.168.56.0/24 via 192.168.232.162` (persist in `/etc/network/interfaces`).<br>3. Verify ICMP reachability to `192.168.56.30` and `192.168.56.10`.<br>4. Uncompress `/usr/share/wordlists/rockyou.txt` and prepare BloodHound 4.x GUI (`bloodhound-start`). |
 

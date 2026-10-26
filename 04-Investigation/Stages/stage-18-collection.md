@@ -1,6 +1,6 @@
 # Investigation — Stage 18 — Data Collection
 
-> **Status:** In Progress  
+> **Status:** Draft, not yet validated  
 > **Attack stage:** [Stage 18](../../02-Attack-Simulation/Stages/stage-18-collection.md)  
 > **TheHive case:** [Domain Compromise and Impact](../Cases/case-03-domain-compromise.md)  
 

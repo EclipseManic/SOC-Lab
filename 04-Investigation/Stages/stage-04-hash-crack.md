@@ -1,6 +1,6 @@
 # Investigation — Stage 04 — Hash Cracking
 
-> **Status:** In Progress  
+> **Status:** Draft, not yet validated  
 > **Attack stage:** [Stage 04](../../02-Attack-Simulation/Stages/stage-04-hash-crack.md)  
 > **TheHive case:** [Web Application Compromise](../Cases/case-01-web-compromise.md)  
 

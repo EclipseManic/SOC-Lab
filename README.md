@@ -24,8 +24,8 @@ The attacker starts outside the network on an isolated subnet. Every perimeter p
 | **01 — Lab Setup** | [`01-Lab-Setup/README.md`](01-Lab-Setup/README.md) | Complete hybrid cloud architecture, network segmentation, WireGuard VPN configuration, and reproducible host build profiles for all 6 systems. |
 | **02 — Attack Simulation** | [`02-Attack-Simulation/README.md`](02-Attack-Simulation/README.md) | The 20-stage red-team playbook with exact terminal commands, execution tradecraft, and 62 attacker-side terminal proof screenshots. |
 | **03 — Detection Engineering** | [`03-Detection-Engineering/README.md`](03-Detection-Engineering/README.md) | Custom Wazuh detection rules (`local_rules.xml`), Suricata NIDS signatures, Sysmon/Auditd telemetry baselines, and the `thecustomhive` SQLite WAL SOAR daemon. |
-| **04 — Investigation** | [`04-Investigation/README.md`](04-Investigation/README.md) | **In Progress (Active Analyst Review):** SOC analyst triage notes for all 20 stages, raw-to-alert event correlations, and 3 comprehensive multi-stage TheHive incident cases. |
-| **05 — Incident Report** | [`05-Incident-Report/README.md`](05-Incident-Report/README.md) | **In Progress (Post-Incident Draft Hardening):** Formal executive incident report, full chronological attack timeline, complete IOC tables, and remediation engineering backlog. |
+| **04 — Investigation** | [`04-Investigation/README.md`](04-Investigation/README.md) | **Draft, not yet validated:** SOC analyst triage notes for all 20 stages, raw-to-alert event correlations, and 3 comprehensive multi-stage TheHive incident cases. |
+| **05 — Incident Report** | [`05-Incident-Report/README.md`](05-Incident-Report/README.md) | **Draft, not yet validated:** Formal executive incident report, full chronological attack timeline, complete IOC tables, and remediation engineering backlog. |
 | **06 — Resources** | [`06-Resources/README.md`](06-Resources/README.md) | Telemetry datasets (9,567 raw baseline alerts, 808 analyst-curated records, 46 TheHive incident cases), automation scripts, and master campaign PDF. |
 | **Master Index** | [`INDEX.md`](INDEX.md) | Master traceability matrix mapping every stage to MITRE ATT&CK techniques, detection rules, alert IDs, and raw evidence files. |
 
@@ -92,12 +92,12 @@ While the adversary advanced through these three acts, the defensive stack opera
 ## How to Read This Repo
 
 - **5 minutes:** Read this page, review the result numbers, and scan the 20-stage attack table above.
-- **30 minutes:** Read five standout stage investigations comparing attack tradecraft against the raw telemetry:
-  - [Stage 03 — SQL Injection](04-Investigation/Stages/stage-03-sqli.md) (Web application exploitation: UNION SELECT database dump & perimeter NIDS alert)
-  - [Stage 07 — Privilege Escalation](04-Investigation/Stages/stage-07-privesc.md) (Linux host compromise: SUID binary abuse & Auditd syscall tracking)
-  - [Stage 10 — Responder Poisoning](04-Investigation/Stages/stage-10-responder.md) (Network MitM: Link-local broadcast poisoning & NTLMv2 hash interception)
-  - [Stage 13 — Kerberoasting](04-Investigation/Stages/stage-13-kerberoasting.md) (Active Directory exploitation: Kerberos TGS-REQ wire frame vs. target logging)
-  - [Stage 15 — Pass-the-Hash](04-Investigation/Stages/stage-15-pass-the-hash.md) (Lateral movement: NTLM Logon Type 3 & WMI process creation)
+- **30 minutes:** Read five standout stage simulations and detection engineering baselines comparing attack tradecraft against the telemetry rulesets:
+  - [Stage 03 — SQL Injection](02-Attack-Simulation/Stages/stage-03-sqli.md) (Web application exploitation: UNION SELECT database dump & [Suricata SID 2010963](03-Detection-Engineering/Suricata/README.md#3-empirically-verified-signatures-fired-in-campaign))
+  - [Stage 07 — Privilege Escalation](02-Attack-Simulation/Stages/stage-07-privesc.md) (Linux host compromise: passwordless sudo Python misconfiguration & [Auditd execve tracking](03-Detection-Engineering/Auditd/README.md))
+  - [Stage 10 — Responder Poisoning](02-Attack-Simulation/Stages/stage-10-responder.md) (Network MitM: Link-local broadcast poisoning & [Wazuh bashcmd logging](03-Detection-Engineering/Wazuh/README.md))
+  - [Stage 13 — Kerberoasting](02-Attack-Simulation/Stages/stage-13-kerberoasting.md) (Active Directory exploitation: Kerberos TGS-REQ wire frames & [Suricata SID 2019922](03-Detection-Engineering/Suricata/README.md#3-empirically-verified-signatures-fired-in-campaign))
+  - [Stage 15 — Pass-the-Hash](02-Attack-Simulation/Stages/stage-15-pass-the-hash.md) (Lateral movement: NTLM Logon Type 3 & [Wazuh WMI Rule 100613](03-Detection-Engineering/Wazuh/README.md))
 
 ---
 

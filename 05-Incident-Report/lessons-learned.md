@@ -8,7 +8,7 @@ Post-incident analysis of defensive posture, telemetry visibility, and strategic
 
 - **Multi-Sensor Correlation:** Combining Suricata network intrusion signatures with Wazuh endpoint behavioral analytics provided multi-layered verification for 16 attack stages.
 - **Custom Integration Pipeline:** The `thecustomhive` two-tier correlation architecture successfully intercepted high-severity alerts in real time directly from the raw 9,567 stream via the Wazuh Level >= 8 gate, clustering bursts and tool campaigns into 46 high-fidelity, actionable incident cases in TheHive 5 (preventing alert fatigue without requiring analyst pre-filtering).
-- **High-Velocity Detection:** Host behavioral rules (Auditd SUID execution, Apache error floods, Pass-the-Hash Logon Type 3, process fan-outs) alerted with sub-15-second latency.
+- **High-Velocity Detection:** Host behavioral rules (Auditd `execve` tracking, PAM sudo alerts, Apache error floods, Pass-the-Hash Logon Type 3, process fan-outs) alerted with sub-15-second latency.
 - **Promiscuous Sniffing Resilience:** AF-PACKET promiscuous capture on router interface `ens37` allowed Suricata to observe intra-subnet Layer 2 sweeps and Kerberos ticket requests that did not traverse the router's IP stack.
 
 ---
