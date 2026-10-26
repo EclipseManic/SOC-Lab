@@ -44,10 +44,10 @@ Before examining rules and code, here are the authentic results from our 20-stag
 | **Attack Stages Tested** | **20** | Full kill chain from external port scanning to Active Directory takeover and ransomware |
 | **Stages Caught (Detection Rate)** | **16 (80%)** | Real-time, high-priority alerts raised in TheHive 5 with full forensic evidence |
 | **Documented Blind Spots** | **4 (20%)** | **2 Offline:** Password cracking ran locally on the attacker's GPU (zero victim packets).<br>**2 Logging Gaps:** Internal switch discovery and BloodHound LDAP scans lacked target-side rule alerts. |
-| **Raw Events Ingested** | **9,567 records** | Every single raw alert generated across all 4 agents (`Wazuh-Raw-Alerts.csv`) |
-| **Elevated Incidents** | **808 records** | Filtered dataset preserving elevated multi-level rules (`wazuh_alerts.csv`) |
-| **Actionable TheHive Cases** | **46 cases** | Grouped, deduplicated incident tickets delivered to analysts (`thehive_alerts.json`) |
-| **Custom Noise Suppressions** | **87 rules** | False-positive rules silencing VMware guest heartbeats, machine accounts, and background loops |
+| **Total Raw Telemetry Ingested** | **9,567 records** | Complete raw alert baseline indexed in Wazuh across all 4 agents (`Wazuh-Raw-Alerts.csv`) |
+| **Analyst Curated Records** | **808 records** | Focused forensic dataset created by applying 11 OpenSearch exclusion filters in Wazuh Dashboard (`wazuh_alerts.csv`) |
+| **Live TheHive Incidents** | **46 cases** | Actionable, correlated incident tickets delivered live to TheHive 5 via Level ≥ 8 gate (`thehive_alerts.json`) |
+| **Custom Noise Suppressions** | **87 rules** | Server-side false-positive rules silencing background OS chatter, guest tools, and machine loops |
 
 ---
 
@@ -233,34 +233,73 @@ Here is the complete traceability matrix mapping all 20 adversary stages across 
 
 ---
 
-## 5. The Telemetry Funnel: 9,567 $\to$ 808 $\to$ 46
+## 5. Telemetry Architecture: Live SOAR Ingestion vs. Analyst Dashboard Triage
 
-How do thousands of raw machine logs turn into a small number of actionable tickets?
+A critical architectural distinction in this SOC lab is understanding **how the numbers 9,567, 808, and 46 actually relate to each other**. They are **not** a single linear waterfall; rather, they represent **two distinct operational pathways** originating from the same baseline telemetry stream:
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  STAGE 1: Complete Raw Telemetry (Wazuh-Raw-Alerts.csv)     │
-│  9,567 raw event records across all 4 agents                │
-│  (DVWA: 8,114  •  Suricata: 1,168  •  DC: 168  •  Win10: 117)│
-└──────────────────────────────┬──────────────────────────────┘
-                               │
-                               ▼ 87 Custom Suppressions & Multi-Level Filtering
-┌─────────────────────────────────────────────────────────────┐
-│  STAGE 2: Curated Analysis Dataset (wazuh_alerts.csv)       │
-│  808 elevated security events across the 20 attack stages   │
-└──────────────────────────────┬──────────────────────────────┘
-                               │
-                               ▼ Wazuh <level>8</level> Gate & custom-thehive
-┌─────────────────────────────────────────────────────────────┐
-│  STAGE 3: Actionable TheHive Incidents (thehive_alerts.json)│
-│  46 clean, correlated case tickets in TheHive 5             │
-│  (Grouped by tool campaigns, process trees, and logon bursts)│
-└─────────────────────────────────────────────────────────────┘
+                              [ Wazuh SIEM Telemetry Ingestion ]
+                              9,567 Total Raw Alerts Indexed in OpenSearch
+                              (DVWA: 8,114  •  Suricata: 1,168  •  DC: 168  •  Win10: 117)
+                                              │
+                    ┌─────────────────────────┴─────────────────────────┐
+                    ▼                                                   ▼
+       [ PATHWAY A: Real-Time SOAR Engine ]            [ PATHWAY B: Analyst Dashboard Triage ]
+       • Evaluated LIVE during simulation execution     • Performed in Wazuh Dashboard search UI
+       • Filter: Alert Level ≥ 8 Ingestion Gate         • Filter: 11 OpenSearch Exclusion Query Filters
+       • Engine: custom-thehive (SQLite WAL + 5s loop)    (Removes 404 fuzzing, SCA, VMware & Win services)
+       • Purpose: Instant, non-blocking incident case   • Purpose: Eliminates background noise so analyst
+         creation for human SOC analysts                  can inspect the exact attack progression
+                    │                                                   │
+                    ▼                                                   ▼
+       [ 46 Correlated Cases in TheHive 5 ]            [ 808 Curated Alerts (wazuh_alerts.csv) ]
+       (thehive_alerts.json - Actionable Incidents)     (Forensic dataset for timeline & case evidence)
 ```
 
-1. **Stage 1 (9,567 Raw Logs):** The raw firehose. Contains every single event logged during the campaign, including lower-level authentication checks, routine connections, and test pings.
-2. **Stage 2 (808 Filtered Events):** Retains events directly tied to attacker activity while filtering out background operating system chatter.
-3. **Stage 3 (46 TheHive Cases):** The final output of `thecustomhive`. Instead of an analyst opening 300 tickets for a single web fuzzing scan, they receive **one single clustered incident** titled `Tool Campaign: Nikto on DVWA` with all 300 raw hits attached as forensic observables.
+### Pathway A: Live Automated SOAR Pipeline (46 TheHive Cases)
+- **Evaluated In Real-Time:** When red-team attack stages executed, the Wazuh Manager's rules engine evaluated all incoming logs in real-time.
+- **The Level $\ge 8$ Gate:** Inside `/var/ossec/etc/ossec.conf`, the integration block specifies `<level>8</level>`. Any alert with a severity level of 8 or higher immediately triggers `/var/ossec/integrations/custom-thehive`.
+- **Why Only 46 Cases Were Created:** Instead of bombarding TheHive with 9,567 raw hits, `custom-thehive` writes each Level $\ge 8$ alert to an SQLite Write-Ahead Logging (WAL) queue in sub-millisecond time. The background daemon (`thehive-flush.service`) wakes up every 5 seconds, groups related alerts (such as rapid Nikto 4xx web fuzzing, Impacket `wmiexec` process fan-outs, and SSH logon bursts), applies tool regex fingerprints, and pushes **46 distinct, high-fidelity incident cases** to TheHive 5.
+- **Result:** Analysts receive clean, organized incident cards directly from the live simulation without losing context or dropping alerts.
+
+---
+
+### Pathway B: Human Analyst Dashboard Triage & Filtering (808 Records)
+- **The Forensic Challenge:** When a SOC analyst sits down at the Wazuh Dashboard to investigate an incident, the database contains all **9,567 raw alerts**. Over 8,000 of these alerts are repetitive 404 HTTP errors from directory brute-forcing, routine SCA security compliance summaries, VMware background heartbeats, and benign Windows background services.
+- **How the Analyst Filtered the Noise:** To isolate the authentic attack footprint without drowning in noise, the analyst configured **11 precision exclusion filters (`must_not` clauses)** in the Wazuh Dashboard (OpenSearch) query interface:
+
+```json
+{
+  "query": {
+    "bool": {
+      "must_not": [
+        { "wildcard": { "rule.description": { "value": "*SCA*Summary*", "case_insensitive": true } } },
+        { "wildcard": { "rule.description": { "value": "*VMware*", "case_insensitive": true } } },
+        { "wildcard": { "rule.description": { "value": "*secpol*", "case_insensitive": true } } },
+        { "wildcard": { "rule.description": { "value": "*SecurityHealthsystray*", "case_insensitive": true } } },
+        { "wildcard": { "rule.description": { "value": "*reporting*", "case_insensitive": true } } },
+        { "wildcard": { "rule.description": { "value": "*msedgeweb*", "case_insensitive": true } } },
+        { "wildcard": { "rule.description": { "value": "*SessionEnv*", "case_insensitive": true } } },
+        { "wildcard": { "rule.description": { "value": "*CIS*Microsoft*", "case_insensitive": true } } },
+        { "wildcard": { "rule.description": { "value": "*4xx*error*", "case_insensitive": true } } },
+        { "wildcard": { "rule.description": { "value": "*[404]*", "case_insensitive": true } } },
+        {
+          "bool": {
+            "should": [
+              { "match_phrase": { "full_log": "HTTP/1.1 404" } },
+              { "match_phrase": { "full_log": "HTTP/1.0 404" } },
+              { "match_phrase": { "full_log": "HTTP/2.0 404" } }
+            ],
+            "minimum_should_match": 1
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+- **What Remained:** Applying these 11 search filters reduced 9,567 noisy logs down to **808 curated, high-value security events**. This filtered view was exported as [`wazuh_alerts.csv`](../06-Resources/Alerts/wazuh_alerts.csv), giving the analyst a focused forensic dataset to correlate attack stages, build the master timeline, and verify detections across all 20 stages.
 
 ---
 
