@@ -10,26 +10,13 @@
 
 To understand how detection works in this lab, imagine securing a corporate office building:
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                            THE 5 DEFENSIVE ROLES                            │
-├───────────────────────┬─────────────────────────────────────────────────────┤
-│ 1. Suricata NIDS      │ The Perimeter Cameras: Watches all traffic entering │
-│    (Network Wire)     │ the building and crossing between hallways.         │
-├───────────────────────┼─────────────────────────────────────────────────────┤
-│ 2. Linux Auditd       │ The Server Room Motion Sensor: Hooks the Linux      │
-│    (Kernel Syscalls)  │ kernel to watch every command run by web services.  │
-├───────────────────────┼─────────────────────────────────────────────────────┤
-│ 3. Windows Sysmon     │ The Desktop Watchdog: Records process trees,        │
-│    (Endpoint Context) │ command lines, and registry tampering on Windows.   │
-├───────────────────────┼─────────────────────────────────────────────────────┤
-│ 4. Wazuh SIEM         │ The Central Control Room: Ingests all sensor feeds, │
-│    (Analysis Brain)   │ applies rules, silences noise, and sounds alarms.   │
-├───────────────────────┼─────────────────────────────────────────────────────┤
-│ 5. TheHive 5 + Script │ The Incident Desk: Groups related alerts into clean │
-│    (SOAR & Pipeline)  │ investigation cases for human SOC analysts.         │
-└───────────────────────┴─────────────────────────────────────────────────────┘
-```
+| Defensive Layer | Primary Mechanism | Real-World Office Analogy |
+|---|---|---|
+| **1. Suricata NIDS** (Network Wire) | High-speed AF-PACKET promiscuous sniffing on gateway interfaces | **The Perimeter Cameras:** Watches all traffic entering the building and crossing between hallways. |
+| **2. Linux Auditd** (Kernel Syscalls) | Hooks Linux netlink kernel subsystem (execve by uid=33) | **The Server Room Motion Sensor:** Hooks the Linux kernel to watch every command run by web services. |
+| **3. Windows Sysmon** (Endpoint Context) | Deep process creation (EID 1), network (EID 3), registry (EID 13) | **The Desktop Watchdog:** Records process trees, command lines, and registry tampering on Windows. |
+| **4. Wazuh SIEM** (Analysis Brain) | Real-time decoders, local_rules.xml, and CDB memory lookups | **The Central Control Room:** Ingests all sensor feeds, applies rules, silences noise, and sounds alarms. |
+| **5. TheHive 5 + SOAR** (Incident Desk) | Two-tier SQLite WAL queue and async clustering daemon | **The Incident Desk:** Groups related alerts into clean investigation cases for human SOC analysts. |
 
 When an attacker launches a multi-stage attack across our network, all five components work as interlocking gears. If the attacker hides their payload with transport encryption, the endpoint kernel catches them; if the attacker disables local logging, the network wire catches them.
 
