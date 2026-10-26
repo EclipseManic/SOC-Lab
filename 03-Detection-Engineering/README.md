@@ -99,7 +99,7 @@ Fires SID 2019284 into eve.json          Fires key="web_process_creation"       
                                                 ▼
                                    [ Step 4: Rules Engine & Decoding ]
                                    Wazuh decodes Auditd log using "bashcmd" decoder
-                                   Matches custom Rule 100214: "Web shell command execution"
+                                   Matches custom Rule 100199: "Auditd: blacklisted/suspicious command executed - /usr/bin/id"
                                    Assigns severity: LEVEL 10 (High Priority)
                                                 ▼
                                    [ Step 5: Tier 1 Fast Ingest (0.2 ms) ]

@@ -42,7 +42,7 @@ The high-level diagram is linked from [README.md](../README.md) and [01-Lab-Setu
 The core scripts located in [`Scripts/`](Scripts/) power the alert bridge between Wazuh and TheHive:
 - **Tier 1 Ingestion:** Wazuh Manager executes `custom-thehive` per alert ($\ge 8$). Inserts rows into `/var/ossec/logs/correlation_state.db` (SQLite WAL) with zero network I/O.
 - **Tier 2 Flush Daemon:** `thehive-flush.service` runs `custom-thehive.py --flush-daemon` on a 5-second loop. Correlates attacks using the embedded tool fingerprint catalog and syncs grouped alerts to TheHive 5 REST API across private VNet peering.
-- Full architectural analysis: [03-Detection-Engineering/README.md#5-thecustomhive-alert-pipeline](../03-Detection-Engineering/README.md#5-thecustomhive-alert-pipeline).
+- Full architectural analysis: [03-Detection-Engineering/README.md#5-telemetry-architecture-live-soar-ingestion-vs-analyst-dashboard-triage](../03-Detection-Engineering/README.md#5-telemetry-architecture-live-soar-ingestion-vs-analyst-dashboard-triage).
 
 ## Alert Evidence Exports
 

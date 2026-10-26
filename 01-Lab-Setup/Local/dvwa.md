@@ -3,10 +3,10 @@
 | Property | Value |
 |----------|-------|
 | **OS** | Ubuntu 24.04 LTS (Noble Numbat) |
-| **Role** | Vulnerable web application target · internal adversary pivot host |
+| **Role** | Vulnerable web application target · internal adversary pivot host · DMZ edge |
 | **Hostname** | `dvwa` |
-| **Address** | `192.168.56.30/24` |
-| **Default gateway** | `192.168.56.150` |
+| **Network Interfaces** | Dual-homed: `ens33` (`192.168.56.30/24`, VMnet2) & `ens37` (`192.168.232.161/24`, VMnet8) |
+| **Default gateway** | `192.168.56.150` (via `ens33`) |
 | **Primary DNS** | `192.168.56.10` (`PC-DC.ad.lab`) |
 | **Resources** | 2 vCPU · 4 GB RAM |
 | **Wazuh agent** | `DVWA` |
@@ -17,7 +17,10 @@
 
 ## 1. Network Configuration (`/etc/netplan/01-netcfg.yaml`)
 
-DVWA is hosted inside the isolated victim segment (`192.168.56.0/24`, VMware VMnet2). All outbound traffic is routed through the Security Gateway (`192.168.56.150`), and internal name resolution is handled by the Domain Controller (`192.168.56.10`):
+DVWA functions as a dual-homed DMZ edge web server bridging the external management/attacker network (`192.168.232.0/24`, VMware VMnet8 NAT) and the isolated internal enterprise segment (`192.168.56.0/24`, VMware VMnet2 Host-Only):
+
+- **`ens33` (`192.168.56.30/24`):** Connects to the internal enterprise segment (VMnet2). All outbound victim traffic is routed through the Security Gateway (`192.168.56.150`), and internal name resolution is handled by the Domain Controller (`192.168.56.10`).
+- **`ens37` (`192.168.232.161/24`):** Connects to the external/NAT segment (VMnet8), allowing direct DMZ ingress and egress from the Kali Linux attacker machine (`192.168.232.135`) during initial exploitation (such as the Stage 06 reverse shell callback).
 
 ```yaml
 network:
@@ -32,6 +35,9 @@ network:
       nameservers:
         addresses:
           - 192.168.56.10
+    ens37:
+      addresses:
+        - 192.168.232.161/24
 ```
 
 Apply and verify the network configuration:
@@ -41,6 +47,7 @@ sudo netplan apply
 ip route show
 # default via 192.168.56.150 dev ens33 proto static
 # 192.168.56.0/24 dev ens33 proto kernel scope link src 192.168.56.30
+# 192.168.232.0/24 dev ens37 proto kernel scope link src 192.168.232.161
 ```
 
 ---
@@ -370,7 +377,7 @@ sudo -u www-data sudo -l
 | Source | File / Channel | What it captures |
 |--------|----------------|-----------------|
 | **Apache Access / Error** | `/var/log/apache2/*.log` | Inbound HTTP scans (Nikto), Python brute force (`dvwa_bruteforce.py`), SQL injection, webshell requests |
-| **Auditd Syscall Log** | `/var/log/audit/audit.log` | `execve` calls by `www-data` (Rule 100214), SUID changes, `/etc/passwd` modifications |
+| **Auditd Syscall Log** | `/var/log/audit/audit.log` | `execve` calls by `www-data` (Rule 100199), SUID changes, `/etc/passwd` modifications |
 | **Bashcmd Log** | `/var/log/bashcmd.log` | Interactive command executions (`whoami`, `Responder.py`, `impacket`) via custom decoder |
 | **Auth Log** | `/var/log/auth.log` | SSH key logins, sudo elevation (`sudo python3`), PAM authentication failures |
 | **Wazuh Agent (`DVWA`)** | TCP `1514` | Real-time security telemetry forwarder to cloud manager (`10.122.1.4`) |

@@ -21,7 +21,7 @@ The adversary initiated an external attack campaign targeting the public-facing 
 | 02 | [Brute force](../../02-Attack-Simulation/Stages/stage-02-bruteforce.md) | [stage-02](../Stages/stage-02-bruteforce.md) | **Detected** (Wazuh Rule 100213 & Suricata SID 2000547) |
 | 03 | [SQL injection](../../02-Attack-Simulation/Stages/stage-03-sqli.md) | [stage-03](../Stages/stage-03-sqli.md) | **Detected** (Suricata SID 2010963 & Wazuh Rule 31106) |
 | 04 | [Hash cracking](../../02-Attack-Simulation/Stages/stage-04-hash-crack.md) | [stage-04](../Stages/stage-04-hash-crack.md) | **Detection gap** (DG-04: Inherent offline cracking) |
-| 05 | [Web shell upload](../../02-Attack-Simulation/Stages/stage-05-webshell.md) | [stage-05](../Stages/stage-05-webshell.md) | **Detected** (Suricata SID 2019284 / Wazuh Rule 100214 / Auditd) |
+| 05 | [Web shell upload](../../02-Attack-Simulation/Stages/stage-05-webshell.md) | [stage-05](../Stages/stage-05-webshell.md) | **Detected** (Suricata SID 2019284 / Wazuh Rule 100199 / Auditd) |
 | 06 | [Reverse shell](../../02-Attack-Simulation/Stages/stage-06-reverse-shell.md) | [stage-06](../Stages/stage-06-reverse-shell.md) | **Detected** (Suricata SID 3400020 & Wazuh Rule 100199) |
 | 07 | [Privilege escalation](../../02-Attack-Simulation/Stages/stage-07-privesc.md) | [stage-07](../Stages/stage-07-privesc.md) | **Detected** (Wazuh Rule 5402 (PAM) & Auditd web_process_creation) |
 
@@ -32,7 +32,7 @@ The adversary initiated an external attack campaign targeting the public-facing 
 | Source | What it contributed |
 |---|---|
 | **Suricata** | Dual-interface NIDS flagged Nmap port sweeps (SID 2000545), automated Python HTTP brute-force bursts (User-Agent: `python-requests`, SID 2017515 / 2000547), and SQL injection / sensitive parameter access (Wazuh Rule 31153 watchlist). |
-| **Wazuh** | Apache access log analysis flagged HTTP 4xx scanning floods (Rule 100410) and 401 Unauthorized bursts (Rule 100213). Linux Auditd integration alerted on web shell file drops (Rule 100214), reverse shell execution (Rule 100602), and passwordless sudo privilege escalation (Rule 5402). |
+| **Wazuh** | Apache access log analysis flagged HTTP 4xx scanning floods (Rule 100410) and 401 Unauthorized bursts (Rule 100213). Linux Auditd integration alerted on web shell command execution (Rule 100199), reverse shell execution (Rule 100199), and passwordless sudo privilege escalation (Rule 5402). |
 | **TheHive** | Aggregated multiple correlated alerts into unified triage incidents (`tool_campaign`, `process_chain`). |
 | **Velociraptor** | Host forensic artifact triage: extracted process tree (`apache2` -> `sh` -> `python3`), verified web shell on disk, and identified sudoers NOPASSWD misconfiguration. |
 

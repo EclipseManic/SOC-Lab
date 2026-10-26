@@ -507,4 +507,4 @@ nc -zv 10.122.0.4 9000
 | [Wazuh Decoders Catalog](../../03-Detection-Engineering/Wazuh/README.md#3-decoders-catalog-local_decoderxml) | Detection Engineering | Custom decoders catalog in `local_decoder.xml` |
 | [Wazuh Manager Config](../../06-Resources/Configs/ossec.conf) | Server Config | Full production `ossec.conf` file |
 | [CDB Internal Bins List](../../06-Resources/Configs/lists/wazuh-internal-bins) | CDB List | Binary lookup table suppressing syscollector auditd loop |
-| [custom-thehive Pipeline](../../03-Detection-Engineering/README.md#5-thecustomhive-alert-pipeline) | Pipeline Architecture | Two-tier correlation engine and alert grouping design |
+| [custom-thehive Pipeline](../../03-Detection-Engineering/README.md#5-telemetry-architecture-live-soar-ingestion-vs-analyst-dashboard-triage) | Pipeline Architecture | Two-tier correlation engine and alert grouping design |

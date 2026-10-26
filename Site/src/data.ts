@@ -77,7 +77,7 @@ export const stages: Stage[] = [
     attacker:
       "Runs fast SYN scans, service version detection, and OS fingerprinting from Kali against 192.168.56.30.",
     defender:
-      "Suricata NIDS detects Nmap OS detection probe (SID 3400002) and multi-port scanning (SID 2010937). Wazuh correlates Rule 86601.",
+      "Suricata NIDS detects Nmap TCP SYN scan (SID 3400001/3400002), OS probe (SID 2018489), and multi-port scanning (SID 2010937). Wazuh correlates Rule 86601.",
     evidence:
       "Nmap terminal output, Suricata eve-alert.json alerts, and TheHive alert wzb-3a8045a03c.",
     telemetry: "Network flow / IDS",
@@ -87,7 +87,7 @@ export const stages: Stage[] = [
     caseSlug: "case-01-web-compromise",
     attackPath: "02-Attack-Simulation/Stages/stage-01-recon.md",
     investigationPath: "04-Investigation/Stages/stage-01-recon.md",
-    ruleId: "Wazuh 86601 / SID 3400002",
+    ruleId: "Wazuh 86601 / SID 2018489, 3400001, 3400002",
     alertRef: "wzb-3a8045a03c",
   },
   {
@@ -103,7 +103,7 @@ export const stages: Stage[] = [
     attacker:
       "Sends high-frequency HTTP POST requests with wordlists to the DVWA login form until finding admin/password.",
     defender:
-      "Wazuh Apache access log decoder flags repeated 400 errors (Rule 31151), multi-vector web attacks (Rule 31153), and Shellshock scanner signatures (Rule 31168).",
+      "Wazuh Rule 100213 detects 401 Unauthorized bursts; Suricata flags automated Python requests (SID 2017515/2000547); Wazuh Rule 31153 flags multi-vector web access.",
     evidence:
       "Python brute-force script terminal success, Apache access.log POST bursts, and TheHive alert wzb-81becfcc8d.",
     telemetry: "Web server access logs",
@@ -113,7 +113,7 @@ export const stages: Stage[] = [
     caseSlug: "case-01-web-compromise",
     attackPath: "02-Attack-Simulation/Stages/stage-02-bruteforce.md",
     investigationPath: "04-Investigation/Stages/stage-02-bruteforce.md",
-    ruleId: "Wazuh 31153, 31151, 31168",
+    ruleId: "Wazuh 100213 (Level 10), 31153 / SID 2017515",
     alertRef: "wzb-81becfcc8d",
   },
   {
@@ -129,9 +129,9 @@ export const stages: Stage[] = [
     attacker:
       "Submits `' UNION SELECT user, password FROM users-- -` into the vulnerable ID field, dumping user password hashes.",
     defender:
-      "Suricata matches SELECT USER SQLi in URI (SID 2010937). Wazuh custom Rule 100201 matches SQL injection keywords in URI.",
+      "Suricata detects SELECT USER SQL injection in URI (SID 2010963, ET WEB_SERVER). Wazuh decodes Apache access log with Rule 31106.",
     evidence:
-      "Browser SQLi dump, raw HTTP GET payload in eve-alert.json, and TheHive alert wzb-10160d36c2.",
+      "Browser SQLi dump, raw HTTP GET payload in eve-alert.json (Row 9108), and Wazuh rule 31106 alert.",
     telemetry: "HTTP / Network IDS / Web logs",
     gap: "DG-03",
     status: "Detected",
@@ -139,8 +139,8 @@ export const stages: Stage[] = [
     caseSlug: "case-01-web-compromise",
     attackPath: "02-Attack-Simulation/Stages/stage-03-sqli.md",
     investigationPath: "04-Investigation/Stages/stage-03-sqli.md",
-    ruleId: "Wazuh 100201 / SID 2010937",
-    alertRef: "wzb-10160d36c2",
+    ruleId: "Suricata SID 2010963 / Wazuh 31106",
+    alertRef: "Row 9108 (CSV) / Wazuh 31106",
   },
   {
     id: "04",
@@ -181,17 +181,17 @@ export const stages: Stage[] = [
     attacker:
       "Uploads a PHP command shell to `/hackable/uploads/shell.php` and executes arbitrary commands via HTTP GET query parameters.",
     defender:
-      "Suricata triggers on PHP System Command in HTTP POST (SID 2014726) and PHP Command Injection in GET (SID 2014727). Wazuh correlates Rule 100600.",
+      "Suricata detects web shell id response (SID 2019284). Linux Auditd intercepts execve(/usr/bin/id) under uid=33, matching Wazuh Rule 100199 (Level 10).",
     evidence:
-      "Uploaded shell file path, Suricata POST alert in eve-alert.json, and TheHive alert wzb-e9a1797ac4.",
-    telemetry: "Network IDS / Web server logs",
+      "Uploaded shell file path, Suricata response alert in eve-alert.json, and TheHive alert wzb-e9a1797ac4.",
+    telemetry: "Network IDS / Auditd execve",
     gap: "DG-05",
     status: "Detected",
     caseLabel: "Case 01",
     caseSlug: "case-01-web-compromise",
     attackPath: "02-Attack-Simulation/Stages/stage-05-webshell.md",
     investigationPath: "04-Investigation/Stages/stage-05-webshell.md",
-    ruleId: "Wazuh 100600 / SID 2014726",
+    ruleId: "Suricata SID 2019284 / Wazuh 100199 / Auditd",
     alertRef: "wzb-e9a1797ac4",
   },
   {
@@ -207,9 +207,9 @@ export const stages: Stage[] = [
     attacker:
       "Executes Python socket payload on DVWA to initiate an outbound TCP connection to Kali (192.168.232.135:4444).",
     defender:
-      "Suricata detects outbound reverse shell connection (SID 2002752). Wazuh correlates web user interactive shell execution.",
+      "Suricata detects outbound reverse shell on TCP 4444 (SID 3400020, POSSBL SCAN SHELL M-SPLOIT TCP). Wazuh Rule 100199 flags netcat execution.",
     evidence:
-      "Netcat shell prompt on Kali, Suricata reverse shell alert, and TheHive alert wzb-f87fab3eda.",
+      "Netcat shell prompt on Kali, Suricata reverse shell alert, and TheHive alert wzb-81bb1f83f7.",
     telemetry: "Process / Network IDS",
     gap: "DG-06",
     status: "Detected",
@@ -217,8 +217,8 @@ export const stages: Stage[] = [
     caseSlug: "case-01-web-compromise",
     attackPath: "02-Attack-Simulation/Stages/stage-06-reverse-shell.md",
     investigationPath: "04-Investigation/Stages/stage-06-reverse-shell.md",
-    ruleId: "Wazuh 86601 / SID 2002752",
-    alertRef: "wzb-f87fab3eda",
+    ruleId: "Suricata SID 3400020 / Wazuh 100199",
+    alertRef: "wzb-81bb1f83f7",
   },
   {
     id: "07",
@@ -233,9 +233,9 @@ export const stages: Stage[] = [
     attacker:
       "Spawns an interactive root shell via `sudo python3 -c 'import os;os.system(\"/bin/bash\")'` using GTFOBins sudoers misconfiguration.",
     defender:
-      "Linux PAM authentication logs captured by Wazuh Rule 5402 showing sudo execution by service user www-data.",
+      "Linux PAM authentication logs captured by Wazuh Rule 5402 (12 instances) showing root privilege escalation via passwordless sudo Python (GTFOBins).",
     evidence:
-      "Root shell ID output, /var/log/auth.log sudo log entry, and TheHive alert wzb-ccae331b77.",
+      "Root shell ID output, /var/log/auth.log sudo log entry (12x PAM alerts), and TheHive alert wzb-ccae331b77.",
     telemetry: "Linux auth / PAM logs",
     gap: "DG-07",
     status: "Detected",
@@ -243,7 +243,7 @@ export const stages: Stage[] = [
     caseSlug: "case-01-web-compromise",
     attackPath: "02-Attack-Simulation/Stages/stage-07-privesc.md",
     investigationPath: "04-Investigation/Stages/stage-07-privesc.md",
-    ruleId: "Wazuh 5402 (PAM)",
+    ruleId: "Wazuh 5402 (PAM) / Auditd",
     alertRef: "wzb-ccae331b77",
   },
   {
@@ -285,9 +285,9 @@ export const stages: Stage[] = [
     attacker:
       "Scans the internal victim subnet from DVWA, identifying Domain Controller (192.168.56.10) and Windows 10 (192.168.56.20).",
     defender:
-      "Suricata detects internal reconnaissance sweep probes (SID 2000545). Intra-subnet layer 2 sweep limitation documented as logging gap (DG-09).",
+      "Suricata promiscuous capture on ens37 detects internal reconnaissance sweep (SIDs 3400001, 3400002, 3400020). Target-side L2 logging gap documented (DG-09).",
     evidence:
-      "Pivot scan output, Suricata internal sweep alert, and TheHive alert wzb-3152e3ed59.",
+      "Pivot scan output, Suricata internal sweep alert (14 victim-to-victim alerts in CSV), and TheHive alert wzb-3152e3ed59.",
     telemetry: "Host process / Network IDS",
     gap: "DG-09",
     status: "Logging gap",
@@ -295,7 +295,7 @@ export const stages: Stage[] = [
     caseSlug: "case-02-lateral-movement",
     attackPath: "02-Attack-Simulation/Stages/stage-09-internal-discovery.md",
     investigationPath: "04-Investigation/Stages/stage-09-internal-discovery.md",
-    ruleId: "Wazuh 86601 / SID 2000545",
+    ruleId: "Suricata SIDs 3400001, 3400002, 3400020 on ens37",
     alertRef: "wzb-3152e3ed59",
   },
   {
@@ -311,18 +311,18 @@ export const stages: Stage[] = [
     attacker:
       "Runs Responder on interface ens33, responding to broadcast name queries from Windows 10 and capturing user NetNTLMv2 challenge responses.",
     defender:
-      "Suricata detects anomalous LLMNR/NBT-NS multicast poisoning response on UDP ports 5355/137 (SID 2013028). Wazuh Rule 86601.",
+      "Wazuh bashcmd logging captures uid:0 Responder execution on the pivot host (CSV row 9231); endpoint logs record the NTLMv2 capture.",
     evidence:
-      "Captured NetNTLMv2 hash string, Suricata multicast alert, and TheHive alert wzb-7a4a134d1b.",
-    telemetry: "Network IDS / Windows auth",
+      "Captured NetNTLMv2 hash string, Wazuh bashcmd execution log on DVWA, and Hashcat crack file.",
+    telemetry: "Endpoint command / Windows auth",
     gap: "DG-10",
     status: "Detected",
     caseLabel: "Case 02",
     caseSlug: "case-02-lateral-movement",
     attackPath: "02-Attack-Simulation/Stages/stage-10-responder.md",
     investigationPath: "04-Investigation/Stages/stage-10-responder.md",
-    ruleId: "Wazuh 86601 / SID 2013028",
-    alertRef: "wzb-7a4a134d1b",
+    ruleId: "Wazuh bashcmd (uid:0 Responder.py)",
+    alertRef: "CSV row 9231 (Level 5)",
   },
   {
     id: "11",
@@ -389,17 +389,17 @@ export const stages: Stage[] = [
     attacker:
       "Uses Impacket `GetUserSPNs.py` with valid domain credentials to request an RC4-encrypted TGS ticket for user HANK_SHERMAN.",
     defender:
-      "Domain Controller Windows Security EID 4769 flagged by Wazuh Rule 60107 showing Kerberos TGS request with RC4 encryption (0x17).",
+      "Suricata captures Kerberos TGS-REQ wire frames on port 88 (SID 2019922, ET EXPLOIT MS14-068); Wazuh Rule 5715 captures pivot SSH session.",
     evidence:
-      "Extracted TGS ticket hash, DC Event ID 4769 audit log, and TheHive alert wzb-1d2d7fb4b8.",
-    telemetry: "Kerberos / Windows Security logs",
+      "Extracted TGS ticket hash, Suricata Kerberos wire alert, and TheHive alert wzb-1d2d7fb4b8.",
+    telemetry: "Kerberos Wire / Linux auth logs",
     gap: "DG-13",
     status: "Detected",
     caseLabel: "Case 02",
     caseSlug: "case-02-lateral-movement",
     attackPath: "02-Attack-Simulation/Stages/stage-13-kerberoasting.md",
     investigationPath: "04-Investigation/Stages/stage-13-kerberoasting.md",
-    ruleId: "Windows 4769 / Wazuh 60107",
+    ruleId: "Suricata SID 2019922 (via 86601) + Wazuh 5715",
     alertRef: "wzb-1d2d7fb4b8",
   },
   {
@@ -441,18 +441,18 @@ export const stages: Stage[] = [
     attacker:
       "Authenticates to Windows 10 (192.168.56.20) via SMB using Administrator NTLM hash with Impacket `wmiexec.py`.",
     defender:
-      "Suricata detects ET EXPLOIT GoldenPac Privilege Escalation signature (SID 2015862). Wazuh logs Windows LogonType 3 session.",
+      "Windows Security EID 4624 flags Logon Type 3 NTLM authentication (24 events in CSV: 15 on Win10, 9 on DC); Wazuh Rule 100613 alerts on WMI process fan-out.",
     evidence:
-      "Wmiexec session banner, Suricata GoldenPac alert in eve-alert.json, and TheHive alert wzb-c1e2642eb2.",
-    telemetry: "Network IDS / Windows auth logs",
+      "Wmiexec session banner, Windows Security EID 4624 NTLM logon events, and TheHive alert wzb-b7f91cd3ab.",
+    telemetry: "Windows Security EID 4624 / Sysmon EID 1",
     gap: "DG-15",
     status: "Detected",
     caseLabel: "Case 03",
     caseSlug: "case-03-domain-compromise",
     attackPath: "02-Attack-Simulation/Stages/stage-15-pass-the-hash.md",
     investigationPath: "04-Investigation/Stages/stage-15-pass-the-hash.md",
-    ruleId: "Wazuh 86601 / SID 2015862",
-    alertRef: "wzb-c1e2642eb2",
+    ruleId: "Windows EID 4624 / Wazuh 100613",
+    alertRef: "wzb-b7f91cd3ab",
   },
   {
     id: "16",
@@ -489,9 +489,9 @@ export const stages: Stage[] = [
     technique: "Domain Account",
     techniqueId: "T1136.002",
     plain:
-      "The attacker creates a rogue backdoor domain user (`backdoor`) and adds it to the Domain Admins group for permanent redundancy.",
+      "The attacker creates a rogue backdoor domain user (`backdoor_admin`) and adds it to the Domain Admins group for permanent redundancy.",
     attacker:
-      "Executes `net user backdoor ... /add` and `net group \"Domain Admins\" backdoor /add` on PC-DC via Impacket `wmiexec`.",
+      "Executes `net user backdoor_admin ... /add` and `net group \"Domain Admins\" backdoor_admin /add` on PC-DC via Impacket `wmiexec`.",
     defender:
       "Wazuh custom Rule 100613 flags Impacket wmiexec execution via WMI; Windows Security EID 4720 and 4728 alert on account creation.",
     evidence:
@@ -571,18 +571,18 @@ export const stages: Stage[] = [
     attacker:
       "Deploys defacement wallpaper (`hacked.bmp`) to Windows 10 and updates registry autostart keys via Impacket wmiexec.",
     defender:
-      "Wazuh Rule 100613 (wmiexec command execution), Rule 100100 (Registry persistence), and Suricata network alerts all fire.",
+      "Wazuh Rule 100613 flags Impacket wmiexec process fan-out; Sysmon EID 1 tracks registry modification; Suricata flags SMB NTLM session setup (SIDs 2067085-2067087).",
     evidence:
-      "Modified desktop screenshot, Sysmon Registry Event 13, and TheHive alert wzb-71ef983ad8.",
-    telemetry: "Sysmon / Registry / Network IDS",
+      "Defaced wallpaper screenshot, Windows Sysmon Process Creation events, and TheHive alert wzb-71ef983ad8.",
+    telemetry: "Sysmon EID 1 / Suricata SMB NTLM",
     gap: "DG-20",
     status: "Detected",
     caseLabel: "Case 03",
     caseSlug: "case-03-domain-compromise",
     attackPath: "02-Attack-Simulation/Stages/stage-20-impact.md",
     investigationPath: "04-Investigation/Stages/stage-20-impact.md",
-    ruleId: "Wazuh 100613, 100100",
-    alertRef: "wzb-71ef983ad8",
+    ruleId: "Wazuh 100613 / Sysmon EID 1 / Suricata SIDs 2067085-2067087",
+    alertRef: "wzb-71ef983ad8, wzb-7a4a134d1b",
   },
 ];
 
@@ -679,7 +679,7 @@ export const chapters = [
       technical:
         "The ledger separates captured artifacts from pending ones. Visual proof spans 60 attack screenshots and 23 alert captures in TheHive.",
       hiring:
-        "Evidence maturity is part of the work: documented, scaffolded, draft, pending. The labels are the proof of rigor.",
+        "Evidence maturity is part of the work: verified, documented, draft. The labels are the proof of rigor.",
     },
     proof: "INDEX.md · 06-Resources/README.md · 06-Resources/Diagrams/SOC_Lab_Architecture.png",
   },
@@ -694,7 +694,7 @@ export const cases = [
     stages: ["01", "02", "03", "04", "05", "06", "07"],
     question:
       "How did the web tier fall, and what did the attacker gain before leaving it?",
-    status: "Scaffolded · verdict open",
+    status: "Draft, not yet validated",
     path: "04-Investigation/Cases/case-01-web-compromise.md",
   },
   {
@@ -705,7 +705,7 @@ export const cases = [
     stages: ["08", "09", "10", "11", "12", "13", "14"],
     question:
       "How did the attacker move from the web host into the domain, and which hops were invisible to Suricata?",
-    status: "Scaffolded · verdict open",
+    status: "Draft, not yet validated",
     path: "04-Investigation/Cases/case-02-lateral-movement.md",
   },
   {
@@ -716,7 +716,7 @@ export const cases = [
     stages: ["15", "16", "17", "18", "19", "20"],
     question:
       "What domain control was obtained, what data left, and what recovery evidence is missing?",
-    status: "Scaffolded · verdict open",
+    status: "Draft, not yet validated",
     path: "04-Investigation/Cases/case-03-domain-compromise.md",
   },
 ] as const;
@@ -808,16 +808,16 @@ export const evidenceItems = [
   },
   {
     label: "Investigation cases",
-    value: "Scaffolded",
+    value: "Draft",
     tone: "blue",
-    note: "Three case records with scope and questions; verdicts remain open for manual analyst triage.",
+    note: "Three case records with scopes, observables, and timelines; marked as draft pending validation.",
     path: "04-Investigation/Cases/",
   },
   {
     label: "Incident report",
     value: "Draft",
     tone: "rose",
-    note: "The report package is scaffolded; no detection success is claimed.",
+    note: "Post-incident deliverables compiled from 20-stage simulation telemetry, marked as draft.",
     path: "05-Incident-Report/incident-report.md",
   },
 ] as const;
