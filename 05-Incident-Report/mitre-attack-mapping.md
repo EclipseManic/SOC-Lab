@@ -1,5 +1,8 @@
 # MITRE ATT&CK Mapping
 
+[![Attack Simulation 20-Stage Kill Chain Roadmap](../06-Resources/Diagrams/Attack%20Simulation%2020-Stage%20Kill%20Chain%20Roadmap.png)](../06-Resources/Diagrams/Attack%20Simulation%2020-Stage%20Kill%20Chain%20Roadmap.png)
+*Figure 1: Complete 20-stage attack simulation lifecycle mapped across the 3 investigation cases, showing detection statuses and tool vectors ([view full asset](../06-Resources/Diagrams/Attack%20Simulation%2020-Stage%20Kill%20Chain%20Roadmap.png)).*
+
 Stage-by-stage mapping of the adversary campaign across the MITRE ATT&CK enterprise framework.
 
 ---

@@ -17,6 +17,9 @@
 
 ## 1. Executive Summary
 
+[![Consolidated Incident Response 74-Minute Timeline](../06-Resources/Diagrams/Consolidated%20Incident%20Response%2074-Minute%20Timeline.png)](../06-Resources/Diagrams/Consolidated%20Incident%20Response%2074-Minute%20Timeline.png)
+*Figure 1: Full chronological incident timeline spanning 74 minutes ($T_0$ to $T_0 + 74\text{m}$), correlating attacker milestones (top) against blue-team detection alerts across Suricata, Auditd, Wazuh, Sysmon, and TheHive (bottom) ([view full asset](../06-Resources/Diagrams/Consolidated%20Incident%20Response%2074-Minute%20Timeline.png)).*
+
 An advanced multi-stage cyber intrusion was simulated across the hybrid enterprise lab environment, originating from external IP `192.168.232.135` (Kali Linux) and culminating in complete Tier 0 Active Directory domain compromise. The adversary breached the perimeter by exploiting a SQL injection vulnerability on the DVWA server (`192.168.56.30`), dropping a PHP web shell, executing an interactive reverse shell, and escalating privileges to `root` via SUID binary abuse. 
 
 Establishing SSH persistence, the adversary used the compromised web server as a pivot into the internal network (`192.168.56.0/24`), poisoned LLMNR requests using Responder to capture domain credentials, enumerated Active Directory via BloodHound/SharpHound, kerberoasted Domain Admin `HANK_SHERMAN`, and executed DCSync directory replication via DRSUAPI. Using the dumped domain secrets, the adversary conducted Pass-the-Hash lateral movement to Windows 10 (`192.168.56.20`), forged a Kerberos Golden Ticket (`krbtgt`), created a persistent backdoor Domain Admin account, staged and exfiltrated sensitive data via SCP, and deployed registry-driven defacement and extortion artifacts across domain endpoints.
