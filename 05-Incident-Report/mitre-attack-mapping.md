@@ -15,7 +15,7 @@ Stage-by-stage mapping of the adversary campaign across the MITRE ATT&CK enterpr
 | 02 | Brute Force | Credential Access | Password Spraying / Brute Force | `T1110.001` | **Detected** | Wazuh `100213` (Level 10), Wazuh `31153` / Suricata SID `2000547` |
 | 03 | SQL Injection | Initial Access | Exploit Public-Facing Application | `T1190` | **Detected** | Suricata SID `2010963` (`ET WEB_SERVER SELECT USER`) / Wazuh `31106` |
 | 04 | Hash Cracking | Credential Access | Password Cracking | `T1110.002` | **Detection Gap** (Offline) | *Inherent Offline Gap (DG-04)* |
-| 05 | Web Shell Upload | Persistence | Server Software Component: Web Shell | `T1505.003` | **Detected** | Suricata SID `2019284` / Wazuh `100214` (Level 12) / Auditd `web_process_creation` |
+| 05 | Web Shell Upload | Persistence | Server Software Component: Web Shell | `T1505.003` | **Detected** | Suricata SID `2019284` / Wazuh `100199` (Level 10) / Auditd `web_process_creation` |
 | 06 | Reverse Shell | Execution | Command and Scripting Interpreter: Unix Shell | `T1059.004` | **Detected** | Suricata SID `3400020` / Wazuh `100199` |
 | 07 | Privilege Escalation | Privilege Escalation | Abuse Elevation Control Mechanism: Sudo and Sudo Caching | `T1548.003` | **Detected (Host Alerted)** | Wazuh `5402` (PAM) / Auditd `web_process_creation` |
 | 08 | SSH Persistence | Persistence | Account Manipulation: SSH Authorized Keys | `T1098.004` | **Detected** | Wazuh `5715` (Elevated Level 8) / Wazuh `550` (Syscheck) |

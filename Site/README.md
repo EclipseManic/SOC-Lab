@@ -2,7 +2,7 @@
 
 The site at <https://soc-lab.eclipsemanic.me/> is a narrative front door to the repository. It is a six-act story: the lab, the build, the attack, the signal, the case, and the record.
 
-The site now covers all six acts: the lab, the build, the attack, the signal, the case, and the record. The attack ledger uses the 20 documented stages; the detection chapter shows telemetry capability without claiming validated coverage; the case and report chapters stay explicitly draft or scaffolded.
+The site now covers all six acts: the lab, the build, the attack, the signal, the case, and the record. The attack ledger presents the 20 documented stages with ground-truth metrics (80% operational coverage / 70% direct target detection); the case and report chapters stay explicitly marked as draft.
 
 The Markdown, logs, cases, and report files are authoritative. This app is a reading layer over them.
 

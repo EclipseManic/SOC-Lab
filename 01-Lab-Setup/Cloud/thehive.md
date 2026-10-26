@@ -335,7 +335,7 @@ Correlated alert batches are pushed directly from Wazuh Manager to TheHive REST 
 - **Ingestion Hook:** `http://10.122.0.4:9000/api/v1`
 - **Engine:** Powered by `thecustomhive` (running via `thehive-flush.service` on Wazuh VM)
 - **Batch Processing:** 5-second polling loop delivering burst-correlated cases
-- **Documentation:** [README.md#5-thecustomhive-alert-pipeline](../../03-Detection-Engineering/README.md#5-thecustomhive-alert-pipeline)
+- **Documentation:** [README.md#5-telemetry-architecture-live-soar-ingestion-vs-analyst-dashboard-triage](../../03-Detection-Engineering/README.md#5-telemetry-architecture-live-soar-ingestion-vs-analyst-dashboard-triage)
 
 ---
 
@@ -389,5 +389,5 @@ nc -zv 10.122.1.4 443
 | Document | Description |
 |----------|-------------|
 | [wazuh.md](wazuh.md) | Wazuh SIEM VM — rules, CDB lists, agent ingestion, indexer |
-| [thecustomhive Pipeline](../../03-Detection-Engineering/README.md#5-thecustomhive-alert-pipeline) | Alert pipeline architecture (Wazuh → TheHive) |
+| [thecustomhive Pipeline](../../03-Detection-Engineering/README.md#5-telemetry-architecture-live-soar-ingestion-vs-analyst-dashboard-triage) | Alert pipeline architecture (Wazuh → TheHive) |
 | [Wazuh Detection Rules](../../03-Detection-Engineering/Wazuh/README.md) | Custom Wazuh detection rules & suppressions |

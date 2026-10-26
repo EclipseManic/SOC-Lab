@@ -114,7 +114,7 @@ The environment is cleanly divided into four zones:
 - **Target Hosts:**
   - **Windows Server 2022 (Domain Controller — `192.168.56.10`):** Active Directory Domain Services (`ad.lab`), DNS, Kerberos KDC, Sysmon endpoint logging, Wazuh Agent (`DomainWin10`), Velociraptor client.
   - **Windows 10 Workstation (`192.168.56.20`):** Domain-joined endpoint (`ad\victim`), Sysmon telemetry, Wazuh Agent (`Win10User`), Velociraptor client.
-  - **DVWA Web Server (`192.168.56.30`):** Ubuntu Linux host acting as both the perimeter web target (Apache/MySQL) and internal adversary pivot. Monitored with Linux Auditd syscall tracking (`audit.rules`), custom Bash command execution auditing (`bashcmd`), Wazuh Agent (`DVWA`), and Velociraptor client.
+  - **DVWA Web Server (`192.168.56.30` / `192.168.232.161`):** Dual-homed Ubuntu Linux host acting as both the perimeter web target (Apache/MySQL) and internal adversary pivot. Connects to VMnet2 (`ens33: 192.168.56.30/24`) and VMnet8 (`ens37: 192.168.232.161/24`). Monitored with Linux Auditd syscall tracking (`audit.rules`), custom Bash command execution auditing (`bashcmd`), Wazuh Agent (`DVWA`), and Velociraptor client.
 
 ### Cloud SOC Infrastructure (VM1 & VM2)
 - **Private Subnet:** `10.122.0.0/16` (peered private cloud network; zero public IP exposure).
@@ -150,7 +150,7 @@ The entire detection pipeline operates in 7 clean steps:
 | **Security Gateway (Internal)** | `192.168.56.150/24` | VMnet2 / `ens37` | Default gateway for victim network; Suricata AF-PACKET victim sniffing |
 | **Domain Controller** | `192.168.56.10/24` | VMnet2 / `Ethernet0` | Windows Server 2022: AD DS, DNS, Kerberos KDC, Sysmon, Wazuh Agent |
 | **Windows 10 Workstation** | `192.168.56.20/24` | VMnet2 / `Ethernet0` | Domain-joined client workstation: Sysmon, Wazuh Agent |
-| **DVWA Client** | `192.168.56.30/24` | VMnet2 / `ens33` | Ubuntu 24.04: Vulnerable web app + pivot host; Auditd, `bashcmd`, Wazuh |
+| **DVWA Client & Pivot** | `192.168.56.30/24`<br>`192.168.232.161/24` | VMnet2 (`ens33`)<br>VMnet8 (`ens37`) | Ubuntu 24.04: Dual-homed vulnerable web app + pivot host; Auditd, `bashcmd`, Wazuh |
 | **WireGuard Tunnel** | `10.8.0.0/24` | Tunnel / `wg0` | Encrypted tunnel linking Security Gateway (`.2`) to Cloud Hub (`.1`) |
 | **Cloud Subnet (VM1 & VM2)** | `10.122.0.0/16` | Private Cloud VNet | Peered private cloud network for SOC services (zero public IPs) |
 | **Cloud VM1 (TheHive / Hub)** | `10.122.0.4` | Private Cloud / `eth0` | TheHive 5, Cassandra, Elasticsearch, Velociraptor, NPM, WireGuard Server |
@@ -249,7 +249,7 @@ The laboratory requires a multi-threaded physical host (or split cloud hyperviso
 | **VM1 (Cloud Hub)** | TheHive 5 / WireGuard / NPM | Ubuntu 24.04 LTS | 4 vCPU | 16 GB | 64 GB SSD | `eth0` (`10.122.0.4/16`), `wg0` (`10.8.0.1/24`) |
 | **VM2 (Cloud SIEM)** | Wazuh Manager / OpenSearch | Ubuntu 24.04 LTS | 4 vCPU | 16 GB | 64 GB SSD | `eth0` (`10.122.1.4/16`) |
 | **Security Gateway** | Router & Suricata NIDS | Ubuntu 24.04 LTS | 2 vCPU | 4 GB | 32 GB SSD | `ens33` (`.232.162`), `ens37` (`.56.150`), `wg0` (`10.8.0.2`) |
-| **DVWA Server** | Web Target & Pivot Host | Ubuntu 24.04 LTS | 2 vCPU | 4 GB | 32 GB SSD | `ens33` (`192.168.56.30/24`) |
+| **DVWA Server** | Web Target & Pivot Host | Ubuntu 24.04 LTS | 2 vCPU | 4 GB | 32 GB SSD | `ens33` (`.56.30`), `ens37` (`.232.161`) |
 | **Domain Controller** | AD DS & DNS Server | Windows Server 2022 | 2 vCPU | 6 GB | 60 GB SSD | `Ethernet0` (`192.168.56.10/24`) |
 | **Windows 10** | Domain Workstation | Windows 10 Enterprise | 2 vCPU | 4 GB | 50 GB SSD | `Ethernet0` (`192.168.56.20/24`) |
 | **Kali Linux** | Attacker Platform | Kali Linux 2024.x | 4 vCPU | 6 GB | 40 GB SSD | `eth0` (`192.168.232.135/24`) |
@@ -271,7 +271,7 @@ Each host has a dedicated, reproducible build specification:
 |---|---|---|---|
 | **[Local/kali.md](Local/kali.md)** | **Attacker Workstation** | `192.168.232.135/24` (VMnet8) | Kali Linux 2024.x, full red-team toolchain, custom routing tables |
 | **[Local/suricata-gateway.md](Local/suricata-gateway.md)** | **Security Gateway & NIDS** | Dual-NIC (`.232.162` / `.56.150`) | Ubuntu 24.04 LTS, Suricata 8.0.6 (AF-PACKET), WireGuard client, Wazuh Agent |
-| **[Local/dvwa.md](Local/dvwa.md)** | **Web Target & Pivot** | `192.168.56.30/24` (VMnet2) | Ubuntu 24.04 LTS, Apache/MySQL, Linux Auditd (`audit.rules`), `bashcmd` decoder |
+| **[Local/dvwa.md](Local/dvwa.md)** | **Web Target & Pivot** | `192.168.56.30` & `.232.161` | Ubuntu 24.04 LTS, Apache/MySQL, Linux Auditd (`audit.rules`), `bashcmd` decoder |
 | **[Local/win10.md](Local/win10.md)** | **Domain Workstation** | `192.168.56.20/24` (VMnet2) | Windows 10 Pro N, Sysmon modular config, Wazuh Agent, Velociraptor client |
 | **[Local/dc-ad.md](Local/dc-ad.md)** | **Domain Controller** | `192.168.56.10/24` (VMnet2) | Windows Server 2022, Active Directory Domain Services, DNS, Sysmon, Wazuh Agent |
 | **[Cloud/thehive.md](Cloud/thehive.md)** | **Ingress & Case Hub (VM1)** | `10.122.0.4/16` (Cloud VNet) | TheHive 5, Cassandra 4.x, Elasticsearch 8.x, Velociraptor Server, WireGuard, NPM |

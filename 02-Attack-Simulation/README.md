@@ -82,7 +82,7 @@ The evidence sets below are published in the public repository. The attack scree
 - **Offline Detection Gaps:** 
   - **Stage 04 (Hash Cracking):** Recovering plaintext credentials from extracted MD5 database hashes occurs entirely offline on the attacker's workstation (Kali). No network traffic or host-level telemetry is emitted on victim systems.
   - **Stage 11 (NTLMv2 Cracking):** Cracking captured NetNTLMv2 hashes occurs offline via Hashcat dictionary attacks on the attacker's GPU/CPU.
-  - *Mitigation & Upstream Detection:* While offline cracking itself cannot be detected directly at the endpoint, upstream actions (SQL injection in Stage 03, LLMNR poisoning in Stage 10) and downstream use of cracked credentials (SSH in Stage 08, BloodHound in Stage 12) are reliably detected. Full gap analyses are documented in [03-Detection-Engineering/README.md#4-detection-gap-register--blind-spot-analysis](../03-Detection-Engineering/README.md#4-detection-gap-register--blind-spot-analysis).
+  - *Mitigation & Upstream Detection:* While offline cracking itself cannot be detected directly at the endpoint, upstream actions (SQL injection in Stage 03, LLMNR poisoning in Stage 10) and downstream use of cracked credentials (SSH in Stage 08, BloodHound in Stage 12) are reliably detected. Full gap analyses are documented in [03-Detection-Engineering/README.md#challenge-3-the-honest-gap-register-why-80-detection-is-real-security](../03-Detection-Engineering/README.md#challenge-3-the-honest-gap-register-why-80-detection-is-real-security).
 
 ---
 
