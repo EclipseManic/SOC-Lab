@@ -80,11 +80,12 @@ While the adversary advanced through these three acts, the defensive stack opera
 
 ## Result at a Glance
 
-| Metric | Result | Plain-English Summary |
+| Metric | Result | Engineering Ground Truth |
 |---|:---:|---|
 | **Attack stages run** | **20** | Full kill chain: external reconnaissance, web exploitation, Linux privilege escalation, network credential theft, Active Directory takeover, and domain defacement |
-| **Stages caught** | **16 (80%)** | Actionable alerts raised in TheHive 5 via Suricata NIDS, Linux Auditd, and Windows Sysmon |
-| **Stages missed** | **4 (20%)** | **2 offline:** Password cracking ran locally on the attacker's GPU (zero victim telemetry by definition).<br>**2 logging gaps:** Internal discovery and BloodHound LDAP scans were visible on the pivot or wire, but lacked target-side detection rules. |
+| **Direct Target Detections** | **14 (70%)** | **Direct rule triggers:** Dedicated rules inspecting target payloads, command arguments, process trees, and auth rate anomalies directly on victim hosts or wire |
+| **Operational Alert Coverage** | **16 (80%)** | **Actionable TheHive tickets:** The SOC received real-time incident cases for 16 stages (including root pivot session alerts during lateral movement) |
+| **Documented Detection Gaps** | **4 (20%)** | **2 Inherent Offline:** Password cracking ran locally on the attacker's GPU (zero victim telemetry by definition).<br>**2 Target Logging Limits:** Internal L2 subnet scan (missed by router; caught on wire) and BloodHound LDAP queries (pivot alerted; DC lacked EID 1644). |
 
 ---
 

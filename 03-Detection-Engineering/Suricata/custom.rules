@@ -12,8 +12,8 @@
 # Detects rapid TCP SYN scan attempts from external attacker (aleksibovellan/nmap ruleset)
 alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"POSSBL PORT SCAN (NMAP -sS)"; flags:S; threshold:type both, track by_src, count 25, seconds 5; classtype:attempted-recon; sid:3400001; rev:3;)
 
-# Detects Nmap OS fingerprint probes utilizing invalid TCP flag combinations (SYN+FIN+PSH+URG)
-alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SCAN NMAP OS Detection Probe"; flags:SFPU; reference:url,doc.emergingthreats.net/2000537; classtype:attempted-recon; sid:3400002; rev:1;)
+# Detects secondary TCP SYN probe sweeps across victim subnets (aleksibovellan/nmap ruleset)
+alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"POSSBL PORT SCAN (NMAP -sS)"; flags:S; threshold:type both, track by_src, count 10, seconds 2; classtype:attempted-recon; sid:3400002; rev:2;)
 
 # Detects multi-port reconnaissance targeting database and administrative services
 alert tcp $EXTERNAL_NET any -> $HOME_NET [22,3306,5432,1433,3389,5900] (msg:"ET SCAN Suspicious inbound to MySQL/MSSQL/PostgreSQL/SSH/VNC/RDP"; flags:S; threshold:type both, track by_src, count 5, seconds 30; classtype:attempted-recon; sid:2010937; rev:2;)
@@ -33,8 +33,8 @@ alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER PHP Sy
 alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Exploit Suspected PHP Injection Attack (cmd=)"; flow:established,to_server; http.uri; content:"cmd="; nocase; classtype:web-application-attack; sid:2014727; rev:1;)
 
 # --- STAGE 06: OUTBOUND REVERSE SHELL ---
-# Detects outbound interactive bash/sh reverse shell connections originating from web server
-alert tcp $HOME_NET any -> $EXTERNAL_NET 4444 (msg:"ET POLICY Outbound Interactive Shell Spawned / Reverse Shell TCP"; flow:established,to_server; classtype:trojan-activity; sid:3400020; rev:3;)
+# Detects outbound interactive reverse shell connections / Metasploit default listener (aleksibovellan/nmap ruleset)
+alert tcp $HOME_NET any -> $EXTERNAL_NET 4444 (msg:"POSSBL SCAN SHELL M-SPLOIT TCP"; flow:established,to_server; classtype:trojan-activity; sid:3400020; rev:2;)
 
 # --- STAGE 09: INTERNAL NETWORK RECONNAISSANCE ---
 # Detects intra-subnet or routed reconnaissance sweeps from compromised pivot host

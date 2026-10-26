@@ -33,7 +33,7 @@ Analysis of the 9,567 raw alerts in [`06-Resources/Alerts/Wazuh-Raw-Alerts.csv`]
 
 | SID | Signature Message | Stage | Target Protocol | Detection Mechanism & TheHive Alert |
 |---|---|---|---|---|
-| `3400001` / `3400002` | `POSSBL PORT SCAN (NMAP -sS)` / `ET SCAN NMAP OS Detection Probe` | 01 (Recon) & 09 (Internal Disc) | TCP SYN / Probe Flags | Inbound port sweep (`wzb-3a8045a03c`) and internal pivot sweep (`wzb-3152e3ed59`) |
+| `3400001` / `3400002` | `POSSBL PORT SCAN (NMAP -sS)` | 01 (Recon) & 09 (Internal Disc) | TCP SYN / Probe Flags | Inbound port sweep (`wzb-3a8045a03c`) and internal pivot sweep (`wzb-3152e3ed59`) |
 | `2017515` | `ET INFO User-Agent (python-requests) Inbound to Webserver` | 02 (Brute Force) | HTTP User-Agent | Automated brute-force tool hitting `/login.php` (`wzb-6a22425401`, Rule 100600) |
 | `2010960` | `ET SCAN WhatWeb Web Application Fingerprint Scanner Default User-Agent Detected` | 01 / 02 (Recon) | HTTP User-Agent | Automated web discovery probe hitting `/` and `/login.php` (Row 9058 in raw CSV) |
 | `2010963` | `ET WEB_SERVER SELECT USER SQL Injection Attempt in URI` | 03 (SQLi) | HTTP URI | UNION SELECT SQL injection targeting `/vulnerabilities/sqli/` (Row 9108 in raw CSV) |
@@ -71,7 +71,7 @@ This empirical evidence demonstrates that network sensors deployed in promiscuou
 To prevent alert fatigue and pipeline saturation during high-volume scans without blinding the sensor to the attacker, [`threshold.config`](threshold.config) implements rate limiting:
 
 ```text
-# Rate limit Nmap OS detection probe to 1 event per source IP per 60 seconds
+# Rate limit secondary Nmap SYN portscan probe to 1 event per source IP per 60 seconds
 threshold gen_id 1, sig_id 3400002, type both, track by_src, count 1, seconds 60
 
 # Rate limit multi-port database probes to 5 events per source IP per 60 seconds
