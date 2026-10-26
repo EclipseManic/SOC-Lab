@@ -34,13 +34,20 @@ The attacker starts outside the network on an isolated subnet. Every perimeter p
 ## The Attack Story in Three Acts
 
 ### 1. Break into the Web Server & Escalate to Root (Web Exploitation & Linux Host Compromise)
-The attacker scans the perimeter, discovers a vulnerable web application (DVWA), and exploits an SQL injection vulnerability to dump database credentials. After cracking an administrative password, the attacker uploads a PHP web shell through an unrestricted file upload form, catches an interactive reverse shell, elevates privileges to root using a misconfigured SUID binary, and establishes persistent SSH access.
+The attacker scans the perimeter, discovers a vulnerable web application (DVWA), and exploits an SQL injection vulnerability to dump database credentials. After cracking an administrative password, the attacker uploads a PHP web shell through an unrestricted file upload form, catches an interactive reverse shell, elevates privileges to root using a passwordless sudo Python misconfiguration (`sudo /usr/bin/python3` GTFOBins), and establishes persistent SSH access.
 
 ### 2. Pivot & Capture Network Credentials (Internal Recon, LLMNR Poisoning & AD Mapping)
 Now inside the company network, the attacker turns the compromised web server into an internal pivot. Operating from this pivot, the attacker runs Responder to poison link-local multicast name resolution (LLMNR/NBT-NS), intercepting a domain user's password hash from a Windows 10 workstation. After cracking the hash offline, the attacker launches BloodHound to map Active Directory trust relationships and identify domain attack paths.
 
 ### 3. Take Over Active Directory & Impact Endpoints (Domain Takeover, Persistence & Defacement)
 Using the mapped path, the attacker requests a Kerberos service ticket for a privileged service account (Kerberoasting) and cracks it to gain Domain Admin credentials. With domain admin rights, the attacker performs a DCSync attack against the Domain Controller to extract all Active Directory password hashes, forges an unrestricted Golden Ticket for indefinite persistence, creates a rogue domain administrator account, and pushes an unauthorized wallpaper defacement across the domain to demonstrate complete control.
+
+### The Defensive Counterpart: How Detection Engineering Intercepted the Chain
+While the adversary advanced through these three acts, the defensive stack operated as an interlocking, multi-layered mesh:
+- **At the Perimeter & Wire:** Dual-homed **Suricata NIDS** (sniffing `ens33` and `ens37`) caught inbound Nmap OS sweeps, Hydra brute-force floods, SQL injection payloads, and intra-subnet Kerberos ticket requests.
+- **In the Linux Kernel:** **Linux Auditd** intercepted system calls (`execve`) executed by the web server user (`uid=33`), exposing the PHP web shell commands and reverse shell spawn regardless of transport encryption.
+- **On the Windows Endpoints:** **Microsoft Sysmon & Windows Security Logs** caught Pass-the-Hash NTLM Type 3 logons (EID 4624), rogue account additions to `Domain Admins`, and Impacket's `wmiexec` process tree fan-out (`WmiPrvSE.exe` $\to$ `cmd.exe /Q /c`).
+- **In the Cloud SIEM & SOAR Pipeline:** **Wazuh SIEM** evaluated all feeds against 148 rule definitions and 87 noise suppressions. Alerts meeting the $\ge \text{Level 8}$ threshold triggered `custom-thehive`, an asynchronous two-tier SOAR engine using local SQLite WAL queues and a 5-second flush daemon to cluster alert floods into **46 high-fidelity incident cases in TheHive 5**—achieving an **80% overall detection rate (16 of 20 stages caught)** while shielding analysts from alert fatigue.
 
 ---
 
