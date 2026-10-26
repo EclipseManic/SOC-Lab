@@ -1,6 +1,6 @@
 # Case 02 — Lateral Movement and Credential Access
 
-> **Status:** Closed (Resolved)  
+> **Status:** Draft, not yet validated  
 > **TheHive case ID:** `CAS-002-LATMOVE`  
 > **Severity:** Critical  
 > **TLP / PAP:** `TLP:AMBER / PAP:AMBER`  
@@ -31,7 +31,7 @@ Following root privilege escalation on the DVWA host (`192.168.56.30`), the adve
 
 | Source | What it contributed |
 |---|---|
-| **Suricata** | Sniffing on `ens37` in promiscuous mode captured internal subnet port sweeps from DVWA (SIDs 3400001, 3400002, 3400020) and Kerberos TGS-REQ wire frames during Kerberoasting (SID 2019922). |
+| **Suricata** | Dual-interface NIDS: promiscuous capture on `ens37` observed internal subnet port sweeps from DVWA (SIDs 3400001, 3400002, 3400020) and Kerberos TGS-REQ wire frames during Kerberoasting (SID 2019922). |
 | **Wazuh** | Monitored Linux authentication on DVWA: authorized_keys modification (Rule 100215) and interactive root SSH logons (Rule 5715 elevated to Level 8) providing end-to-end pivot visibility. Monitored Windows domain member events. |
 | **TheHive** | Aggregated pivot logons and network IDS alerts into correlated incident cases. |
 | **Velociraptor** | Queried Active Directory audit events, inspected `/root/.ssh/authorized_keys` and `/tmp/hank.hash` on DVWA pivot. |

@@ -1,6 +1,6 @@
 # Investigation — Stage 14 — DCSync
 
-> **Status:** In Progress  
+> **Status:** Draft, not yet validated  
 > **Attack stage:** [Stage 14](../../02-Attack-Simulation/Stages/stage-14-dcsync.md)  
 > **TheHive case:** [Lateral Movement and Credential Access](../Cases/case-02-lateral-movement.md)  
 

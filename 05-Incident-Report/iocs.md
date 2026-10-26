@@ -40,7 +40,7 @@ Comprehensive inventory of observable artifacts generated and verified during th
 |---|---|---|---|
 | `admin` | DVWA Local | Web Administrator | Web user account compromised via SQL injection. |
 | `www-data` | Linux Local | Service Account | Web server execution context abused for reverse shell. |
-| `root` | Linux Local | Superuser | Privileged local account compromised via SUID find abuse. |
+| `root` | Linux Local | Superuser | Privileged local account compromised via passwordless sudo Python misconfiguration. |
 | `ad.lab\win10` | Active Directory | Domain User | Workstation user account compromised via Responder LLMNR poisoning. |
 | `ad.lab\HANK_SHERMAN` | Active Directory | Domain Admin (SPN) | High-privilege account kerberoasted via `GetUserSPNs.py`. |
 | `ad.lab\Administrator` | Active Directory | Built-in Administrator | Target account for Pass-the-Hash lateral movement. |

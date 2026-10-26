@@ -1,6 +1,6 @@
 # Investigation — Stage 19 — Exfiltration
 
-> **Status:** In Progress  
+> **Status:** Draft, not yet validated  
 > **Attack stage:** [Stage 19](../../02-Attack-Simulation/Stages/stage-19-exfiltration.md)  
 > **TheHive case:** [Domain Compromise and Impact](../Cases/case-03-domain-compromise.md)  
 

@@ -1,6 +1,6 @@
 # Investigation — Stage 13 — Kerberoasting
 
-> **Status:** In Progress  
+> **Status:** Draft, not yet validated  
 > **Attack stage:** [Stage 13](../../02-Attack-Simulation/Stages/stage-13-kerberoasting.md)  
 > **TheHive case:** [Lateral Movement and Credential Access](../Cases/case-02-lateral-movement.md)  
 
@@ -20,7 +20,7 @@
 
 ## What was detected
 
-Adversary requested a Kerberos service ticket (TGS-REQ) for service account `HANK_SHERMAN` to extract its crackable ticket. Suricata on `ens37` flagged the Kerberos wire activity on port 88 (SID 2019922), and Wazuh Rule 5715 captured the pivot session.
+Adversary requested a Kerberos service ticket (TGS-REQ) for service account `HANK_SHERMAN` to extract its crackable ticket. Suricata (operating in dual-interface mode, capturing intra-segment frames on `ens37` in promiscuous mode) flagged the Kerberos wire activity on port 88 (SID 2019922), and Wazuh Rule 5715 captured the pivot session.
 
 ---
 

@@ -65,6 +65,12 @@ As documented in [`06-Resources/Alerts/Wazuh-Raw-Alerts.csv`](../../06-Resources
 
 This empirical evidence demonstrates that network sensors deployed in promiscuous mode provide critical intra-subnet detection capabilities even when packets bypass gateway routing.
 
+> [!NOTE]
+> **Dual-Interface Packet Evaluation & Telemetry Accounting:**  
+> Because Suricata runs AF-PACKET listeners on both the external perimeter interface (`ens33`) and the internal routed interface (`ens37`), routed packets crossing the Layer 3 kernel forwarding boundary are evaluated upon ingress and again upon egress.  
+> - In the raw telemetry baseline ([`Wazuh-Raw-Alerts.csv`](../../06-Resources/Alerts/Wazuh-Raw-Alerts.csv)), this generates dual-interface alert events for cross-boundary traffic (e.g. `in_iface: ens33` and `in_iface: ens37`).
+> - In operational metrics, **this does NOT inflate incident figures**. The headline detection rate is measured across the **20 attack stages**, and the 46 TheHive cases ([`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)) are produced by the `custom-thehive` asynchronous SOAR pipeline, which groups and de-duplicates alert bursts by tool fingerprint, source IP, and correlation time window into single consolidated incident tickets.
+
 ---
 
 ## 5. Noise Reduction & Rate Limiting (`threshold.config`)

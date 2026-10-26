@@ -1,6 +1,6 @@
 # Investigation — Stage 15 — Pass-the-Hash
 
-> **Status:** In Progress  
+> **Status:** Draft, not yet validated  
 > **Attack stage:** [Stage 15](../../02-Attack-Simulation/Stages/stage-15-pass-the-hash.md)  
 > **TheHive case:** [Domain Compromise and Impact](../Cases/case-03-domain-compromise.md)  
 

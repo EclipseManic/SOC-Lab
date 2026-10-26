@@ -1,6 +1,6 @@
 # Investigation — Stage 06 — Reverse Shell
 
-> **Status:** In Progress  
+> **Status:** Draft, not yet validated  
 > **Attack stage:** [Stage 06](../../02-Attack-Simulation/Stages/stage-06-reverse-shell.md)  
 > **TheHive case:** [Web Application Compromise](../Cases/case-01-web-compromise.md)  
 

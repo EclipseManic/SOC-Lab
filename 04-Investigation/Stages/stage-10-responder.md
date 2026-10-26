@@ -1,6 +1,6 @@
 # Investigation — Stage 10 — Responder Poisoning
 
-> **Status:** In Progress  
+> **Status:** Draft, not yet validated  
 > **Attack stage:** [Stage 10](../../02-Attack-Simulation/Stages/stage-10-responder.md)  
 > **TheHive case:** [Lateral Movement and Credential Access](../Cases/case-02-lateral-movement.md)  
 

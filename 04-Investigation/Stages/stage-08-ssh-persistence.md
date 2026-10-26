@@ -1,6 +1,6 @@
 # Investigation — Stage 08 — SSH Persistence
 
-> **Status:** In Progress  
+> **Status:** Draft, not yet validated  
 > **Attack stage:** [Stage 08](../../02-Attack-Simulation/Stages/stage-08-ssh-persistence.md)  
 > **TheHive case:** [Lateral Movement and Credential Access](../Cases/case-02-lateral-movement.md)  
 

@@ -1,6 +1,6 @@
 # Investigation — Stage 03 — SQL Injection
 
-> **Status:** In Progress  
+> **Status:** Draft, not yet validated  
 > **Attack stage:** [Stage 03](../../02-Attack-Simulation/Stages/stage-03-sqli.md)  
 > **TheHive case:** [Web Application Compromise](../Cases/case-01-web-compromise.md)  
 

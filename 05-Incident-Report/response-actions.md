@@ -20,7 +20,7 @@ Procedures executed during the incident response lifecycle to contain, eradicate
 | Step | Action | Target Asset | Operational Command / Method | Verification |
 |---|---|---|---|---|
 | **2.1** | Web Shell Quarantine | DVWA (`192.168.56.30`) | Remove `/var/www/html/hackable/uploads/shell.php` | Verified file deletion and directory clean. |
-| **2.2** | SUID Bit Removal | DVWA (`192.168.56.30`) | `chmod u-s /usr/bin/find` | Verified permissions revert to `0755`. |
+| **2.2** | Sudoers Hardening | DVWA (`192.168.56.30`) | Remove `NOPASSWD: /usr/bin/python3` entry from `/etc/sudoers.d/` | Verified `www-data` cannot execute sudo commands. |
 | **2.3** | Persistence Clean | DVWA (`192.168.56.30`) | Clear unauthorized keys from `/root/.ssh/authorized_keys` | Verified authorized_keys contains only management key. |
 | **2.4** | Backdoor User Purge | PC-DC (`192.168.56.10`) | `Remove-ADUser -Identity backdoor_admin -Confirm:$false` | Confirmed account removed from Active Directory. |
 | **2.5** | Staged Data Purge | DVWA / Windows | Delete `/tmp/data.tar.gz`, `/tmp/hank.hash`, `C:\Windows\Temp\hacked.bmp` | Verified disk clean on all staging paths. |

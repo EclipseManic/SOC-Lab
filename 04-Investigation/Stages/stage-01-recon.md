@@ -1,6 +1,6 @@
 # Investigation — Stage 01 — Reconnaissance
 
-> **Status:** In Progress  
+> **Status:** Draft, not yet validated  
 > **Attack stage:** [Stage 01](../../02-Attack-Simulation/Stages/stage-01-recon.md)  
 > **TheHive case:** [Web Application Compromise](../Cases/case-01-web-compromise.md)  
 

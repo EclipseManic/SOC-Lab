@@ -1,6 +1,6 @@
 # Investigation — Stage 07 — Privilege Escalation
 
-> **Status:** In Progress  
+> **Status:** Draft, not yet validated  
 > **Attack stage:** [Stage 07](../../02-Attack-Simulation/Stages/stage-07-privesc.md)  
 > **TheHive case:** [Web Application Compromise](../Cases/case-01-web-compromise.md)  
 
@@ -20,7 +20,7 @@
 
 ## What was detected
 
-Adversary abused a misconfigured SUID `/usr/bin/find` binary and executed commands escalating to `root`. Linux Auditd recorded the command execution under uid 33, and Wazuh PAM authentication logs captured successful root elevation (Rule 5402, 12 instances).
+Adversary exploited an insecure sudoers misconfiguration permitting passwordless execution of `/usr/bin/python3` (GTFOBins) from unprivileged account `www-data`. Linux Auditd recorded the command execution under uid 33, and Wazuh PAM authentication logs captured successful root elevation (Rule 5402, 12 instances).
 
 ---
 
@@ -30,16 +30,16 @@ Adversary abused a misconfigured SUID `/usr/bin/find` binary and executed comman
 |---|---|
 | **Verdict** | True Positive |
 | **Confidence** | High |
-| **Rationale** | Abuse of SUID misconfiguration on find binary allowing unprivileged www-data user to spawn a root shell and access sensitive system files. |
+| **Rationale** | Abuse of passwordless sudoers misconfiguration on `/usr/bin/python3` allowing unprivileged www-data user to spawn a root bash shell. |
 
 ---
 
 ## Investigation steps
 
-1. Verified Auditd execve events for /usr/bin/find with euid=0.
-2. Analyzed command line arguments: find . -exec /bin/sh -p \;.
-3. Confirmed subsequent file access event on /etc/shadow with key cat_sensitive_file.
-4. Correlated with Wazuh Rule 100603 elevated alert in TheHive.
+1. Verified Auditd execve events for `/usr/bin/python3` with euid=0.
+2. Analyzed command line arguments: `sudo /usr/bin/python3 -c 'import os; os.system("/bin/bash")'`.
+3. Confirmed Wazuh Rule 5402 (PAM: Successful sudo to ROOT) triggered 12 times.
+4. Correlated with bash process creation under root context.
 5. Marked Case 01 scope as fully escalated to local root.
 
 ---
@@ -56,8 +56,8 @@ Adversary abused a misconfigured SUID `/usr/bin/find` binary and executed comman
 
 | Type | Value | Context |
 |---|---|---|
-| Binary | `/usr/bin/find` | SUID binary abused for escalation |
-| File | `/etc/shadow` | Sensitive credential store accessed |
+| Binary | `/usr/bin/python3` | Sudoers NOPASSWD binary abused for root escalation |
+| Command | `sudo /usr/bin/python3 -c 'import os; os.system("/bin/bash")'` | GTFOBins root escape execution |
 | EUID | `0 (root)` | Escalated effective user ID |
 
 ---
@@ -66,13 +66,13 @@ Adversary abused a misconfigured SUID `/usr/bin/find` binary and executed comman
 
 - **Status:** Detected (Host Alerted)
 - **Gap ID:** None
-- **Engineering Assessment:** Rule 100603 elevated to Level 8 ensured immediate transmission to TheHive 5 queue.
+- **Engineering Assessment:** PAM Rule 5402 and Auditd execve logging captured the sudo transition and child bash shell with zero latency.
 
 ---
 
 ## Verdict
 
-Confirmed True Positive local root privilege escalation via SUID find abuse.
+Confirmed True Positive local root privilege escalation via passwordless sudo Python GTFOBins execution.
 
 ---
 

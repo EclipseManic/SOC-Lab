@@ -1,6 +1,6 @@
 # Investigation — Stage 02 — Brute Force
 
-> **Status:** In Progress  
+> **Status:** Draft, not yet validated  
 > **Attack stage:** [Stage 02](../../02-Attack-Simulation/Stages/stage-02-bruteforce.md)  
 > **TheHive case:** [Web Application Compromise](../Cases/case-01-web-compromise.md)  
 
@@ -20,7 +20,7 @@
 
 ## What was detected
 
-Suricata and Wazuh flagged an aggressive HTTP POST credential brute-force attack against `/login.php` using Hydra from `192.168.232.135`. Wazuh Rule 100213 alerted on multiple 401 Unauthorized responses, while Suricata SID 2000547 detected python-requests user-agent patterns.
+Suricata and Wazuh flagged an aggressive HTTP POST credential brute-force attack against `/login.php` using custom Python automation (`dvwa_bruteforce.py`) from `192.168.232.135`. Wazuh Rule 100213 alerted on multiple 401 Unauthorized responses, while Suricata SID 2017515 / 2000547 detected `python-requests` user-agent patterns.
 
 ---
 
@@ -38,7 +38,7 @@ Suricata and Wazuh flagged an aggressive HTTP POST credential brute-force attack
 
 1. Inspected DVWA Apache access logs for rapid POST requests to /dvwa/login.php.
 2. Verified 401 Unauthorized response codes exceeding threshold within 15 seconds.
-3. Confirmed Suricata signature match for Hydra brute-force tooling.
+3. Confirmed Suricata signature match for automated Python brute-force tooling (`python-requests` / 4xx burst).
 4. Identified target account under attack (admin).
 5. Checked for eventual HTTP 302/200 success response indicating successful compromise.
 
