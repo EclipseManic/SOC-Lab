@@ -87,7 +87,6 @@ whoami
 
 | Tactic | Technique | ID | Sub-technique |
 |---|---|---|---|
-| Privilege Escalation | Exploitation for Privilege Escalation | T1068 | — |
 | Privilege Escalation | Abuse Elevation Control Mechanism | T1548 | Sudo and Sudo Caching (T1548.003) |
 
 ## Detection opportunities

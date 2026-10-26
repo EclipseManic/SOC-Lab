@@ -79,4 +79,4 @@ Confirmed True Positive local root privilege escalation via passwordless sudo Py
 ## MITRE ATT&CK
 
 - **Tactic:** Privilege Escalation
-- **Technique:** Abuse Elevation Control Mechanism: Setuid and Setgid (T1548.001)
+- **Technique:** Abuse Elevation Control Mechanism: Sudo and Sudo Caching (T1548.003)
