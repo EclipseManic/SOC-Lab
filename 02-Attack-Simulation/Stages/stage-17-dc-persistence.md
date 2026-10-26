@@ -58,8 +58,14 @@ This action represents complete enterprise persistence, allowing the adversary t
 
 ### Detection & Alert Screenshots
 
+![TheHive Alert 15 — Rogue Domain Account Creation Overview](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/15.png)
+*Figure 17.3: TheHive Alert 15 overview capturing rogue user `backdoor` creation on Domain Controller (`wzb-26b4d06a63`).*
+
+![TheHive Alert 15.5 — Security Group Elevation Details](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/15.5.png)
+*Figure 17.4: Alert 15 event details displaying Event ID 4728 (Domain Admins group addition).*
+
 ![TheHive alert list showing dense alert volume for persistence activities](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/17.png)
-*Figure 17.3: TheHive alert dashboard displaying multiple correlated alerts for account creation, group membership changes, and WMI execution.*
+*Figure 17.5: TheHive alert dashboard displaying multiple correlated alerts for account creation, group membership changes, and WMI execution.*
 
 ![Impacket wmiexec fan-out alert for net user and net group commands](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/17.1.png)
 *Figure 17.4: Process Fan-Out alert (Rule 100613) capturing remote command execution for account creation and group additions.*

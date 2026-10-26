@@ -58,8 +58,14 @@ Using native command concatenation, the attacker executed `cmd /c "type C:\Users
 
 ### Detection & Alert Screenshots
 
+![TheHive Alert 16 — Domain Controller Process Fan-Out Overview](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/16.png)
+*Figure 18.3: TheHive Alert 16 overview capturing process fan-out on DomainWin10 under parent PID 4432 (`wzb-aa66cb916a`).*
+
+![TheHive Alert 16.5 — Process Execution Telemetry Details](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/16.5.png)
+*Figure 18.4: Alert 16 event breakdown showing child process command line executions for data harvesting.*
+
 ![TheHive alert overview for data collection activities](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/18.png)
-*Figure 18.3: TheHive alert dashboard showing process fan-out alerts generated on both DomainWin10 (DC) and Win10User endpoints.*
+*Figure 18.5: TheHive alert dashboard showing process fan-out alerts generated on both DomainWin10 (DC) and Win10User endpoints.*
 
 ![Wazuh alert on PC-DC detecting net user and whoami collection output redirection](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/18.1.png)
 *Figure 18.4: Wazuh Sysmon alert (Rule 100613) capturing command execution on PC-DC writing `domain_users.txt` and `admin_info.txt`.*

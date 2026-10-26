@@ -126,7 +126,7 @@ echo "192.168.56.10 PC-DC.ad.lab ad.lab" >> /etc/hosts
 
 | Source | Rule / Signature | Rule ID | TheHive Alert | Severity | Status |
 |---|---|---|---|---|---|
-| Suricata / Wazuh | Network Port Scanning / Internal Reconnaissance Sweep | Suricata Portscan / Wazuh 100xxx | Alert 8 (`8.png`, `8.1.png`) | Medium | Detected |
+| Suricata / Wazuh | Network Port Scanning / Internal Reconnaissance Sweep | Suricata SIDs 3400001, 3400002, 3400020 / Wazuh 86601 | Alert 8 (`8.png`, `8.1.png`) | Medium | Detected |
 
 ## MITRE ATT&CK
 

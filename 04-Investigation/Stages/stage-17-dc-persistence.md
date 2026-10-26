@@ -47,7 +47,7 @@ Adversary created a rogue local domain user `backdoor_admin` and added it to Dom
 ## Evidence
 
 - **Attack Evidence:** [`../../02-Attack-Simulation/Attack-Screenshots/52.png`](../../02-Attack-Simulation/Attack-Screenshots/52.png)
-- **Alert Evidence:** [`../../03-Detection-Engineering/TheHive_Alert-ScreenShot/15.png`](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/15.png)
+- **Alert Evidence:** [`../../03-Detection-Engineering/TheHive_Alert-ScreenShot/15.png`](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/15.png), [`../../03-Detection-Engineering/TheHive_Alert-ScreenShot/15.5.png`](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/15.5.png)
 - **Raw Telemetry:** Exported in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv), [`Wazuh-Raw-Alerts.csv`](../../06-Resources/Alerts/Wazuh-Raw-Alerts.csv), and [`thehive_alerts.json`](../../06-Resources/Alerts/thehive_alerts.json)
 
 ---
