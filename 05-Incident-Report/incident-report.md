@@ -96,7 +96,7 @@ Mean Time to Detect (MTTD):             < 15 seconds for online telemetry
 | Weakness / Control Gap | Attack Phase Exploit | Strategic Engineering Fix |
 |---|---|---|
 | Insecure Web File Upload | Stage 05 (Web Shell) | Implement strict MIME-type validation and mount uploads directory with `noexec`. |
-| SUID Binary Misconfiguration | Stage 07 (Privesc) | Regular compliance auditing with `find / -perm -4000`; strip unnecessary SUID bits. |
+| Sudoers Misconfiguration (NOPASSWD) | Stage 07 (Privesc) | Enforce strict least-privilege in `/etc/sudoers.d/`; eliminate NOPASSWD entries for interpreters like `python3`. |
 | Insecure Protocols (LLMNR/NBT-NS) | Stage 10 (Responder) | Globally disable LLMNR and NetBIOS over TCP/IP via Group Policy across all domain endpoints. |
 | Privileged Service Principal Names | Stage 13 (Kerberoasting) | Prohibit SPNs on Domain Admin accounts; transition all services to Group Managed Service Accounts (gMSA). |
 | Unaudited Directory Replication | Stage 14 (DCSync) | Restrict DRSUAPI replication permissions strictly to Domain Controller computer objects; alert on EID 4662. |

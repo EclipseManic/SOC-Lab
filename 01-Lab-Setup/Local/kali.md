@@ -8,7 +8,7 @@
 | **Resources** | 6 vCPU · 6 GB RAM |
 | **Default Gateway** | `192.168.232.2` (VMware NAT Gateway) |
 | **Static Route** | `192.168.56.0/24` via `192.168.232.162` (Suricata Gateway) |
-| **SSH Management** | Host laptop key (`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFImUu819rU/dVwoUxcH2WnR10MGqK5tlNDMp7U4so68 manichand gupta@ManicLenovo`) |
+| **SSH Management** | Dedicated administrative key (`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5...<REDACTED_MANAGEMENT_KEY>... soc-analyst@management`) |
 
 > [!IMPORTANT]
 > **Implementation Notice — Reference Architecture vs. Blind Copy-Paste:**

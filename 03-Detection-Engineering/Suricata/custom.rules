@@ -1,22 +1,26 @@
 # =========================================================================
-# custom.rules — Lab-Specific & ET Open Signatures for Suricata 8.0.6
+# custom.rules — Curated Network Signatures for Suricata 8.0.6
 # Path: /etc/suricata/rules/custom.rules
 # Tested on: Suricata Gateway (Ubuntu 24.04, ens33 / ens37 / wg0)
+# Sources:
+#   1. Aleksi Bovellan Nmap Ruleset (SID 3400000+ series)
+#   2. Emerging Threats (ET Open) Community Signatures (SID 2000000+ series)
+#   3. Lab-specific intrusion detection tuning
 # =========================================================================
 
 # --- STAGE 01: RECONNAISSANCE & PORT SCANNING ---
+# Detects rapid TCP SYN scan attempts from external attacker (aleksibovellan/nmap ruleset)
+alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"POSSBL PORT SCAN (NMAP -sS)"; flags:S; threshold:type both, track by_src, count 25, seconds 5; classtype:attempted-recon; sid:3400001; rev:3;)
+
 # Detects Nmap OS fingerprint probes utilizing invalid TCP flag combinations (SYN+FIN+PSH+URG)
 alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET SCAN NMAP OS Detection Probe"; flags:SFPU; reference:url,doc.emergingthreats.net/2000537; classtype:attempted-recon; sid:3400002; rev:1;)
-
-# Detects rapid TCP SYN scan attempts from external attacker
-alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"POSSBL PORT SCAN (NMAP -sS)"; flags:S; threshold:type both, track by_src, count 25, seconds 5; classtype:attempted-recon; sid:2000537; rev:3;)
 
 # Detects multi-port reconnaissance targeting database and administrative services
 alert tcp $EXTERNAL_NET any -> $HOME_NET [22,3306,5432,1433,3389,5900] (msg:"ET SCAN Suspicious inbound to MySQL/MSSQL/PostgreSQL/SSH/VNC/RDP"; flags:S; threshold:type both, track by_src, count 5, seconds 30; classtype:attempted-recon; sid:2010937; rev:2;)
 
 # --- STAGE 03: SQL INJECTION EXPLOITATION ---
 # Detects SELECT USER / UNION SELECT SQL injection attempts in URI parameters
-alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER SELECT USER SQL Injection Attempt in URI"; flow:established,to_server; http.uri; content:"UNION"; nocase; content:"SELECT"; nocase; pcre:"/(?:user|password|schema|table_name)/i"; classtype:web-application-attack; sid:2010938; rev:4;)
+alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER SELECT USER SQL Injection Attempt in URI"; flow:established,to_server; http.uri; content:"UNION"; nocase; content:"SELECT"; nocase; pcre:"/(?:user|password|schema|table_name)/i"; classtype:web-application-attack; sid:2010963; rev:4;)
 
 # Detects WhatWeb web application fingerprinting tool default User-Agent
 alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET SCAN WhatWeb Web Application Fingerprint Scanner Default User-Agent Detected"; flow:established,to_server; http.user_agent; content:"WhatWeb"; depth:7; classtype:attempted-recon; sid:2001569; rev:2;)
@@ -30,7 +34,7 @@ alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Exploi
 
 # --- STAGE 06: OUTBOUND REVERSE SHELL ---
 # Detects outbound interactive bash/sh reverse shell connections originating from web server
-alert tcp $HOME_NET any -> $EXTERNAL_NET 4444 (msg:"ET POLICY Outbound Interactive Shell Spawned / Reverse Shell TCP"; flow:established,to_server; classtype:trojan-activity; sid:2002752; rev:3;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET 4444 (msg:"ET POLICY Outbound Interactive Shell Spawned / Reverse Shell TCP"; flow:established,to_server; classtype:trojan-activity; sid:3400020; rev:3;)
 
 # --- STAGE 09: INTERNAL NETWORK RECONNAISSANCE ---
 # Detects intra-subnet or routed reconnaissance sweeps from compromised pivot host

@@ -155,7 +155,7 @@ Here are the three biggest challenges we tackled:
 - **How We Fixed It (`thecustomhive` Two-Tier Pipeline):**
   We replaced Shuffle with a custom, high-speed Python automation pipeline:
 
-[![Wazuh-TheHive Neon Alert Pipeline](../06-Resources/Diagrams/Wazuh–TheHive%20Neon%20Alert%20Pipeline.png)](../06-Resources/Diagrams/Wazuh–TheHive%20Neon%20Alert%20Pipeline.png)
+[![Wazuh-TheHive Neon Alert Pipeline](../06-Resources/Diagrams/Wazuh-TheHive%20Neon%20Alert%20Pipeline.png)](../06-Resources/Diagrams/Wazuh-TheHive%20Neon%20Alert%20Pipeline.png)
 *Figure 3: Two-tier asynchronous alert correlation pipeline from Wazuh Manager Level ≥ 8 trigger into TheHive 5 case management.*
 
   - **Tier 1 (Instant Local Buffer — Zero HTTP):** When an alert ($\ge 8$) fires, Wazuh executes `/var/ossec/integrations/custom-thehive`. Instead of making network calls, this lightweight script writes the alert JSON into a local SQLite database running in Write-Ahead Logging (WAL) mode. This executes in under **0.2 milliseconds** locally. The Wazuh engine never freezes or drops an alert.
@@ -164,6 +164,7 @@ Here are the three biggest challenges we tackled:
 
 ---
 
+<a id="4-detection-gap-register--blind-spot-analysis"></a><a id="detection-gap-register"></a>
 ### Challenge 3: The Honest Gap Register (Why 80% Detection is Real Security)
 In junior cybersecurity labs, people often claim "100% detection rate." In real enterprise security, 100% detection is impossible. 
 
@@ -182,6 +183,17 @@ We achieved an **80% detection rate (16 out of 20 stages caught)**. More importa
 4. **Encrypted Transport Blindness (Stage 19 — Exfiltration via SCP):**
    - *Why It Was Missed on the Wire:* The attacker transferred files over encrypted SSH/SCP (`22/TCP`). Network sniffers cannot read encrypted file contents.
    - *How We Caught It Anyway:* Wazuh's correlation engine detected an authentication anomaly: a rapid burst of 6 administrative SSH logins in under one second (`Rule 5715`), catching the exfiltration through behavior rather than packet inspection.
+
+> [!NOTE]
+> **Detection Accounting Methodology — Direct Target Detection vs. Correlated Pivot Alerting:**  
+> A critical distinction in detection engineering is differentiating between **direct target-side rule triggers** and **correlated operational session alerts**:
+> - **Direct Target-Side Detections (14 of 20 stages, 70%):** A specific rule directly caught the adversary's payload, binary, or behavior on the target system (e.g., Stage 05 Web Shell `execve` via Auditd, Stage 15 Pass-the-Hash Type 3 NTLM via EID 4624, Stage 17 Backdoor User via Rule 100613, or Stage 19 SCP bulk exfiltration via rapid 6-login/second burst anomaly).
+> - **Operational Pivot Alerts (TheHive Incident Tickets):** When the adversary pivoted through DVWA to attack Active Directory, every operational phase triggered root SSH session alerts (`Rule 5715`) in TheHive. However, on the Windows Domain Controller target:
+>   - *Stage 12 (BloodHound)* is classified as a **Logging Gap (DG-12)** because Windows Server did not log LDAP search queries on the DC without custom registry key `15 Field Engineering = 5`.
+>   - *Stage 14 (DCSync)* was logged on the DC as Event ID 4662 (`DS-Replication-Get-Changes-All`), and the operational session alerted in TheHive.
+>   - *Stage 16 (Golden Ticket)* was logged on the DC as Event ID 4769 with legacy RC4-HMAC encryption, and the operational session alerted in TheHive.
+> - **Inherent Offline Computation Gaps (2 of 20 stages, 10%):** Stages 04 & 11 occurred locally on the attacker's GPU with zero target interaction.
+> - **Summary Verdict:** The blue team received **actionable SOC alerts in TheHive for 16 of 20 stages (80%)**, with **14 stages possessing dedicated target-side signatures** and **4 cataloged telemetry/offline gaps**.
 
 ---
 
@@ -223,6 +235,7 @@ Here is the complete traceability matrix mapping all 20 adversary stages across 
 
 ---
 
+<a id="5-thecustomhive-alert-pipeline"></a><a id="thecustomhive-alert-pipeline"></a>
 ## 5. Telemetry Architecture: Live SOAR Ingestion vs. Analyst Dashboard Triage
 
 A critical architectural distinction in this SOC lab is understanding **how the numbers 9,567, 808, and 46 actually relate to each other**. They are **not** a single linear waterfall; rather, they represent **two distinct operational pathways** originating from the same baseline telemetry stream:

@@ -8,7 +8,7 @@
 | **Resources** | 2–3 vCPU · 3 GB RAM |
 | **Suricata Engine** | Version 8.0.6 (AF-PACKET passive IDS mode on victim interface `ens37`) |
 | **Wazuh Agent** | `Suricata` |
-| **SSH Management** | Host laptop key (`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5... manichand gupta@ManicLenovo`) |
+| **SSH Management** | Dedicated administrative key (`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5...<REDACTED_MANAGEMENT_KEY>... soc-analyst@management`) |
 
 ---
 

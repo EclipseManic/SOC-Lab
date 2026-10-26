@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached  
 > **Case:** [Case 02](../../04-Investigation/Cases/case-02-lateral-movement.md)  
 > **Investigation:** [Stage 11](../../04-Investigation/Stages/stage-11-ntlmv2-crack.md)  
-> **Evidence:** [attack](../Attack-Screenshots/31.png) · [alert (none)](../../03-Detection-Engineering/README.md#4-detection-gap-register--blind-spot-analysis#register)
+> **Evidence:** [attack](../Attack-Screenshots/31.png) · [alert (none)](../../03-Detection-Engineering/README.md#detection-gap-register)
 
 ---
 
@@ -69,7 +69,7 @@ Because NetNTLMv2 challenge-response hashes cannot be used directly in Pass-the-
 
 ### Detection Gap Details
 
-- **Gap Identifier:** [DG-11](../../03-Detection-Engineering/README.md#4-detection-gap-register--blind-spot-analysis#register)
+- **Gap Identifier:** [DG-11](../../03-Detection-Engineering/README.md#detection-gap-register)
 - **Root Cause:** Offline cryptographic attacks generate zero host, endpoint, or network telemetry on the victim infrastructure. Once a challenge-response hash is captured over the wire or extracted from memory, cracking is conducted entirely out-of-band on adversary-owned hardware.
 - **Defensive Significance:** Detection cannot rely on spotting the cracking process itself. SOC teams must focus detection efforts upstream on hash extraction/poisoning (Stage 10) or downstream on the initial logon using the cracked credential (Stage 12).
 

@@ -17,6 +17,12 @@ Wazuh functions as the centralized SIEM and correlation engine in the SOC lab. I
 
 Alerts matching level $\ge 8$ (or designated high-priority SIDs) are passed via Wazuh's integration mechanism to [`custom-thehive`](../../06-Resources/Scripts/custom-thehive), which persists them in an SQLite WAL queue before asynchronous correlation and dispatch to TheHive 5.
 
+### Ruleset Composition in `local_rules.xml`
+The production ruleset contains **148 total `<rule id>` definitions**:
+- **133 Custom Laboratory Rules (`id >= 100000`):** Behavioral detections, process fan-outs, Impacket tracking, and custom web shell decoders.
+- **15 Core Rule Overwrites (`id < 100000`, `overwrite="yes"`):** Elevation of critical core rules (e.g., elevating Suricata Rule `86601` to Level 8 for TheHive forwarding; PAM authentication elevation).
+- **87 Noise Suppression Rules (`level="0"`):** Zero-overhead filtering dropping background hypervisor, OS service, and machine account polling.
+
 [![Wazuh Log Ingestion & Rules Engine Flow](../../06-Resources/Diagrams/Wazuh%20Log%20Ingestion%20to%20TheHive%20Flow.png)](../../06-Resources/Diagrams/Wazuh%20Log%20Ingestion%20to%20TheHive%20Flow.png)
 
 ---
@@ -190,6 +196,7 @@ Processes Apache access logs decoded by custom web parsers:
 
 ---
 
+<a id="3-decoders-catalog-local_decoderxml"></a>
 ## 3. Decoders Catalog (`local_decoder.xml`)
 
 ### Custom Shell Decoder: `bashcmd`
@@ -228,7 +235,7 @@ uid:0 user:root pwd:/root/.ssh cmd:echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA...
 
 ## 4. The 87 Suppressions & Noise Reduction Architecture
 
-Of the 133 rules in `local_rules.xml`, **87 are Level 0 suppressions**. Rather than letting high-volume benign OS events flood the SIEM and exhaust analyst attention, noise is silenced at the earliest evaluation stage. Each suppression rule is safe by design:
+Across the 148 total rule definitions in `local_rules.xml` (comprising 133 custom rules with ID $\ge$ 100000 and 15 core rule overwrites with ID < 100000), **87 are Level 0 suppressions**. Rather than letting high-volume benign OS events flood the SIEM and exhaust analyst attention, noise is silenced at the earliest evaluation stage. Each suppression rule is safe by design:
 
 1. **Machine Account Logons (32 rules):** Silences routine background authentications from domain machine accounts (`WIN10$`, `PC-DC$`), Type 3/5 service authentications, and routine Kerberos TGS renewals for local computer services (`100610`, `100611`, `100287`, `100288`).
    - *Why it is safe:* Suppressions require the username to terminate in `$` (domain computer accounts) and originate from local or DC addresses. Non-machine accounts and machine accounts logging on from anomalous or non-local IP addresses remain fully alertable via Rules `100601`, `100602`, and `100603`.

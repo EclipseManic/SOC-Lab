@@ -17,7 +17,7 @@ Stage-by-stage mapping of the adversary campaign across the MITRE ATT&CK enterpr
 | 04 | Hash Cracking | Credential Access | Password Cracking | `T1110.002` | **Detection Gap** (Offline) | *Inherent Offline Gap (DG-04)* |
 | 05 | Web Shell Upload | Persistence | Server Software Component: Web Shell | `T1505.003` | **Detected** | Suricata SID `2019284` / Wazuh `100214` (Level 12) / Auditd `web_process_creation` |
 | 06 | Reverse Shell | Execution | Command and Scripting Interpreter: Unix Shell | `T1059.004` | **Detected** | Suricata SID `3400020` / Wazuh `100199` |
-| 07 | Privilege Escalation | Privilege Escalation | Abuse Elevation Control Mechanism: SUID | `T1548.003` | **Detected (Host Alerted)** | Wazuh `5402` (PAM) / Auditd `web_process_creation` |
+| 07 | Privilege Escalation | Privilege Escalation | Abuse Elevation Control Mechanism: Sudo and Sudo Caching | `T1548.003` | **Detected (Host Alerted)** | Wazuh `5402` (PAM) / Auditd `web_process_creation` |
 | 08 | SSH Persistence | Persistence | Account Manipulation: SSH Authorized Keys | `T1098.004` | **Detected** | Wazuh `5715` (Elevated Level 8) / Wazuh `550` (Syscheck) |
 | 09 | Internal Discovery | Discovery | Remote System Discovery | `T1018` | **Logging Gap (Network Alerted; DG-09)** | Suricata SIDs `3400001`, `3400002`, `3400020` on `ens37` (14 alerts) |
 | 10 | Responder Poisoning | Credential Access | Adversary-in-the-Middle: LLMNR/NBT-NS Poisoning | `T1557.001` | **Detected (Pivot Telemetry)** | Wazuh `bashcmd` (uid:0 Responder.py execution on pivot) |
