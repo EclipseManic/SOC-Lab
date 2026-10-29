@@ -6,14 +6,18 @@ import type { StageStatus } from "@/data";
 export const tone = {
   attacker: "#f2779a",
   defender: "#35e0c2",
+  teal: "#35e0c2",
+  cyan: "#00f0ff",
   gap: "#f2b84b",
   infrastructure: "#6aa8ff",
+  emerald: "#30e080",
   slate: "#7f8fa6",
   faint: "#7f8fa6",
   ink: "#e7eef7",
   muted: "#9fb0c4",
   line: "#233044",
   panel: "#0b1220",
+  canvas: "#060a11",
 };
 
 export function statusColor(status: StageStatus) {
@@ -35,6 +39,53 @@ export function StatusPill({ status, compact = false }: { status: StageStatus; c
       <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: statusColor(status) }} aria-hidden="true" />
       {status}
     </span>
+  );
+}
+
+export function AnatomyPlate({
+  fig,
+  title,
+  hint,
+  readout,
+  children,
+  className,
+}: {
+  fig: string;
+  title: string;
+  hint?: string;
+  readout?: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn("relative rounded-2xl border border-line/90 bg-panel/75 p-4 shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur-sm sm:p-6", className)}>
+      <span className="plate-corner plate-corner-tl" aria-hidden="true" />
+      <span className="plate-corner plate-corner-tr" aria-hidden="true" />
+      <span className="plate-corner plate-corner-bl" aria-hidden="true" />
+      <span className="plate-corner plate-corner-br" aria-hidden="true" />
+
+      {/* Plate Header Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line/60 pb-3 font-mono text-[9px] uppercase tracking-[0.18em]">
+        <div className="flex items-center gap-2">
+          <span className="inline-block h-1.5 w-1.5 rounded-sm bg-teal" aria-hidden="true" />
+          <span className="font-semibold text-teal">{fig}</span>
+          <span className="text-line">/</span>
+          <span className="text-ink">{title}</span>
+        </div>
+        {readout && <span className="text-faint">{readout}</span>}
+      </div>
+
+      {/* Main Content Area */}
+      <div className="relative mt-4">{children}</div>
+
+      {/* Plate Footer Readout */}
+      {hint && (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-line/60 pt-3 font-mono text-[8.5px] uppercase tracking-[0.14em] text-faint">
+          <span>{hint}</span>
+          <span className="text-[7.5px] tracking-[0.2em] text-teal/70">ANATOMY // REVEAL ENGINE</span>
+        </div>
+      )}
+    </div>
   );
 }
 

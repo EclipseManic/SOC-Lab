@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { ArrowRight, Check, CircleAlert, FileJson, GitBranch, Radio, ServerCog, ShieldCheck } from "lucide-react";
 import { alerts, metrics, repoBlob, stages, traceability } from "@/data";
-import { SceneFrame, SectionKicker, SectionTitle, tone } from "./visual-shared";
+import { AnatomyPlate, SectionKicker, SectionTitle, tone } from "./visual-shared";
 
 type Mode = "direct" | "operational";
 const sensors = ["Suricata", "Wazuh / host", "AD security"] as const;
@@ -40,8 +40,14 @@ export function VisualSignal() {
           <SectionTitle eyebrow="The signal" title="What did the SOC actually see?" body="One real alert shows the path from endpoint event to TheHive. The heatmap keeps the more difficult truth visible: direct-target detection and operational coverage are not the same claim." />
         </div>
 
-        <SceneFrame className="mt-10">
-          <div className="border-b border-line/70 px-4 py-4 sm:px-6">
+        <AnatomyPlate
+          fig="FIG 05 // SIGNAL PIPELINE"
+          title="END-TO-END TELEMETRY LIFECYCLE (LIFE OF AN ALERT)"
+          hint="[CLICK STAGE STEP] TRACE HOST SYSCALL -> FORWARDING -> CORRELATION -> QUEUE -> THEHIVE"
+          readout={`sourceRef ${candidate.sourceRef} · LATENCY: ${candidate.timeToDetectMs}ms`}
+          className="mt-10"
+        >
+          <div className="border-b border-line/70 pb-4">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-teal">Life of an alert / stage {stage.id}</p>
@@ -71,12 +77,40 @@ export function VisualSignal() {
               </div>
             </div>
           </div>
-        </SceneFrame>
+        </AnatomyPlate>
 
-        <SceneFrame className="mt-8">
-          <div className="flex flex-col gap-4 border-b border-line/70 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-            <div><p className="font-mono text-[9px] uppercase tracking-[0.18em] text-teal">Coverage heatmap / {metrics.stageCount} × {sensors.length}</p><p className="mt-1 text-sm text-muted">Toggle the claim: direct target signal or operational alert.</p></div>
-            <div className="flex rounded-full border border-line/80 bg-canvas/50 p-1"><button type="button" onClick={() => setMode("direct")} className={`rounded-full px-3 py-2 font-mono text-[9px] uppercase tracking-[0.13em] ${mode === "direct" ? "bg-teal/15 text-teal" : "text-faint"}`}>Direct ({metrics.directDetectionCount})</button><button type="button" onClick={() => setMode("operational")} className={`rounded-full px-3 py-2 font-mono text-[9px] uppercase tracking-[0.13em] ${mode === "operational" ? "bg-blue/15 text-blue" : "text-faint"}`}>Operational ({metrics.operationalAlertCount})</button></div>
+        <AnatomyPlate
+          fig="FIG 06 // HEATMAP"
+          title="20-STAGE DETECTION MATRIX (DIRECT TARGET VS OPERATIONAL COVERAGE)"
+          hint="[MATRIX SELECTOR] TOGGLE DIRECT TARGET (14/20 = 70%) VS OPERATIONAL TICKETS (16/20 = 80%)"
+          readout={`MATRIX // ${metrics.directDetectionCount} DIRECT · ${metrics.operationalAlertCount} OPERATIONAL · ${metrics.totalGapCount} GAPS`}
+          className="mt-8"
+        >
+          <div className="flex flex-col gap-4 border-b border-line/70 pb-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-teal">Coverage heatmap / {metrics.stageCount} × {sensors.length}</p>
+              <p className="mt-1 text-sm text-muted">Toggle the claim: direct target signal or operational alert.</p>
+            </div>
+            <div className="flex rounded-full border border-line/80 bg-canvas/50 p-1">
+              <button
+                type="button"
+                onClick={() => setMode("direct")}
+                className={`rounded-full px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.13em] transition ${
+                  mode === "direct" ? "bg-teal/20 text-teal font-semibold" : "text-faint hover:text-ink"
+                }`}
+              >
+                Direct ({metrics.directDetectionCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("operational")}
+                className={`rounded-full px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.13em] transition ${
+                  mode === "operational" ? "bg-blue/20 text-blue font-semibold" : "text-faint hover:text-ink"
+                }`}
+              >
+                Operational ({metrics.operationalAlertCount})
+              </button>
+            </div>
           </div>
           <div className="overflow-x-auto p-4 sm:p-6">
             <div className="min-w-[660px]">
@@ -85,7 +119,7 @@ export function VisualSignal() {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-4 border-t border-line/70 px-4 py-4 font-mono text-[9px] uppercase tracking-[0.13em] text-faint sm:px-6"><span className="inline-flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-teal" /> signal present</span><span className="inline-flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-amber" /> named logging/offline gap</span><span className="inline-flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-line" /> not the claim</span></div>
-        </SceneFrame>
+        </AnatomyPlate>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2"><div className="rounded-2xl border border-teal/25 bg-teal/[0.04] p-5"><div className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.15em] text-teal"><Check className="h-4 w-4" aria-hidden="true" /> direct target signal</div><p className="mt-3 font-mono text-3xl text-ink">{metrics.directDetectionCount} / {metrics.stageCount}</p><p className="mt-2 text-sm leading-6 text-muted">Dedicated rules inspected target payloads, command arguments, process trees, or auth anomalies directly.</p></div><div className="rounded-2xl border border-amber/25 bg-amber/[0.04] p-5"><div className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.15em] text-amber"><CircleAlert className="h-4 w-4" aria-hidden="true" /> named gaps</div><p className="mt-3 font-mono text-3xl text-ink">{metrics.totalGapCount} / {metrics.stageCount}</p><p className="mt-2 text-sm leading-6 text-muted">Stages 04 and 11 are offline. Stages 09 and 12 are logging gaps. None are hidden under a success rate.</p></div></div>
         <div className="mt-8 flex justify-end"><a href={`${repoBlob}/INDEX.md`} target="_blank" rel="noreferrer" className="font-mono text-[9px] uppercase tracking-[0.14em] text-faint hover:text-teal">Open the traceability matrix ↗</a></div>

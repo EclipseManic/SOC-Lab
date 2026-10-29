@@ -14,10 +14,13 @@ export function VisualNav() {
     <header className="sticky top-0 z-50 border-b border-line/70 bg-canvas/82 backdrop-blur-xl">
       <div className="container-page flex h-16 items-center justify-between gap-5">
         <a href="#top" className="group flex items-center gap-3" aria-label="SOC Lab home">
-          <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-teal/40 bg-teal/10 text-teal transition group-hover:bg-teal/15">
+          <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-teal/40 bg-teal/10 text-teal transition group-hover:bg-teal/15 shadow-[0_0_12px_rgba(53,224,194,0.2)]">
             <ShieldCheck className="h-4 w-4" aria-hidden="true" />
           </span>
-          <span className="hidden font-mono text-[10px] font-medium uppercase tracking-[0.2em] text-ink sm:block">SOC / LAB</span>
+          <div className="hidden sm:block">
+            <span className="block font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-ink">SOC // LAB</span>
+            <span className="block font-mono text-[7.5px] uppercase tracking-[0.16em] text-teal">ANATOMY DISSECTOR</span>
+          </div>
         </a>
         <nav aria-label="Story sections" className="hidden items-center gap-5 md:flex">
           {links.map(([label, href]) => (
