@@ -12,6 +12,7 @@
   --color-muted: #9fb0c4;
   --color-faint: #7f8fa6;
   --color-teal: #35e0c2;
+  --color-cyan: #00f0ff;
   --color-blue: #6aa8ff;
   --color-amber: #f2b84b;
   --color-rose: #f2779a;
@@ -95,6 +96,28 @@
     background-size: 64px 64px;
     mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 92%);
   }
+
+  .blueprint-grid {
+    background-image:
+      linear-gradient(to right, rgba(53, 224, 194, 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(53, 224, 194, 0.04) 1px, transparent 1px),
+      linear-gradient(to right, rgba(106, 168, 255, 0.08) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(106, 168, 255, 0.08) 1px, transparent 1px);
+    background-size: 20px 20px, 20px 20px, 100px 100px, 100px 100px;
+  }
+
+  .plate-corner {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-color: rgba(53, 224, 194, 0.4);
+    pointer-events: none;
+    z-index: 10;
+  }
+  .plate-corner-tl { top: 0; left: 0; border-top: 1.5px solid; border-left: 1.5px solid; }
+  .plate-corner-tr { top: 0; right: 0; border-top: 1.5px solid; border-right: 1.5px solid; }
+  .plate-corner-bl { bottom: 0; left: 0; border-bottom: 1.5px solid; border-left: 1.5px solid; }
+  .plate-corner-br { bottom: 0; right: 0; border-bottom: 1.5px solid; border-right: 1.5px solid; }
 
   .dialog-overlay {
     background: rgba(2, 6, 12, 0.78);

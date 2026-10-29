@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { cases, metrics, repoBlob, stages, timeline } from "@/data";
-import { RepoLink, SceneFrame, SectionKicker, SectionTitle, StatusPill, tone } from "./visual-shared";
+import { AnatomyPlate, RepoLink, SectionKicker, SectionTitle, StatusPill, tone } from "./visual-shared";
 
 const findings = [
   "The web tier is the entry point; the evidence chain starts before root.",
@@ -18,9 +18,20 @@ export function VisualCase() {
       <div className="container-page">
         <SectionKicker index="04 / CASE" label="Three incidents, one story" />
         <div className="mt-10"><SectionTitle eyebrow="The case" title="Three incidents, one story." body="The cases share the same T0 axis. Each lane narrows the question: how did the campaign cross a boundary, what evidence carried it, and where does the record stop proving?" /></div>
-        <SceneFrame className="mt-10">
-          <div className="border-b border-line/70 px-4 py-4 sm:px-6"><div className="flex items-center justify-between gap-3"><p className="font-mono text-[9px] uppercase tracking-[0.18em] text-teal">Shared incident axis</p><p className="font-mono text-[9px] text-faint">T0 → T0 + {metrics.durationMinutes}m</p></div></div>
-          <div className="space-y-3 p-4 sm:p-6">
+        <AnatomyPlate
+          fig="FIG 07 // CASES"
+          title="INCIDENT TRIAGE LANES (THREE INCIDENTS, ONE STORY)"
+          hint="[SELECT INCIDENT LANE] EXPAND SCOPE, TIMELINE BEATS, AND ROOT CAUSE HYPOTHESES"
+          readout={`3 CASES · SHARED T0 AXIS · +${metrics.durationMinutes}m DURATION`}
+          className="mt-10"
+        >
+          <div className="border-b border-line/70 pb-3">
+            <div className="flex items-center justify-between gap-3">
+              <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-teal">Shared incident axis</p>
+              <p className="font-mono text-[9px] text-faint">T0 → T0 + {metrics.durationMinutes}m</p>
+            </div>
+          </div>
+          <div className="space-y-3 pt-4">
             {cases.map((item, index) => {
               const selected = item.id === open;
               const laneStages = item.stages.map((id) => stages.find((stage) => stage.id === id)).filter(Boolean);
@@ -40,7 +51,7 @@ export function VisualCase() {
               );
             })}
           </div>
-        </SceneFrame>
+        </AnatomyPlate>
         <p className="mt-6 max-w-2xl text-sm leading-6 text-faint">The lane is the summary. The case file is where observables, tasks, and verdict language can be inspected without turning the trailer into the manual.</p>
       </div>
     </section>
