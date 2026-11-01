@@ -4,6 +4,10 @@
 > **Environment:** SOC-Lab (DVWA `192.168.56.30`, Suricata, DomainWin10 `192.168.56.10`, Win10User `192.168.56.20`)
 > **Incident Window:** 2026-10-18 `17:10:09 IST` – `18:36:34 IST` (**46 TheHive Alerts / 192 Sub-Events**)
 
+> [!TIP]
+> **Companion Incident Response Record:**  
+> For the step-by-step live response commands, Velociraptor and PowerShell execution workflows, before/after states, and photographic proof of containment across all VMs, see **[`Immediate-Containment-Execution.md`](Immediate-Containment-Execution.md)**.
+
 ---
 
 ## 📑 Table of Contents
@@ -78,7 +82,8 @@ Because an active compromise demands immediate containment before an analyst spe
 
 # 2. Master Triage Table: All 46 Alerts
 
-> **With Verbatim Titles, Priorities & Verdicts**
+> **With Verbatim Titles, Priorities & Verdicts**  
+> 💡 **Containment Execution Cross-Reference:** To view the active tactical isolation commands and photographic proof for all Critical (P1) and High (P2) alerts in this table, consult the companion record: **[`Immediate-Containment-Execution.md`](Immediate-Containment-Execution.md)**.
 
 | # | IST Time | Verbatim TheHive Alert Title | Host / Sensor | TheHive Sev | Real Priority | Verdict | Key Evidence & Next Verification Step |
 |---|----------|------------------------------|-------------|-------------|---------------|---------|----------------------------------------|
@@ -140,6 +145,8 @@ Before I start a deep forensic investigation to write up Cases 01, 02, and 03, I
 
 ## 🛡️ Action 1: Block Attacker IP 192.168.232.135 at the Firewall & Cut DVWA's Internal Pivot Bridge (192.168.56.30)
 
+> 📸 **Tactical Execution Proof:** [Action 1: Firewall DROP in Velociraptor](Immediate-Containment-Execution.md#3-action-1-perimeter-firewall-block--internal-pivot-bridge-severing)
+
 ### Why I am doing this first (The Reasoning):
 
 Every external attack in the queue—from the python-requests session (#11) and the port 4444 reverse shell (#14 – #15) to all root SSH logins (#16, #20 – #22, #24, #37, #38)—originated from `192.168.232.135`. Alerts #17 (Internal Nmap), #19 (Outbound SSH Scan), #23 (Kerberos traffic `.56.30 -> .56.10:88`), and #43 (NTLM Session Setup `.56.30 <-> .56.20:445`) show that **DVWA (`192.168.56.30`) is acting as the internal jump box into Active Directory**.
@@ -150,6 +157,8 @@ Every external attack in the queue—from the python-requests session (#11) and 
 - **Isolate DVWA (`192.168.56.30`)** by blocking outbound connections from `.56.30` to `192.168.56.10` (PC-DC) and `192.168.56.20` (Win10) on ports `:88` (Kerberos), `:445` (SMB), and `:135` (RPC/WMI). This blinds the attacker immediately before I touch a single file on the hosts.
 
 ## 🛡️ Action 2: Remove the Rogue Root SSH Key, Kill Live Shells & Quarantine shell.php on DVWA (192.168.56.30)
+
+> 📸 **Tactical Execution Proof:** [Action 2: Shell Quarantine](Immediate-Containment-Execution.md#4-action-2-dvwa-reverse-shell-termination--web-shell-quarantine) & [Action 3: Root SSH Key Eradication](Immediate-Containment-Execution.md#5-action-3-dvwa-rogue-root-ssh-key-eradication)
 
 ### Why I am doing this (The Reasoning):
 
@@ -162,6 +171,8 @@ On DVWA, the attacker established **three independent ways in**. If I only delet
 - **Quarantine the Webshell (#11):** Move `/var/www/html/hackable/uploads/shell.php` out of the web root to `/root/forensics_shell.php.quarantine` (`chmod 000`) so Apache (www-data) can no longer execute `?cmd=` requests.
 
 ## 🛡️ Action 3: Disable AD\backdoor, Strip Its Admin Groups & Twice-Reset krbtgt on DomainWin10 (192.168.56.10)
+
+> 📸 **Tactical Execution Proof:** [Action 4: AD Backdoor Disabled](Immediate-Containment-Execution.md#6-action-4-active-directory-rogue-account-neutralization-adbackdoor) & [Action 5: krbtgt Password Reset](Immediate-Containment-Execution.md#7-action-5-active-directory-kerberos-golden-ticket-invalidation-krbtgt-reset)
 
 ### Why I am doing this (The Reasoning):
 
@@ -181,6 +192,8 @@ net localgroup Administrators backdoor /del
 
 ## 🛡️ Action 4: Terminate WMI/SMB Sessions on Win10User (192.168.56.20) & Quarantine Staged Files on Both Windows Hosts
 
+> 📸 **Tactical Execution Proof:** [Action 6: Endpoint Defacement Reversion & Recon Quarantine](Immediate-Containment-Execution.md#8-action-6-endpoint-defacement-reversion--staged-recon-data-quarantine)
+
 ### Why I am doing this (The Reasoning):
 
 In Alerts #35 and #36, the attacker dumped sensitive AD and workstation data into `C:\Windows\Temp\domain_users.txt`, `admin_info.txt`, and `sensitive_data.txt`. And in #39 and #42, they copied hacked.bmp to `C:\Users\Public\hacked.bmp`, modified `HKCU\Control Panel\Desktop` (Wallpaper and WallpaperStyle), and wrote README_HACKED.txt, documents.enc, and passwords.enc onto `C:\Users\Administrator\Desktop\` (on the DC) and `C:\Users\win10\Desktop\` (on Win10User).
@@ -193,6 +206,8 @@ In Alerts #35 and #36, the attacker dumped sensitive AD and workstation data int
 - Restore `HKCU\Control Panel\Desktop` (Wallpaper and WallpaperStyle)
 
 ## 🛡️ Action 5: Rotate DVWA Web Application & Database Passwords (#11)
+
+> 📸 **Tactical Execution Proof:** [Action 7: Database & Web Credential Rotation](Immediate-Containment-Execution.md#9-action-7-dvwa-database--web-application-credential-rotation)
 
 ### Why I am doing this (The Reasoning):
 

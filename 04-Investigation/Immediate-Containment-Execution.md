@@ -6,6 +6,10 @@
 > **Trigger Incident:** Active Enterprise Compromise (46 TheHive Alerts / 192 Sub-Events)  
 > **Objective:** Sever all active adversary footholds, preserve forensic integrity, and prevent lateral re-infection.
 
+> [!IMPORTANT]
+> **Investigative Basis & Threat Intelligence Context:**  
+> This tactical containment playbook is executed in direct response to the 46 TheHive alerts triaged and analyzed in **[`Initial-Triage and Investigation.md`](Initial-Triage%20and%20Investigation.md)**. For the complete master triage table, detection pipeline critique (8 flaws), and 6-window chronological timeline, refer to that companion investigation record.
+
 ---
 
 ## 📑 Table of Contents
@@ -63,6 +67,8 @@ Remediation across the Active Directory environment was performed via elevated P
 
 # 3. Action 1: Perimeter Firewall Block & Internal Pivot Bridge Severing
 
+> 🔍 **Investigative Basis:** [Section 3 Action 1 in Initial Triage](Initial-Triage%20and%20Investigation.md#3-immediate-containment-actions--operational-rationale) | Triggered by Alerts #01–#03 & #11 ingress from `192.168.232.135`.
+
 ### 🎯 Objective:
 Completely sever inbound and outbound communication between the external attacker machine (`192.168.232.135`) and all internal lab networks.
 
@@ -88,6 +94,8 @@ sudo iptables -L -n -v | grep 192.168.232.135
 ---
 
 # 4. Action 2: DVWA Reverse Shell Termination & Web Shell Quarantine
+
+> 🔍 **Investigative Basis:** [Window 2 Forensic Walkthrough](Initial-Triage%20and%20Investigation.md#5-deep-dive-chronological-evidence-walkthrough-by-time-window) | Neutralizing web shell in Alert #11 (sub-events 18–22) and Netcat reverse shell in Alerts #14 & #15.
 
 ### 🎯 Objective:
 Terminate active interactive shells running on port `4444` and safely quarantine the uploaded PHP web shell (`shell.php`) without deleting it (preserving file timestamps, inode numbers, and cryptographic hashes for forensic evidence).
@@ -125,6 +133,8 @@ ls -la /var/www/html/dvwa/hackable/uploads/
 
 # 5. Action 3: DVWA Rogue Root SSH Key Eradication
 
+> 🔍 **Investigative Basis:** [Alert #16 Root SSH Login Detail](Initial-Triage%20and%20Investigation.md#5-deep-dive-chronological-evidence-walkthrough-by-time-window) | Wiping ED25519 root persistence key logged at 17:29:43 IST.
+
 ### 🎯 Objective:
 Remove the attacker's rogue ED25519 public key injected into `/root/.ssh/authorized_keys` during Window 2 (`17:29:43 IST`, Alert #16) and kill all active unauthorized root SSH sessions.
 
@@ -154,6 +164,8 @@ sudo ss -tprn '( dport = :22 or sport = :22 )'
 
 # 6. Action 4: Active Directory Rogue Account Neutralization (AD\backdoor)
 
+> 🔍 **Investigative Basis:** [Window 4 Domain Controller Takeover](Initial-Triage%20and%20Investigation.md#5-deep-dive-chronological-evidence-walkthrough-by-time-window) | Neutralizing rogue AD user created via Impacket wmiexec in Alerts #29–#33.
+
 ### 🎯 Objective:
 Disable the rogue domain account `AD\backdoor` created via Impacket wmiexec at `18:08:21 IST` (Alert #29 / #30) and strip it from both `Domain Admins` and `Administrators` groups.
 
@@ -182,6 +194,8 @@ Get-ADPrincipalGroupMembership -Identity "backdoor" | Select-Object Name
 ---
 
 # 7. Action 5: Active Directory Kerberos Golden Ticket Invalidation (krbtgt Reset)
+
+> 🔍 **Investigative Basis:** [Alert #23 GoldenPac Kerberos Exploit](Initial-Triage%20and%20Investigation.md#5-deep-dive-chronological-evidence-walkthrough-by-time-window) | Invalidating forged Kerberos TGTs created via port 88 MS14-068 exploit.
 
 ### 🎯 Objective:
 Invalidate all forged Kerberos Ticket Granting Tickets (TGTs) generated using the GoldenPac / MS14-068 exploit (`18:01:18 IST`, Alert #23) by performing a double password reset on the `krbtgt` domain account.
@@ -215,6 +229,8 @@ Get-ADUser -Identity "krbtgt" -Properties pwdLastSet | Select-Object Name, @{N="
 ---
 
 # 8. Action 6: Endpoint Defacement Reversion & Staged Recon Data Quarantine
+
+> 🔍 **Investigative Basis:** [Window 6 Ransomware & Impact Batch](Initial-Triage%20and%20Investigation.md#5-deep-dive-chronological-evidence-walkthrough-by-time-window) | Remediating wallpaper defacement and staged files in Alerts #35, #36, #39, #42.
 
 ### 🎯 Objective:
 Kill remote execution processes, quarantine staged reconnaissance files dumped in `C:\Windows\Temp\`, delete extortion notes (`README_HACKED.txt`), and restore original desktop wallpaper registry settings on both `DomainWin10` and `Win10User`.
@@ -254,6 +270,8 @@ Get-ChildItem -Path "C:\Forensics_Quarantine"
 ---
 
 # 9. Action 7: DVWA Database & Web Application Credential Rotation
+
+> 🔍 **Investigative Basis:** [Alert #11 SQL Injection Analysis](Initial-Triage%20and%20Investigation.md#5-deep-dive-chronological-evidence-walkthrough-by-time-window) | Rotating credentials dumped via UNION SELECT user, password from users-- -.
 
 ### 🎯 Objective:
 Rotate all database and web application passwords dumped by the attacker via SQL injection (`UNION SELECT user, password FROM users-- -`, Alert #11, sub-event 17).
