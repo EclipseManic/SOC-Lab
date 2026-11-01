@@ -701,8 +701,3 @@ cmd /c "type C:\Users\win10\Documents\Sensitive\* > C:\Windows\Temp\sensitive_da
 |-------|---------|-------------|------------------|
 | **#39, #40, #41, #42, #44, #45, #46** | Confirmed True Positives (Simulated Ransomware/Defacement Impact, Forced Reboots & Surviving Backdoor) | Medium | **Critical (P1)** |
 | **#43** | Confirmed True Positive (Supporting NTLM Pivot Context) | Medium | **High (P2)** |
-
----
-
-> 📄 **Document Source:** `SOC_Lab_First_Glance_Alert_Triage_and_Containment.pdf` (12 pages)
-> **Converted to Markdown with full content preservation & enhanced formatting**
