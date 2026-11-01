@@ -13,6 +13,13 @@ TheHive is case-centric: alerts become cases, and cases contain tasks, observabl
 
 This gives stage-level traceability without fragmenting one incident into twenty tiny cases.
 
+## Core Incident Response Records
+
+| Document | Purpose |
+|---|---|
+| [Initial-Triage and Investigation.md](Initial-Triage%20and%20Investigation.md) | Initial alert triage of all 46 TheHive alerts, master triage register, detection pipeline critique (8 flaws), and 6-window chronological forensic deep-dive. |
+| [Immediate-Containment-Execution.md](Immediate-Containment-Execution.md) | Operational containment execution guide with exact host commands, sequencing rationale, and photographic proof of attacker lockout. |
+
 ## Case map
 
 | Case | Scope | Stages | Summary |

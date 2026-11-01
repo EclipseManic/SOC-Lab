@@ -133,6 +133,9 @@ Because an active compromise demands immediate containment before an analyst spe
 
 # 3. Immediate Containment Actions & Operational Rationale
 
+> [!NOTE]
+> For the step-by-step terminal execution commands, before-and-after verification checks, and photographic proof of containment across all VMs, see the companion execution record: **[Immediate Containment & Incident Remediation Execution](Immediate-Containment-Execution.md)**.
+
 Before I start a deep forensic investigation to write up Cases 01, 02, and 03, I have to **lock the attacker out**. If I leave their Critical (P1) footholds open while I spend hours analyzing logs, they can log right back in, wipe evidence, or deploy real ransomware. Even more importantly, **the sequence of containment matters**: if I delete their webshell or AD\backdoor account before cutting off their network access, the attacker can see my cleanup in real time and plant a second hidden backdoor.
 
 ## 🛡️ Action 1: Block Attacker IP 192.168.232.135 at the Firewall & Cut DVWA's Internal Pivot Bridge (192.168.56.30)
