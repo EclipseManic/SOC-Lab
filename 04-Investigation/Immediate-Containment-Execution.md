@@ -75,27 +75,31 @@ Terminate active interactive shells running on port `4444` and safely quarantine
 ### 💻 Execution Commands (Run on DVWA `192.168.56.30`):
 
 ```bash
-# 1. Identify and kill active reverse shell processes (nc.openbsd / python / mkfifo)
-sudo pkill -9 -f "nc.*4444" || sudo pkill -9 -f "mkfifo" || sudo kill -9 $(pgrep -f "4444")
+# 1. Terminate active reverse shell processes
+sudo pkill -9 -f "4444" 2>/dev/null || true
+sudo pkill -9 -f "nc.openbsd" 2>/dev/null || true
 
-# 2. Verify port 4444 is no longer in an ESTABLISHED state
-sudo netstat -antp | grep 4444
+# 2. Verify port 4444 is dead and not established (using modern 'ss')
+sudo ss -antp | grep 4444
 
 # 3. Create a secure forensic quarantine directory (read-only permissions)
 sudo mkdir -p /root/forensics_quarantine
 sudo chmod 700 /root/forensics_quarantine
 
-# 4. Quarantine shell.php from the web root to prevent further web execution
-sudo mv /var/www/html/hackable/uploads/shell.php /root/forensics_quarantine/shell.php.quarantined
+# 4. Quarantine shell.php from the DVWA uploads directory
+sudo mv /var/www/html/dvwa/hackable/uploads/shell.php /root/forensics_quarantine/shell.php.quarantined
 sudo chmod 000 /root/forensics_quarantine/shell.php.quarantined
 
 # 5. Verify the uploads directory is clean
-ls -la /var/www/html/hackable/uploads/
+ls -la /var/www/html/dvwa/hackable/uploads/
 ```
 
 ### 📸 Proof of Execution:
-![DVWA reverse shell terminated and web shell quarantined](Screenshot/Containment-Execution-Screenshots/slot_02_containment_dvwa_shells_quarantined.png)  
-*Figure 2: Netstat confirming port 4444 is cleared, and directory listing verifying `shell.php` has been moved to the forensic quarantine directory.*
+![DVWA reverse shell terminated and web shell quarantined](Screenshot/Containment-Execution-Screenshots/slot_02a_containment_dvwa_shells_quarantined.png)  
+*Figure 2a: Socket statistics (`ss`) confirming port 4444 is cleared, and `shell.php` staged for isolation.*
+
+![DVWA uploads directory verified clean](Screenshot/Containment-Execution-Screenshots/slot_02b_containment_dvwa_uploads_cleaned.png)  
+*Figure 2b: Directory listing confirming `shell.php` is completely removed from `/var/www/html/dvwa/hackable/uploads/` and quarantined.*
 
 ---
 
@@ -153,8 +157,11 @@ Get-ADPrincipalGroupMembership -Identity "backdoor" | Select-Object Name
 ```
 
 ### 📸 Proof of Execution:
-![Disabling AD\backdoor and stripping Domain Admins membership](Screenshot/Containment-Execution-Screenshots/slot_04_containment_dc_backdoor_disabled.png)  
-*Figure 4: Active Directory PowerShell console confirming `Enabled : False` and group membership reduced strictly to default Domain Users.*
+![Disabling AD\backdoor and stripping Domain Admins membership](Screenshot/Containment-Execution-Screenshots/slot_04a_containment_dc_backdoor_disabled.png)  
+*Figure 4a: Active Directory PowerShell console executing `Disable-ADAccount` and stripping `backdoor` from Domain Admins and Administrators.*
+
+![Verifying backdoor account disabled state and stripped group memberships](Screenshot/Containment-Execution-Screenshots/slot_04b_containment_dc_backdoor_verified.png)  
+*Figure 4b: `Get-ADUser` output confirming `Enabled : False` and `Get-ADPrincipalGroupMembership` verifying reduction strictly to default Domain Users.*
 
 ---
 
@@ -183,8 +190,11 @@ Get-ADUser -Identity "krbtgt" -Properties pwdLastSet | Select-Object Name, @{N="
 ```
 
 ### 📸 Proof of Execution:
-![Domain Controller krbtgt account password reset](Screenshot/Containment-Execution-Screenshots/slot_05_containment_dc_krbtgt_reset.png)  
-*Figure 5: PowerShell console executing `krbtgt` password reset and verifying updated `pwdLastSet` timestamp.*
+![Domain Controller krbtgt account password reset](Screenshot/Containment-Execution-Screenshots/slot_05a_containment_dc_krbtgt_reset.png)  
+*Figure 5a: PowerShell console checking initial `pwdLastSet` timestamp and executing `Set-ADAccountPassword` on `krbtgt`.*
+
+![Purging domain Kerberos tickets and verifying updated timestamp](Screenshot/Containment-Execution-Screenshots/slot_05b_containment_dc_krbtgt_verified.png)  
+*Figure 5b: Purging Kerberos tickets with `klist purge -li 0x3e7` and verifying updated `pwdLastSet` timestamp, invalidating all forged Golden Tickets.*
 
 ---
 
@@ -220,8 +230,11 @@ Get-ChildItem -Path "$env:USERPROFILE\Desktop"
 ```
 
 ### 📸 Proof of Execution:
-![Endpoint staged recon quarantine and desktop cleanup](Screenshot/Containment-Execution-Screenshots/slot_06_containment_endpoint_remediation.png)  
-*Figure 6: Windows PowerShell console showing quarantined files in `C:\Forensics_Quarantine\` and desktop cleared of defacement artifacts.*
+![Endpoint staged recon quarantine and desktop cleanup](Screenshot/Containment-Execution-Screenshots/slot_06d_containment_quarantine_verified.png)  
+*Figure 6a: Windows PowerShell console showing staged reconnaissance dumps and malicious wallpaper bitmap (`hacked.bmp`) successfully quarantined in `C:\Forensics_Quarantine\`.*
+
+![Restoring desktop wallpaper registry and refreshing UI](Screenshot/Containment-Execution-Screenshots/slot_06e_containment_desktop_refreshed.png)  
+*Figure 6b: Registry update resetting Wallpaper and WallpaperStyle followed by `RUNDLL32.EXE` to refresh the desktop parameters.*
 
 ---
 
@@ -230,31 +243,26 @@ Get-ChildItem -Path "$env:USERPROFILE\Desktop"
 ### 🎯 Objective:
 Rotate all database and web application passwords dumped by the attacker via SQL injection (`UNION SELECT user, password FROM users-- -`, Alert #11, sub-event 17).
 
-### 💻 Execution Commands (Run on DVWA `192.168.56.30`):
+### 💻 Execution Commands (Run via Velociraptor Shell on DVWA `192.168.56.30`):
 
 ```bash
-# 1. Connect to MariaDB/MySQL root prompt
-sudo mysql -u root -p
-```
+# 1. Update the DVWA application database user password non-interactively
+sudo mysql -e "ALTER USER 'dvwa'@'localhost' IDENTIFIED BY 'S0C_S3cur3_Db_P@ssw0rd_2026!'; FLUSH PRIVILEGES; SELECT User, Host FROM mysql.user WHERE User='dvwa';"
 
-```sql
--- 2. Update the DVWA application database user password
-ALTER USER 'dvwa'@'localhost' IDENTIFIED BY 'S0C_S3cur3_Db_P@ssw0rd_2026!';
-FLUSH PRIVILEGES;
+# 2. Update the DVWA application configuration file with the new database password
+sudo sed -i "s/db_password' \] = .*/db_password' \] = 'S0C_S3cur3_Db_P@ssw0rd_2026!';/" /var/www/html/dvwa/config/config.inc.php
+grep "db_password" /var/www/html/dvwa/config/config.inc.php
 
--- 3. Update the DVWA application configuration file with the new password
--- File: /var/www/html/config/config.inc.php
--- $_DVWA['db_password'] = 'S0C_S3cur3_Db_P@ssw0rd_2026!';
+# 3. Invalidate and reset compromised web admin credentials in dvwa database
+sudo mysql -e "USE dvwa; UPDATE users SET password = MD5('NewStrongAdminP@ss2026!') WHERE user = 'admin'; SELECT user, password FROM dvwa.users WHERE user='admin';"
 
--- 4. Invalidate and reset compromised web user credentials in dvwa database
-USE dvwa;
-UPDATE users SET password = MD5('NewStrongAdminP@ss2026!') WHERE user = 'admin';
-SELECT user, password FROM users;
+# 4. Restart Apache web server to apply configuration
+systemctl start apache2
 ```
 
 ### 📸 Proof of Execution:
 ![Database credential rotation in MariaDB console](Screenshot/Containment-Execution-Screenshots/slot_07_containment_dvwa_db_credential_rotation.png)  
-*Figure 7: MariaDB console demonstrating successful password rotation query execution and updated database user authentication.*
+*Figure 7: Velociraptor console demonstrating successful non-interactive password rotation in MariaDB, DVWA config file update, and Apache restart.*
 
 ---
 
@@ -288,7 +296,7 @@ nc -zv 192.168.56.30 22 80 4444
 | Action # | Target System | Action Taken | Operational Status | Verified By |
 |---|---|---|---|---|
 | **01** | Gateway / Firewall | Inbound & Forward DROP rules on `192.168.232.135` | **ACTIVE** | `iptables -L -n -v` |
-| **02** | DVWA (`192.168.56.30`) | Terminated port 4444 reverse shell; moved `shell.php` to quarantine | **CONTAINED** | `netstat -antp` & `ls` |
+| **02** | DVWA (`192.168.56.30`) | Terminated port 4444 reverse shell; moved `shell.php` to quarantine | **CONTAINED** | `ss -antp` & `ls` |
 | **03** | DVWA (`192.168.56.30`) | Purged `/root/.ssh/authorized_keys`; killed rogue root sessions | **CONTAINED** | `cat` & `who` |
 | **04** | DomainWin10 (`192.168.56.10`) | Disabled `AD\backdoor`; stripped `Domain Admins` & `Administrators` | **CONTAINED** | `Get-ADUser` |
 | **05** | DomainWin10 (`192.168.56.10`) | Twice-reset `krbtgt` password; purged Kerberos ticket cache | **CONTAINED** | `Get-ADUser krbtgt` |
