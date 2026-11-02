@@ -5,6 +5,7 @@ import { HeroBackdrop } from "@/components/fx/backdrop";
 import { HeroConsole } from "@/components/fx/console";
 import { Counter } from "@/components/fx/counter";
 import { Reveal, EASE } from "@/components/fx/reveal";
+import { useBooted } from "@/lib/boot";
 
 const strip = [
   { value: metrics.stageCount, label: "steps in the break-in", tone: "text-ink" },
@@ -14,6 +15,16 @@ const strip = [
 ];
 
 export function VisualHero() {
+  const booted = useBooted();
+
+  // The entrance plays only once the boot overlay lifts, so the first thing a
+  // visitor sees is the hero animating in rather than a half-built page.
+  const enter = (y: number, delay: number, duration: number) => ({
+    initial: { opacity: 0, y },
+    animate: booted ? { opacity: 1, y: 0 } : { opacity: 0, y },
+    transition: { duration, delay, ease: EASE as unknown as [number, number, number, number] },
+  });
+
   return (
     <section id="top" className="relative isolate overflow-hidden pb-14 pt-10 sm:pb-20 sm:pt-14">
       <HeroBackdrop />
@@ -23,9 +34,7 @@ export function VisualHero() {
           {/* Left — the story */}
           <div className="min-w-0">
             <motion.span
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: EASE }}
+              {...enter(12, 0, 0.5)}
               className="chip border-rule-2 bg-paper-2/60 text-ink-2"
             >
               <span className="h-1.5 w-1.5 animate-pulse-soft rounded-full bg-accent" />
@@ -33,9 +42,7 @@ export function VisualHero() {
             </motion.span>
 
             <motion.h1
-              initial={{ opacity: 0, y: 22 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.06, ease: EASE }}
+              {...enter(22, 0.06, 0.7)}
               className="mt-6 max-w-[15ch] text-[2.7rem] leading-[1.0] text-ink sm:text-display-m"
             >
               I built a company, broke in,{" "}
@@ -43,9 +50,7 @@ export function VisualHero() {
             </motion.h1>
 
             <motion.p
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.16, ease: EASE }}
+              {...enter(18, 0.16, 0.7)}
               className="mt-6 max-w-xl text-md leading-relaxed text-ink-2 sm:text-lg"
             >
               A hacker box, three victims, and a full security stack watching. I played the
@@ -54,12 +59,7 @@ export function VisualHero() {
               defenses actually caught and what slipped past.
             </motion.p>
 
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.26, ease: EASE }}
-              className="mt-8 flex flex-wrap items-center gap-3"
-            >
+            <motion.div {...enter(16, 0.26, 0.6)} className="mt-8 flex flex-wrap items-center gap-3">
               <a href="#investigation" className="btn btn-primary">
                 <Search className="h-4 w-4" />
                 See how I investigate
