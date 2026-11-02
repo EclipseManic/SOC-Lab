@@ -1,9 +1,11 @@
-import { motion, type Variants } from "motion/react";
+import { useRef } from "react";
+import { motion, useInView, type Variants } from "motion/react";
 import type { ReactNode } from "react";
+import { useBooted } from "@/lib/boot";
 
 export const EASE = [0.22, 1, 0.36, 1] as const;
 
-/** Fade + rise into view once. */
+/** Fade + rise into view once. Held back until the boot overlay lifts. */
 export function Reveal({
   children,
   delay = 0,
@@ -17,12 +19,17 @@ export function Reveal({
   className?: string;
   once?: boolean;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once, margin: "-90px" });
+  const booted = useBooted();
+  const show = booted && inView;
+
   return (
     <motion.div
+      ref={ref}
       className={className}
       initial={{ opacity: 0, y }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once, margin: "-90px" }}
+      animate={show ? { opacity: 1, y: 0 } : { opacity: 0, y }}
       transition={{ duration: 0.65, delay, ease: EASE }}
     >
       {children}
@@ -42,13 +49,17 @@ const child: Variants = {
 
 /** Parent that staggers its `StaggerItem` children. */
 export function Stagger({ children, className }: { children: ReactNode; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-70px" });
+  const booted = useBooted();
+
   return (
     <motion.div
+      ref={ref}
       className={className}
       variants={parent}
       initial="hidden"
-      whileInView="show"
-      viewport={{ once: true, margin: "-70px" }}
+      animate={booted && inView ? "show" : "hidden"}
     >
       {children}
     </motion.div>

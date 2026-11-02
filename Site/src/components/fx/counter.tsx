@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { animate, useInView } from "motion/react";
 import { EASE } from "./reveal";
+import { useBooted } from "@/lib/boot";
 
-/** Counts from 0 to `to` once it scrolls into view. */
+/** Counts from 0 to `to` once it scrolls into view and the boot overlay lifts. */
 export function Counter({
   to,
   decimals = 0,
@@ -22,17 +23,18 @@ export function Counter({
 }) {
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, margin: "-40px" });
+  const booted = useBooted();
   const [value, setValue] = useState(0);
 
   useEffect(() => {
-    if (!inView) return;
+    if (!booted || !inView) return;
     const controls = animate(0, to, {
       duration,
       ease: EASE as unknown as [number, number, number, number],
       onUpdate: (v) => setValue(v),
     });
     return () => controls.stop();
-  }, [inView, to, duration]);
+  }, [booted, inView, to, duration]);
 
   return (
     <span ref={ref} className={className}>

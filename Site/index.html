@@ -42,10 +42,126 @@
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230a0d12'/%3E%3Cpath d='M16 5l9 4v6.5c0 5.6-3.8 9.2-9 11.5-5.2-2.3-9-5.9-9-11.5V9l9-4z' fill='none' stroke='%23f0b343' stroke-width='1.5'/%3E%3Cpath d='M11.5 16h3l1.5-3 2.5 6 1.5-3h-1' fill='none' stroke='%23f0b343' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
     />
     <title>SOC Lab: What the defenders could actually see</title>
+
+    <!--
+      Critical boot styles. These are inlined in the document head so they apply
+      before the app bundle (and its stylesheet) finish downloading. They stop a
+      reload from flashing a white background, a bare half-built layout, or the
+      lazy chunks popping in one by one.
+    -->
+    <style>
+      html {
+        background: #0a0e14;
+      }
+      body {
+        margin: 0;
+        background: #0a0e14;
+      }
+
+      #boot-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 2147483000;
+        display: grid;
+        place-items: center;
+        background:
+          radial-gradient(1100px 620px at 82% -8%, rgba(120, 205, 235, 0.14), transparent 60%),
+          radial-gradient(900px 560px at 6% 4%, rgba(126, 165, 222, 0.12), transparent 62%), #0a0e14;
+        transition:
+          opacity 520ms cubic-bezier(0.22, 1, 0.36, 1),
+          visibility 520ms;
+      }
+
+      html.booted #boot-overlay {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+
+      .boot-mark {
+        display: flex;
+        align-items: baseline;
+        justify-content: center;
+        gap: 0.6rem;
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      .boot-mark b {
+        color: #eef3f9;
+        font-size: 1.0625rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+      .boot-mark span {
+        color: #8a96a7;
+        font-size: 0.72rem;
+        font-weight: 500;
+      }
+
+      .boot-bar {
+        margin: 0.9rem auto 0;
+        width: 168px;
+        height: 2px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.09);
+        overflow: hidden;
+      }
+      .boot-bar i {
+        display: block;
+        width: 42%;
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #5ea0e8, #b98ce0, #4fd0c0);
+        animation: boot-slide 1.15s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+      }
+      @keyframes boot-slide {
+        0% {
+          transform: translateX(-115%);
+        }
+        100% {
+          transform: translateX(320%);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        #boot-overlay {
+          transition: none;
+        }
+        .boot-bar i {
+          animation: none;
+          width: 100%;
+          opacity: 0.55;
+        }
+      }
+    </style>
+
+    <script>
+      // Always start a fresh visit at the top. Without this the browser restores
+      // the previous scroll position on reload, which is what made the reading
+      // progress bar look "stuck at 100%" while the page was still loading.
+      if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+
+      // Safety net: if the app never signals readiness, lift the overlay anyway
+      // so the page can never stay covered.
+      window.setTimeout(function () {
+        document.documentElement.classList.add("booted");
+      }, 4000);
+    </script>
   </head>
   <body>
+    <div id="boot-overlay" aria-hidden="true">
+      <div>
+        <div class="boot-mark"><b>SOC Lab</b><span>one lab · one break-in · 20 steps</span></div>
+        <div class="boot-bar"><i></i></div>
+      </div>
+    </div>
+
     <div id="root"></div>
     <noscript>
+      <style>
+        #boot-overlay {
+          display: none;
+        }
+      </style>
       <div class="container-page py-16 text-ink">
         <h1>SOC Lab</h1>
         <p>

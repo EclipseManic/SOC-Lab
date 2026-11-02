@@ -1,7 +1,9 @@
+import { useEffect, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
-import { motion, useScroll, useSpring } from "motion/react";
+import { motion, useMotionValue, useSpring } from "motion/react";
 import { repoUrl } from "@/data";
 import { useActiveSection } from "@/hooks/use-active-section";
+import { cn } from "@/lib/utils";
 
 const links = [
   ["Lab", "#setup"],
@@ -16,8 +18,37 @@ const sectionIds = ["top", "setup", "attack", "detection", "investigation", "sco
 
 export function VisualNav() {
   const active = useActiveSection(sectionIds);
-  const { scrollYProgress } = useScroll();
-  const progress = useSpring(scrollYProgress, { stiffness: 140, damping: 26, restDelta: 0.001 });
+
+  // Reading progress, measured straight off the document rather than through
+  // motion's scroll tracker. The tracker only recomputed on scroll or resize,
+  // so when the lazy acts grew the page it went stale and the bar was left
+  // stuck at 100%. Measuring directly, and observing height changes, keeps it
+  // honest — and the bar stays hidden until the reader actually starts moving.
+  const raw = useMotionValue(0);
+  const progress = useSpring(raw, { stiffness: 140, damping: 26, restDelta: 0.001 });
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const update = () => {
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - window.innerHeight;
+      raw.set(max > 8 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0);
+      setScrolled(window.scrollY > 8);
+    };
+
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(update);
+    observer?.observe(document.documentElement);
+
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+      observer?.disconnect();
+    };
+  }, [raw]);
 
   return (
     <header className="glass sticky top-0 z-50 rounded-none border-0 border-b border-rule/70">
@@ -71,7 +102,10 @@ export function VisualNav() {
       </div>
       <motion.div
         style={{ scaleX: progress }}
-        className="h-0.5 origin-left bg-gradient-to-r from-accent via-ember to-cool"
+        className={cn(
+          "h-0.5 origin-left bg-gradient-to-r from-accent via-ember to-cool transition-opacity duration-300",
+          scrolled ? "opacity-100" : "opacity-0",
+        )}
       />
     </header>
   );
