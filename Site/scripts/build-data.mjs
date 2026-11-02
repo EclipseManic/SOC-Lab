@@ -9,7 +9,7 @@ const generatedRoot = resolve(siteRoot, "src", "generated");
 const sourcePaths = {
   index: "INDEX.md",
   timeline: "05-Incident-Report/timeline.md",
-  alerts: "06-Resources/Alerts/thehive_alerts.json",
+  alerts: "assets/files/alerts/thehive_alerts.json",
   report: "05-Incident-Report/incident-report.md",
   reportReadme: "05-Incident-Report/README.md",
   labSetup: "01-Lab-Setup/README.md",

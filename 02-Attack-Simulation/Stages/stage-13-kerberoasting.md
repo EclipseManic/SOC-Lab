@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached  
 > **Case:** [Case 02](../../04-Investigation/Cases/case-02-lateral-movement.md)  
 > **Investigation:** [Stage 13](../../04-Investigation/Stages/stage-13-kerberoasting.md)  
-> **Evidence:** [attack](../Attack-Screenshots/41.png) · [alert](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/11.png)
+> **Evidence:** [attack](..\../assets/screenshots/attack-simulation/41.png) · [alert](..\../assets/screenshots/detection-engineering/11.png)
 
 ---
 
@@ -63,21 +63,21 @@ With the plaintext password of an active Domain Administrator in hand, the attac
 
 ### Attack Screenshots
 
-![Impacket GetUserSPNs Execution on Pivot Host](../Attack-Screenshots/41.png)
+![Impacket GetUserSPNs Execution on Pivot Host](..\../assets/screenshots/attack-simulation/41.png)
 *Figure 13.1: Executing `GetUserSPNs.py` from DVWA pivot (`192.168.56.30`) with `win10` credentials to request TGS tickets for SPN accounts and grepping for `HANK_SHERMAN`.*
 
-![Extracted Kerberos TGS-REP Hash](../Attack-Screenshots/42.png)
+![Extracted Kerberos TGS-REP Hash](..\../assets/screenshots/attack-simulation/42.png)
 *Figure 13.2: Extracted Kerberos 5 TGS-REP ticket hash formatted for Hashcat (`$krb5tgs$23$*HANK_SHERMAN...`).*
 
-![SCP Transfer of Ticket Hash and Hashcat Invocation](../Attack-Screenshots/43.png)
+![SCP Transfer of Ticket Hash and Hashcat Invocation](..\../assets/screenshots/attack-simulation/43.png)
 *Figure 13.3: Exfiltrating `hank.hash` to Kali via SCP and executing Hashcat mode 13100 against `rockyou.txt`.*
 
-![Hashcat Recovered Domain Admin Password](../Attack-Screenshots/44.png)
+![Hashcat Recovered Domain Admin Password](..\../assets/screenshots/attack-simulation/44.png)
 *Figure 13.4: Hashcat output displaying successfully cracked Kerberos ticket for `HANK_SHERMAN`, recovering the plaintext password `Passw***123`.*
 
 ### Alert Screenshots
 
-![TheHive Alert - Pivot Authentication Activity](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/11.png)
+![TheHive Alert - Pivot Authentication Activity](..\../assets/screenshots/detection-engineering/11.png)
 *Figure 13.5: TheHive alert detail capturing Wazuh Rule 5715 triggered by SSH access to the DVWA pivot machine during the Kerberoasting ticket extraction phase.*
 
 ---

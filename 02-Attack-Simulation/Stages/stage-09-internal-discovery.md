@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached
 > **Case:** [Case 02](../../04-Investigation/Cases/case-02-lateral-movement.md)
 > **Investigation:** [Stage 09](../../04-Investigation/Stages/stage-09-internal-discovery.md)
-> **Evidence:** [attack](../Attack-Screenshots/) · [alert](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/)
+> **Evidence:** [attack](..\../assets/screenshots/attack-simulation/) · [alert](..\../assets/screenshots/detection-engineering/)
 
 ## Objective
 
@@ -93,33 +93,33 @@ echo "192.168.56.10 PC-DC.ad.lab ad.lab" >> /etc/hosts
 
 ### Attack Screenshots
 
-![Local Network Topology and ARP Cache](../Attack-Screenshots/21.png)
+![Local Network Topology and ARP Cache](..\../assets/screenshots/attack-simulation/21.png)
 *Figure 1: Local network interface enumeration, routing table, and kernel ARP cache on DVWA revealing internal subnet hosts.*
 
-![Internal Subnet Nmap Scan — Domain Controller](../Attack-Screenshots/22.png)
+![Internal Subnet Nmap Scan — Domain Controller](..\../assets/screenshots/attack-simulation/22.png)
 *Figure 2: Nmap scan output against `192.168.56.0/24` identifying the Domain Controller `PC-DC.ad.lab` (`192.168.56.10`) and exposed AD services.*
 
-![Secondary Subnet Nmap Scan](../Attack-Screenshots/23.png)
+![Secondary Subnet Nmap Scan](..\../assets/screenshots/attack-simulation/23.png)
 *Figure 3: Nmap scan of the `192.168.232.0/24` subnet identifying Kali and gateway devices.*
 
-![Internal Subnet Nmap Scan — Windows 10 Workstation](../Attack-Screenshots/24.png)
+![Internal Subnet Nmap Scan — Windows 10 Workstation](..\../assets/screenshots/attack-simulation/24.png)
 *Figure 4: Continuation of internal Nmap scan discovering Windows 10 endpoint (`192.168.56.20`) with open SMB and RPC ports.*
 
-![Tool Staging via SCP](../Attack-Screenshots/25.png)
+![Tool Staging via SCP](..\../assets/screenshots/attack-simulation/25.png)
 *Figure 5: Transferring offensive tool bundles (`dvwa_tools.tar.gz`, Responder) from Kali to the DVWA pivot via SCP.*
 
-![Tool Extraction and Pip Installation on Pivot](../Attack-Screenshots/26.png)
+![Tool Extraction and Pip Installation on Pivot](..\../assets/screenshots/attack-simulation/26.png)
 *Figure 6: Unpacking attack tools and installing Python packages locally on `dvwa`.*
 
-![Host Resolution Mapping in /etc/hosts](../Attack-Screenshots/27.png)
+![Host Resolution Mapping in /etc/hosts](..\../assets/screenshots/attack-simulation/27.png)
 *Figure 7: Adding `PC-DC.ad.lab` and `ad.lab` to `/etc/hosts` for Domain Controller name resolution.*
 
 ### Alert Screenshots
 
-![TheHive Alert 8 — Network Port Scanning Overview](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/8.png)
+![TheHive Alert 8 — Network Port Scanning Overview](..\../assets/screenshots/detection-engineering/8.png)
 *Figure 8: TheHive Alert 8 overview displaying detection of internal port scanning and network reconnaissance.*
 
-![TheHive Alert 8.1 — Scan Rule Matches and Telemetry](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/8.1.png)
+![TheHive Alert 8.1 — Scan Rule Matches and Telemetry](..\../assets/screenshots/detection-engineering/8.1.png)
 *Figure 9: Detailed alert rule breakdown showing Suricata/Wazuh port scan thresholds and event signatures.*
 
 ## Alert observed

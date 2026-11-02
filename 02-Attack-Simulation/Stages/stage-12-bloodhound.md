@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached  
 > **Case:** [Case 02](../../04-Investigation/Cases/case-02-lateral-movement.md)  
 > **Investigation:** [Stage 12](../../04-Investigation/Stages/stage-12-bloodhound.md)  
-> **Evidence:** [attack](../Attack-Screenshots/33.png) · [alert](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/10.png)
+> **Evidence:** [attack](..\../assets/screenshots/attack-simulation/33.png) · [alert](..\../assets/screenshots/detection-engineering/10.png)
 
 ---
 
@@ -60,36 +60,36 @@ This finding identified a direct, high-impact compromise route: requesting and c
 
 ### Attack Screenshots
 
-![Executing BloodHound Python Collector on DVWA Pivot](../Attack-Screenshots/33.png)
+![Executing BloodHound Python Collector on DVWA Pivot](..\../assets/screenshots/attack-simulation/33.png)
 *Figure 12.1: Executing `bloodhound.py` on the DVWA pivot host (`192.168.56.30`) using compromised `win10` domain credentials against `PC-DC.ad.lab`.*
 
-![Exfiltrating BloodHound Archive to Kali via SCP](../Attack-Screenshots/34.png)
+![Exfiltrating BloodHound Archive to Kali via SCP](..\../assets/screenshots/attack-simulation/34.png)
 *Figure 12.2: Transferring the 13MB BloodHound zip archive (`20260926063108_bloodhound.zip`) from DVWA to the Kali attack host via SCP.*
 
-![Starting Neo4j and BloodHound Community Edition](../Attack-Screenshots/35.png)
+![Starting Neo4j and BloodHound Community Edition](..\../assets/screenshots/attack-simulation/35.png)
 *Figure 12.3: Starting Neo4j and BloodHound CE background services listening on local port 8080.*
 
-![BloodHound CE Login Interface](../Attack-Screenshots/36.png)
+![BloodHound CE Login Interface](..\../assets/screenshots/attack-simulation/36.png)
 *Figure 12.4: Authenticating to the BloodHound CE web interface as administrator.*
 
-![Navigating to Quick Upload in BloodHound](../Attack-Screenshots/37.png)
+![Navigating to Quick Upload in BloodHound](..\../assets/screenshots/attack-simulation/37.png)
 *Figure 12.5: Selecting "Quick Upload" in the BloodHound navigation sidebar.*
 
-![Uploading Ingestion Archive](../Attack-Screenshots/38.png)
+![Uploading Ingestion Archive](..\../assets/screenshots/attack-simulation/38.png)
 *Figure 12.6: Importing `20260926063108_bloodhound.zip` into the BloodHound graph database.*
 
-![Cypher Query - 51 Kerberoastable Users](../Attack-Screenshots/39.png)
+![Cypher Query - 51 Kerberoastable Users](..\../assets/screenshots/attack-simulation/39.png)
 *Figure 12.7: Cypher query `MATCH (u:User) WHERE u.hasspn=true RETURN u` returning 51 Kerberoastable domain user objects.*
 
-![Cypher Query - Pinpointing Domain Admin Hank Sherman](../Attack-Screenshots/40.png)
+![Cypher Query - Pinpointing Domain Admin Hank Sherman](..\../assets/screenshots/attack-simulation/40.png)
 *Figure 12.8: Targeted Cypher query identifying `HANK_SHERMAN@AD.LAB` as a Kerberoastable Domain Administrator account in Tier Zero.*
 
 ### Alert Screenshots
 
-![TheHive Alert List - Pivot Logon Activity](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/10.png)
+![TheHive Alert List - Pivot Logon Activity](..\../assets/screenshots/detection-engineering/10.png)
 *Figure 12.9: TheHive alert overview displaying multiple Wazuh logon activity alerts for ROOT on DVWA during enumeration pivot setup.*
 
-![TheHive Alert Details - Wazuh Rule 5715](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/10.1.png)
+![TheHive Alert Details - Wazuh Rule 5715](..\../assets/screenshots/detection-engineering/10.1.png)
 *Figure 12.10: TheHive alert detail showing Wazuh Rule 5715 triggered by SSH logon bursts from Kali (`192.168.232.135`) to DVWA (`192.168.56.30`) to execute and retrieve BloodHound telemetry.*
 
 ---

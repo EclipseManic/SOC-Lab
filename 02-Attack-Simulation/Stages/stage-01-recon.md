@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached
 > **Case:** [Case 01](../../04-Investigation/Cases/case-01-web-compromise.md)
 > **Investigation:** [Stage 01](../../04-Investigation/Stages/stage-01-recon.md)
-> **Evidence:** [attack](../Attack-Screenshots/) · [alert](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/)
+> **Evidence:** [attack](..\../assets/screenshots/attack-simulation/) · [alert](..\../assets/screenshots/detection-engineering/)
 
 ## Objective
 
@@ -42,33 +42,33 @@ gobuster dir -u http://192.168.56.30/ -w /usr/share/wordlists/dirb/common.txt -x
 
 ### Attack Screenshots
 
-![ICMP Ping Reachability Check](../Attack-Screenshots/1.png)
+![ICMP Ping Reachability Check](..\../assets/screenshots/attack-simulation/1.png)
 *Figure 1.1: Verification of ICMP network reachability to DVWA target (192.168.56.30).*
 
-![Nmap Full TCP Port and Service Scan](../Attack-Screenshots/2.png)
+![Nmap Full TCP Port and Service Scan](..\../assets/screenshots/attack-simulation/2.png)
 *Figure 1.2: Nmap scan results identifying OpenSSH 9.6p1, Apache 2.4.58, and exposed .git directory.*
 
-![WhatWeb Web Stack Fingerprinting](../Attack-Screenshots/3.png)
+![WhatWeb Web Stack Fingerprinting](..\../assets/screenshots/attack-simulation/3.png)
 *Figure 1.3: WhatWeb fingerprinting revealing Apache, PHP, and DVWA redirect to login.php.*
 
-![Nikto Web Server Vulnerability Scan](../Attack-Screenshots/4.png)
+![Nikto Web Server Vulnerability Scan](..\../assets/screenshots/attack-simulation/4.png)
 *Figure 1.4: Nikto web vulnerability scan reporting missing headers and indexed directories.*
 
-![Gobuster Directory Enumeration](../Attack-Screenshots/5.png)
+![Gobuster Directory Enumeration](..\../assets/screenshots/attack-simulation/5.png)
 *Figure 1.5: Gobuster enumeration mapping out web application structure and sensitive PHP scripts.*
 
 ### Alert Screenshots
 
-![TheHive Alert Overview - Network and Scan Alerts](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/1.png)
+![TheHive Alert Overview - Network and Scan Alerts](..\../assets/screenshots/detection-engineering/1.png)
 *Figure 1.6: TheHive alert dashboard showing Suricata Nmap and multi-port scan detections.*
 
-![TheHive Alert Detail - Nmap Tool Campaign Detected by Suricata](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/1.1.png)
+![TheHive Alert Detail - Nmap Tool Campaign Detected by Suricata](..\../assets/screenshots/detection-engineering/1.1.png)
 *Figure 1.7: Detailed Suricata alert for Nmap OS detection probe and SYN port scan (rule 86601).*
 
-![TheHive Alert Detail - Suricata Unknown Scanner Multi-Port Probe](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/1.2.png)
+![TheHive Alert Detail - Suricata Unknown Scanner Multi-Port Probe](..\../assets/screenshots/detection-engineering/1.2.png)
 *Figure 1.8: Suricata alert tracking multi-port scan across SSH, MySQL, and database ports.*
 
-![TheHive Alert Detail - Suricata POSSBL Port Scan and OS Detection](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/1.3.png)
+![TheHive Alert Detail - Suricata POSSBL Port Scan and OS Detection](..\../assets/screenshots/detection-engineering/1.3.png)
 *Figure 1.9: Raw Suricata alert details captured in TheHive alert wzb-3a8045a03c.*
 
 ## Alert observed

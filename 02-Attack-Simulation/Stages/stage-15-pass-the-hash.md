@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached  
 > **Case:** [Case 03](../../04-Investigation/Cases/case-03-domain-compromise.md)  
 > **Investigation:** [Stage 15](../../04-Investigation/Stages/stage-15-pass-the-hash.md)  
-> **Evidence:** [attack](../Attack-Screenshots/48.png) · [alert](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/13.png)
+> **Evidence:** [attack](..\../assets/screenshots/attack-simulation/48.png) · [alert](..\../assets/screenshots/detection-engineering/13.png)
 
 ---
 
@@ -49,12 +49,12 @@ With full interactive command execution confirmed on `PC-DC`, the adversary esta
 
 ### Attack Screenshots
 
-![Impacket WMIexec Pass-the-Hash Remote Shell Execution](../Attack-Screenshots/48.png)
+![Impacket WMIexec Pass-the-Hash Remote Shell Execution](..\../assets/screenshots/attack-simulation/48.png)
 *Figure 15.1: Executing `wmiexec.py` from DVWA pivot host using the Administrator NTLM hash, establishing a semi-interactive shell on `PC-DC` and verifying identity with `whoami` and `hostname`.*
 
 ### Alert Screenshots
 
-![TheHive Alert - Suricata Exploit Alert](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/13.png)
+![TheHive Alert - Suricata Exploit Alert](..\../assets/screenshots/detection-engineering/13.png)
 *Figure 15.2: TheHive alert detail displaying Suricata Rule 86601 ("ET EXPLOIT Possible GoldenPac Priv Esc in-use") triggered by network traffic between DVWA (`192.168.56.30`) and Domain Controller `PC-DC` (`192.168.56.10:88`).*
 
 ---
@@ -68,7 +68,7 @@ With full interactive command execution confirmed on `PC-DC`, the adversary esta
 
 ### Detection Analysis
 
-- **Primary Endpoint Detection (Windows Event ID 4624 (Logon Type 3 NTLM)):** The definitive empirical detection for Pass-the-Hash in this lab is recorded in [`06-Resources/Alerts/wazuh_alerts.csv`](../../06-Resources/Alerts/wazuh_alerts.csv), where Windows Event ID 4624 (Logon Type 3 NTLM) fired over 24 times on `DomainWin10` (`192.168.56.20`). The rule specifically alerts on Windows Security Event ID 4624 with Logon Type 3 (Network) where `AuthenticationPackageName` is `NtLmSsp` for administrative accounts (`Administrator`), diagnosing lateral movement over SMB without Kerberos pre-authentication.
+- **Primary Endpoint Detection (Windows Event ID 4624 (Logon Type 3 NTLM)):** The definitive empirical detection for Pass-the-Hash in this lab is recorded in [`..\../assets/files/alerts/wazuh_alerts.csv`](..\../assets/files/alerts/wazuh_alerts.csv), where Windows Event ID 4624 (Logon Type 3 NTLM) fired over 24 times on `DomainWin10` (`192.168.56.20`). The rule specifically alerts on Windows Security Event ID 4624 with Logon Type 3 (Network) where `AuthenticationPackageName` is `NtLmSsp` for administrative accounts (`Administrator`), diagnosing lateral movement over SMB without Kerberos pre-authentication.
 - **Network Telemetry Context (SID 2019922):** Suricata on the router host (`ens37` promiscuous capture) simultaneously triggered signature `ET EXPLOIT Possible MS14-068 GoldenPac` (Rule 86601). While GoldenPac signatures match generic Kerberos ASN.1 structures on port 88 during associated ticket requests, the true protocol detection for PtH remains the endpoint NTLM Security Event ID 4624.
 - **Correlated Host Telemetry on Target Workstation & Domain Controller:**
   - **Windows Security Event ID 4624 (Logon Type 3 / Network):**

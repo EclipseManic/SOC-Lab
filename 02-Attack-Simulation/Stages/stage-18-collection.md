@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached  
 > **Case:** [Case 03](../../04-Investigation/Cases/case-03-domain-compromise.md)  
 > **Investigation:** [Stage 18](../../04-Investigation/Stages/stage-18-collection.md)  
-> **Evidence:** [attack](../Attack-Screenshots/54.png) · [alert](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/18.png)
+> **Evidence:** [attack](..\../assets/screenshots/attack-simulation/54.png) · [alert](..\../assets/screenshots/detection-engineering/18.png)
 
 ## Objective
 
@@ -50,27 +50,27 @@ Using native command concatenation, the attacker executed `cmd /c "type C:\Users
 
 ### Attack Execution Screenshots
 
-![Domain Controller intelligence harvesting via wmiexec](../Attack-Screenshots/54.png)
+![Domain Controller intelligence harvesting via wmiexec](..\../assets/screenshots/attack-simulation/54.png)
 *Figure 18.1: Enumerating domain accounts and administrative privileges to temporary staging files on PC-DC and downloading via lget.*
 
-![Sensitive data aggregation and staging on Windows 10 workstation](../Attack-Screenshots/55.png)
+![Sensitive data aggregation and staging on Windows 10 workstation](..\../assets/screenshots/attack-simulation/55.png)
 *Figure 18.2: Lateral movement via Pass-the-Hash to Windows 10, concatenating sensitive documents, and downloading via lget.*
 
 ### Detection & Alert Screenshots
 
-![TheHive Alert 16 — Domain Controller Process Fan-Out Overview](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/16.png)
+![TheHive Alert 16 — Domain Controller Process Fan-Out Overview](..\../assets/screenshots/detection-engineering/16.png)
 *Figure 18.3: TheHive Alert 16 overview capturing process fan-out on DomainWin10 under parent PID 4432 (`wzb-aa66cb916a`).*
 
-![TheHive Alert 16.5 — Process Execution Telemetry Details](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/16.5.png)
+![TheHive Alert 16.5 — Process Execution Telemetry Details](..\../assets/screenshots/detection-engineering/16.5.png)
 *Figure 18.4: Alert 16 event breakdown showing child process command line executions for data harvesting.*
 
-![TheHive alert overview for data collection activities](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/18.png)
+![TheHive alert overview for data collection activities](..\../assets/screenshots/detection-engineering/18.png)
 *Figure 18.5: TheHive alert dashboard showing process fan-out alerts generated on both DomainWin10 (DC) and Win10User endpoints.*
 
-![Wazuh alert on PC-DC detecting net user and whoami collection output redirection](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/18.1.png)
+![Wazuh alert on PC-DC detecting net user and whoami collection output redirection](..\../assets/screenshots/detection-engineering/18.1.png)
 *Figure 18.4: Wazuh Sysmon alert (Rule 100613) capturing command execution on PC-DC writing `domain_users.txt` and `admin_info.txt`.*
 
-![Wazuh alert on Win10 detecting type command data aggregation](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/18.2.png)
+![Wazuh alert on Win10 detecting type command data aggregation](..\../assets/screenshots/detection-engineering/18.2.png)
 *Figure 18.5: Wazuh Sysmon alert (Rule 100613) on Win10 workstation detecting sensitive data aggregation to `sensitive_data.txt`.*
 
 ## Alert observed

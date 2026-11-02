@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached
 > **Case:** [Case 01](../../04-Investigation/Cases/case-01-web-compromise.md)
 > **Investigation:** [Stage 06](../../04-Investigation/Stages/stage-06-reverse-shell.md)
-> **Evidence:** [attack](../Attack-Screenshots/) · [alert](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/)
+> **Evidence:** [attack](..\../assets/screenshots/attack-simulation/) · [alert](..\../assets/screenshots/detection-engineering/)
 
 ## Objective
 
@@ -66,18 +66,18 @@ export TERM=xterm
 
 ### Attack Screenshots
 
-![Kali IP Configuration and Netcat Listener Setup](../Attack-Screenshots/15.png)
+![Kali IP Configuration and Netcat Listener Setup](..\../assets/screenshots/attack-simulation/15.png)
 *Figure 1: Kali Linux interface verification (`192.168.232.135`) and Netcat listener initialized on port 4444.*
 
-![Reverse Shell Trigger via Web Shell GET Request](../Attack-Screenshots/16.png)
+![Reverse Shell Trigger via Web Shell GET Request](..\../assets/screenshots/attack-simulation/16.png)
 *Figure 2: Browser request triggering the FIFO reverse shell one-liner via `shell.php`.*
 
-![Netcat Connection Handshake and PTY Upgrade](../Attack-Screenshots/17.png)
+![Netcat Connection Handshake and PTY Upgrade](..\../assets/screenshots/attack-simulation/17.png)
 *Figure 3 (Top Half): Reverse shell connection established from `192.168.232.161` as `www-data`, followed by Python PTY bash spawning and stty terminal configuration.*
 
 ### Alert Screenshots
 
-![TheHive Alert 5 — Outbound Reverse Shell Connection](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/5.png)
+![TheHive Alert 5 — Outbound Reverse Shell Connection](..\../assets/screenshots/detection-engineering/5.png)
 *Figure 4: TheHive Alert 5 generated from Suricata and Wazuh telemetry detecting the outbound reverse shell connection.*
 
 ## Alert observed
