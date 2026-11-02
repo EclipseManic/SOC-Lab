@@ -42,13 +42,13 @@ The adversary initiated an external attack campaign targeting the public-facing 
 
 | Time | Event | Source | Evidence |
 |---|---|---|---|
-| T0 | External port scan and directory fuzzing from 192.168.232.135 | Suricata / Wazuh | [Attack 01](../../02-Attack-Simulation/Attack-Screenshots/1.png) · [Alert 01](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/1.png) |
-| T+2m | Automated Python credential brute-force burst against `/login.php` | Suricata / Wazuh | [Attack 05](../../02-Attack-Simulation/Attack-Screenshots/6.png) · [Alert 02](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/2.png) |
-| T+5m | SQL injection payload submitted dumping credentials | Suricata | [Attack 09](../../02-Attack-Simulation/Attack-Screenshots/8.png) · [Alert 03](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/3.png) |
-| T+8m | Offline Hashcat MD5 password cracking on Kali | Offline GPU | [Attack 13](../../02-Attack-Simulation/Attack-Screenshots/10.png) · DG-04 |
-| T+11m | Malicious PHP file uploaded to /var/www/html/hackable/uploads/ | Wazuh / Auditd | [Attack 16](../../02-Attack-Simulation/Attack-Screenshots/12.png) · [Alert 04](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/4.png) |
-| T+13m | Python reverse shell spawned to 192.168.232.135:4444 | Wazuh Auditd | [Attack 19](../../02-Attack-Simulation/Attack-Screenshots/15.png) · [Alert 05](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/5.png) |
-| T+16m | Passwordless sudo Python execution granting effective root and reading /etc/shadow | Wazuh Auditd | [Attack 23](../../02-Attack-Simulation/Attack-Screenshots/17.png) · [Alert 06](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/6.png) |
+| T0 | External port scan and directory fuzzing from 192.168.232.135 | Suricata / Wazuh | [Attack 01](..\../assets/screenshots/attack-simulation/1.png) · [Alert 01](..\../assets/screenshots/detection-engineering/1.png) |
+| T+2m | Automated Python credential brute-force burst against `/login.php` | Suricata / Wazuh | [Attack 05](..\../assets/screenshots/attack-simulation/6.png) · [Alert 02](..\../assets/screenshots/detection-engineering/2.png) |
+| T+5m | SQL injection payload submitted dumping credentials | Suricata | [Attack 09](..\../assets/screenshots/attack-simulation/8.png) · [Alert 03](..\../assets/screenshots/detection-engineering/3.png) |
+| T+8m | Offline Hashcat MD5 password cracking on Kali | Offline GPU | [Attack 13](..\../assets/screenshots/attack-simulation/10.png) · DG-04 |
+| T+11m | Malicious PHP file uploaded to /var/www/html/hackable/uploads/ | Wazuh / Auditd | [Attack 16](..\../assets/screenshots/attack-simulation/12.png) · [Alert 04](..\../assets/screenshots/detection-engineering/4.png) |
+| T+13m | Python reverse shell spawned to 192.168.232.135:4444 | Wazuh Auditd | [Attack 19](..\../assets/screenshots/attack-simulation/15.png) · [Alert 05](..\../assets/screenshots/detection-engineering/5.png) |
+| T+16m | Passwordless sudo Python execution granting effective root and reading /etc/shadow | Wazuh Auditd | [Attack 23](..\../assets/screenshots/attack-simulation/17.png) · [Alert 06](..\../assets/screenshots/detection-engineering/6.png) |
 
 ---
 

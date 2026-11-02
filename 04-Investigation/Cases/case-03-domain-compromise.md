@@ -42,12 +42,12 @@ Armed with the dumped domain NTLM hashes from DCSync, the adversary executed Pas
 
 | Time | Event | Source | Evidence |
 |---|---|---|---|
-| T+45m | Pass-the-Hash remote logon Type 3 via NtLmSsp to DomainWin10 | Wazuh (Win10) | [Attack 50](../../02-Attack-Simulation/Attack-Screenshots/48.png) · [Alert 13](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/13.png) |
-| T+48m | Forged Kerberos TGT (Golden Ticket) generated on pivot host | Wazuh SSHD | [Attack 54](../../02-Attack-Simulation/Attack-Screenshots/49.png) · [Alert 14](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/14.png) |
-| T+52m | Rogue user `backdoor_admin` created and added to Domain Admins | Wazuh (PC-DC) | [Attack 58](../../02-Attack-Simulation/Attack-Screenshots/52.png) · [Alert 15](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/15.png) |
-| T+55m | Automated host data collection commands and tar archive staging | Wazuh / Sysmon | [Attack 62](../../02-Attack-Simulation/Attack-Screenshots/54.png) · [Alert 16](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/16.png) |
-| T+58m | Rapid administrative SSH burst exfiltrating /tmp/data.tar.gz via SCP | Wazuh SSHD | [Attack 66](../../02-Attack-Simulation/Attack-Screenshots/56.png) · [Alert 17](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/17.png) |
-| T+62m | Impacket wmiexec fan-out altering desktop wallpaper registry keys | Wazuh / Sysmon | [Attack 70](../../02-Attack-Simulation/Attack-Screenshots/57.png) · [Alert 18](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/18.png) |
+| T+45m | Pass-the-Hash remote logon Type 3 via NtLmSsp to DomainWin10 | Wazuh (Win10) | [Attack 50](..\../assets/screenshots/attack-simulation/48.png) · [Alert 13](..\../assets/screenshots/detection-engineering/13.png) |
+| T+48m | Forged Kerberos TGT (Golden Ticket) generated on pivot host | Wazuh SSHD | [Attack 54](..\../assets/screenshots/attack-simulation/49.png) · [Alert 14](..\../assets/screenshots/detection-engineering/14.png) |
+| T+52m | Rogue user `backdoor_admin` created and added to Domain Admins | Wazuh (PC-DC) | [Attack 58](..\../assets/screenshots/attack-simulation/52.png) · [Alert 15](..\../assets/screenshots/detection-engineering/15.png) |
+| T+55m | Automated host data collection commands and tar archive staging | Wazuh / Sysmon | [Attack 62](..\../assets/screenshots/attack-simulation/54.png) · [Alert 16](..\../assets/screenshots/detection-engineering/16.png) |
+| T+58m | Rapid administrative SSH burst exfiltrating /tmp/data.tar.gz via SCP | Wazuh SSHD | [Attack 66](..\../assets/screenshots/attack-simulation/56.png) · [Alert 17](..\../assets/screenshots/detection-engineering/17.png) |
+| T+62m | Impacket wmiexec fan-out altering desktop wallpaper registry keys | Wazuh / Sysmon | [Attack 70](..\../assets/screenshots/attack-simulation/57.png) · [Alert 18](..\../assets/screenshots/detection-engineering/18.png) |
 
 ---
 

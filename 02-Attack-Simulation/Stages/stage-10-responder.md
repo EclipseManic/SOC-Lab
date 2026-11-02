@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached
 > **Case:** [Case 02](../../04-Investigation/Cases/case-02-lateral-movement.md)
 > **Investigation:** [Stage 10](../../04-Investigation/Stages/stage-10-responder.md)
-> **Evidence:** [attack](../Attack-Screenshots/) · [alert](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/)
+> **Evidence:** [attack](..\../assets/screenshots/attack-simulation/) · [alert](..\../assets/screenshots/detection-engineering/)
 
 ## Objective
 
@@ -59,27 +59,27 @@ win10::AD:112233***8899:b4a78***e31
 
 ### Attack Screenshots
 
-![Stopping Apache and Launching Responder](../Attack-Screenshots/28.png)
+![Stopping Apache and Launching Responder](..\../assets/screenshots/attack-simulation/28.png)
 *Figure 1: Halting Apache service (`systemctl stop apache2`) and launching Responder on internal interface `ens33`.*
 
-![LLMNR Poisoning and NTLMv2 Hash Interception](../Attack-Screenshots/29.png)
+![LLMNR Poisoning and NTLMv2 Hash Interception](..\../assets/screenshots/attack-simulation/29.png)
 *Figure 2: Responder poisoning queries for `nonexistent` from `192.168.56.20` and capturing the NTLMv2 hash for domain user `AD\win10`.*
 
-![Responder Log Verification and Hash Staging](../Attack-Screenshots/30.png)
+![Responder Log Verification and Hash Staging](..\../assets/screenshots/attack-simulation/30.png)
 *Figure 3: Listing Responder logs and copying the captured NetNTLMv2 hash file to `/tmp/win10.hash`.*
 
 ### Alert Screenshots
 
-![TheHive Alert 9 — LLMNR Poisoning and Rogue Traffic Overview](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/9.png)
+![TheHive Alert 9 — LLMNR Poisoning and Rogue Traffic Overview](..\../assets/screenshots/detection-engineering/9.png)
 *Figure 4: TheHive Alert 9 overview showing detection of LLMNR/NBT-NS multicast poisoning and rogue authentication responses.*
 
-![TheHive Alert 9.1 — Multicast Poisoning Rule Trigger](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/9.1.png)
+![TheHive Alert 9.1 — Multicast Poisoning Rule Trigger](..\../assets/screenshots/detection-engineering/9.1.png)
 *Figure 5: Alert rule trigger details for rogue LLMNR/mDNS answers detected on the internal subnet.*
 
-![TheHive Alert 9.2 — Rogue Authentication and SMB Anomaly](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/9.2.png)
+![TheHive Alert 9.2 — Rogue Authentication and SMB Anomaly](..\../assets/screenshots/detection-engineering/9.2.png)
 *Figure 6: Suricata and Wazuh event telemetry capturing unauthorized SMB challenge-response exchange.*
 
-![TheHive Alert 9.3 — Host Telemetry for Apache Stop and Port Bind](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/9.3.png)
+![TheHive Alert 9.3 — Host Telemetry for Apache Stop and Port Bind](..\../assets/screenshots/detection-engineering/9.3.png)
 *Figure 7: Wazuh host monitoring alert on `dvwa` logging the termination of `apache2` followed by Python binding to privileged network ports.*
 
 ## Alert observed

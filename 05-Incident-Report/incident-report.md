@@ -17,8 +17,8 @@
 
 ## 1. Executive Summary
 
-[![Consolidated Incident Response 74-Minute Timeline](../06-Resources/Diagrams/Consolidated%20Incident%20Response%2074-Minute%20Timeline.png)](../06-Resources/Diagrams/Consolidated%20Incident%20Response%2074-Minute%20Timeline.png)
-*Figure 1: Full chronological incident timeline spanning 74 minutes ($T_0$ to $T_0 + 74\text{m}$), correlating attacker milestones (top) against blue-team detection alerts across Suricata, Auditd, Wazuh, Sysmon, and TheHive (bottom) ([view full asset](../06-Resources/Diagrams/Consolidated%20Incident%20Response%2074-Minute%20Timeline.png)).*
+[![Consolidated Incident Response 74-Minute Timeline](../assets/diagrams/Consolidated%20Incident%20Response%2074-Minute%20Timeline.png)](../assets/diagrams/Consolidated%20Incident%20Response%2074-Minute%20Timeline.png)
+*Figure 1: Full chronological incident timeline spanning 74 minutes ($T_0$ to $T_0 + 74\text{m}$), correlating attacker milestones (top) against blue-team detection alerts across Suricata, Auditd, Wazuh, Sysmon, and TheHive (bottom) ([view full asset](../assets/diagrams/Consolidated%20Incident%20Response%2074-Minute%20Timeline.png)).*
 
 An advanced multi-stage cyber intrusion was simulated across the hybrid enterprise lab environment, originating from external IP `192.168.232.135` (Kali Linux) and culminating in complete Tier 0 Active Directory domain compromise. The adversary breached the perimeter by exploiting a SQL injection vulnerability on the DVWA server (`192.168.56.30`), dropping a PHP web shell, executing an interactive reverse shell, and escalating privileges to `root` via a passwordless sudo Python misconfiguration (`sudo /usr/bin/python3` GTFOBins). 
 

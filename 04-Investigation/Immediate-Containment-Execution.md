@@ -8,7 +8,9 @@
 
 > [!IMPORTANT]
 > **Investigative Basis & Threat Intelligence Context:**  
-> This tactical containment playbook is executed in direct response to the 46 TheHive alerts triaged and analyzed in **[`Initial-Triage and Investigation.md`](Initial-Triage%20and%20Investigation.md)**. For the complete master triage table, detection pipeline critique (8 flaws), and 6-window chronological timeline, refer to that companion investigation record.
+> This tactical containment playbook is executed in direct response to the forensic findings detailed across our incident records:
+> - **[`Initial-Triage and Investigation.md`](Initial-Triage%20and%20Investigation.md)**: Master 46-alert triage table, detection pipeline critique (8 flaws), and 6-window chronological timeline.
+> - **[`Deep-Dive-Attack-Chain-Investigation.md`](Deep-Dive-Attack-Chain-Investigation.md)**: Comprehensive DFIR deep-dive of the complete 7-phase attack chain, root-cause vulnerability analysis, 68-screenshot telemetry index, and strategic enterprise hardening roadmap.
 
 ---
 
@@ -88,7 +90,7 @@ sudo iptables -L -n -v | grep 192.168.232.135
 ```
 
 ### 📸 Proof of Execution:
-![Firewall DROP rule active for 192.168.232.135](Screenshot/Containment-Execution-Screenshots/slot_01_containment_firewall_drop.png)  
+![Firewall DROP rule active for 192.168.232.135](../assets/screenshots/investigation/containment/slot_01_containment_firewall_drop.png)  
 *Figure 1: Velociraptor terminal output on Suricata displaying active iptables packet filtering rules dropping all inbound and forward packets from attacker IP `192.168.232.135`.*
 
 ---
@@ -123,10 +125,10 @@ ls -la /var/www/html/dvwa/hackable/uploads/
 ```
 
 ### 📸 Proof of Execution:
-![DVWA reverse shell terminated and web shell quarantined](Screenshot/Containment-Execution-Screenshots/slot_02a_containment_dvwa_shells_quarantined.png)  
+![DVWA reverse shell terminated and web shell quarantined](../assets/screenshots/investigation/containment/slot_02a_containment_dvwa_shells_quarantined.png)  
 *Figure 2a: Socket statistics (`ss`) confirming port 4444 is cleared, and `shell.php` staged for isolation.*
 
-![DVWA uploads directory verified clean](Screenshot/Containment-Execution-Screenshots/slot_02b_containment_dvwa_uploads_cleaned.png)  
+![DVWA uploads directory verified clean](../assets/screenshots/investigation/containment/slot_02b_containment_dvwa_uploads_cleaned.png)  
 *Figure 2b: Directory listing confirming `shell.php` is completely removed from `/var/www/html/dvwa/hackable/uploads/` and quarantined.*
 
 ---
@@ -157,7 +159,7 @@ sudo ss -tprn '( dport = :22 or sport = :22 )'
 ```
 
 ### 📸 Proof of Execution:
-![Removal of unauthorized root SSH authorized keys](Screenshot/Containment-Execution-Screenshots/slot_03_containment_dvwa_root_ssh_eradication.png)  
+![Removal of unauthorized root SSH authorized keys](../assets/screenshots/investigation/containment/slot_03_containment_dvwa_root_ssh_eradication.png)  
 *Figure 3: Velociraptor console verifying `/root/.ssh/authorized_keys` removal (showing `kali@kali` key wiped) and `who` command confirming zero unauthorized root sessions.*
 
 ---
@@ -185,10 +187,10 @@ Get-ADPrincipalGroupMembership -Identity "backdoor" | Select-Object Name
 ```
 
 ### 📸 Proof of Execution:
-![Disabling AD\backdoor and stripping Domain Admins membership](Screenshot/Containment-Execution-Screenshots/slot_04a_containment_dc_backdoor_disabled.png)  
+![Disabling AD\backdoor and stripping Domain Admins membership](../assets/screenshots/investigation/containment/slot_04a_containment_dc_backdoor_disabled.png)  
 *Figure 4a: Active Directory PowerShell console executing `Disable-ADAccount` and stripping `backdoor` from Domain Admins and Administrators.*
 
-![Verifying backdoor account disabled state and stripped group memberships](Screenshot/Containment-Execution-Screenshots/slot_04b_containment_dc_backdoor_verified.png)  
+![Verifying backdoor account disabled state and stripped group memberships](../assets/screenshots/investigation/containment/slot_04b_containment_dc_backdoor_verified.png)  
 *Figure 4b: `Get-ADUser` output confirming `Enabled : False` and `Get-ADPrincipalGroupMembership` verifying reduction strictly to default Domain Users.*
 
 ---
@@ -220,10 +222,10 @@ Get-ADUser -Identity "krbtgt" -Properties pwdLastSet | Select-Object Name, @{N="
 ```
 
 ### 📸 Proof of Execution:
-![Domain Controller krbtgt account password reset](Screenshot/Containment-Execution-Screenshots/slot_05a_containment_dc_krbtgt_reset.png)  
+![Domain Controller krbtgt account password reset](../assets/screenshots/investigation/containment/slot_05a_containment_dc_krbtgt_reset.png)  
 *Figure 5a: PowerShell console checking initial `pwdLastSet` timestamp and executing `Set-ADAccountPassword` on `krbtgt`.*
 
-![Purging domain Kerberos tickets and verifying updated timestamp](Screenshot/Containment-Execution-Screenshots/slot_05b_containment_dc_krbtgt_verified.png)  
+![Purging domain Kerberos tickets and verifying updated timestamp](../assets/screenshots/investigation/containment/slot_05b_containment_dc_krbtgt_verified.png)  
 *Figure 5b: Purging Kerberos tickets with `klist purge -li 0x3e7` and verifying updated `pwdLastSet` timestamp, invalidating all forged Golden Tickets.*
 
 ---
@@ -261,10 +263,10 @@ Get-ChildItem -Path "C:\Forensics_Quarantine"
 ```
 
 ### 📸 Proof of Execution:
-![Endpoint staged recon quarantine and desktop cleanup](Screenshot/Containment-Execution-Screenshots/slot_06d_containment_quarantine_verified.png)  
+![Endpoint staged recon quarantine and desktop cleanup](../assets/screenshots/investigation/containment/slot_06d_containment_quarantine_verified.png)  
 *Figure 6a: Windows PowerShell console showing staged reconnaissance dumps and malicious wallpaper bitmap (`hacked.bmp`) successfully quarantined in `C:\Forensics_Quarantine\`.*
 
-![Restoring desktop wallpaper registry and refreshing UI](Screenshot/Containment-Execution-Screenshots/slot_06e_containment_desktop_refreshed.png)  
+![Restoring desktop wallpaper registry and refreshing UI](../assets/screenshots/investigation/containment/slot_06e_containment_desktop_refreshed.png)  
 *Figure 6b: Registry update resetting Wallpaper and WallpaperStyle followed by `RUNDLL32.EXE` to refresh the desktop parameters.*
 
 ---
@@ -294,7 +296,7 @@ systemctl start apache2
 ```
 
 ### 📸 Proof of Execution:
-![Database credential rotation in MariaDB console](Screenshot/Containment-Execution-Screenshots/slot_07_containment_dvwa_db_credential_rotation.png)  
+![Database credential rotation in MariaDB console](../assets/screenshots/investigation/containment/slot_07_containment_dvwa_db_credential_rotation.png)  
 *Figure 7: Velociraptor console demonstrating successful non-interactive password rotation in MariaDB, DVWA config file update, and Apache restart.*
 
 ---

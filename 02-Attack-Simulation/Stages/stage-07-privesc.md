@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached
 > **Case:** [Case 01](../../04-Investigation/Cases/case-01-web-compromise.md)
 > **Investigation:** [Stage 07](../../04-Investigation/Stages/stage-07-privesc.md)
-> **Evidence:** [attack](../Attack-Screenshots/) · [alert](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/)
+> **Evidence:** [attack](..\../assets/screenshots/attack-simulation/) · [alert](..\../assets/screenshots/detection-engineering/)
 
 ## Objective
 
@@ -60,21 +60,21 @@ whoami
 
 ### Attack Screenshots
 
-![Sudo Enumeration and Root Privilege Escalation](../Attack-Screenshots/17.png)
+![Sudo Enumeration and Root Privilege Escalation](..\../assets/screenshots/attack-simulation/17.png)
 *Figure 1 (Bottom Half): Execution of `sudo -l` revealing `(ALL) NOPASSWD: /usr/bin/python3`, followed by the Python GTFOBins command execution granting `root@dvwa`.*
 
 ### Alert Screenshots
 
-![TheHive Alert 6 — Sudo Privilege Escalation Overview](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/6.png)
+![TheHive Alert 6 — Sudo Privilege Escalation Overview](..\../assets/screenshots/detection-engineering/6.png)
 *Figure 2: TheHive Alert 6 overview displaying detected sudo privilege escalation activity on host `dvwa`.*
 
-![TheHive Alert 6.1 — Rule Details and Threat Mapping](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/6.1.png)
+![TheHive Alert 6.1 — Rule Details and Threat Mapping](..\../assets/screenshots/detection-engineering/6.1.png)
 *Figure 3: Details of Alert 6 showing rule triggers and MITRE ATT&CK privilege escalation alignment.*
 
-![TheHive Alert 6.2 — Wazuh Audit Telemetry for Sudo Python](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/6.2.png)
+![TheHive Alert 6.2 — Wazuh Audit Telemetry for Sudo Python](..\../assets/screenshots/detection-engineering/6.2.png)
 *Figure 4: Wazuh host telemetry capturing execution of `/usr/bin/python3` executed via sudo by `www-data`.*
 
-![TheHive Alert 6.3 — Root Session Initialization Log](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/6.3.png)
+![TheHive Alert 6.3 — Root Session Initialization Log](..\../assets/screenshots/detection-engineering/6.3.png)
 *Figure 5: PAM authentication record showing superuser session opened for `root` by parent user `www-data`.*
 
 ## Alert observed

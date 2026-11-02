@@ -60,9 +60,9 @@ Single source of truth for the lab. Update this table whenever a stage, alert, r
 
 | Evidence Set | Location |
 |---|---|
-| Attack Screenshots | `02-Attack-Simulation/Attack-Screenshots/` (62 images: 1.png – 60.png, plus 58.5.png, 59.5.png) |
-| TheHive Alert Screenshots | `03-Detection-Engineering/TheHive_Alert-ScreenShot/` (60 images: 1.png – 22.4.png) |
-| Raw Telemetry CSV (Complete) | [`06-Resources/Alerts/Wazuh-Raw-Alerts.csv`](06-Resources/Alerts/Wazuh-Raw-Alerts.csv) (9,567 raw baseline alerts across all 4 agents in OpenSearch) |
-| Curated Incident Analysis Set | [`06-Resources/Alerts/wazuh_alerts.csv`](06-Resources/Alerts/wazuh_alerts.csv) (808 curated forensic alerts filtered via 11 OpenSearch exclusion clauses) |
-| Correlated Incident Alerts | [`06-Resources/Alerts/thehive_alerts.json`](06-Resources/Alerts/thehive_alerts.json) (46 actionable incident cases created live in TheHive via Level >= 8 gate) |
-| Master Attack Blueprint | [`06-Resources/attack-chain-full.pdf`](06-Resources/attack-chain-full.pdf) |
+| Attack Screenshots | `assets/screenshots/attack-simulation/` (62 images: 1.png – 60.png, plus 58.5.png, 59.5.png) |
+| TheHive Alert Screenshots | `assets/screenshots/detection-engineering/` (60 images: 1.png – 22.4.png) |
+| Raw Telemetry CSV (Complete) | [`assets/files/alerts/Wazuh-Raw-Alerts.csv`](assets/files/alerts/Wazuh-Raw-Alerts.csv) (9,567 raw baseline alerts across all 4 agents in OpenSearch) |
+| Curated Incident Analysis Set | [`assets/files/alerts/wazuh_alerts.csv`](assets/files/alerts/wazuh_alerts.csv) (808 curated forensic alerts filtered via 11 OpenSearch exclusion clauses) |
+| Correlated Incident Alerts | [`assets/files/alerts/thehive_alerts.json`](assets/files/alerts/thehive_alerts.json) (46 actionable incident cases created live in TheHive via Level >= 8 gate) |
+| Master Attack Blueprint | [`assets/files/attack-chain-full.pdf`](assets/files/attack-chain-full.pdf) |

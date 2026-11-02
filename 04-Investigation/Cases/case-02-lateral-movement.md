@@ -42,14 +42,14 @@ Following root privilege escalation on the DVWA host (`192.168.56.30`), the adve
 
 | Time | Event | Source | Evidence |
 |---|---|---|---|
-| T+18m | Attacker public key added to /root/.ssh/authorized_keys | Wazuh Auditd | [Attack 26](../../02-Attack-Simulation/Attack-Screenshots/18.png) · [Alert 07](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/7.png) |
-| T+20m | Inbound root SSH interactive session established from Kali | Wazuh SSHD | [Attack 26](../../02-Attack-Simulation/Attack-Screenshots/18.png) · [Alert 07](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/7.png) |
-| T+23m | Internal subnet discovery sweep against 192.168.56.0/24 | Suricata (`ens37`) | [Attack 29](../../02-Attack-Simulation/Attack-Screenshots/21.png) · [Alert 08](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/8.png) |
-| T+27m | Responder LLMNR/NBT-NS poisoning capturing win10 NetNTLMv2 hash | Suricata / Wazuh | [Attack 33](../../02-Attack-Simulation/Attack-Screenshots/28.png) · [Alert 09](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/9.png) |
-| T+30m | Offline Hashcat NetNTLMv2 hash cracking on Kali | Offline GPU | [Attack 36](../../02-Attack-Simulation/Attack-Screenshots/31.png) · DG-11 |
-| T+34m | BloodHound/SharpHound LDAP query volume from DVWA to DC | Wazuh SSHD | [Attack 38](../../02-Attack-Simulation/Attack-Screenshots/33.png) · [Alert 10](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/10.png) |
-| T+38m | Kerberoasting TGS-REQ requested for HANK_SHERMAN SPN | Suricata / Wazuh | [Attack 41](../../02-Attack-Simulation/Attack-Screenshots/41.png) · [Alert 11](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/11.png) |
-| T+42m | DCSync replication dumping domain hashes via DRSUAPI | Wazuh SSHD | [Attack 46](../../02-Attack-Simulation/Attack-Screenshots/45.png) · [Alert 12](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/12.png) |
+| T+18m | Attacker public key added to /root/.ssh/authorized_keys | Wazuh Auditd | [Attack 26](..\../assets/screenshots/attack-simulation/18.png) · [Alert 07](..\../assets/screenshots/detection-engineering/7.png) |
+| T+20m | Inbound root SSH interactive session established from Kali | Wazuh SSHD | [Attack 26](..\../assets/screenshots/attack-simulation/18.png) · [Alert 07](..\../assets/screenshots/detection-engineering/7.png) |
+| T+23m | Internal subnet discovery sweep against 192.168.56.0/24 | Suricata (`ens37`) | [Attack 29](..\../assets/screenshots/attack-simulation/21.png) · [Alert 08](..\../assets/screenshots/detection-engineering/8.png) |
+| T+27m | Responder LLMNR/NBT-NS poisoning capturing win10 NetNTLMv2 hash | Suricata / Wazuh | [Attack 33](..\../assets/screenshots/attack-simulation/28.png) · [Alert 09](..\../assets/screenshots/detection-engineering/9.png) |
+| T+30m | Offline Hashcat NetNTLMv2 hash cracking on Kali | Offline GPU | [Attack 36](..\../assets/screenshots/attack-simulation/31.png) · DG-11 |
+| T+34m | BloodHound/SharpHound LDAP query volume from DVWA to DC | Wazuh SSHD | [Attack 38](..\../assets/screenshots/attack-simulation/33.png) · [Alert 10](..\../assets/screenshots/detection-engineering/10.png) |
+| T+38m | Kerberoasting TGS-REQ requested for HANK_SHERMAN SPN | Suricata / Wazuh | [Attack 41](..\../assets/screenshots/attack-simulation/41.png) · [Alert 11](..\../assets/screenshots/detection-engineering/11.png) |
+| T+42m | DCSync replication dumping domain hashes via DRSUAPI | Wazuh SSHD | [Attack 46](..\../assets/screenshots/attack-simulation/45.png) · [Alert 12](..\../assets/screenshots/detection-engineering/12.png) |
 
 ---
 

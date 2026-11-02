@@ -1,73 +1,114 @@
-# 04 — Investigation
+# 04 — Incident Investigation & Forensic Analysis
 
-This section is the analyst view of the campaign. Each attack stage has a matching investigation note, and every note is linked to one of three TheHive cases.
+Welcome to the **Incident Investigation** section of the SOC Lab repository. This directory represents the defender and DFIR (Digital Forensics and Incident Response) analyst view of the campaign. It documents the end-to-end journey from initial alert triage and queue prioritization, through live host containment and artifact collection, to forensic root-cause analysis and enterprise hardening.
 
-## Why stage-wise notes and case summaries
+[![SOC Analyst Investigation Lifecycle](../assets/diagrams/SOC%20Analyst%20Investigation%20Lifecycle.png)](../assets/diagrams/SOC%20Analyst%20Investigation%20Lifecycle.png)
+*Figure 1: SOC Analyst Investigation Lifecycle from alert ingestion to case resolution and post-incident remediation.*
 
-TheHive is case-centric: alerts become cases, and cases contain tasks, observables, TTPs, and a timeline. An incident is the case, not the stage. The repository therefore has two layers:
+---
 
-| Layer | Location | Purpose |
-|---|---|---|
-| Case summary | `Cases/` | The TheHive case record: scope, severity, observables, tasks, verdict |
-| Stage note | `Stages/` | The detailed investigation of one technique, with queries and evidence |
+## 📑 Core Investigation Architecture
 
-This gives stage-level traceability without fragmenting one incident into twenty tiny cases.
+To avoid fragmenting a single orchestrated enterprise intrusion into twenty disconnected notes, our investigation is structured into **three operational tiers**:
 
-## Core Incident Response Records
+```
+04-Investigation/
+├── README.md                                           # Master navigation & investigation guide (this file)
+├── Initial-Triage and Investigation.md                 # Tier 1: Alert triage, queue sorting & pipeline critique
+├── Immediate-Containment-Execution.md                  # Tier 1: Live tactical containment & lockout execution
+├── Deep-Dive-Attack-Chain-Investigation.md             # Tier 1: Definitive forensic attack chain storyline & root cause
+└── Cases/                                              # Tier 2: TheHive Case Management Records
+    ├── case-01-web-compromise.md                       # Case 01: Perimeter breach, SQLi, webshell & sudo privesc
+    ├── case-02-lateral-movement.md                     # Case 02: Pivot persistence, LLMNR poisoning & DCSync
+    └── case-03-domain-compromise.md                    # Case 03: Golden ticket, domain admin takeover & impact
+```
 
-| Document | Purpose |
-|---|---|
-| [Initial-Triage and Investigation.md](Initial-Triage%20and%20Investigation.md) | Initial alert triage of all 46 TheHive alerts, master triage register, detection pipeline critique (8 flaws), and 6-window chronological forensic deep-dive. |
-| [Immediate-Containment-Execution.md](Immediate-Containment-Execution.md) | Operational containment execution guide with exact host commands, sequencing rationale, and photographic proof of attacker lockout. |
+---
 
-## Case map
+## 🛡️ Tier 1: Core Incident Response Records
 
-| Case | Scope | Stages | Summary |
-|---|---|---|---|
-| Case 01 | Web application compromise | 01–07 | [case-01-web-compromise.md](Cases/case-01-web-compromise.md) |
-| Case 02 | Lateral movement and credential access | 08–14 | [case-02-lateral-movement.md](Cases/case-02-lateral-movement.md) |
-| Case 03 | Domain compromise and impact | 15–20 | [case-03-domain-compromise.md](Cases/case-03-domain-compromise.md) |
+These three master documents constitute the primary forensic records of this campaign:
 
-## Investigation workflow
+| Document | Operational Scope | Key Analyst Findings & Artifacts |
+|:---|:---|:---|
+| **[`Initial-Triage and Investigation.md`](Initial-Triage%20and%20Investigation.md)** | **Queue Triage & Alert Analysis** | • Prioritization of **46 TheHive alerts** by severity (Critical → High → Medium)<br>• Comprehensive Master Triage Register<br>• Technical critique of **8 detection pipeline flaws** (over-alerting, raw IP titles, static regex matching)<br>• 6-window chronological timeline supported by 26 triage screenshots |
+| **[`Immediate-Containment-Execution.md`](Immediate-Containment-Execution.md)** | **Operational Threat Containment** | • **7 sequential containment actions** severing attacker footholds<br>• Velociraptor VQL artifact collection & enterprise PowerShell workflows<br>• Before/after forensic states across Linux DMZ and Windows DC/Workstation<br>• Photographic proof of adversary lockout supported by 15 containment screenshots |
+| **[`Deep-Dive-Attack-Chain-Investigation.md`](Deep-Dive-Attack-Chain-Investigation.md)** | **Master Forensic Deep-Dive** | • **7-phase end-to-end attack chain narrative** connecting every alert and host action<br>• Deep-dive technical breakdown of **7 systemic organizational vulnerabilities**<br>• Master Indicators of Compromise (IoC) Register (network, host, accounts, hashes)<br>• Strategic Active Directory, DMZ, and SIEM hardening roadmap<br>• Complete 68-screenshot forensic telemetry index (`wzb-01` to `wzb-68`) |
 
-[![SOC Analyst Investigation Lifecycle](../06-Resources/Diagrams/SOC%20Analyst%20Investigation%20Lifecycle.png)](../06-Resources/Diagrams/SOC%20Analyst%20Investigation%20Lifecycle.png)
+---
 
-1. **Receive the alert.** Record the alert ID, rule ID, source, and timestamp.
-2. **Triage.** Decide true positive, false positive, or benign. Set severity, TLP, and PAP.
-3. **Create or update the case.** Use the three-case map above.
-4. **Add observables.** IPs, users, files, hashes, URLs, and domains.
-5. **Create tasks.** One task per investigation step, not one task per tool.
-6. **Investigate.** Use Wazuh, Suricata, TheHive, Velociraptor, and host logs.
-7. **Correlate.** Build a timeline and link the stage to the attack evidence.
-8. **Assess detection.** Mark Detected, Logging gap, Detection gap, Rule failure, or Not tested.
-9. **Conclude.** Write the verdict and update `INDEX.md`.
-10. **Close the case.** Write the summary and export the case report.
+## 🗂️ Tier 2: TheHive Case Management Records
 
-## Stage notes
+In modern Security Operations Centers, alerts are triaged into incident cases within a Case Management Platform (TheHive). Rather than creating twenty micro-cases, all alerts from this campaign are grouped into three operational cases matching attack scope and operational boundaries:
 
-| # | Stage | Investigation |
-|---|---|---|
-| 01 | Reconnaissance | [stage-01](Stages/stage-01-recon.md) |
-| 02 | Brute force | [stage-02](Stages/stage-02-bruteforce.md) |
-| 03 | SQL injection | [stage-03](Stages/stage-03-sqli.md) |
-| 04 | Hash cracking | [stage-04](Stages/stage-04-hash-crack.md) |
-| 05 | Web shell upload | [stage-05](Stages/stage-05-webshell.md) |
-| 06 | Reverse shell | [stage-06](Stages/stage-06-reverse-shell.md) |
-| 07 | Privilege escalation | [stage-07](Stages/stage-07-privesc.md) |
-| 08 | SSH persistence | [stage-08](Stages/stage-08-ssh-persistence.md) |
-| 09 | Internal discovery | [stage-09](Stages/stage-09-internal-discovery.md) |
-| 10 | Responder poisoning | [stage-10](Stages/stage-10-responder.md) |
-| 11 | NTLMv2 cracking | [stage-11](Stages/stage-11-ntlmv2-crack.md) |
-| 12 | BloodHound enumeration | [stage-12](Stages/stage-12-bloodhound.md) |
-| 13 | Kerberoasting | [stage-13](Stages/stage-13-kerberoasting.md) |
-| 14 | DCSync | [stage-14](Stages/stage-14-dcsync.md) |
-| 15 | Pass-the-Hash | [stage-15](Stages/stage-15-pass-the-hash.md) |
-| 16 | Golden Ticket | [stage-16](Stages/stage-16-golden-ticket.md) |
-| 17 | DC persistence | [stage-17](Stages/stage-17-dc-persistence.md) |
-| 18 | Collection | [stage-18](Stages/stage-18-collection.md) |
-| 19 | Exfiltration | [stage-19](Stages/stage-19-exfiltration.md) |
-| 20 | Impact | [stage-20](Stages/stage-20-impact.md) |
+| Case Record | TheHive ID | Scope & Stages | Summary of Covered Tactics |
+|:---|:---:|:---:|:---|
+| **[`Cases/case-01-web-compromise.md`](Cases/case-01-web-compromise.md)** | `CAS-001-WEBCOMP` | **Stages 01–07** | External port scanning (Nmap), web fuzzing (Nikto/Dirbuster), automated credential brute-forcing, SQL injection extraction, arbitrary webshell upload, and **instant privilege escalation to root via sudoers Python misconfiguration**. |
+| **[`Cases/case-02-lateral-movement.md`](Cases/case-02-lateral-movement.md)** | `CAS-002-LATMOVE` | **Stages 08–14** | Injected root SSH public key persistence, internal subnet network discovery, broadcast poisoning (Responder) capturing `AD.LAB\win10` NTLMv2 hash, BloodHound AD enumeration, Kerberoasting (`HANK_SHERMAN`), and **DCSync directory replication**. |
+| **[`Cases/case-03-domain-compromise.md`](Cases/case-03-domain-compromise.md)** | `CAS-003-DOMIMP` | **Stages 15–20** | Pass-the-Hash arrival on Domain Controller, Kerberos Golden Ticket forgery (`krbtgt`), hidden backdoor user creation elevated to `Domain Admins`, sensitive data staging and exfiltration, and **dual-endpoint desktop defacement and simulated ransomware impact**. |
 
-## Status
+---
 
-**Draft, not yet validated:** The 20 stage investigation notes and 3 comprehensive case records are active incident analysis drafts compiled from empirical telemetry. They are actively maintained to validate correlation notes, query parameters, and artifact links.
+## 🔍 Master 20-Stage Attack-to-Investigation Traceability Matrix
+
+Every technique executed during the offensive campaign maps directly to our defensive telemetry, TheHive case structure, and deep-dive forensic writeup:
+
+| # | Stage Name | ATT&CK ID | Attack Simulation Record | Monitored Sensor & Alert Rule | Assigned TheHive Case | Deep-Dive Forensic Coverage | Detection Verdict |
+|:---:|:---|:---:|:---|:---|:---:|:---|:---|
+| **01** | Reconnaissance | `T1595.001` | [Stage 01 Doc](../02-Attack-Simulation/Stages/stage-01-recon.md) | Suricata NIDS (PostgreSQL 5432, Nmap -sS) | Case 01 | [Phase 1 Narrative](Deep-Dive-Attack-Chain-Investigation.md#phase-1-external-perimeter-reconnaissance--web-application-breach) | **Direct Detection** |
+| **02** | Brute Force | `T1110.001` | [Stage 02 Doc](../02-Attack-Simulation/Stages/stage-02-bruteforce.md) | Suricata (python-requests) / Wazuh 100213 | Case 01 | [Phase 1 Narrative](Deep-Dive-Attack-Chain-Investigation.md#phase-1-external-perimeter-reconnaissance--web-application-breach) | **Direct Detection** |
+| **03** | SQL Injection | `T1190` | [Stage 03 Doc](../02-Attack-Simulation/Stages/stage-03-sqli.md) | Suricata SID 2010963 / Wazuh Rule 31106 | Case 01 | [Phase 1 Narrative](Deep-Dive-Attack-Chain-Investigation.md#phase-1-external-perimeter-reconnaissance--web-application-breach) | **Direct Detection** |
+| **04** | Hash Cracking | `T1110.002` | [Stage 04 Doc](../02-Attack-Simulation/Stages/stage-04-hash-crack.md) | *None (Local Offline Activity on Attacker Kali)* | Case 01 | [Phase 1 Narrative](Deep-Dive-Attack-Chain-Investigation.md#phase-1-external-perimeter-reconnaissance--web-application-breach) | **Offline Gap (DG-04)** |
+| **05** | Web Shell Upload | `T1505.003` | [Stage 05 Doc](../02-Attack-Simulation/Stages/stage-05-webshell.md) | Apache Access Logs / Auditd `/usr/bin/id` | Case 01 | [Phase 2 Narrative](Deep-Dive-Attack-Chain-Investigation.md#phase-2-execution--the-critical-organization-flaw-sudo-escalation) | **Direct Detection** |
+| **06** | Reverse Shell | `T1059.004` | [Stage 06 Doc](../02-Attack-Simulation/Stages/stage-06-reverse-shell.md) | Auditd Rule `web_process_creation` (stty sane) | Case 01 | [Phase 2 Narrative](Deep-Dive-Attack-Chain-Investigation.md#phase-2-execution--the-critical-organization-flaw-sudo-escalation) | **Direct Detection** |
+| **07** | Privilege Escalation | `T1548.003` | [Stage 07 Doc](../02-Attack-Simulation/Stages/stage-07-privesc.md) | Wazuh Rule 5402 (`sudo python3 to ROOT`) | Case 01 | [Phase 2 Narrative](Deep-Dive-Attack-Chain-Investigation.md#phase-2-execution--the-critical-organization-flaw-sudo-escalation) | **Direct Detection** |
+| **08** | SSH Persistence | `T1098.004` | [Stage 08 Doc](../02-Attack-Simulation/Stages/stage-08-ssh-persistence.md) | Auditd `authorized_keys` / Wazuh Rule 5715 | Case 02 | [Phase 3 Narrative](Deep-Dive-Attack-Chain-Investigation.md#phase-3-pivot-persistence--internal-lateral-discovery) | **Direct Detection** |
+| **09** | Internal Discovery | `T1018` | [Stage 09 Doc](../02-Attack-Simulation/Stages/stage-09-internal-discovery.md) | Suricata internal ens37 sweeps & outbound SSH | Case 02 | [Phase 3 Narrative](Deep-Dive-Attack-Chain-Investigation.md#phase-3-pivot-persistence--internal-lateral-discovery) | **Operational Alert (DG-09)** |
+| **10** | Responder Poisoning | `T1557.001` | [Stage 10 Doc](../02-Attack-Simulation/Stages/stage-10-responder.md) | Auditd bashcmd / Win10 EID 4688 rundll32 | Case 02 | [Phase 4 Narrative](Deep-Dive-Attack-Chain-Investigation.md#phase-4-identity-harvesting--broadcast-poisoning) | **Direct Detection** |
+| **11** | NTLMv2 Cracking | `T1110.002` | [Stage 11 Doc](../02-Attack-Simulation/Stages/stage-11-ntlmv2-crack.md) | *None (Local Offline Activity on Attacker Kali)* | Case 02 | [Phase 4 Narrative](Deep-Dive-Attack-Chain-Investigation.md#phase-4-identity-harvesting--broadcast-poisoning) | **Offline Gap (DG-11)** |
+| **12** | BloodHound AD Recon | `T1087.002` | [Stage 12 Doc](../02-Attack-Simulation/Stages/stage-12-bloodhound.md) | Pivot bashcmd / DC EID 4624 Type 3 Kerberos | Case 02 | [Phase 4 Narrative](Deep-Dive-Attack-Chain-Investigation.md#phase-4-identity-harvesting--broadcast-poisoning) | **Target Logging Gap (DG-12)** |
+| **13** | Kerberoasting | `T1558.003` | [Stage 13 Doc](../02-Attack-Simulation/Stages/stage-13-kerberoasting.md) | Suricata SID 2019922 (TGS-REQ) / GetUserSPNs.py | Case 02 | [Phase 5 Narrative](Deep-Dive-Attack-Chain-Investigation.md#phase-5-active-directory-forest-domination) | **Direct Detection** |
+| **14** | DCSync | `T1003.006` | [Stage 14 Doc](../02-Attack-Simulation/Stages/stage-14-dcsync.md) | Pivot secretsdump.py / DC EID 4662 Directory Rep | Case 02 | [Phase 5 Narrative](Deep-Dive-Attack-Chain-Investigation.md#phase-5-active-directory-forest-domination) | **Operational Alert** |
+| **15** | Pass-the-Hash | `T1550.002` | [Stage 15 Doc](../02-Attack-Simulation/Stages/stage-15-pass-the-hash.md) | Wazuh Rule 100613 / DC EID 4624 & 4672 NTLM | Case 03 | [Phase 5 Narrative](Deep-Dive-Attack-Chain-Investigation.md#phase-5-active-directory-forest-domination) | **Direct Detection** |
+| **16** | Golden Ticket | `T1558.001` | [Stage 16 Doc](../02-Attack-Simulation/Stages/stage-16-golden-ticket.md) | Pivot ticketer.py / DC EID 4624 Kerberos logon | Case 03 | [Phase 5 Narrative](Deep-Dive-Attack-Chain-Investigation.md#phase-5-active-directory-forest-domination) | **Operational Alert** |
+| **17** | DC Persistence | `T1136.002` | [Stage 17 Doc](../02-Attack-Simulation/Stages/stage-17-dc-persistence.md) | Wazuh 100613 / DC EID 4720 (User) & 4728 (Group) | Case 03 | [Phase 6 Narrative](Deep-Dive-Attack-Chain-Investigation.md#phase-6-domain-persistence-staging--anomalous-exfiltration) | **Direct Detection** |
+| **18** | Collection | `T1005` | [Stage 18 Doc](../02-Attack-Simulation/Stages/stage-18-collection.md) | Sysmon EID 1 (Temp file dumping of domain users) | Case 03 | [Phase 6 Narrative](Deep-Dive-Attack-Chain-Investigation.md#phase-6-domain-persistence-staging--anomalous-exfiltration) | **Direct Detection** |
+| **19** | Exfiltration | `T1041` | [Stage 19 Doc](../02-Attack-Simulation/Stages/stage-19-exfiltration.md) | Wazuh Rule 5715 Rate Anomaly (6 SSH in <0.57s) | Case 03 | [Phase 6 Narrative](Deep-Dive-Attack-Chain-Investigation.md#phase-6-domain-persistence-staging--anomalous-exfiltration) | **Direct Detection** |
+| **20** | Impact | `T1491.001` | [Stage 20 Doc](../02-Attack-Simulation/Stages/stage-20-impact.md) | Wazuh Rule 92041 (Wallpaper reg), .enc, reboot | Case 03 | [Phase 7 Narrative](Deep-Dive-Attack-Chain-Investigation.md#phase-7-coordinated-dual-endpoint-impact--defacement) | **Direct Detection** |
+
+---
+
+## 🏛️ Tier 3: Centralized Evidentiary Asset Hub
+
+All telemetry datasets, evidence captures, and production configurations referenced across the investigation are consolidated in the repository asset hub:
+
+* **Investigation Screenshots:**
+  * [`assets/screenshots/investigation/initial-triage/`](../assets/screenshots/investigation/initial-triage/): 26 queue triage & chronological evidence captures.
+  * [`assets/screenshots/investigation/containment/`](../assets/screenshots/investigation/containment/): 15 live response & containment execution captures.
+  * [`assets/screenshots/investigation/wazuh-alerts/`](../assets/screenshots/investigation/wazuh-alerts/): 68 chronological SIEM alert captures (`wzb-01` to `wzb-68`).
+* **Telemetry Data Files:**
+  * [`assets/files/alerts/wazuh_alerts.csv`](../assets/files/alerts/wazuh_alerts.csv): 808 curated SIEM alert records.
+  * [`assets/files/alerts/thehive_alerts.json`](../assets/files/alerts/thehive_alerts.json): 46 correlated TheHive incident alerts.
+* **Architecture Diagrams:**
+  * [`assets/diagrams/`](../assets/diagrams/): Complete master network, dual-pathway flow, and IR lifecycle blueprints.
+
+---
+
+## 🚨 Critical Analytical Takeaways
+
+Our deep-dive investigation identified **three catastrophic security failures** that permitted a simple web application exploit to escalate into total Active Directory forest compromise in **under 74 minutes**:
+
+1. **The Sudoers Blunder (`www-data` NOPASSWD Python):** The public web server granted passwordless root execution for Python. Once the attacker achieved arbitrary webshell upload, they escalated to `root` in **10 seconds** via a one-line Python OS shell command.
+2. **The Flawed DMZ Architecture:** The internet-facing web server had unrestricted Layer 2/3 connectivity to internal corporate networks, permitting LLMNR broadcast poisoning (Responder) and remote administrative RPC/WMI directly into the Active Directory Domain Controller.
+3. **The Excessive Service Account Privilege:** Service account `HANK_SHERMAN` held `DS-Replication-Get-Changes-All` rights. Once Kerberoasted, the attacker used DCSync to replicate the domain database and compromise the master `krbtgt` password hash, establishing permanent domain control.
+
+---
+
+## 🧭 Analyst Navigation
+
+To navigate the investigation, we recommend the following progression:
+
+1. **Begin with Initial Triage:** Read **[`Initial-Triage and Investigation.md`](Initial-Triage%20and%20Investigation.md)** to see how a tier-1/tier-2 analyst processes an unread alert queue and identifies false positives vs. true breaches.
+2. **Review Live Containment:** Read **[`Immediate-Containment-Execution.md`](Immediate-Containment-Execution.md)** to observe how the active footholds were severed across Linux and Windows hosts using Velociraptor and PowerShell.
+3. **Analyze the Deep-Dive Attack Chain:** Read **[`Deep-Dive-Attack-Chain-Investigation.md`](Deep-Dive-Attack-Chain-Investigation.md)** for the complete forensic narrative, root-cause vulnerability analysis, and strategic enterprise remediation roadmap.
+4. **Inspect Case Summaries:** Review the individual TheHive case records in **[`Cases/`](Cases/)** for case observables, task breakdowns, and formal closure verdicts.

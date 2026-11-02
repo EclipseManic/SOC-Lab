@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached
 > **Case:** [Case 01](../../04-Investigation/Cases/case-01-web-compromise.md)
 > **Investigation:** [Stage 02](../../04-Investigation/Stages/stage-02-bruteforce.md)
-> **Evidence:** [attack](../Attack-Screenshots/) · [alert](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/)
+> **Evidence:** [attack](..\../assets/screenshots/attack-simulation/) · [alert](..\../assets/screenshots/detection-engineering/)
 
 ## Objective
 
@@ -71,36 +71,36 @@ python dvwa_bruteforce.py
 
 ### Attack Screenshots
 
-![Custom DVWA CSRF-Aware Python Brute-Force Script](../Attack-Screenshots/6.png)
+![Custom DVWA CSRF-Aware Python Brute-Force Script](..\../assets/screenshots/attack-simulation/6.png)
 *Figure 2.1: Custom Python brute-force script designed to parse user_token anti-CSRF values.*
 
-![Brute-Force Script Execution and Credential Discovery](../Attack-Screenshots/7.png)
+![Brute-Force Script Execution and Credential Discovery](..\../assets/screenshots/attack-simulation/7.png)
 *Figure 2.2: Execution output discovering valid administrative credentials (admin:password).*
 
 ### Alert Screenshots
 
-![TheHive Alert Overview - Web Attack Bursts and Access Log Alerts](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/2.png)
+![TheHive Alert Overview - Web Attack Bursts and Access Log Alerts](..\../assets/screenshots/detection-engineering/2.png)
 *Figure 2.3: TheHive alert inbox displaying multiple correlated Wazuh and Suricata web security alerts.*
 
-![TheHive Alert Details - Wazuh Multiple 400 Errors from Source IP](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/2.1.png)
+![TheHive Alert Details - Wazuh Multiple 400 Errors from Source IP](..\../assets/screenshots/detection-engineering/2.1.png)
 *Figure 2.4: Wazuh rule 31151 alert tracking multiple 404 client errors from 192.168.232.135.*
 
-![TheHive Alert Details - Suricata High-Volume HTTP 4xx Burst Detected](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/2.2.png)
+![TheHive Alert Details - Suricata High-Volume HTTP 4xx Burst Detected](..\../assets/screenshots/detection-engineering/2.2.png)
 *Figure 2.5: Suricata rule 100410 alert for high-volume HTTP 4xx error bursts exceeding 100 in 60s.*
 
-![TheHive Alert Details - Wazuh Web Application Shellshock Attempt Alerts](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/2.3.png)
+![TheHive Alert Details - Wazuh Web Application Shellshock Attempt Alerts](..\../assets/screenshots/detection-engineering/2.3.png)
 *Figure 2.6: Wazuh rule 31168 critical alert flagging Shellshock attack patterns in web requests.*
 
-![TheHive Alert Details - Wazuh Sensitive Path Watchlist Match (/etc/passwd)](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/2.4.png)
+![TheHive Alert Details - Wazuh Sensitive Path Watchlist Match (/etc/passwd)](..\../assets/screenshots/detection-engineering/2.4.png)
 *Figure 2.7: Wazuh watchlist rule triggering on sensitive file access attempts targeting /etc/passwd.*
 
-![TheHive Alert Details - Wazuh Multiple Common Web Attacks from Same Source](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/2.5.png)
+![TheHive Alert Details - Wazuh Multiple Common Web Attacks from Same Source](..\../assets/screenshots/detection-engineering/2.5.png)
 *Figure 2.8: Wazuh rule 31153 alert aggregating multiple common web attack signatures.*
 
-![TheHive Alert Details - Wazuh Multiple XSS Attempts from Source IP](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/2.6.png)
+![TheHive Alert Details - Wazuh Multiple XSS Attempts from Source IP](..\../assets/screenshots/detection-engineering/2.6.png)
 *Figure 2.9: Wazuh rule 31154 alert tracking cross-site scripting attack vectors.*
 
-![TheHive Alert Details - Suricata Unicode Directory Traversal Alert](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/2.7.png)
+![TheHive Alert Details - Suricata Unicode Directory Traversal Alert](..\../assets/screenshots/detection-engineering/2.7.png)
 *Figure 2.10: Suricata rule 86601 alert detecting Unicode directory traversal attempts in HTTP traffic.*
 
 ## Alert observed

@@ -727,7 +727,7 @@ export const chapters = [
       hiring:
         "Evidence maturity is part of the work: verified, documented, draft. The labels are the proof of rigor.",
     },
-    proof: "INDEX.md · 06-Resources/README.md · 06-Resources/Diagrams/SOC_Lab_Architecture.png",
+    proof: "INDEX.md · ..\../assets/README.md · ..\../assets/diagrams/SOC_Lab_Architecture.png",
   },
 ] as const;
 
@@ -822,15 +822,15 @@ export const evidenceItems = [
     label: "Raw Alert Exports",
     value: "Captured",
     tone: "teal",
-    note: "Authentic TheHive 5 alert JSON and Wazuh alert CSV exports preserved in 06-Resources/Alerts/.",
-    path: "06-Resources/Alerts/",
+    note: "Authentic TheHive 5 alert JSON and Wazuh alert CSV exports preserved in ..\../assets/files/alerts/.",
+    path: "..\../assets/files/alerts/",
   },
   {
     label: "Architecture diagram",
     value: "Captured",
     tone: "teal",
     note: "High-level overview. The architecture & network tables are authoritative for addresses and flows.",
-    path: "06-Resources/Diagrams/SOC_Lab_Architecture.png",
+    path: "..\../assets/diagrams/SOC_Lab_Architecture.png",
   },
   {
     label: "Architecture & Network",
@@ -843,15 +843,15 @@ export const evidenceItems = [
     label: "Attack screenshots",
     value: "Captured",
     tone: "teal",
-    note: "Comprehensive visual chain across all 20 stages in 02-Attack-Simulation/Attack-Screenshots/.",
-    path: "02-Attack-Simulation/Attack-Screenshots/",
+    note: "Comprehensive visual chain across all 20 stages in ..\../assets/screenshots/attack-simulation/.",
+    path: "..\../assets/screenshots/attack-simulation/",
   },
   {
     label: "Alert screenshots",
     value: "Captured",
     tone: "teal",
     note: "TheHive alert dashboard and detail captures across all detected stages.",
-    path: "03-Detection-Engineering/TheHive_Alert-ScreenShot/",
+    path: "..\../assets/screenshots/detection-engineering/",
   },
   {
     label: "Detection Coverage",

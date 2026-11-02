@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached  
 > **Case:** [Case 03](../../04-Investigation/Cases/case-03-domain-compromise.md)  
 > **Investigation:** [Stage 16](../../04-Investigation/Stages/stage-16-golden-ticket.md)  
-> **Evidence:** [attack](../Attack-Screenshots/49.png) · [alert](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/14.png)
+> **Evidence:** [attack](..\../assets/screenshots/attack-simulation/49.png) · [alert](..\../assets/screenshots/detection-engineering/14.png)
 
 ## Objective
 
@@ -41,18 +41,18 @@ To validate the ticket, the attacker exported the environment variable `KRB5CCNA
 
 ### Attack Execution Screenshots
 
-![Domain SID lookup via lookupsid.py](../Attack-Screenshots/49.png)
+![Domain SID lookup via lookupsid.py](..\../assets/screenshots/attack-simulation/49.png)
 *Figure 16.1: Extracting Domain SID (`S-1-5-21-3315718683-193253855-3518612541`) from Domain Controller via lookupsid.py.*
 
-![Golden Ticket generation via ticketer.py](../Attack-Screenshots/50.png)
+![Golden Ticket generation via ticketer.py](..\../assets/screenshots/attack-simulation/50.png)
 *Figure 16.2: Synthesizing forged Kerberos TGT (`Administrator.ccache`) using the extracted KRBTGT hash and Domain SID.*
 
-![Kerberos authentication to Domain Controller via wmiexec.py](../Attack-Screenshots/51.png)
+![Kerberos authentication to Domain Controller via wmiexec.py](..\../assets/screenshots/attack-simulation/51.png)
 *Figure 16.3: Successful passwordless Kerberos WMI connection to PC-DC executing commands as `ad.lab\administrator`.*
 
 ### Detection & Alert Screenshots
 
-![TheHive alert for SSH session and remote access telemetry](../../03-Detection-Engineering/TheHive_Alert-ScreenShot/14.png)
+![TheHive alert for SSH session and remote access telemetry](..\../assets/screenshots/detection-engineering/14.png)
 *Figure 16.4: TheHive Alert 14 recording SSH authentication activity on the DVWA pivot supporting remote staging operations.*
 
 ## Alert observed
