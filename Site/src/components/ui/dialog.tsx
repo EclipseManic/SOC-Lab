@@ -29,13 +29,13 @@ export function DialogContent({
       <DialogOverlay />
       <DialogPrimitive.Content
         className={cn(
-          "dialog-content fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-line bg-panel p-5 shadow-[0_30px_120px_rgba(0,0,0,0.65)] sm:p-7",
+          "dialog-content fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-card border border-rule bg-paper-2 p-5 sm:p-7",
           className,
         )}
         {...props}
       >
         {children}
-        <DialogPrimitive.Close className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border border-line/80 bg-panel-2/80 text-muted transition hover:border-teal/40 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal">
+        <DialogPrimitive.Close className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-pill border border-rule bg-paper-2 text-muted transition-colors hover:border-rule-2 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
           <X className="h-4 w-4" aria-hidden="true" />
           <span className="sr-only">Close</span>
         </DialogPrimitive.Close>
@@ -57,7 +57,7 @@ export function DialogTitle({
 }: ComponentPropsWithoutRef<typeof DialogPrimitive.Title>) {
   return (
     <DialogPrimitive.Title
-      className={cn("text-2xl font-semibold tracking-[-0.02em] text-ink", className)}
+      className={cn("text-xl font-medium tracking-[-0.03em] text-ink", className)}
       {...props}
     />
   );

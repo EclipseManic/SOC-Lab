@@ -46,26 +46,26 @@ export const phases: Record<
   web: {
     label: "Web foothold",
     short: "Web",
-    range: "01–07",
-    tone: "text-teal border-teal/30 bg-teal/10",
+    range: "01-07",
+    tone: "text-ok border-ok/30 bg-ok-soft",
   },
   cred: {
     label: "Credential access & lateral movement",
     short: "Credential",
-    range: "08–14",
-    tone: "text-blue border-blue/30 bg-blue/10",
+    range: "08-14",
+    tone: "text-cool border-cool/30 bg-cool-soft",
   },
   domain: {
     label: "Domain compromise",
     short: "Domain",
-    range: "15–17",
-    tone: "text-amber border-amber/30 bg-amber/10",
+    range: "15-17",
+    tone: "text-accent border-accent/30 bg-accent-soft",
   },
   impact: {
     label: "Collection, exfiltration & impact",
     short: "Impact",
-    range: "18–20",
-    tone: "text-rose border-rose/30 bg-rose/10",
+    range: "18-20",
+    tone: "text-bad border-bad/30 bg-bad-soft",
   },
 };
 
@@ -685,13 +685,13 @@ export const chapters = [
     n: "04",
     id: "investigation",
     title: "Investigation",
-    promise: "How the campaign was scoped into three cases — and what is still open.",
+    promise: "How the campaign was scoped into three cases, and what is still open.",
     handoff: "The case work becomes a record. The record must say what it cannot prove.",
     lens: {
       executive:
         "Three cases separate web compromise, credential and lateral movement, and domain impact. The structure keeps one incident from becoming twenty disconnected tickets.",
       technical:
-        "Case 01 covers 01–07, Case 02 covers 08–14, Case 03 covers 15–20. Each case is a TheHive record with scope, observables, tasks, and a verdict; the stage notes hold the technique-level detail.",
+        "Case 01 covers 01-07, Case 02 covers 08-14, Case 03 covers 15-20. Each case is a TheHive record with scope, observables, tasks, and a verdict; the stage notes hold the technique-level detail.",
       hiring:
         "The case map shows triage judgment: group by incident boundary, not by tool or by stage count.",
     },
@@ -701,7 +701,7 @@ export const chapters = [
     n: "05",
     id: "report",
     title: "Incident report",
-    promise: "What the record can say — and what it cannot.",
+    promise: "What the record can say, and what it cannot.",
     handoff: "Every claim needs a file behind it. The evidence ledger is the last chapter.",
     lens: {
       executive:
@@ -717,7 +717,7 @@ export const chapters = [
     n: "06",
     id: "evidence",
     title: "Evidence & resources",
-    promise: "Where the proof lives — and what is still missing.",
+    promise: "Where the proof lives, and what is still missing.",
     handoff: "The repository is the record. This site is the reading layer.",
     lens: {
       executive:
