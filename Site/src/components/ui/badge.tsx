@@ -4,11 +4,11 @@ import { cn } from "@/lib/utils";
 type Tone = "teal" | "blue" | "amber" | "rose" | "neutral";
 
 const tones: Record<Tone, string> = {
-  teal: "border-teal/30 bg-teal/10 text-teal",
-  blue: "border-blue/30 bg-blue/10 text-blue",
-  amber: "border-amber/30 bg-amber/10 text-amber",
-  rose: "border-rose/30 bg-rose/10 text-rose",
-  neutral: "border-line/80 bg-panel-2/70 text-muted",
+  teal: "border-ok/40 bg-ok-soft text-ok",
+  blue: "border-cool/40 bg-cool-soft text-cool",
+  amber: "border-accent/40 bg-accent-soft text-accent",
+  rose: "border-bad/40 bg-bad-soft text-bad",
+  neutral: "border-rule bg-paper-3 text-muted",
 };
 
 export function Badge({
@@ -19,7 +19,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[10px] font-medium uppercase tracking-[0.14em]",
+        "inline-flex items-center gap-1.5 rounded-pill border px-2 py-1 font-sans text-xs font-medium",
         tones[tone],
         className,
       )}

@@ -1,82 +1,210 @@
-import { useMemo, useState } from "react";
-import { motion, useReducedMotion } from "motion/react";
-import { ArrowLeft, ArrowRight, Clock3, Maximize2, Pause, Play, Terminal } from "lucide-react";
-import { metrics, stageById, stages, timeline, repoBlob, type Stage } from "@/data";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { AnatomyPlate, SectionKicker, SectionTitle, StatusPill, formatClock, tone } from "./visual-shared";
+import { useEffect, useRef, useState } from "react";
+import { Crown, LogIn, Network, Pause, Play } from "lucide-react";
+import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/react";
+import { repoBlob, stages } from "@/data";
+import { RepoLink, SectionHead } from "./visual-shared";
+import { Reveal } from "@/components/fx/reveal";
 
-const attackAssetByStage: Record<string, string> = {
-  "01": "/evidence/attack-01.webp", "02": "/evidence/attack-02.webp", "03": "/evidence/attack-03.webp", "04": "/evidence/attack-04.webp", "05": "/evidence/attack-05.webp", "06": "/evidence/attack-06.webp", "07": "/evidence/attack-07.webp", "08": "/evidence/attack-08.webp", "09": "/evidence/attack-09.webp", "10": "/evidence/attack-10.webp", "11": "/evidence/attack-11.webp", "12": "/evidence/attack-12.webp", "13": "/evidence/attack-13.webp", "14": "/evidence/attack-14.webp", "15": "/evidence/attack-15.webp", "16": "/evidence/attack-16.webp", "17": "/evidence/attack-17.webp", "18": "/evidence/attack-18.webp", "19": "/evidence/attack-19.webp", "20": "/evidence/attack-20.webp",
-};
+const acts = [
+  { n: "01", name: "Break in", range: "01–07", blurb: "Kick the front door in", icon: LogIn, tone: "text-hot", bar: "bg-hot" },
+  { n: "02", name: "Spread out", range: "08–14", blurb: "Sneak around, steal passwords", icon: Network, tone: "text-violet", bar: "bg-violet" },
+  { n: "03", name: "Take over", range: "15–20", blurb: "Own the whole domain", icon: Crown, tone: "text-accent", bar: "bg-accent" },
+];
 
-const timelineEvents = timeline.events as Array<{ stageId: string; offsetSeconds: number; endOffsetSeconds: number; phase: string; telemetryEvent: string; sourceSensor: string; elapsedLabel: string }>;
+function actOf(i: number) {
+  if (i < 7) return 0;
+  if (i < 14) return 1;
+  return 2;
+}
 
-function toolForStage(stage: Stage) {
-  const text = `${stage.attacker} ${stage.plain}`.toLowerCase();
-  const tools = ["Nmap", "Nikto", "Hashcat", "Responder", "BloodHound", "SharpHound", "Impacket", "GetUserSPNs.py", "secretsdump.py", "wmiexec.py", "SCP", "Python", "Netcat", "SQL payload"];
-  return tools.find((tool) => text.includes(tool.toLowerCase())) ?? "Documented action";
+function outcome(status: string) {
+  if (status === "Detected") return { label: "Caught", tone: "text-ok", dot: "bg-ok", ring: "border-ok/50", glow: "shadow-glow-cool" };
+  if (status === "Rule failure") return { label: "Missed", tone: "text-hot", dot: "bg-hot", ring: "border-hot/50", glow: "shadow-glow-hot" };
+  if (status === "Not tested") return { label: "Not tested", tone: "text-muted", dot: "bg-muted", ring: "border-rule", glow: "" };
+  return { label: "Missed", tone: "text-accent", dot: "bg-accent", ring: "border-accent/50", glow: "shadow-glow-accent" };
 }
 
 export function VisualAttack() {
-  const reduceMotion = useReducedMotion();
   const [index, setIndex] = useState(0);
+  const reduced = useReducedMotion();
   const [playing, setPlaying] = useState(false);
-  const [lightbox, setLightbox] = useState(false);
-  const currentEvent = timelineEvents[index] ?? timelineEvents[0];
-  const currentStage = stageById(currentEvent.stageId) ?? stages[0];
-  const phaseCounts = useMemo(() => timelineEvents.reduce<Record<string, number>>((counts, event) => { counts[event.phase] = (counts[event.phase] ?? 0) + 1; return counts; }, {}), []);
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { amount: 0.35 });
 
-  function setStage(next: number) {
-    setIndex(Math.max(0, Math.min(timelineEvents.length - 1, next)));
-  }
+  useEffect(() => {
+    if (!reduced) setPlaying(true);
+  }, [reduced]);
+
+  useEffect(() => {
+    if (!playing || !inView || reduced) return;
+    const t = setInterval(() => setIndex((i) => (i + 1) % stages.length), 1700);
+    return () => clearInterval(t);
+  }, [playing, inView, reduced]);
+
+  const current = stages[index];
+  const act = acts[actOf(index)];
+  const result = outcome(current.status);
+  const caught = stages.filter((s) => s.status === "Detected").length;
 
   return (
-    <section id="attack" className="border-b border-line/70 py-20 sm:py-28">
-      <div className="container-page">
-        <SectionKicker index="02 / PLAYBACK" label="Execution order, not stage order"><span className="hidden sm:inline">T0 = 11:40:09 UTC</span></SectionKicker>
-        <div className="mt-10"><SectionTitle eyebrow="The attack" title={`${metrics.stageCount} moves in ${metrics.durationMinutes} minutes.`} body="The stage numbers are labels, not a clock. This playback follows the actual execution sequence from timeline.md — including 12 before 10, and 19 before 16." /></div>
-        <div className="mt-10 grid grid-cols-2 gap-2 sm:grid-cols-4">{Object.entries(phaseCounts).map(([phase, count]) => <div key={phase} className="rounded-2xl border border-line/70 bg-panel/35 p-4"><p className="font-mono text-[9px] uppercase tracking-[0.15em] text-faint">{phase}</p><p className="mt-2 font-mono text-xl text-ink">{count}</p><p className="mt-1 text-xs text-faint">timeline beats</p></div>)}</div>
-        <AnatomyPlate
-          fig="FIG 04 // TIMELINE"
-          title="20-STAGE INTRUSION CHRONOLOGY & EVIDENCE PLAYBACK"
-          hint="[SCRUB TIMELINE] TRACE EXECUTION SEQUENCE · [AUTO-PLAY] 74-MINUTE INTRUSION · [OPEN FRAME] MAGNIFY PROOF SCREENSHOT"
-          readout={`BEAT ${index + 1} / ${timelineEvents.length} · T0 ${formatClock(currentEvent.offsetSeconds)} · STAGE ${currentStage.id}`}
-          className="mt-8"
-        >
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line/70 pb-4">
-            <div className="flex items-center gap-2">
-              <Clock3 className="h-4 w-4 text-teal" aria-hidden="true" />
-              <span className="font-mono text-sm font-semibold text-ink">{formatClock(currentEvent.offsetSeconds)}</span>
-              <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-faint">/ {currentEvent.elapsedLabel}</span>
+    <section id="attack" className="section-shell">
+      <div className="container-page" ref={ref}>
+        <SectionHead
+          index="02"
+          kicker="How the break-in went"
+          title="Twenty steps, from front door to total control."
+          lede="A real intrusion moves in stages: get in, spread out, take over. Press play and the chain runs — each step either lit up my defenses or slipped past, and every one links to the actual commands in the repository."
+        />
+
+        <div className="mt-12 grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-start">
+          {/* Rail */}
+          <Reveal>
+            <div className="panel p-5">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPlaying((p) => !p)}
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-accent bg-accent text-accent-ink shadow-glow-accent transition-transform hover:scale-105"
+                    aria-label={playing ? "Pause the chain" : "Play the chain"}
+                  >
+                    {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                  </button>
+                  <div>
+                    <div className="text-sm font-medium text-ink">
+                      Step {index + 1} of {stages.length}
+                    </div>
+                    <div className="text-xs text-muted">
+                      {caught} caught · {stages.length - caught} slipped past
+                    </div>
+                  </div>
+                </div>
+                <div
+                  className={`chip ${
+                    result.label === "Caught"
+                      ? "border-ok/40 bg-ok-soft text-ok"
+                      : result.label === "Missed"
+                        ? "border-accent/40 bg-accent-soft text-accent"
+                        : "border-rule bg-paper-3 text-muted"
+                  }`}
+                >
+                  {result.label}
+                </div>
+              </div>
+
+              <div className="mt-5 space-y-4">
+                {acts.map((a, ai) => {
+                  const ActIcon = a.icon;
+                  return (
+                    <div key={a.n}>
+                      <div className="mb-2 flex items-center gap-2 text-xs">
+                        <ActIcon className={`h-3.5 w-3.5 ${a.tone}`} />
+                        <span className={`font-medium ${a.tone}`}>{a.name}</span>
+                        <span className="text-faint">· {a.blurb}</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {stages.map((s, si) => {
+                          if (actOf(si) !== ai) return null;
+                          const isActive = si === index;
+                          const isPast = si < index;
+                          const r = outcome(s.status);
+                          return (
+                            <button
+                              key={s.id}
+                              type="button"
+                              onClick={() => {
+                                setIndex(si);
+                                setPlaying(false);
+                              }}
+                              aria-label={`Step ${s.id} — ${s.title}`}
+                              className={`relative flex h-9 w-9 items-center justify-center rounded-lg border font-mono text-xs transition-all duration-300 ${
+                                isActive
+                                  ? `${r.ring} bg-paper-3 text-ink ${r.glow} scale-110`
+                                  : isPast
+                                    ? "border-rule-2 bg-paper-2 text-ink-2"
+                                    : "border-rule bg-paper-3/60 text-faint hover:border-rule-2 hover:text-ink-2"
+                              }`}
+                            >
+                              {s.id}
+                              <span className={`absolute -bottom-0.5 h-1 w-1 rounded-full ${isPast || isActive ? r.dot : "bg-rule"}`} />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setPlaying((value) => !value)}
-                className="inline-flex items-center gap-2 rounded-full border border-line/80 px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-faint transition hover:border-teal/40 hover:text-teal"
-              >
-                {playing ? <Pause className="h-3.5 w-3.5" aria-hidden="true" /> : <Play className="h-3.5 w-3.5" aria-hidden="true" />}
-                {playing ? "Pause" : "Auto-play"}
-              </button>
-              <span className="font-mono text-[9px] text-faint">{index + 1} / {timelineEvents.length}</span>
+          </Reveal>
+
+          {/* Spotlight */}
+          <Reveal delay={0.08}>
+            <div className="panel relative overflow-hidden p-6 sm:p-8">
+              <div className="pointer-events-none absolute inset-0 bg-grid opacity-[0.15]" />
+              <div className={`pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full blur-[80px] ${act.bar} opacity-20`} />
+
+              <div className="relative">
+                <div className="flex items-center justify-between">
+                  <span className="chip border-rule-2 bg-paper-3 font-mono text-ink-2">
+                    Stage {current.id}
+                  </span>
+                  <span className={`text-xs font-medium ${act.tone}`}>
+                    Act {act.n} · {act.name}
+                  </span>
+                </div>
+
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={current.id}
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <h3 className="mt-5 text-2xl text-ink sm:text-3xl">{current.title}</h3>
+                    <p className="mt-4 max-w-xl text-md leading-relaxed text-ink-2">{current.plain}</p>
+
+                    <div className="mt-6 flex flex-wrap items-center gap-3">
+                      <span
+                        className={`chip ${
+                          result.label === "Caught"
+                            ? "border-ok/40 bg-ok-soft text-ok"
+                            : result.label === "Missed"
+                              ? "border-accent/40 bg-accent-soft text-accent"
+                              : "border-rule bg-paper-3 text-muted"
+                        }`}
+                      >
+                        <span className={`h-1.5 w-1.5 rounded-full ${result.dot}`} />
+                        {result.label === "Caught" ? "An alarm fired" : result.label === "Missed" ? "Nothing saw this" : "Not tested"}
+                      </span>
+                      <span className="font-mono text-xs text-faint">{current.techniqueId}</span>
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
+
+                <div className="mt-7 border-t border-rule pt-5">
+                  <a
+                    href={`${repoBlob}/${current.attackPath}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-accent hover:text-ink"
+                  >
+                    Read the exact commands for stage {current.id}
+                    <span aria-hidden>↗</span>
+                  </a>
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="p-4 sm:p-6">
-            <div className="hidden md:block"><div className="relative h-24"><div className="absolute left-0 right-0 top-9 h-px bg-line" /><motion.div className="absolute left-0 top-9 h-px bg-gradient-to-r from-rose via-amber to-teal" animate={{ width: `${(index / (timelineEvents.length - 1)) * 100}%` }} transition={{ duration: reduceMotion ? 0 : 0.3 }} />{timelineEvents.map((event, itemIndex) => { const stage = stageById(event.stageId) ?? stages[0]; const offline = stage.status === "Detection gap"; return <button key={`${event.stageId}-${itemIndex}`} type="button" onClick={() => setStage(itemIndex)} aria-label={`Jump to stage ${event.stageId}, ${stage.title}`} className="group absolute top-0 -translate-x-1/2" style={{ left: `${(itemIndex / (timelineEvents.length - 1)) * 100}%` }}><span className={`mx-auto block h-4 w-4 rounded-full border-2 ${offline ? "border-dashed" : ""}`} style={{ backgroundColor: itemIndex <= index ? tone.defender : tone.panel, borderColor: offline ? tone.slate : itemIndex <= index ? tone.defender : tone.line }} /><span className="mt-2 block font-mono text-[9px] text-faint group-hover:text-ink">{event.stageId}</span></button>; })}</div></div>
-            <div className="md:hidden"><input aria-label="Stage timeline" type="range" min={0} max={timelineEvents.length - 1} value={index} onChange={(event) => setStage(Number(event.target.value))} className="w-full accent-teal" /><div className="mt-2 flex justify-between font-mono text-[9px] uppercase tracking-[0.14em] text-faint"><span>T0</span><span>+{metrics.durationMinutes}m</span></div></div>
-            <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,0.84fr)_minmax(0,1.16fr)] lg:items-start lg:gap-8">
-              <div><div className="flex flex-wrap items-center gap-2"><span className="font-mono text-[10px] uppercase tracking-[0.17em] text-rose">Stage {currentStage.id}</span><StatusPill status={currentStage.status} compact /></div><h3 className="mt-3 max-w-xl text-3xl font-semibold leading-tight tracking-[-0.05em] text-ink sm:text-4xl">{currentStage.title}</h3><p className="mt-4 text-base leading-7 text-muted">{currentStage.plain}</p><div className="mt-6 grid gap-3 sm:grid-cols-2"><Meta label="Tool" value={toolForStage(currentStage)} icon={<Terminal className="h-3.5 w-3.5" />} /><Meta label="ATT&CK" value={currentStage.techniqueId} /><Meta label="Sensor" value={currentEvent.sourceSensor} /><Meta label="Signal" value={currentEvent.telemetryEvent} /></div><div className="mt-6 flex flex-wrap items-center gap-4"><a href={`${repoBlob}/${currentStage.attackPath}`} target="_blank" rel="noreferrer" className="font-mono text-[9px] uppercase tracking-[0.14em] text-faint hover:text-teal">Open stage evidence ↗</a><span className="font-mono text-[9px] uppercase tracking-[0.14em] text-faint">{currentStage.status === "Detection gap" ? "No victim telemetry" : "Evidence path recorded"}</span></div></div>
-              <div><button type="button" onClick={() => setLightbox(true)} className="group relative block w-full overflow-hidden rounded-2xl border border-line/70 bg-canvas text-left"><img src={attackAssetByStage[currentStage.id]} alt={`Attack screenshot for stage ${currentStage.id}: ${currentStage.title}`} width="960" height="540" className="aspect-video w-full object-cover opacity-85 transition duration-300 group-hover:scale-[1.02] group-hover:opacity-100" /><span className="absolute bottom-3 right-3 inline-flex items-center gap-2 rounded-full border border-white/20 bg-canvas/80 px-3 py-2 font-mono text-[9px] uppercase tracking-[0.13em] text-ink"><Maximize2 className="h-3.5 w-3.5" aria-hidden="true" /> Open frame</span></button><p className="mt-3 font-mono text-[9px] uppercase tracking-[0.14em] text-faint">Attack screenshot / stage {currentStage.id} · {currentStage.attackPath.split("/").at(-1)}</p></div>
-            </div>
-            <div className="mt-8 flex items-center justify-between border-t border-line/70 pt-4"><button type="button" onClick={() => setStage(index - 1)} disabled={index === 0} className="inline-flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.14em] text-faint disabled:opacity-30 hover:text-teal"><ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" /> previous</button><button type="button" onClick={() => setStage(index + 1)} disabled={index === timelineEvents.length - 1} className="inline-flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.14em] text-faint disabled:opacity-30 hover:text-teal">next <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" /></button></div>
-          </div>
-        </AnatomyPlate>
-        <Dialog open={lightbox} onOpenChange={setLightbox}><DialogContent className="max-w-4xl bg-canvas p-3 sm:p-5"><DialogHeader><DialogTitle>Stage {currentStage.id} / {currentStage.title}</DialogTitle><DialogDescription>{currentStage.plain}</DialogDescription></DialogHeader><img src={attackAssetByStage[currentStage.id]} alt={`Expanded attack screenshot for stage ${currentStage.id}`} width="960" height="540" className="mt-5 w-full rounded-xl border border-line/70" /></DialogContent></Dialog>
+          </Reveal>
+        </div>
+
+        <Reveal delay={0.15} className="mt-8">
+          <RepoLink href={`${repoBlob}/02-Attack-Simulation/README.md`} note="all 20 stages, with terminal proof">
+            See the full attack playbook
+          </RepoLink>
+        </Reveal>
       </div>
     </section>
   );
-}
-
-function Meta({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
-  return <div className="rounded-xl border border-line/70 bg-canvas/50 p-3"><p className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.14em] text-faint">{icon}{label}</p><p className="mt-2 line-clamp-3 text-xs leading-5 text-ink">{value}</p></div>;
 }

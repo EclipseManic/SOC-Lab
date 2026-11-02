@@ -31,6 +31,7 @@ function stripMarkdown(value) {
     .replace(/\*\*/g, "")
     .replace(/\*/g, "")
     .replace(/\\/g, "")
+    .replace(/[–—]/g, "-")
     .trim();
 }
 
@@ -161,7 +162,10 @@ function parseTimeline(timelineText) {
       order: events.length + 1,
       stageId,
       phase: stripMarkdown(phase),
-      elapsedLabel: stripMarkdown(elapsed),
+      elapsedLabel: stripMarkdown(elapsed)
+        .replace(/\$T_0/g, "T0")
+        .replace(/\$/g, "")
+        .replace(/_/g, ""),
       offsetSeconds,
       endOffsetSeconds,
       timestamp,
