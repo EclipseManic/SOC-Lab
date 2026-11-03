@@ -3,7 +3,7 @@
 > **Production Configuration & Artifacts:**
 > - Custom Signatures: [`custom.rules`](custom.rules)
 > - Rate-Limiting & Suppression: [`threshold.config`](threshold.config)
-> - Tool Fingerprints: [`tool_fingerprints.json`](..\../assets/scripts/tool_fingerprints.json)
+> - Tool Fingerprints: [`tool_fingerprints.json`](../../assets/scripts/tool_fingerprints.json)
 > - Target Deployment: Suricata Gateway Host (Ubuntu 24.04 LTS, dual-homed `ens33` / `ens37`)
 > - Output Channel: EVE JSON alert log (`/var/log/suricata/eve-alert.json`) forwarded to Wazuh (`Rule 86601` / `100600`)
 
@@ -13,7 +13,7 @@
 
 Suricata operates in passive IDS mode on the gateway router between the external attack segment (`192.168.232.0/24`, `ens33`) and the internal victim segment (`192.168.56.0/24`, `ens37`).
 
-[![Suricata Gateway Network Topology](..\../assets/diagrams/Neon%20Suricata%20Network%20Defense%20Diagram.png)](..\../assets/diagrams/Neon%20Suricata%20Network%20Defense%20Diagram.png)
+[![Suricata Gateway Network Topology](../../assets/diagrams/Neon%20Suricata%20Network%20Defense%20Diagram.png)](../../assets/diagrams/Neon%20Suricata%20Network%20Defense%20Diagram.png)
 
 ---
 
@@ -29,7 +29,7 @@ Suricata operates in passive IDS mode on the gateway router between the external
 
 ## 3. Empirically Verified Signatures (Fired in Campaign)
 
-Analysis of the 9,567 raw alerts in [`..\../assets/files/alerts/Wazuh-Raw-Alerts.csv`](..\../assets/files/alerts/Wazuh-Raw-Alerts.csv) and [`thehive_alerts.json`](..\../assets/files/alerts/thehive_alerts.json) confirms the following primary signatures:
+Analysis of the 9,567 raw alerts in [`../../assets/files/alerts/Wazuh-Raw-Alerts.csv`](../../assets/files/alerts/Wazuh-Raw-Alerts.csv) and [`thehive_alerts.json`](../../assets/files/alerts/thehive_alerts.json) confirms the following primary signatures:
 
 | SID | Signature Message | Stage | Target Protocol | Detection Mechanism & TheHive Alert |
 |---|---|---|---|---|
@@ -57,7 +57,7 @@ In standard IP routing, traffic exchanged between hosts on the same Layer 2 subn
 
 While external attack traffic arrives across **`ens33`**, Suricata is additionally configured with **AF-PACKET promiscuous mode** on interface **`ens37`**. In VMware Workstation VMnet2, promiscuous mode allows the gateway virtual interface to receive broadcast, multicast, and unicast frames switched across the segment.
 
-As documented in [`..\../assets/files/alerts/Wazuh-Raw-Alerts.csv`](..\../assets/files/alerts/Wazuh-Raw-Alerts.csv), Suricata generated **14 victim-to-victim alerts** during the campaign:
+As documented in [`../../assets/files/alerts/Wazuh-Raw-Alerts.csv`](../../assets/files/alerts/Wazuh-Raw-Alerts.csv), Suricata generated **14 victim-to-victim alerts** during the campaign:
 1. **Nmap Port Scans:** `192.168.56.30 -> 192.168.56.20` on ports 995, 111, 443 (SIDs `3400001` / `3400002`).
 2. **Metasploit / Shell Sweep:** `192.168.56.30` probing internal targets on port 4444 (SID `3400020`).
 3. **Kerberoasting TGS-REQ:** `192.168.56.30:33986 -> 192.168.56.10:88` (SID `2019922`).
@@ -68,8 +68,8 @@ This empirical evidence demonstrates that network sensors deployed in promiscuou
 > [!NOTE]
 > **Dual-Interface Packet Evaluation & Telemetry Accounting:**  
 > Because Suricata runs AF-PACKET listeners on both the external perimeter interface (`ens33`) and the internal routed interface (`ens37`), routed packets crossing the Layer 3 kernel forwarding boundary are evaluated upon ingress and again upon egress.  
-> - In the raw telemetry baseline ([`Wazuh-Raw-Alerts.csv`](..\../assets/files/alerts/Wazuh-Raw-Alerts.csv)), this generates dual-interface alert events for cross-boundary traffic (e.g. `in_iface: ens33` and `in_iface: ens37`).
-> - In operational metrics, **this does NOT inflate incident figures**. The headline detection rate is measured across the **20 attack stages**, and the 46 TheHive cases ([`thehive_alerts.json`](..\../assets/files/alerts/thehive_alerts.json)) are produced by the `custom-thehive` asynchronous SOAR pipeline, which groups and de-duplicates alert bursts by tool fingerprint, source IP, and correlation time window into single consolidated incident tickets.
+> - In the raw telemetry baseline ([`Wazuh-Raw-Alerts.csv`](../../assets/files/alerts/Wazuh-Raw-Alerts.csv)), this generates dual-interface alert events for cross-boundary traffic (e.g. `in_iface: ens33` and `in_iface: ens37`).
+> - In operational metrics, **this does NOT inflate incident figures**. The headline detection rate is measured across the **20 attack stages**, and the 46 TheHive cases ([`thehive_alerts.json`](../../assets/files/alerts/thehive_alerts.json)) are produced by the `custom-thehive` asynchronous SOAR pipeline, which groups and de-duplicates alert bursts by tool fingerprint, source IP, and correlation time window into single consolidated incident tickets.
 
 ---
 

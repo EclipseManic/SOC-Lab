@@ -540,8 +540,8 @@ Here are the exact technical indicators to search for in your environment:
 As documented in detail in [Immediate-Containment-Execution.md](Immediate-Containment-Execution.md), our incident response team executed 7 containment actions to lock out the adversary:
 1. **Firewall severed:** Blocked external IP `192.168.232.135` at the boundary gateway.
 2. **SSH key removed:** Deleted the rogue ed25519 key from `/root/.ssh/authorized_keys` and set `PermitRootLogin no`.
-3. **Webshell quarantined:** Deleted `shell.php` from `/uploads/` and configured web uploads directory with `noexec`.
-4. **Backdoor user wiped:** Disabled and removed user `backdoor` from Active Directory.
+3. **Webshell quarantined:** Moved `shell.php` to `/root/forensics_quarantine/shell.php.quarantined` (`chmod 000`) and mounted the web uploads directory with `noexec` to block future PHP execution.
+4. **Backdoor user neutralized:** Disabled user `AD\backdoor` and stripped its `Domain Admins` and `Administrators` group memberships (preserving its SID for forensic tracking).
 5. **Passwords reset:** Forced immediate password resets on `win10`, `HANK_SHERMAN`, and `Administrator`.
 6. **Defacement cleared:** Restored default Windows wallpapers and quarantined extortion artifacts.
 7. **Database password rotated:** Rotated MySQL credentials on DVWA and updated configuration files.

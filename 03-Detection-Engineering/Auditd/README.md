@@ -16,7 +16,7 @@ Linux Auditd provides kernel-level system call and file-system tracking via the 
 
 ## 2. Empirically Verified Telemetry (`key="web_process_creation"`)
 
-Analysis of [`..\../assets/files/alerts/Wazuh-Raw-Alerts.csv`](..\../assets/files/alerts/Wazuh-Raw-Alerts.csv) confirms that the primary active rule during simulation was:
+Analysis of [`../../assets/files/alerts/Wazuh-Raw-Alerts.csv`](../../assets/files/alerts/Wazuh-Raw-Alerts.csv) confirms that the primary active rule during simulation was:
 
 ```text
 -a always,exit -F arch=b64 -S execve -F uid=33 -k web_process_creation

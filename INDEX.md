@@ -5,7 +5,7 @@ Single source of truth for the lab. Update this table whenever a stage, alert, r
 > [!NOTE]
 > **Project Lifecycle & Section Status:**  
 > - **Sections 01–03 (Lab Setup, Attack Simulation, Detection Engineering):** Complete reference architectures, execution playbooks, and detection rulesets.
-> - **Sections 04 (Investigation) & 05 (Incident Report):** Marked as **Draft, not yet validated** while analyst triage notes and post-incident deliverables undergo validation against raw telemetry.
+> - **Section 04 (Investigation):** Marked as **Completed & Validated** | **Section 05 (Incident Report):** Marked as **Draft, pending review** while analyst triage notes and post-incident deliverables undergo validation against raw telemetry.
 
 ## Detection Status Legend & Ground Truth Metrics
 

@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached
 > **Case:** [Case 01](../../04-Investigation/Cases/case-01-web-compromise.md)
 > **Investigation:** [Phase 1 Deep Dive](../../04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-1-rattling-the-doorknobs-reconnaissance--web-exploitation)
-> **Evidence:** [attack](..\../assets/screenshots/attack-simulation/) · [alert](..\../assets/screenshots/detection-engineering/)
+> **Evidence:** [attack](../../assets/screenshots/attack-simulation/) · [alert](../../assets/screenshots/detection-engineering/)
 
 ## Objective
 
@@ -53,18 +53,18 @@ curl -s -b "PHPSESSID=session_token; security=low" \
 
 ### Attack Screenshots
 
-![Boolean SQL Injection Dumping All Database Users](..\../assets/screenshots/attack-simulation/8.png)
+![Boolean SQL Injection Dumping All Database Users](../../assets/screenshots/attack-simulation/8.png)
 *Figure 3.1: Boolean SQL injection (1' OR '1'='1) returning all registered user profiles.*
 
-![UNION-Based SQL Injection Exfiltrating User Hashes](..\../assets/screenshots/attack-simulation/9.png)
+![UNION-Based SQL Injection Exfiltrating User Hashes](../../assets/screenshots/attack-simulation/9.png)
 *Figure 3.2: UNION SELECT injection extracting usernames and MD5 password hashes from the users table.*
 
 ### Alert Screenshots
 
-![TheHive Alert - Suricata / Wazuh Detection of Web Traffic](..\../assets/screenshots/detection-engineering/3.png)
+![TheHive Alert - Suricata / Wazuh Detection of Web Traffic](../../assets/screenshots/detection-engineering/3.png)
 *Figure 3.3: Wazuh and Suricata events recording suspicious HTTP traffic and scanner signatures in TheHive.*
 
-![TheHive Alert Detail - Suricata ET WEB_SERVER SELECT USER SQL Injection Attempt](..\../assets/screenshots/detection-engineering/5.png)
+![TheHive Alert Detail - Suricata ET WEB_SERVER SELECT USER SQL Injection Attempt](../../assets/screenshots/detection-engineering/5.png)
 *Figure 3.4: Suricata rule 100600 alert capturing ET WEB_SERVER SELECT USER SQL Injection Attempt in URI.*
 
 ## Alert observed

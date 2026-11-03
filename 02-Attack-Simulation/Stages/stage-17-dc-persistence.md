@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached  
 > **Case:** [Case 03](../../04-Investigation/Cases/case-03-domain-compromise.md)  
 > **Investigation:** [Phase 6 Deep Dive](../../04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-6-backdoors--smuggling-domain-persistence--rapid-exfiltration)  
-> **Evidence:** [attack](..\../assets/screenshots/attack-simulation/52.png) · [alert](..\../assets/screenshots/detection-engineering/17.png)
+> **Evidence:** [attack](../../assets/screenshots/attack-simulation/52.png) · [alert](../../assets/screenshots/detection-engineering/17.png)
 
 ## Objective
 
@@ -50,39 +50,39 @@ This action represents complete enterprise persistence, allowing the adversary t
 
 ### Attack Execution Screenshots
 
-![Backdoor user creation and group promotion on DC](..\../assets/screenshots/attack-simulation/52.png)
+![Backdoor user creation and group promotion on DC](../../assets/screenshots/attack-simulation/52.png)
 *Figure 17.1: Creation of rogue user `backdoor` and assignment to local Administrators and global Domain Admins groups on PC-DC.*
 
-![Active Directory verification of backdoor account](..\../assets/screenshots/attack-simulation/53.png)
+![Active Directory verification of backdoor account](../../assets/screenshots/attack-simulation/53.png)
 *Figure 17.2: Verifying account configuration (`Account expires: Never`, `Memberships: *Administrators, *Domain Admins`).*
 
 ### Detection & Alert Screenshots
 
-![TheHive Alert 15 — Rogue Domain Account Creation Overview](..\../assets/screenshots/detection-engineering/15.png)
+![TheHive Alert 15 — Rogue Domain Account Creation Overview](../../assets/screenshots/detection-engineering/15.png)
 *Figure 17.3: TheHive Alert 15 overview capturing rogue user `backdoor` creation on Domain Controller (`wzb-26b4d06a63`).*
 
-![TheHive Alert 15.5 — Security Group Elevation Details](..\../assets/screenshots/detection-engineering/15.5.png)
+![TheHive Alert 15.5 — Security Group Elevation Details](../../assets/screenshots/detection-engineering/15.5.png)
 *Figure 17.4: Alert 15 event details displaying Event ID 4728 (Domain Admins group addition).*
 
-![TheHive alert list showing dense alert volume for persistence activities](..\../assets/screenshots/detection-engineering/17.png)
+![TheHive alert list showing dense alert volume for persistence activities](../../assets/screenshots/detection-engineering/17.png)
 *Figure 17.5: TheHive alert dashboard displaying multiple correlated alerts for account creation, group membership changes, and WMI execution.*
 
-![Impacket wmiexec fan-out alert for net user and net group commands](..\../assets/screenshots/detection-engineering/17.1.png)
+![Impacket wmiexec fan-out alert for net user and net group commands](../../assets/screenshots/detection-engineering/17.1.png)
 *Figure 17.4: Process Fan-Out alert (Rule 100613) capturing remote command execution for account creation and group additions.*
 
-![Wazuh alert for user account creation Event ID 4720 and 4722](..\../assets/screenshots/detection-engineering/17.2.png)
+![Wazuh alert for user account creation Event ID 4720 and 4722](../../assets/screenshots/detection-engineering/17.2.png)
 *Figure 17.5: TheHive alert detail for Windows Security Auditing events: Event ID 4720 (User Created) and Event ID 4722 (User Enabled).*
 
-![Wazuh alert for Administrators local group change Event ID 4732](..\../assets/screenshots/detection-engineering/17.3.png)
+![Wazuh alert for Administrators local group change Event ID 4732](../../assets/screenshots/detection-engineering/17.3.png)
 *Figure 17.6: High-severity alert for Event ID 4732 (A member was added to a security-enabled local group: Administrators).*
 
-![Process Fan-Out alert for Domain Admins modification and password change flag](..\../assets/screenshots/detection-engineering/17.4.png)
+![Process Fan-Out alert for Domain Admins modification and password change flag](../../assets/screenshots/detection-engineering/17.4.png)
 *Figure 17.7: Sysmon / Wazuh process execution alert capturing `net group "Domain Admins"` and `/passwordchg:no`.*
 
-![Wazuh alert for Domain Admins global group change Event ID 4728](..\../assets/screenshots/detection-engineering/17.5.png)
+![Wazuh alert for Domain Admins global group change Event ID 4728](../../assets/screenshots/detection-engineering/17.5.png)
 *Figure 17.8: High-severity alert for Event ID 4728 (A member was added to a security-enabled global group: Domain Admins).*
 
-![Wazuh alert for account attribute modification Event ID 4738](..\../assets/screenshots/detection-engineering/17.6.png)
+![Wazuh alert for account attribute modification Event ID 4738](../../assets/screenshots/detection-engineering/17.6.png)
 *Figure 17.9: Alert detail capturing Event ID 4738 recording the modification of the `backdoor` account attributes.*
 
 ## Alert observed
