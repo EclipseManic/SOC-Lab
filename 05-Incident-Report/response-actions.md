@@ -148,7 +148,7 @@ All containment and eradication procedures were executed through centralized ent
 - **Target:** Domain Controller `PC-DC` (`192.168.56.10`)
 - **Actions:**
   - Permanent Backdoor Removal: Executed `Remove-ADUser -Identity "backdoor" -Confirm:$false`.
-  - Service Account Demotion: Stripped `HANK_SHERMAN` from `Domain Admins` & `Administrators`; purged SPN `MSSQLSvc/PC-DC.ad.lab:1433` via `Set-ADUser`; enforced AES128/AES256 Kerberos encryption; rotated password to 32-character complex secret.
+  - Service Account Demotion: Stripped `HANK_SHERMAN` from `Domain Admins` & `Administrators`; purged SPN `CIFS/AWSWAPPS1000000.ad.lab` via `Set-ADUser`; enforced AES128/AES256 Kerberos encryption; rotated password to 32-character complex secret.
   - Protected Users Group Enrollment: Enrolled `Administrator` and `HANK_SHERMAN` into `Protected Users` security group, disabling NTLM caching, DES/RC4 encryption, and credential delegation.
 - **Evidence:** [`slot_04_eradication_ad_backdoor_deleted.png`](../assets/screenshots/investigation/eradication/slot_04_eradication_ad_backdoor_deleted.png), [`slot_05_eradication_ad_hank_demoted.png`](../assets/screenshots/investigation/eradication/slot_05_eradication_ad_hank_demoted.png), [`slot_06_eradication_ad_protected_users.png`](../assets/screenshots/investigation/eradication/slot_06_eradication_ad_protected_users.png)
 
