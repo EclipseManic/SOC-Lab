@@ -8,6 +8,14 @@
 > **Companion Incident Response Records:**  
 > - For the step-by-step live response commands, Velociraptor and PowerShell execution workflows, before/after states, and photographic proof of containment across all VMs, see **[`Immediate-Containment-Execution.md`](Immediate-Containment-Execution.md)**.
 > - For the end-to-end forensic deep-dive of the complete 7-phase attack chain, root-cause vulnerability analysis, 68-screenshot telemetry index, and strategic enterprise hardening roadmap, see **[`Deep-Dive-Attack-Chain-Investigation.md`](Deep-Dive-Attack-Chain-Investigation.md)**.
+> - For permanent post-investigation remediation, attacker staging shredding, Active Directory hardening, and closing cases in TheHive, see **[`Eradication-Hardening-and-Recovery.md`](Eradication-Hardening-and-Recovery.md)**.
+
+> [!NOTE]
+> ### ⏱️ Telemetry Timestamp Variations & Simulation Iteration Mechanics
+> As an incident responder analyzing live multi-sensor telemetry across Suricata, Linux Auditd/Bash, Windows Event Logs, and TheHive, minor variations in alert timestamps (1–3 seconds, or a few minutes for interactive commands) are technically and architecturally expected:
+> 1. **SOAR Fast-Path vs. OpenSearch Indexing Delay:** Wazuh's `wazuh-integratord` hooks directly into `analysisd` in memory to push Level >= 8 alerts to `custom-thehive` in < 0.2 ms, whereas Wazuh Dashboard queries require Filebeat log shipping, OpenSearch cluster indexing, and web UI polling refresh (a 1–3s transit delay). Consequently, TheHive alert cards often register 1–3 seconds before indexed dashboard events.
+> 2. **Shell `PROMPT_COMMAND` Flushing Behavior:** Linux `bashcmd` telemetry hooks into Bash's `PROMPT_COMMAND`, which flushes to disk only **after** an interactive command completes and returns the shell prompt. Long-running or interactive tools (`Responder.py`, `wmiexec.py`) cause Suricata and Windows Domain Controller event logs to trigger immediately on packet/RPC arrival, while `bashcmd` writes to disk only when returning to the shell prompt.
+> 3. **Live Attack Multi-Attempt Iterations:** In live simulation testing, human command execution involves iterative syntax adjustments (e.g. quote escaping, retry attempts). TheHive groups events into an alert card anchored to the first matching trigger in its correlation window, while Wazuh Dashboard screenshots reflect specific execution instances within that cluster.
 
 ---
 
