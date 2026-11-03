@@ -37,11 +37,11 @@
   "reportStatus": "Final / Resolved",
   "reportDocumentStatuses": {
     "05-Incident-Report/incident-report.md": "Final / Resolved",
-    "05-Incident-Report/timeline.md": "Draft, not yet validated",
-    "05-Incident-Report/iocs.md": "Draft, not yet validated",
-    "05-Incident-Report/mitre-attack-mapping.md": "Draft, not yet validated",
-    "05-Incident-Report/response-actions.md": "Draft, not yet validated",
-    "05-Incident-Report/lessons-learned.md": "Draft, not yet validated"
+    "05-Incident-Report/timeline.md": "Completed & Formally Validated",
+    "05-Incident-Report/iocs.md": "Completed & Formally Validated",
+    "05-Incident-Report/mitre-attack-mapping.md": "Completed & Formally Validated",
+    "05-Incident-Report/response-actions.md": "Completed & Formally Validated",
+    "05-Incident-Report/lessons-learned.md": "Completed & Formally Validated"
   },
   "gateway": {
     "internalAddress": "192.168.56.150",

@@ -6,7 +6,7 @@
 > **TLP / PAP:** `TLP:AMBER / PAP:AMBER`  
 > **Master Incident Tag:** `INC-2026-1018-ALPHA`  
 > **Linked Alerts:** 13 Ingested Alerts (Alerts #02–#05, #07–#15)  
-> **Eradication Playbook:** [`Eradication-Hardening-and-Recovery.md`](../Eradication-Hardening-and-Recovery.md#step-2-linux-root-cause-vulnerability-elimination--web-hardening-dvwa)
+> **Eradication Playbook:** [`Eradication-Hardening-and-Recovery.md`](../Eradication-Hardening-and-Recovery.md#4-step-2-linux-root-cause-vulnerability-elimination--web-hardening-dvwa)
 
 ![TheHive Case 01 Closed](../../assets/screenshots/investigation/eradication/thehive_case01_closed.png)  
 *Figure 1: TheHive 5 Case Record for `CAS-001-WEBCOMP` showing 13 linked alerts, completed remediation tasks, and formal closure verdict.*  

@@ -82,4 +82,4 @@ All post-mortem analysis across these reports is grounded in the authoritative t
 
 ## Verification Status
 
-**Draft, not yet validated:** The reports in this directory represent active post-incident deliverables compiled from the 20-stage simulation telemetry, pending formal verification of remediation recommendations and root cause findings against exported alert sets.
+**Completed & Formally Validated:** The post-incident deliverables in this directory are fully reconciled against the 46 TheHive alerts, 9,567 raw SIEM events, and authenticated forensic evidence.

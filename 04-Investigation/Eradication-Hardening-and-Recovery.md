@@ -56,7 +56,7 @@ flowchart LR
 During **Immediate Containment** ([`Immediate-Containment-Execution.md`](Immediate-Containment-Execution.md)), our sole priority was **adversary lockout and forensic preservation**:
 1. We **isolated** the network origin (`192.168.232.135`) and terminated active network connections (`pkill nc.openbsd`).
 2. We moved `shell.php` to `/root/forensics_quarantine/` with `chmod 000` rather than deleting it so cryptographic checksums could be generated.
-3. We **disabled** rogue user `AD\backdoor` (`UserAccountControl: ACCOUNTDISABLE`) rather than deleting it so its Security Identifier (`S-1-5-21-384912093-1948201948-294019284-1108`) could be traced across historical Windows Event logs.
+3. We **disabled** rogue user `AD\backdoor` (`UserAccountControl: ACCOUNTDISABLE`) rather than deleting it so its Security Identifier (`S-1-5-21-3315718683-193253855-3518612541-4192`) could be traced across historical Windows Event logs.
 
 With forensic deep-dive analysis fully completed ([`Deep-Dive-Attack-Chain-Investigation.md`](Deep-Dive-Attack-Chain-Investigation.md)), we now move into **Phase 4: Eradication, Hardening & Recovery**:
 - **Eradication:** Completely and irreversibly purge all adversary implants, staging caches, harvested hash dumps, and rogue user accounts from production disk and directory storage.
@@ -144,6 +144,7 @@ resolvectl status
 
 ---
 
+<a id="step-2-linux-root-cause-vulnerability-elimination--web-hardening-dvwa"></a>
 # 4. Step 2: Linux Root-Cause Vulnerability Elimination & Web Hardening (DVWA)
 
 > 🎯 **Objective:** Permanently eliminate Root Cause Flaw 1 (Sudoers NOPASSWD Python), Flaw 2 (Permissive SSH root logon), and Flaw 3 (Arbitrary PHP execution in web upload directory).  
@@ -233,6 +234,7 @@ rm -f /var/www/html/dvwa/hackable/uploads/canary.php
 
 ---
 
+<a id="step-3-active-directory-account-eradication-privileged-demotion--kerberos-invalidation-pc-dc"></a>
 # 5. Step 3: Active Directory Account Eradication, Privileged Demotion & Kerberos Invalidation (PC-DC)
 
 > 🎯 **Objective:** Permanently delete the adversary's backdoor account (`AD\backdoor`), demote compromised service account `HANK_SHERMAN`, revoke SPN mappings, enforce Protected Users enrollment, and complete the `krbtgt` password invalidation cycle.  
@@ -241,7 +243,7 @@ rm -f /var/www/html/dvwa/hackable/uploads/canary.php
 
 ### Vulnerability Breakdown & Remediation Rationale
 1. **Adversary Persistence (`AD\backdoor`):** Created in Stage 17 via Impacket `wmiexec` (Alert #30, EID 4720). In containment, it was disabled and group memberships were stripped to preserve the object SID. With forensic deep-dive finished, it must be permanently deleted from Active Directory.
-2. **Root Cause Flaw 4 (`HANK_SHERMAN` Domain Admin Service Account):** BadBlood configured service account `HANK_SHERMAN` with a registered Service Principal Name (`MSSQLSvc/PC-DC.ad.lab:1433`) while concurrently granting it membership in `Domain Admins`. This allowed the attacker to Kerberoast the account (Alert #23), crack its weak password (`Password123`), and immediately invoke DCSync via DRSUAPI.
+2. **Root Cause Flaw 4 (`HANK_SHERMAN` Domain Admin Service Account):** BadBlood configured service account `HANK_SHERMAN` with a registered Service Principal Name (`CIFS/AWSWAPPS1000000.ad.lab`) while concurrently granting it membership in `Domain Admins`. This allowed the attacker to Kerberoast the account (Alert #23), crack its weak password (`Password123`), and immediately invoke DCSync via DRSUAPI.
    - *Fix:* Strip `HANK_SHERMAN` from `Domain Admins` and `Administrators`, delete the SPN mapping via `Set-ADUser -ServicePrincipalNames @{Remove=...}`, enforce AES-128/AES-256 Kerberos encryption types, and rotate its password to a 32-character complex string.
 3. **Root Cause Flaw 5 (Credential Exposure & Golden Ticket Forgery):** DCSync dumped all domain NTLM hashes, enabling Pass-the-Hash and Golden Ticket generation using the `krbtgt` key (`...f4e05f60`).
    - *Fix:* Enroll `Administrator` and `HANK_SHERMAN` into the Active Directory **`Protected Users`** security group. This prevents LSASS caching of plaintext credentials, forces Kerberos with AES encryption, and disables NTLM authentication and credential delegation. Confirm `krbtgt` has completed its two-pass password rotation (incrementing Key Version Number `msDS-KeyVersionNumber` to 4), permanently invalidating all forged Golden Tickets.
@@ -271,7 +273,7 @@ Remove-ADGroupMember -Identity "Domain Admins" -Members "HANK_SHERMAN" -Confirm:
 Remove-ADGroupMember -Identity "Administrators" -Members "HANK_SHERMAN" -Confirm:$false
 
 # Eradicate SPN to eliminate Kerberoasting attack surface
-Set-ADUser -Identity "HANK_SHERMAN" -ServicePrincipalNames @{Remove="MSSQLSvc/PC-DC.ad.lab:1433"}
+Set-ADUser -Identity "HANK_SHERMAN" -ServicePrincipalNames @{Remove="CIFS/AWSWAPPS1000000.ad.lab"}
 
 # Enforce modern AES Kerberos encryption (prohibit RC4-HMAC)
 Set-ADUser -Identity "HANK_SHERMAN" -KerberosEncryptionType AES128,AES256
@@ -306,7 +308,7 @@ Get-ADUser -Identity "krbtgt" -Properties PasswordLastSet, msDS-KeyVersionNumber
 *Figure 4: Active Directory PowerShell console confirming object inspection and permanent removal (`Remove-ADUser`) of `AD\backdoor` from the NTDS.dit database.*
 
 ![Service account HANK_SHERMAN demoted and SPN purged](../assets/screenshots/investigation/eradication/slot_05_eradication_ad_hank_demoted.png)  
-*Figure 5: PowerShell console demonstrating removal of `HANK_SHERMAN` from `Domain Admins`, elimination of SPN `MSSQLSvc/PC-DC.ad.lab:1433`, and enforcement of AES128/AES256 Kerberos encryption.*
+*Figure 5: PowerShell console demonstrating removal of `HANK_SHERMAN` from `Domain Admins`, elimination of SPN `CIFS/AWSWAPPS1000000.ad.lab`, and enforcement of AES128/AES256 Kerberos encryption.*
 
 ![Protected Users enrollment and krbtgt KVNO verified](../assets/screenshots/investigation/eradication/slot_06_eradication_ad_protected_users.png)  
 *Figure 6: Verification of `Administrator` and `HANK_SHERMAN` enrolled in the `Protected Users` security group, alongside `krbtgt` Key Version Number incremented to KVNO 4.*
@@ -320,7 +322,7 @@ Get-ADUser -Identity "krbtgt" -Properties PasswordLastSet, msDS-KeyVersionNumber
 > 🔧 **Channel:** Enterprise PowerShell (Group Policy Registry & CIM Networking Methods)
 
 ### Vulnerability Breakdown & Remediation Rationale
-In Stage 10, the adversary launched Responder on DVWA (`192.168.56.30`). When workstation `Win10User` (`192.168.56.20`) attempted to resolve a non-existent SMB share (`\\CORP-FILE-01`), it broadcasted LLMNR (UDP 5355) and NetBIOS Name Service (UDP 137) queries across the `192.168.56.0/24` broadcast domain. Responder spoofed authoritative answers, forced WebDAV/NTLM authentication via `DavSetCookie` (`rundll32.exe`, Alert #28, `wzb-28`), and captured the `AD.LAB\win10` NetNTLMv2 challenge-response hash.
+In Stage 10, the adversary launched Responder on DVWA (`192.168.56.30`) interface `ens33` (`python3 /opt/Responder/Responder.py -I ens33 -wd`). When workstation `Win10User` (`192.168.56.20`) was prompted via `DavSetCookie` to query `http://nonexistent/share`, it emitted LLMNR (UDP 5355) and NetBIOS Name Service (UDP 137) queries across the `192.168.56.0/24` broadcast domain. Responder spoofed authoritative answers, forced WebDAV/NTLM authentication via `DavSetCookie` (`rundll32.exe`, Alert #20, `wzb-28`), and captured the `AD.LAB\win10` NetNTLMv2 challenge-response hash.
 
 By disabling LLMNR at the DNS client level and setting `NetbiosOptions = 2` (Disable NetBIOS over TCP/IP) on every network interface, Windows hosts strictly require authoritative unicast DNS queries from the Domain Controller (`192.168.56.10`). Rogue broadcast spoofers can no longer intercept authentication requests.
 
@@ -365,7 +367,7 @@ Get-CimInstance -ClassName Win32_NetworkAdapterConfiguration -Filter "IPEnabled 
 # 7. Step 5: Network Micro-Segmentation & DMZ Lateral Movement Boundary Enforcement
 
 > 🎯 **Objective:** Permanently eliminate Root Cause Flaw 7 by enforcing strict zero-trust network boundaries between the DMZ web server (`192.168.56.30`) and the internal Active Directory subnet (`192.168.56.0/24`).  
-> 💻 **Scope:** Suricata Gateway Firewall (`192.168.56.1` / `192.168.232.138`) & DVWA Host (`192.168.56.30`)  
+> 💻 **Scope:** Suricata Gateway Firewall (`192.168.56.150` on ens37 / `192.168.232.162` on ens33) & DVWA Host (`192.168.56.30`)  
 > 🔧 **Channel:** Velociraptor Live Response (`Linux.Sys.BashShell`)
 
 ### Vulnerability Breakdown & Remediation Rationale
@@ -373,12 +375,12 @@ The primary catalyst for total domain compromise was the absence of internal egr
 
 To enforce proper DMZ architecture, we implement dual-layer micro-segmentation:
 1. **Gateway Firewall Forward Rules:** Drop and reject all traffic originating from DVWA DMZ destined for internal Windows infrastructure ports (Kerberos 88, NetBIOS 137-139, RPC 135, LDAP 389/636, SMB 445, GC 3268/3269, RDP 3389, WinRM 5985/5986).
-2. **DVWA Host Output Rules:** Reject all outbound traffic directed to `192.168.56.10` and `192.168.56.20`, permitting outbound connections exclusively to the central SOC monitoring infrastructure (Wazuh Agent TCP 1514/1515 and Velociraptor TLS 8000 on `192.168.56.1`).
+2. **DVWA Host Output Rules:** Reject all outbound traffic directed to `192.168.56.10` and `192.168.56.20`, permitting outbound connections exclusively to the central Cloud SOC monitoring infrastructure (Wazuh Agent TCP 1514/1515 on `10.122.1.4` and Velociraptor TLS 8000 on `10.122.0.4` routed over the WireGuard tunnel gateway `192.168.56.150`).
 
 ### Execution Script:
 ```bash
 # ==============================================================================
-# 1. GATEWAY FIREWALL (192.168.56.1): Inter-subnet micro-segmentation rules
+# 1. GATEWAY FIREWALL (192.168.56.150): Inter-subnet micro-segmentation rules
 # ==============================================================================
 # Reject outbound DMZ TCP connections to internal Windows Directory & RPC services
 iptables -I FORWARD 1 -s 192.168.56.30 -d 192.168.56.0/24 \
@@ -397,8 +399,9 @@ iptables -I FORWARD 2 -s 192.168.56.30 -d 192.168.56.0/24 \
 iptables -A OUTPUT -d 192.168.56.10 -j REJECT --reject-with icmp-admin-prohibited
 iptables -A OUTPUT -d 192.168.56.20 -j REJECT --reject-with icmp-admin-prohibited
 
-# Explicitly permit SOC telemetry transit to Gateway Wazuh and Velociraptor endpoints
-iptables -A OUTPUT -p tcp -d 192.168.56.1 -m multiport --dports 1514,1515,8000 -j ACCEPT
+# Explicitly permit SOC telemetry transit to Cloud Wazuh and Velociraptor endpoints via WireGuard gateway
+iptables -A OUTPUT -p tcp -d 10.122.1.4 -m multiport --dports 1514,1515 -j ACCEPT
+iptables -A OUTPUT -p tcp -d 10.122.0.4 --dport 8000 -j ACCEPT
 
 # Save rules to persist across system reboots
 netfilter-persistent save
@@ -418,7 +421,7 @@ iptables -L FORWARD -n -v --line-numbers | head -n 6
 # 8. Step 6: Full Operational Recovery, Service Availability & Security Health Verification
 
 > 🎯 **Objective:** Validate production service health across all endpoints, confirm Active Directory replication and directory integrity, ensure clean workstation desktop environments, and verify SIEM telemetry health.  
-> 💻 **Scope:** All 4 Network Hosts (`192.168.56.1`, `192.168.56.10`, `192.168.56.20`, `192.168.56.30`)  
+> 💻 **Scope:** All 4 Local Network Hosts (Suricata Gateway `192.168.56.150`, Domain Controller `192.168.56.10`, Workstation `192.168.56.20`, DVWA `192.168.56.30`)  
 > 🔧 **Channel:** Multi-Platform Enterprise Health Checks
 
 ### Comprehensive Verification Matrix:
@@ -461,6 +464,7 @@ dcdiag /test:Replication /test:Advertising /test:FSMOCheck /test:Services | Sele
 
 ---
 
+<a id="step-7-thehive-46-alert-queue-disposition--3-case-resolution-management"></a>
 # 9. Step 7: TheHive 46-Alert Queue Disposition & 3-Case Resolution Management
 
 > 🎯 **Objective:** Review the entire 46-alert operational queue in TheHive, dismiss 3 confirmed false positives with documented rationale, correlate 43 confirmed breach alerts into 3 operational cases, complete all investigative tasks, and officially close each case with formal resolution verdicts.  
@@ -482,52 +486,52 @@ Every alert ingested by TheHive from Wazuh was individually audited by the incid
 
 | Alert # | Time (IST) | Detection Rule & Event Name | Ingestion Source | Assigned Action / Target Case | Resolution Disposition |
 |:---:|:---:|:---|:---:|:---:|:---:|
-| **#01** | `17:10:08` | ET SCAN Potential SSH / Port 4444 SYN Probe | Suricata Gateway | **None (Dismissed)** | **Ignored / False Positive** |
-| **#02** | `17:10:14` | ET SCAN Nmap OS Detection Probe Sequence | Suricata Gateway | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
-| **#03** | `17:10:14` | ET SCAN Nmap Scripting Engine User-Agent | Suricata Gateway | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
-| **#04** | `17:10:15` | ET SCAN Suspicious Inbound Port Sweep | Suricata Gateway | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
-| **#05** | `17:16:45` | Web Vulnerability Scanner Directory Fuzzing | Wazuh / Apache | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
-| **#06** | `17:16:45` | ET WEB_SERVER Shellshock HTTP Canary Header | Suricata Gateway | **None (Dismissed)** | **Ignored / False Positive** |
-| **#07** | `17:17:02` | Excessive HTTP 404 Responses (Dirbuster) | Wazuh / Apache | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
-| **#08** | `17:17:58` | Python-Requests User-Agent Detected on Web Root | Suricata Gateway | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
-| **#09** | `17:18:01` | Automated HTTP Authentication Brute-Force Burst | Wazuh / Apache | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
-| **#10** | `17:18:02` | ET WEB_SERVER Multiple Failed Login Attempts | Suricata Gateway | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
-| **#11** | `17:19:58` | DVWA SQLi UNION SELECT Credential Dump | Suricata / Wazuh | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
-| **#12** | `17:21:44` | Suspicious PHP Web Shell Upload (`shell.php`) | Wazuh / Auditd | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
-| **#13** | `17:21:49` | Web Shell OS Command Execution (`/usr/bin/id`) | Wazuh / Auditd | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
-| **#14** | `17:24:03` | Netcat Outbound Reverse Shell Connection (4444) | Suricata Gateway | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
-| **#15** | `17:25:36` | Sudoers Misconfiguration Abuse (`sudo python3`) | Wazuh PAM / Auditd | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
-| **#16** | `17:29:43` | Inbound Root SSH Interactive Logon | Wazuh SSHD | Case 02 (`CAS-002-LATMOVE`) | **Resolved / True Positive** |
-| **#17** | `17:31:19` | Internal Subnet Reconnaissance Sweep (ens37) | Suricata Gateway | Case 02 (`CAS-002-LATMOVE`) | **Resolved / True Positive** |
-| **#18** | `17:31:25` | Internal Subnet TCP 4444 SYN Probe | Suricata Gateway | **None (Dismissed)** | **Ignored / False Positive** |
-| **#19** | `17:37:10` | Responder Poisoning: LLMNR / NetBIOS Request | Wazuh / Auditd | Case 02 (`CAS-002-LATMOVE`) | **Resolved / True Positive** |
-| **#20** | `17:37:10` | Suspicious rundll32 WebDAV Authentication | Win10 Sysmon | Case 02 (`CAS-002-LATMOVE`) | **Resolved / True Positive** |
-| **#21** | `17:38:29` | Harvested NTLMv2 Hash Written to `/tmp/win10.hash` | Linux Auditd | Case 02 (`CAS-002-LATMOVE`) | **Resolved / True Positive** |
-| **#22** | `18:01:02` | BloodHound AD LDAP Ingestion Burst | Wazuh / Auditd | Case 02 (`CAS-002-LATMOVE`) | **Resolved / True Positive** |
-| **#23** | `18:01:18` | Kerberoasting Service Ticket Request (TGS-REQ) | Suricata / Wazuh | Case 02 (`CAS-002-LATMOVE`) | **Resolved / True Positive** |
-| **#24** | `18:02:43` | DCSync DRSUAPI Directory Replication Command | Wazuh SSHD / Auditd | Case 02 (`CAS-002-LATMOVE`) | **Resolved / True Positive** |
-| **#25** | `18:04:46` | Pass-the-Hash Remote NTLM Logon (Event 4624) | Wazuh (PC-DC) | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
-| **#26** | `18:04:46` | Privileged Special Logon Assigned (Event 4672) | Wazuh (PC-DC) | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
-| **#27** | `18:04:47` | Impacket wmiexec Command Process Fan-Out | Win Sysmon EID 1 | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
-| **#28** | `18:06:40` | Kerberos Golden Ticket Forged on Pivot Host | Linux Auditd | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
-| **#29** | `18:08:21` | Rogue User `backdoor` Created via CMD (EID 1) | Win Sysmon EID 1 | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
-| **#30** | `18:08:22` | AD User Account Created (`backdoor`, EID 4720) | Wazuh (PC-DC) | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
-| **#31** | `18:08:27` | Account Added to Local Administrators (EID 4732) | Wazuh (PC-DC) | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
-| **#32** | `18:09:05` | Account Added to Domain Admins Group (EID 1) | Win Sysmon EID 1 | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
-| **#33** | `18:09:05` | High-Privilege Group Membership Added (EID 4728) | Wazuh (PC-DC) | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
-| **#34** | `18:13:58` | Automated AD Data Collection (`net user /domain`) | Win Sysmon EID 1 | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
-| **#35** | `18:14:03` | Staging Data Written to `domain_users.txt` | Win Sysmon EID 11 | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
-| **#36** | `18:15:00` | Workstation Document Harvested (`sensitive_data.txt`) | Win10 Sysmon | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
-| **#37** | `18:17:30` | Rapid SCP Administrative Exfiltration Burst | Wazuh SSHD | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
-| **#38** | `18:18:22` | Root SSH Reconnection Following Exfiltration | Wazuh SSHD | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
-| **#39** | `18:20:12` | Malicious Wallpaper Written (`C:\Users\Public\hacked.bmp`)| Win Sysmon EID 11 | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
-| **#40** | `18:20:14` | Desktop Wallpaper Registry Tampering (EID 13) | Win Sysmon EID 13 | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
-| **#41** | `18:20:45` | Extortion Ransom Note Dropped (`README_HACKED.txt`)| Win Sysmon EID 11 | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
-| **#42** | `18:21:05` | Simulated Ransomware File Encryption (`*.enc`) | Win Sysmon EID 11 | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
-| **#43** | `18:21:40` | Immediate Forced System Reboot (`shutdown /r /t 0`)| Win Sysmon EID 1 | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
-| **#44** | `18:22:15` | Workstation Forced System Reboot (`shutdown /r /t 0`)| Win10 Sysmon | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
-| **#45** | `18:24:00` | Post-Reboot Domain Controller Startup Event | Win EventLog 6005 | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
-| **#46** | `18:24:14` | Post-Reboot Backdoor Execution via `wmiexec` | Win Sysmon EID 1 | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#01** | `17:10:09` | [2x] [Suricata] Suricata: Alert - POSSBL SCAN SHELL M-SPLOIT TCP | Suricata Gateway | **None (Dismissed)** | **Ignored / False Positive** |
+| **#02** | `17:10:09` | [TOOL:unknown-scanner x17] [Suricata] 192.168.232.135 | Suricata Gateway | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
+| **#03** | `17:10:09` | [TOOL:Nmap x3] [Suricata] 192.168.232.135 | Suricata Gateway | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
+| **#04** | `17:12:05` | [2x] [DVWA] DVWA: Multiple 400 errors - [404] [192.168.232.135] [/udOIY0cZ.fhp] | DVWA (Apache) | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
+| **#05** | `17:12:08` | [1x] [Suricata] Suricata: High-volume HTTP 4xx burst from 192.168.232.135... | Suricata Gateway | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
+| **#06** | `17:12:08` | [5x] [DVWA] Shellshock attack detected | DVWA (Apache) | **None (Dismissed)** | **Ignored / False Positive** |
+| **#07** | `17:12:09` | [16x] [DVWA] Multiple common web attacks from same source ip. | DVWA (Apache) | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
+| **#08** | `17:12:09` | [WATCHLIST x14: passwd] [DVWA] 192.168.232.135 | DVWA (Apache) | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
+| **#09** | `17:12:10` | [26x] [DVWA] Multiple XSS (Cross Site Scripting) attempts from same source ip. | DVWA (Apache) | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
+| **#10** | `17:12:16` | [4x] [Suricata] Suricata: Alert - GPL EXPLOIT unicode directory traversal attempt | Suricata Gateway | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
+| **#11** | `17:18:02` | [22x] [Suricata] Suricata: [200] [192.168.232.135] [/login.php] [ET INFO User-Agent...] | Suricata Gateway | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
+| **#12** | `17:21:53` | [FANOUT x1] [DVWA] parent PID 17550 (/usr/bin/id) | DVWA (Auditd) | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
+| **#13** | `17:21:58` | [1x] [Suricata] Suricata: Alert - ET ATTACK_RESPONSE Output of id command... | Suricata Gateway | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
+| **#14** | `17:24:03` | [5x] [Suricata] Suricata: Alert - POSSBL SCAN SHELL M-SPLOIT TCP | Suricata Gateway | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
+| **#15** | `17:24:03` | [FANOUT x1] [DVWA] parent PID 17562 (/usr/bin/nc.openbsd) | DVWA (Auditd) | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
+| **#16** | `17:29:43` | [2x] [DVWA] Logon activity: ROOT @ 192.168.232.135 | DVWA (SSHD) | Case 02 (`CAS-002-LATMOVE`) | **Resolved / True Positive** |
+| **#17** | `17:30:49` | [TOOL:Nmap x9] [Suricata] 192.168.56.30 | Suricata Gateway | Case 02 (`CAS-002-LATMOVE`) | **Resolved / True Positive** |
+| **#18** | `17:30:51` | [5x] [Suricata] Suricata: Alert - POSSBL SCAN SHELL M-SPLOIT TCP | Suricata Gateway | **None (Dismissed)** | **Ignored / False Positive** |
+| **#19** | `17:32:16` | [TOOL:unknown-scanner x14] [Suricata] 192.168.56.30 | Suricata Gateway | Case 02 (`CAS-002-LATMOVE`) | **Resolved / True Positive** |
+| **#20** | `17:33:14` | [TOOL:unknown-scanner x4] [Suricata] 192.168.56.30 | Suricata Gateway | Case 02 (`CAS-002-LATMOVE`) | **Resolved / True Positive** |
+| **#21** | `17:34:04` | [TOOL:unknown-scanner x4] [Suricata] 192.168.56.30 | Suricata Gateway | Case 02 (`CAS-002-LATMOVE`) | **Resolved / True Positive** |
+| **#22** | `18:01:02` | [2x] [DVWA] Logon activity: ROOT @ 192.168.232.135 | DVWA (SSHD) | Case 02 (`CAS-002-LATMOVE`) | **Resolved / True Positive** |
+| **#23** | `18:01:18` | [TOOL:GoldenPac x1] [Suricata] 192.168.56.30 | Suricata Gateway | Case 02 (`CAS-002-LATMOVE`) | **Resolved / True Positive** |
+| **#24** | `18:04:46` | [1x] [DomainWin10] Logon activity: ADMINISTRATOR @ local | DomainWin10 (PC-DC) | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#25** | `18:04:47` | [FANOUT x2] [DomainWin10] parent PID 4432 (wmiexec init) | DomainWin10 (PC-DC) | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#26** | `18:05:44` | [FANOUT x2] [DomainWin10] parent PID 4432 (whoami/hostname) | DomainWin10 (PC-DC) | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#27** | `18:06:53` | [FANOUT x2] [DomainWin10] parent PID 4432 (wmiexec cd) | DomainWin10 (PC-DC) | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#28** | `18:07:26` | [FANOUT x2] [DomainWin10] parent PID 4432 (whoami/hostname) | DomainWin10 (PC-DC) | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#29** | `18:08:21` | [FANOUT x3] [DomainWin10] parent PID 4432 (net user backdoor /add) | DomainWin10 (PC-DC) | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#30** | `18:08:22` | [3x] [DomainWin10] Logon activity: BACKDOOR @ local (EID 4720/4722/4738) | DomainWin10 (PC-DC) | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#31** | `18:08:27` | [1x] [DomainWin10] Logon activity: ADMINISTRATORS @ local (EID 4732) | DomainWin10 (PC-DC) | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#32** | `18:09:05` | [FANOUT x3] [DomainWin10] parent PID 4432 (net group Domain Admins) | DomainWin10 (PC-DC) | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#33** | `18:09:05` | [1x] [DomainWin10] Logon activity: DOMAIN ADMINS @ local (EID 4728) | DomainWin10 (PC-DC) | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#34** | `18:09:28` | [2x] [DomainWin10] Logon activity: BACKDOOR @ local (/passwordchg:no) | DomainWin10 (PC-DC) | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#35** | `18:13:58` | [FANOUT x2] [DomainWin10] parent PID 4432 (domain_users / admin_info) | DomainWin10 (PC-DC) | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#36** | `18:14:58` | [FANOUT x3] [Win10User] parent PID 4008 (sensitive_data.txt) | Win10User (Win10) | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#37** | `18:17:30` | [6x] [DVWA] Logon activity: ROOT @ 192.168.232.135 (SSH Reconnect) | DVWA (SSHD) | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#38** | `18:19:02` | [2x] [DVWA] Logon activity: ROOT @ 192.168.232.135 (SSH Reconnect) | DVWA (SSHD) | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#39** | `18:19:49` | [FANOUT x9] [DomainWin10] parent PID 4432 (DC Ransomware/Reboot) | DomainWin10 (PC-DC) | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#40** | `18:20:05` | [FANOUT x1] [DomainWin10] parent PID 6500 (Child of #39 reg.exe) | DomainWin10 (PC-DC) | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#41** | `18:20:11` | [FANOUT x1] [DomainWin10] parent PID 4980 (Child of #39 reg.exe) | DomainWin10 (PC-DC) | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#42** | `18:23:59` | [FANOUT x9] [Win10User] parent PID 4008 (Win10 Ransomware/Reboot) | Win10User (Win10) | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#43** | `18:23:59` | [3x] [Suricata] Suricata: Alert - ET INFO NTLM Session Setup Request | Suricata Gateway | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#44** | `18:24:12` | [FANOUT x1] [Win10User] parent PID 1724 (Child of #42 reg.exe) | Win10User (Win10) | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#45** | `18:24:18` | [FANOUT x1] [Win10User] parent PID 3880 (Child of #42 reg.exe) | Win10User (Win10) | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#46** | `18:36:34` | [1x] [DomainWin10] Logon activity: BACKDOOR @ local (Post-Reboot 4738) | DomainWin10 (PC-DC) | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
 
 ---
 
@@ -546,7 +550,7 @@ Every alert ingested by TheHive from Wazuh was individually audited by the incid
 - **Case Name:** Pivot SSH Persistence, Broadcast Poisoning, BloodHound & DCSync
 - **Scope:** Stages 08 through 14 | 8 Linked Alerts (#16, #17, #19–#24)
 - **Status:** **RESOLVED** | **Verdict:** **True Positive** | **Impact:** **With Impact**
-- **Closure Actions:** Purged injected ED25519 root SSH public key; shredded harvested hash caches (`/tmp/win10.hash`, `/tmp/hank.hash`); deleted `/opt/Responder`; unmasked and restored `systemd-resolved` DNS stub resolver; globally disabled LLMNR (`EnableMulticast = 0`) and NetBIOS (`NetbiosOptions = 2`) across Windows endpoints; stripped `HANK_SHERMAN` from `Domain Admins`; deleted SPN `MSSQLSvc/PC-DC.ad.lab:1433`; rotated domain account passwords.
+- **Closure Actions:** Purged injected ED25519 root SSH public key; shredded harvested hash caches (`/tmp/win10.hash`, `/tmp/hank.hash`); deleted `/opt/Responder`; unmasked and restored `systemd-resolved` DNS stub resolver; globally disabled LLMNR (`EnableMulticast = 0`) and NetBIOS (`NetbiosOptions = 2`) across Windows endpoints; stripped `HANK_SHERMAN` from `Domain Admins`; deleted SPN `CIFS/AWSWAPPS1000000.ad.lab`; rotated domain account passwords.
 
 ![TheHive Case 02 Closed](../assets/screenshots/investigation/eradication/thehive_case02_closed.png)  
 *Figure 11: TheHive 5 Case Record for `CAS-002-LATMOVE` showing 8 linked alerts, pivot eradication verification, and formal closure verdict.*

@@ -240,7 +240,7 @@ function parseReportStatus(reportText) {
 }
 
 function parseReportSectionStatus(reportReadmeText) {
-  const status = reportReadmeText.match(/\*\*(Draft, not yet validated):\*\*/)?.[1];
+  const status = reportReadmeText.match(/\*\*(Completed & Formally Validated|Draft, not yet validated):?\*\*/)?.[1];
   if (!status) throw new Error("Could not parse report section verification status from 05-Incident-Report/README.md");
   return status;
 }

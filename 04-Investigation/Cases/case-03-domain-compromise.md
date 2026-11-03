@@ -6,7 +6,7 @@
 > **TLP / PAP:** `TLP:AMBER / PAP:AMBER`  
 > **Master Incident Tag:** `INC-2026-1018-ALPHA`  
 > **Linked Alerts:** 22 Ingested Alerts (Alerts #25 through #46)  
-> **Eradication Playbook:** [`Eradication-Hardening-and-Recovery.md`](../Eradication-Hardening-and-Recovery.md#step-7-thehive-46-alert-queue-disposition--3-case-resolution-management)
+> **Eradication Playbook:** [`Eradication-Hardening-and-Recovery.md`](../Eradication-Hardening-and-Recovery.md#9-step-7-thehive-46-alert-queue-disposition--3-case-resolution-management)
 
 ![TheHive Case 03 Closed](../../assets/screenshots/investigation/eradication/thehive_case03_closed.png)  
 *Figure 1: TheHive 5 Case Record for `CAS-003-DOMIMP` showing 22 linked alerts, forest-wide identity hardening, and formal closure verdict.*  
