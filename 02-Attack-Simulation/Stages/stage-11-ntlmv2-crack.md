@@ -2,7 +2,7 @@
 
 > **Status:** Complete — evidence attached  
 > **Case:** [Case 02](../../04-Investigation/Cases/case-02-lateral-movement.md)  
-> **Investigation:** [Stage 11](../../04-Investigation/Stages/stage-11-ntlmv2-crack.md)  
+> **Investigation:** [Phase 4 Deep Dive](../../04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-4-poisoning-the-well-stealing-windows-passwords-with-responder)  
 > **Evidence:** [attack](..\../assets/screenshots/attack-simulation/31.png) · [alert (none)](../../03-Detection-Engineering/README.md#challenge-3-the-honest-gap-register-why-80-detection-is-real-security)
 
 ---

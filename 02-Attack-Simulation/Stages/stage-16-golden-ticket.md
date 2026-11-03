@@ -2,7 +2,7 @@
 
 > **Status:** Complete — evidence attached  
 > **Case:** [Case 03](../../04-Investigation/Cases/case-03-domain-compromise.md)  
-> **Investigation:** [Stage 16](../../04-Investigation/Stages/stage-16-golden-ticket.md)  
+> **Investigation:** [Phase 5 Deep Dive](../../04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-5-becoming-god-in-active-directory-kerberoasting-dcsync--the-golden-ticket)  
 > **Evidence:** [attack](..\../assets/screenshots/attack-simulation/49.png) · [alert](..\../assets/screenshots/detection-engineering/14.png)
 
 ## Objective

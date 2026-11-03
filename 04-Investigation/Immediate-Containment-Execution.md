@@ -9,7 +9,7 @@
 > [!IMPORTANT]
 > **Investigative Basis & Threat Intelligence Context:**  
 > This tactical containment playbook is executed in direct response to the forensic findings detailed across our incident records:
-> - **[`Initial-Triage and Investigation.md`](Initial-Triage%20and%20Investigation.md)**: Master 46-alert triage table, detection pipeline critique (8 flaws), and 6-window chronological timeline.
+> - **[`Initial-Triage-and-Investigation.md`](Initial-Triage-and-Investigation.md)**: Master 46-alert triage table, detection pipeline critique (8 flaws), and 6-window chronological timeline.
 > - **[`Deep-Dive-Attack-Chain-Investigation.md`](Deep-Dive-Attack-Chain-Investigation.md)**: Comprehensive DFIR deep-dive of the complete 7-phase attack chain, root-cause vulnerability analysis, 68-screenshot telemetry index, and strategic enterprise hardening roadmap.
 
 ---
@@ -69,7 +69,7 @@ Remediation across the Active Directory environment was performed via elevated P
 
 # 3. Action 1: Perimeter Firewall Block & Internal Pivot Bridge Severing
 
-> 🔍 **Investigative Basis:** [Section 3 Action 1 in Initial Triage](Initial-Triage%20and%20Investigation.md#3-immediate-containment-actions--operational-rationale) | Triggered by Alerts #01–#03 & #11 ingress from `192.168.232.135`.
+> 🔍 **Investigative Basis:** [Section 3 Action 1 in Initial Triage](Initial-Triage-and-Investigation.md#3-immediate-containment-actions--operational-rationale) | Triggered by Alerts #01–#03 & #11 ingress from `192.168.232.135`.
 
 ### 🎯 Objective:
 Completely sever inbound and outbound communication between the external attacker machine (`192.168.232.135`) and all internal lab networks.
@@ -83,7 +83,7 @@ sudo iptables -I FORWARD -s 192.168.232.135 -j DROP
 sudo iptables -I OUTPUT -d 192.168.232.135 -j DROP
 
 # 2. Sever DVWA's internal pivot bridge to the AD subnet (192.168.56.0/24)
-sudo iptables -I FORWARD -i eth0 -o eth1 -j DROP
+sudo iptables -I FORWARD -i ens33 -o ens37 -j DROP
 
 # 3. Verify that the DROP rules are active and capturing dropped traffic
 sudo iptables -L -n -v | grep 192.168.232.135
@@ -97,7 +97,7 @@ sudo iptables -L -n -v | grep 192.168.232.135
 
 # 4. Action 2: DVWA Reverse Shell Termination & Web Shell Quarantine
 
-> 🔍 **Investigative Basis:** [Window 2 Forensic Walkthrough](Initial-Triage%20and%20Investigation.md#5-deep-dive-chronological-evidence-walkthrough-by-time-window) | Neutralizing web shell in Alert #11 (sub-events 18–22) and Netcat reverse shell in Alerts #14 & #15.
+> 🔍 **Investigative Basis:** [Window 2 Forensic Walkthrough](Initial-Triage-and-Investigation.md#5-deep-dive-chronological-evidence-walkthrough-by-time-window) | Neutralizing web shell in Alert #11 (sub-events 18–22) and Netcat reverse shell in Alerts #14 & #15.
 
 ### 🎯 Objective:
 Terminate active interactive shells running on port `4444` and safely quarantine the uploaded PHP web shell (`shell.php`) without deleting it (preserving file timestamps, inode numbers, and cryptographic hashes for forensic evidence).
@@ -125,17 +125,20 @@ ls -la /var/www/html/dvwa/hackable/uploads/
 ```
 
 ### 📸 Proof of Execution:
+![Terminating active reverse shell processes](../assets/screenshots/investigation/containment/slot_02_precursor_pkill_attempt.png)  
+*Figure 2a: Velociraptor command line executing process termination (`pkill -f nc.openbsd`) to sever the interactive reverse shell connection on port 4444.*
+
 ![DVWA reverse shell terminated and web shell quarantined](../assets/screenshots/investigation/containment/slot_02a_containment_dvwa_shells_quarantined.png)  
-*Figure 2a: Socket statistics (`ss`) confirming port 4444 is cleared, and `shell.php` staged for isolation.*
+*Figure 2b: Socket statistics (`ss`) confirming port 4444 is cleared, and `shell.php` staged for isolation.*
 
 ![DVWA uploads directory verified clean](../assets/screenshots/investigation/containment/slot_02b_containment_dvwa_uploads_cleaned.png)  
-*Figure 2b: Directory listing confirming `shell.php` is completely removed from `/var/www/html/dvwa/hackable/uploads/` and quarantined.*
+*Figure 2c: Directory listing confirming `shell.php` is completely removed from `/var/www/html/dvwa/hackable/uploads/` and quarantined.*
 
 ---
 
 # 5. Action 3: DVWA Rogue Root SSH Key Eradication
 
-> 🔍 **Investigative Basis:** [Alert #16 Root SSH Login Detail](Initial-Triage%20and%20Investigation.md#5-deep-dive-chronological-evidence-walkthrough-by-time-window) | Wiping ED25519 root persistence key logged at 17:29:43 IST.
+> 🔍 **Investigative Basis:** [Alert #16 Root SSH Login Detail](Initial-Triage-and-Investigation.md#5-deep-dive-chronological-evidence-walkthrough-by-time-window) | Wiping ED25519 root persistence key logged at 17:29:43 IST.
 
 ### 🎯 Objective:
 Remove the attacker's rogue ED25519 public key injected into `/root/.ssh/authorized_keys` during Window 2 (`17:29:43 IST`, Alert #16) and kill all active unauthorized root SSH sessions.
@@ -166,7 +169,7 @@ sudo ss -tprn '( dport = :22 or sport = :22 )'
 
 # 6. Action 4: Active Directory Rogue Account Neutralization (AD\backdoor)
 
-> 🔍 **Investigative Basis:** [Window 4 Domain Controller Takeover](Initial-Triage%20and%20Investigation.md#5-deep-dive-chronological-evidence-walkthrough-by-time-window) | Neutralizing rogue AD user created via Impacket wmiexec in Alerts #29–#33.
+> 🔍 **Investigative Basis:** [Window 4 Domain Controller Takeover](Initial-Triage-and-Investigation.md#5-deep-dive-chronological-evidence-walkthrough-by-time-window) | Neutralizing rogue AD user created via Impacket wmiexec in Alerts #29–#33.
 
 ### 🎯 Objective:
 Disable the rogue domain account `AD\backdoor` created via Impacket wmiexec at `18:08:21 IST` (Alert #29 / #30) and strip it from both `Domain Admins` and `Administrators` groups.
@@ -197,10 +200,10 @@ Get-ADPrincipalGroupMembership -Identity "backdoor" | Select-Object Name
 
 # 7. Action 5: Active Directory Kerberos Golden Ticket Invalidation (krbtgt Reset)
 
-> 🔍 **Investigative Basis:** [Alert #23 GoldenPac Kerberos Exploit](Initial-Triage%20and%20Investigation.md#5-deep-dive-chronological-evidence-walkthrough-by-time-window) | Invalidating forged Kerberos TGTs created via port 88 MS14-068 exploit.
+> 🔍 **Investigative Basis:** [Deep-Dive Phase 5: Golden Ticket Forgery](Deep-Dive-Attack-Chain-Investigation.md#phase-5-becoming-god-in-active-directory-kerberoasting-dcsync--the-golden-ticket) | Invalidate forged Kerberos Golden Tickets created via ticketer.py using DCSynced krbtgt hash.
 
 ### 🎯 Objective:
-Invalidate all forged Kerberos Ticket Granting Tickets (TGTs) generated using the GoldenPac / MS14-068 exploit (`18:01:18 IST`, Alert #23) by performing a double password reset on the `krbtgt` domain account.
+Invalidate all forged Kerberos Ticket Granting Tickets (TGTs) generated using the compromised `krbtgt` hash dumped via DCSync (`18:02:43 IST`, Row 9274) and forged via `ticketer.py` (`18:06:40 IST`, Row 9306) by performing a double password reset on the `krbtgt` domain account.
 
 > [!IMPORTANT]
 > A single `krbtgt` password reset only invalidates newly requested tickets; Kerberos allows tickets encrypted with the previous password to remain valid for up to 10 hours (ticket lifetime). A **second reset** after replication invalidates all previously minted Golden Tickets.
@@ -211,10 +214,13 @@ Invalidate all forged Kerberos Ticket Granting Tickets (TGTs) generated using th
 # 1. Record the current pwdLastSet timestamp of the krbtgt account
 Get-ADUser -Identity "krbtgt" -Properties pwdLastSet | Select-Object Name, @{N="pwdLastSet";E={[DateTime]::FromFileTime($_.pwdLastSet)}}
 
-# 2. Execute the krbtgt password reset
+# 2. Execute the first krbtgt password reset
 Set-ADAccountPassword -Identity "krbtgt" -NewPassword (ConvertTo-SecureString "TempKrbP@ssw0rd2026!#Step1" -AsPlainText -Force) -Reset
 
-# 3. Force Active Directory Kerberos ticket cache purge on domain controllers
+# 3. Execute the second krbtgt password reset (purges N-1 ticket encryption history)
+Set-ADAccountPassword -Identity "krbtgt" -NewPassword (ConvertTo-SecureString "TempKrbP@ssw0rd2026!#Step2" -AsPlainText -Force) -Reset
+
+# 4. Force Active Directory Kerberos ticket cache purge on domain controllers
 klist purge -li 0x3e7
 
 # 4. Verify the updated timestamp
@@ -232,7 +238,7 @@ Get-ADUser -Identity "krbtgt" -Properties pwdLastSet | Select-Object Name, @{N="
 
 # 8. Action 6: Endpoint Defacement Reversion & Staged Recon Data Quarantine
 
-> 🔍 **Investigative Basis:** [Window 6 Ransomware & Impact Batch](Initial-Triage%20and%20Investigation.md#5-deep-dive-chronological-evidence-walkthrough-by-time-window) | Remediating wallpaper defacement and staged files in Alerts #35, #36, #39, #42.
+> 🔍 **Investigative Basis:** [Window 6 Ransomware & Impact Batch](Initial-Triage-and-Investigation.md#5-deep-dive-chronological-evidence-walkthrough-by-time-window) | Remediating wallpaper defacement and staged files in Alerts #35, #36, #39, #42.
 
 ### 🎯 Objective:
 Kill remote execution processes, quarantine staged reconnaissance files dumped in `C:\Windows\Temp\`, delete extortion notes (`README_HACKED.txt`), and restore original desktop wallpaper registry settings on both `DomainWin10` and `Win10User`.
@@ -263,17 +269,26 @@ Get-ChildItem -Path "C:\Forensics_Quarantine"
 ```
 
 ### 📸 Proof of Execution:
+![Forensics quarantine directory initialized](../assets/screenshots/investigation/containment/slot_06a_containment_quarantine_created.png)  
+*Figure 6a: PowerShell command creating isolated forensic directory `C:\Forensics_Quarantine\`.*
+
+![Desktop wallpaper registry restored](../assets/screenshots/investigation/containment/slot_06b_containment_wallpaper_remediated.png)  
+*Figure 6b: Registry keys reset to remove hacked.bmp and revert WallpaperStyle.*
+
+![Quarantine staging file listing](../assets/screenshots/investigation/containment/slot_06c_containment_quarantine_listing.png)  
+*Figure 6c: PowerShell directory listing confirming staging and extortion files moved into quarantine.*
+
 ![Endpoint staged recon quarantine and desktop cleanup](../assets/screenshots/investigation/containment/slot_06d_containment_quarantine_verified.png)  
-*Figure 6a: Windows PowerShell console showing staged reconnaissance dumps and malicious wallpaper bitmap (`hacked.bmp`) successfully quarantined in `C:\Forensics_Quarantine\`.*
+*Figure 6d: Windows PowerShell console showing staged reconnaissance dumps and malicious wallpaper bitmap (`hacked.bmp`) successfully quarantined in `C:\Forensics_Quarantine\`.*
 
 ![Restoring desktop wallpaper registry and refreshing UI](../assets/screenshots/investigation/containment/slot_06e_containment_desktop_refreshed.png)  
-*Figure 6b: Registry update resetting Wallpaper and WallpaperStyle followed by `RUNDLL32.EXE` to refresh the desktop parameters.*
+*Figure 6e: Registry update resetting Wallpaper and WallpaperStyle followed by `RUNDLL32.EXE` to refresh the desktop parameters.*
 
 ---
 
 # 9. Action 7: DVWA Database & Web Application Credential Rotation
 
-> 🔍 **Investigative Basis:** [Alert #11 SQL Injection Analysis](Initial-Triage%20and%20Investigation.md#5-deep-dive-chronological-evidence-walkthrough-by-time-window) | Rotating credentials dumped via UNION SELECT user, password from users-- -.
+> 🔍 **Investigative Basis:** [Alert #11 SQL Injection Analysis](Initial-Triage-and-Investigation.md#5-deep-dive-chronological-evidence-walkthrough-by-time-window) | Rotating credentials dumped via UNION SELECT user, password from users-- -.
 
 ### 🎯 Objective:
 Rotate all database and web application passwords dumped by the attacker via SQL injection (`UNION SELECT user, password FROM users-- -`, Alert #11, sub-event 17).

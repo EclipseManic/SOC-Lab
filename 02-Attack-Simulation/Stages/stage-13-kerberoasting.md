@@ -2,7 +2,7 @@
 
 > **Status:** Complete — evidence attached  
 > **Case:** [Case 02](../../04-Investigation/Cases/case-02-lateral-movement.md)  
-> **Investigation:** [Stage 13](../../04-Investigation/Stages/stage-13-kerberoasting.md)  
+> **Investigation:** [Phase 5 Deep Dive](../../04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-5-becoming-god-in-active-directory-kerberoasting-dcsync--the-golden-ticket)  
 > **Evidence:** [attack](..\../assets/screenshots/attack-simulation/41.png) · [alert](..\../assets/screenshots/detection-engineering/11.png)
 
 ---
