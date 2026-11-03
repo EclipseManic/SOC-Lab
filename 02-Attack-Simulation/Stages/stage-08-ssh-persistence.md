@@ -2,7 +2,7 @@
 
 > **Status:** Complete — evidence attached
 > **Case:** [Case 02](../../04-Investigation/Cases/case-02-lateral-movement.md)
-> **Investigation:** [Stage 08](../../04-Investigation/Stages/stage-08-ssh-persistence.md)
+> **Investigation:** [Phase 3 Deep Dive](../../04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-3-making-themselves-at-home-ssh-persistence--finding-windows)
 > **Evidence:** [attack](..\../assets/screenshots/attack-simulation/) · [alert](..\../assets/screenshots/detection-engineering/)
 
 ## Objective

@@ -8,7 +8,7 @@
 **Incident Scope:** DMZ Web Pivot (`DVWA`), Windows Server 2022 Domain Controller (`PC-DC`), Windows 10 Workstation (`Win10User`)  
 **Attack Dwell Time:** `2026-10-18 17:10:08 IST` – `18:24:32 IST` (**1 Hour, 14 Minutes, 24 Seconds**)  
 **Cross-Linked Incident Records:**
-- [Initial Alert Triage & Triage Register](Initial-Triage%20and%20Investigation.md) *(Preliminary queue triage of 46 TheHive alerts, false positive analysis, and 6-window timeline)*
+- [Initial Alert Triage & Triage Register](Initial-Triage-and-Investigation.md) *(Preliminary queue triage of 46 TheHive alerts, false positive analysis, and 6-window timeline)*
 - [Immediate Operational Containment Execution](Immediate-Containment-Execution.md) *(Step-by-step live response commands, Velociraptor VQL workflows, and lockout verification)*
 
 ---
@@ -17,6 +17,13 @@
 > ### 📸 Evidence Notice: How Screenshots Are Organized
 > The complete forensic repository contains **68 verified SIEM alert screenshots** stored under [`../assets/screenshots/investigation/wazuh-alerts/`](../assets/screenshots/investigation/wazuh-alerts/).  
 > To make this report enjoyable and easy to read without drowning you in 70 consecutive pictures, **only the 14 biggest milestone turning points** are shown directly in the story below. Every other supporting alert is neatly organized in clickable reference tables so you can verify the raw data anytime.
+>
+> > [!NOTE]
+> > **⏱️ Sensor Telemetry Timing & Ingestion Skew Mechanics:**
+> > When comparing timestamps across raw CSVs, network wire captures, Linux kernel hooks, Windows event logs, and TheHive cases, minor variations (1–3 seconds, or minutes for interactive sessions) naturally occur:
+> > 1. **SOAR vs. Dashboard Latency:** `wazuh-integratord` hooks into `analysisd` in memory to send Level >= 8 alerts to `custom-thehive` in < 0.2 ms, whereas Wazuh Dashboard display requires Filebeat buffering and OpenSearch cluster indexing (meaning TheHive cases often register 1–3s before dashboard queries).
+> > 2. **Shell `PROMPT_COMMAND` Flushing:** Linux `bashcmd` logging relies on `PROMPT_COMMAND`, which flushes to disk only **after** a command exits or interrupts (`Ctrl+C`). Long-running tools (`Responder.py`, `wmiexec.py`) log to Suricata/Windows immediately on execution, while `bashcmd` writes only when returning to the shell prompt.
+> > 3. **Live Campaign Multi-Attempt Iterations:** Real-world testing involved retries (e.g. quote syntax). TheHive anchored the alert card to the first trigger in its 5s correlation window, while Wazuh Dashboard screenshots reflect specific execution instances within that cluster.
 
 ---
 
@@ -55,7 +62,7 @@ Over the course of **74 minutes**, an external attacker sitting at `192.168.232.
 2. **Our worst mistake made them Root in 10 seconds:** Once inside as low-privilege web user `www-data`, they ran `sudo -l` and found an unforgivable admin error: `www-data` had permission to run Python with `sudo` with **no password required**. They ran one line of Python code and instantly became `root`.
 3. **They bridged into our private Windows network:** Because our DMZ wasn't isolated from our internal network, the attacker used the compromised web server to listen to internal Windows traffic.
 4. **They stole Windows credentials using Responder:** They ran Responder on the Linux box, tricked a Windows 10 workstation (`192.168.56.20`) into sending its password hash, cracked it offline, and ran BloodHound to map every computer and user in our Active Directory domain.
-5. **They achieved total Domain Dominance:** They found an Active Directory service account (`HANK_SHERMAN`), cracked its weak password (`Password123!`), and discovered it had dangerous **DCSync permissions**. They used it to copy the master `krbtgt` password hash from the Domain Controller, forged an unbreakable **Kerberos Golden Ticket**, and gained permanent god-mode access.
+5. **They achieved total Domain Dominance:** They found an Active Directory service account (`HANK_SHERMAN`), cracked its weak password (`Password123`), and discovered it had dangerous **DCSync permissions**. They used it to copy the master `krbtgt` password hash from the Domain Controller, forged an unbreakable **Kerberos Golden Ticket**, and gained permanent god-mode access.
 6. **They stole our data and vandalized our systems:** They created a hidden Domain Admin user named `backdoor`, dumped sensitive corporate documents, exfiltrated the files over SSH in under 1 second, defaced both the Domain Controller and workstation desktops with a custom hacker wallpaper, dropped simulated ransomware notes (`README_HACKED.txt`), and rebooted both machines.
 
 ---
@@ -65,7 +72,7 @@ Over the course of **74 minutes**, an external attacker sitting at `192.168.232.
 ---
 
 ### Phase 1: Rattling the Doorknobs (Reconnaissance & Web Exploitation)
-* **Timeline:** `17:10:08` – `17:21:40` (11 minutes)  
+* **Timeline:** `17:10:08` – `17:21:44` (11 minutes)  
 * **Target:** Public Linux Web Server (`192.168.56.30`)  
 * **Attacker IP:** `192.168.232.135` (Kali Linux)  
 
@@ -79,7 +86,7 @@ Once the attacker saw port `80` (HTTP) open, they fired up automated web scanner
 
 The attacker discovered our server was running **DVWA (Damn Vulnerable Web Application)**. They pointed a custom Python script at the login page (`/login.php`) to brute-force credentials. Once logged in, they headed straight to the SQL Injection page (`/vulnerabilities/sqli/`) and typed:
 ```sql
-1' UNION SELECT user, password FROM users #
+1' UNION SELECT user, password FROM users-- -
 ```
 This trick fooled the database into dumping all stored usernames and password hashes on the screen.
 
@@ -110,14 +117,14 @@ The attacker now had valid web application logins and knew the server allowed fi
 | [`wzb-06-recon-nikto-shellshock-probes.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-06-recon-nikto-shellshock-probes.jpg) | `17:11:06` | Apache / Wazuh | Nikto scanner trying Shellshock exploit headers |
 | [`wzb-07-recon-suricata-xss-attempt.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-07-recon-suricata-xss-attempt.jpg) | `17:11:08` | Suricata | Cross-site scripting (XSS) probe detected in URL parameters |
 | [`wzb-08-recon-dvwa-php-ini-probe.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-08-recon-dvwa-php-ini-probe.jpg) | `17:11:15` | Apache | Attacker searching for sensitive server config files (/php.ini) |
-| [`wzb-09-bruteforce-dvwa-login-endpoint.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-09-bruteforce-dvwa-login-endpoint.jpg) | `17:12:19` | Apache | Attacker isolating the login page right before brute forcing |
-| [`wzb-10-bruteforce-python-requests-login.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-10-bruteforce-python-requests-login.jpg) | `17:12:21` | Suricata | **Embedded Milestone (Fig 2)**: Python brute force script detected |
-| [`wzb-11-sqli-suricata-select-user.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-11-sqli-suricata-select-user.jpg) | `17:19:06` | Suricata | **Embedded Milestone (Fig 3)**: SQL Injection extracting password hashes |
+| [`wzb-09-bruteforce-dvwa-login-endpoint.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-09-bruteforce-dvwa-login-endpoint.jpg) | `17:18:01` | Apache | Attacker isolating the login page right before brute forcing |
+| [`wzb-10-bruteforce-python-requests-login.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-10-bruteforce-python-requests-login.jpg) | `17:18:02` | Suricata | **Embedded Milestone (Fig 2)**: Python brute force script detected (Alert #11) |
+| [`wzb-11-sqli-suricata-select-user.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-11-sqli-suricata-select-user.jpg) | `17:19:58` | Suricata | **Embedded Milestone (Fig 3)**: SQL Injection extracting password hashes (Row 9110) |
 
 ---
 
 ### Phase 2: The 10-Second Mistake (Webshell to Instant Root)
-* **Timeline:** `17:21:40` – `17:23:55` (2 minutes)  
+* **Timeline:** `17:21:44` – `17:25:40` (4 minutes)  
 * **Target:** Linux Web Server (`192.168.56.30`)  
 * **Privilege Level:** `www-data` (low privilege) → `root` (highest privilege)  
 
@@ -162,18 +169,18 @@ The attacker was no longer trapped in a web sandbox. They were `root` on an ente
 #### 📋 Complete Evidence Table for Phase 2
 | Evidence File Link | Timestamp | Sensor | What the Alert Shows |
 |:---|:---:|:---:|:---|
-| [`wzb-12-webshell-dvwa-post-upload.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-12-webshell-dvwa-post-upload.jpg) | `17:21:40` | Apache | **Embedded Milestone (Fig 4)**: Webshell file uploaded via POST |
+| [`wzb-12-webshell-dvwa-post-upload.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-12-webshell-dvwa-post-upload.jpg) | `17:21:44` | Apache | **Embedded Milestone (Fig 4)**: Webshell file uploaded via POST (Row 9115) |
 | [`wzb-13-webshell-auditd-id-command.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-13-webshell-auditd-id-command.jpg) | `17:21:53` | Auditd | First command run through webshell (`/usr/bin/id`) |
 | [`wzb-14-webshell-suricata-bin-sh-injection.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-14-webshell-suricata-bin-sh-injection.jpg) | `17:21:55` | Suricata | Suricata alert detecting `/bin/sh` invocation in HTTP URI |
-| [`wzb-15-revshell-auditd-stty-sane.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-15-revshell-auditd-stty-sane.jpg) | `17:22:14` | Auditd | Reverse shell opened; attacker stabilizes the terminal using `stty sane` |
-| [`wzb-16-revshell-auditd-export-term.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-16-revshell-auditd-export-term.jpg) | `17:22:15` | Auditd | Attacker sets terminal environment to xterm |
-| [`wzb-17-privesc-pam-sudo-python-root.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-17-privesc-pam-sudo-python-root.jpg) | `17:23:45` | Wazuh PAM | **Embedded Milestone (Fig 5)**: Wazuh logs www-data jumping directly to root via sudo python |
-| [`wzb-18-privesc-auditd-sudo-l.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-18-privesc-auditd-sudo-l.jpg) | `17:23:46` | Auditd | Auditd log capturing the attacker typing `sudo -l` to check permissions |
+| [`wzb-15-revshell-auditd-stty-sane.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-15-revshell-auditd-stty-sane.jpg) | `17:25:22` | Auditd | Reverse shell opened (17:24:03); attacker stabilizes terminal using `stty sane` (Row 9139) |
+| [`wzb-16-revshell-auditd-export-term.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-16-revshell-auditd-export-term.jpg) | `17:25:23` | Auditd | Attacker sets terminal environment to xterm (Row 9140) |
+| [`wzb-17-privesc-pam-sudo-python-root.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-17-privesc-pam-sudo-python-root.jpg) | `17:25:36` | Wazuh PAM | **Embedded Milestone (Fig 5)**: Wazuh logs www-data jumping to root via sudo python (Row 9152) |
+| [`wzb-18-privesc-auditd-sudo-l.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-18-privesc-auditd-sudo-l.jpg) | `17:25:31` | Auditd | Auditd log capturing the attacker typing `sudo -l` to check permissions (Row 9148) |
 
 ---
 
 ### Phase 3: Making Themselves at Home (SSH Persistence & Finding Windows)
-* **Timeline:** `17:24:00` – `17:34:30` (10 minutes)  
+* **Timeline:** `17:26:14` – `17:34:30` (8 minutes)  
 * **Target:** Linux Web Pivot (`192.168.56.30`) → Internal Subnet `192.168.56.0/24`  
 
 #### 🎯 The Attacker's Goal
@@ -183,7 +190,7 @@ Make sure they don't lose access if the web server crashes or restarts, and find
 Reverse shells are clunky and disconnect easily. The attacker wanted clean, permanent access that looks like normal system administration.  
 Because they were already `root`, they simply pasted their personal SSH key into the server's root login file:
 ```bash
-echo "ssh-ed25519 AAAAC3... kali@kali" >> /root/.ssh/authorized_keys
+echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIACi7TGj+OejU78IWt/I6/im7sLXOR1jben7h94DmDJ5 kali@kali" >> /root/.ssh/authorized_keys
 ```
 One second later, they logged in directly over SSH from their computer (`192.168.232.135`) straight into `root@192.168.56.30`. Even if we deleted the webshell, they still had the front door key!
 
@@ -209,8 +216,8 @@ The attacker had a permanent root workstation sitting right inside our corporate
 #### 📋 Complete Evidence Table for Phase 3
 | Evidence File Link | Timestamp | Sensor | What the Alert Shows |
 |:---|:---:|:---:|:---|
-| [`wzb-19-ssh-persist-auditd-authorized-keys.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-19-ssh-persist-auditd-authorized-keys.jpg) | `17:26:27` | Auditd | Auditd catches modification to `/root/.ssh/authorized_keys` |
-| [`wzb-20-ssh-persist-key-inject-sshd-login.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-20-ssh-persist-key-inject-sshd-login.jpg) | `17:26:28` | Wazuh sshd | **Embedded Milestone (Fig 6)**: Attacker successfully logs in as root via SSH |
+| [`wzb-19-ssh-persist-auditd-authorized-keys.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-19-ssh-persist-auditd-authorized-keys.jpg) | `17:26:14` | Auditd | Auditd catches permission & key modifications to `/root/.ssh/authorized_keys` (Row 9156/9164) |
+| [`wzb-20-ssh-persist-key-inject-sshd-login.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-20-ssh-persist-key-inject-sshd-login.jpg) | `17:29:43` | Wazuh sshd | **Embedded Milestone (Fig 6)**: Attacker logs in directly as root via injected SSH key (Row 9166) |
 | [`wzb-21-discovery-auditd-network-arp.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-21-discovery-auditd-network-arp.jpg) | `17:28:43` | Auditd | Commands run to discover internal network routes and ARP cache |
 | [`wzb-22-discovery-suricata-internal-nmap.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-22-discovery-suricata-internal-nmap.jpg) | `17:31:19` | Suricata | Suricata detects the Linux server scanning internal Windows IPs |
 | [`wzb-23-discovery-suricata-internal-tcp-sweep.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-23-discovery-suricata-internal-tcp-sweep.jpg) | `17:31:49` | Suricata | Broad internal TCP port sweeps across subnet 192.168.56.0/24 |
@@ -237,7 +244,7 @@ The attacker turned the compromised Linux web server into a trap:
 ![Responder Started on Linux Pivot](../assets/screenshots/investigation/wazuh-alerts/wzb-27-responder-auditd-daemon-start.jpg)
 *Figure 7: Auditd log showing the attacker launching Responder.py on the compromised web server.*
 
-At `17:42:02`, a WebDAV authentication trigger fired on the Windows 10 workstation (`rundll32.exe DavSetCookie`). The workstation tried to reach a fake server. When DNS couldn't find it, Windows 10 shouted across the local network.  
+At `17:37:10` (12:07:10 UTC), a WebDAV authentication trigger fired on the Windows 10 workstation (`rundll32.exe DavSetCookie`). The workstation tried to reach a fake server. When DNS couldn't find it, Windows 10 shouted across the local network.  
 Responder immediately replied: *"Yes, that's me! Send me your login proof!"*  
 Windows 10 believed it and sent over an **NTLMv2 challenge-response password hash** for the corporate user account **`AD.LAB\win10`**.
 
@@ -268,10 +275,10 @@ The attacker now had a legitimate Windows domain account (`win10`). BloodHound s
 | [`wzb-25-responder-auditd-tar-unpack.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-25-responder-auditd-tar-unpack.jpg) | `17:34:43` | Auditd | Unpacking Responder tool files in `/opt/Responder` |
 | [`wzb-26-responder-auditd-systemd-resolved-stub.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-26-responder-auditd-systemd-resolved-stub.jpg) | `17:35:10` | Auditd | Disabling systemd-resolved DNS stub listener to free port 53/5355 |
 | [`wzb-27-responder-auditd-daemon-start.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-27-responder-auditd-daemon-start.jpg) | `17:37:37` | Auditd | **Embedded Milestone (Fig 7)**: Responder daemon actively listening for broadcast queries |
-| [`wzb-28-responder-win10-rundll32-davsetcookie.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-28-responder-win10-rundll32-davsetcookie.jpg) | `17:42:02` | Win10 Sysmon | **Embedded Milestone (Fig 8)**: rundll32 WebDAV execution triggering authentication |
-| [`wzb-29-responder-auditd-ntlmv2-hash-harvested.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-29-responder-auditd-ntlmv2-hash-harvested.jpg) | `17:47:38` | Auditd | **Embedded Milestone (Fig 9)**: NetNTLMv2 hash saved to `/tmp/win10.hash` |
+| [`wzb-28-responder-win10-rundll32-davsetcookie.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-28-responder-win10-rundll32-davsetcookie.jpg) | `17:37:10` | Win10 Sysmon | **Embedded Milestone (Fig 8)**: rundll32 WebDAV execution triggering authentication (Row 9239) |
+| [`wzb-29-responder-auditd-ntlmv2-hash-harvested.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-29-responder-auditd-ntlmv2-hash-harvested.jpg) | `17:38:29` | Auditd | **Embedded Milestone (Fig 9)**: NetNTLMv2 hash saved to `/tmp/win10.hash` (Row 9244) |
 | [`wzb-30-responder-auditd-resolved-restart.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-30-responder-auditd-resolved-restart.jpg) | `17:48:00` | Auditd | Restarting resolved service after network socket configuration |
-| [`wzb-31-bloodhound-auditd-python-ingest.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-31-bloodhound-auditd-python-ingest.jpg) | `18:01:02` | Auditd | BloodHound Python ingestor launched to map Active Directory structure |
+| [`wzb-31-bloodhound-auditd-python-ingest.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-31-bloodhound-auditd-python-ingest.jpg) | `18:00:57` | Auditd | BloodHound Python ingestor launched (`18:00:57` cmd / `18:01:02` SSH session, Row 9259) |
 | [`wzb-32-bloodhound-dc-eid4624-win10-ldap.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-32-bloodhound-dc-eid4624-win10-ldap.jpg) | `18:01:02` | Domain Controller | DC security log recording win10 logging in via Kerberos to enumerate LDAP |
 
 ---
@@ -287,32 +294,32 @@ Elevate from a standard employee account (`win10`) to total control over the ent
 #### 🎬 What Actually Happened (The Play-by-Play)
 This was the most devastating phase of the entire attack. It took the attacker just **6 minutes** to completely own Active Directory:
 
-1. **Kerberoasting (`18:01:14`):** In Active Directory, any domain user can ask the Domain Controller for an encrypted login ticket to talk to a registered service (an SPN). The attacker asked for the ticket belonging to service account **`HANK_SHERMAN`** and saved it to `/tmp/hank.hash`. They cracked the ticket offline: password was **`Password123!`**.
+1. **Kerberoasting (`18:01:18`):** In Active Directory, any domain user can request an encrypted Kerberos service ticket (TGS-REQ) for a registered Service Principal Name (SPN). The attacker targeted service account **`HANK_SHERMAN`** using `GetUserSPNs.py` (Row 9264). Because BadBlood configured `HANK_SHERMAN` with an easy dictionary password, they cracked it offline in seconds: password was **`Password123`**.
 
 ![Kerberoasting Service Account](../assets/screenshots/investigation/wazuh-alerts/wzb-33-kerberoast-auditd-getuserspns.jpg)
 *Figure 10: Auditd log showing GetUserSPNs.py extracting the encrypted Kerberos ticket for HANK_SHERMAN.*
 
-2. **DCSync Directory Theft (`18:02:16`):** Why did the attacker want `HANK_SHERMAN`? Because someone had accidentally granted this service account **Directory Replication permissions** (`DS-Replication-Get-Changes-All`). This permission is meant *only* for Domain Controllers syncing data with each other!  
-The attacker used `secretsdump.py` to pretend to be a Domain Controller. The real Domain Controller happily handed over **the password hashes of every single user in the company**, including:
-* **The Domain Administrator Hash:** `aad3b435...:cc8147f79ec91200a3ee2c2ebc65f9fb`
-* **The Master `krbtgt` Hash:** `611a8cdcc21cb3fe3bf3a4c2f4e05f6e`
+2. **DCSync Directory Theft (`18:02:43`):** Why was `HANK_SHERMAN` so critical? Because BadBlood configured `HANK_SHERMAN` as a member of **`Domain Admins`** (which inherently possesses `DS-Replication-Get-Changes` and `DS-Replication-Get-Changes-All` rights).  
+The attacker invoked `secretsdump.py` (Row 9274) pretending to be a replicating Domain Controller. The real DC happily replicated **the password hashes of every domain account**, including:
+* **The Domain Administrator NTLM Hash:** `aad3b435...:cc8147f79ec91200a3ee2c2ebc65f9fb`
+* **The Master `krbtgt` Password Hash:** `611a8cdcc21cb3fe3bf3a4c2f4e05f60`
 
 ![DCSync Password Theft](../assets/screenshots/investigation/wazuh-alerts/wzb-34-dcsync-auditd-secretsdump-ntds.jpg)
 *Figure 11: secretsdump.py replicating the entire NTDS database directly from the Domain Controller.*
 
-3. **Forging a Golden Ticket (`18:05:14`):** The `krbtgt` account is the master key of Active Directory. With its hash, the attacker used `ticketer.py` to forge a **Kerberos Golden Ticket** with 10 years of validity. This ticket cannot be revoked by changing the administrator's password — it gives permanent god-mode access to every computer in the domain.
-
-![Golden Ticket Forged](../assets/screenshots/investigation/wazuh-alerts/wzb-38-goldenticket-auditd-ticketer-forgery.jpg)
-*Figure 12: ticketer.py forging an enterprise Golden Ticket using the stolen krbtgt hash.*
-
-4. **Pass-the-Hash onto the Domain Controller (`18:04:47`):** Using the Administrator hash, the attacker logged into the Domain Controller over WMI. Wazuh fired alert `100613`: *Pass-the-Hash attack detected*. The Domain Controller granted the attacker `SeDebugPrivilege` and full administrative tokens.
+3. **Pass-the-Hash onto the Domain Controller (`18:04:46`):** Armed with the stolen Administrator NTLM hash, the attacker immediately moved laterally to `PC-DC` via Impacket `wmiexec.py` over SMB/WMI. Wazuh fired Rule `100613` (*Pass-the-Hash attack detected*). The Domain Controller accepted the remote logon (EID 4624 Type 3) and assigned `SeDebugPrivilege` (EID 4672).
 
 ![Pass-the-Hash Detection](../assets/screenshots/investigation/wazuh-alerts/wzb-35-pth-wazuh-eid4624-detection.jpg)
 *Figure 13: Wazuh alert 100613 catching the remote NTLM Pass-the-Hash logon on the Domain Controller.*
 
+4. **Forging an Enterprise Golden Ticket (`18:06:40`):** To cement irreversible persistence, the attacker took the stolen `krbtgt` hash (`611a8cdcc21cb3fe3bf3a4c2f4e05f60`) and invoked `ticketer.py` (Row 9306) to mint a forged **Kerberos Ticket Granting Ticket (Golden Ticket)** with 10-year validity. This forged ticket allows instant access to any service in the forest, even if the Administrator password is changed!
+
+![Golden Ticket Forged](../assets/screenshots/investigation/wazuh-alerts/wzb-38-goldenticket-auditd-ticketer-forgery.jpg)
+*Figure 12: ticketer.py forging an enterprise Golden Ticket using the stolen krbtgt hash.*
+
 #### 💥 The Critical Blunder: Excessive Service Account Rights
 Why did a service account named `HANK_SHERMAN` have permission to replicate the entire Active Directory database?  
-Granting DCSync rights to standard service accounts is one of the most dangerous mistakes an enterprise can make. Combined with a weak 12-character dictionary password (`Password123!`), it was a fatal combination.
+Granting DCSync rights to standard service accounts is one of the most dangerous mistakes an enterprise can make. Combined with a weak 12-character dictionary password (`Password123`), it was a fatal combination.
 
 #### ➡️ Where This Led Next
 The attacker was now the undisputed master of our entire domain. Next, they moved to secure persistence, steal files, and execute their endgame.
@@ -320,12 +327,12 @@ The attacker was now the undisputed master of our entire domain. Next, they move
 #### 📋 Complete Evidence Table for Phase 5
 | Evidence File Link | Timestamp | Sensor | What the Alert Shows |
 |:---|:---:|:---:|:---|
-| [`wzb-33-kerberoast-auditd-getuserspns.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-33-kerberoast-auditd-getuserspns.jpg) | `18:01:14` | Auditd | **Embedded Milestone (Fig 10)**: Kerberoasting HANK_SHERMAN service account |
-| [`wzb-34-dcsync-auditd-secretsdump-ntds.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-34-dcsync-auditd-secretsdump-ntds.jpg) | `18:02:16` | Auditd | **Embedded Milestone (Fig 11)**: DCSync extracting NTDS database from DC |
-| [`wzb-35-pth-wazuh-eid4624-detection.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-35-pth-wazuh-eid4624-detection.jpg) | `18:04:47` | Wazuh SIEM | **Embedded Milestone (Fig 13)**: Pass-the-Hash remote logon detected |
+| [`wzb-33-kerberoast-auditd-getuserspns.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-33-kerberoast-auditd-getuserspns.jpg) | `18:01:18` | Auditd | **Embedded Milestone (Fig 10)**: Kerberoasting HANK_SHERMAN via GetUserSPNs.py (Row 9264) |
+| [`wzb-34-dcsync-auditd-secretsdump-ntds.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-34-dcsync-auditd-secretsdump-ntds.jpg) | `18:02:43` | Auditd | **Embedded Milestone (Fig 11)**: DCSync extracting NTDS database from DC (Row 9274) |
+| [`wzb-35-pth-wazuh-eid4624-detection.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-35-pth-wazuh-eid4624-detection.jpg) | `18:04:46` | Wazuh SIEM | **Embedded Milestone (Fig 13)**: Pass-the-Hash remote logon detected (Row 9297) |
 | [`wzb-36-pth-dc-eid4624-administrator-logon.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-36-pth-dc-eid4624-administrator-logon.jpg) | `18:04:48` | Domain Controller | DC Event ID 4624 recording Type 3 Administrator logon via NTLM |
 | [`wzb-37-pth-dc-eid4672-privilege-assignment.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-37-pth-dc-eid4672-privilege-assignment.jpg) | `18:04:48` | Domain Controller | DC Event ID 4672 granting SeDebugPrivilege to the remote session |
-| [`wzb-38-goldenticket-auditd-ticketer-forgery.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-38-goldenticket-auditd-ticketer-forgery.jpg) | `18:05:14` | Auditd | **Embedded Milestone (Fig 12)**: Forging Kerberos Golden Ticket via ticketer.py |
+| [`wzb-38-goldenticket-auditd-ticketer-forgery.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-38-goldenticket-auditd-ticketer-forgery.jpg) | `18:06:40` | Auditd | **Embedded Milestone (Fig 12)**: Forging Kerberos Golden Ticket via ticketer.py (Row 9306) |
 | [`wzb-39-wmiexec-wazuh-dc-process-fanout.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-39-wmiexec-wazuh-dc-process-fanout.jpg) | `18:05:40` | Wazuh SIEM | WMI process spawning cmd.exe hidden command shell on DC |
 | [`wzb-40-wmiexec-sysmon-dc-hostname-check.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-40-wmiexec-sysmon-dc-hostname-check.jpg) | `18:05:41` | Sysmon | Sysmon Event 1: attacker verifying DC hostname via WMI |
 | [`wzb-41-goldenticket-dc-eid4624-kerberos-logon.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-41-goldenticket-dc-eid4624-kerberos-logon.jpg) | `18:06:44` | Domain Controller | Inbound logon on DC authenticating using the forged Golden Ticket |
@@ -341,9 +348,9 @@ The attacker was now the undisputed master of our entire domain. Next, they move
 Create a permanent administrative user in Active Directory so they can always log back in, round up confidential files, and steal them without getting stopped.
 
 #### 🎬 What Actually Happened (The Play-by-Play)
-Sitting inside the Domain Controller via WMI, the attacker created their own permanent administrator user at `18:07:51`:
+Sitting inside the Domain Controller via WMI, the attacker created their own permanent administrator user at `18:08:21`:
 ```cmd
-net user backdoor PCssw0rd123! /add /expires:never
+net user backdoor P@ssw0rd123! /add /expires:never
 net group "Domain Admins" backdoor /add
 ```
 Windows Event ID `4720` recorded the new account, and Event ID `4728` recorded its addition into **Domain Admins**.
@@ -351,12 +358,11 @@ Windows Event ID `4720` recorded the new account, and Event ID `4728` recorded i
 ![Backdoor Added to Domain Admins](../assets/screenshots/investigation/wazuh-alerts/wzb-46-persist-wazuh-dc-domain-admins-add.jpg)
 *Figure 14: Wazuh Alert 100613 catching the remote WMI command adding 'backdoor' to the Domain Admins security group.*
 
-Next, the attacker gathered confidential corporate data into `C:\Windows\Temp\`:
-* `domain_users.txt`: List of all employees and domain users.
-* `admin_info.txt`: High-privilege tokens and groups.
-* `sensitive_data.txt`: Internal documents and credentials.
+Next, the attacker gathered confidential corporate data across both Windows hosts into `C:\Windows\Temp\`:
+* **On Domain Controller (`PC-DC`):** Staged `domain_users.txt` (`18:13:58`, Row 9364) and `admin_info.txt` (`18:14:03`, Row 9369).
+* **On Windows 10 Workstation (`Win10User`):** Dumped corporate user documents from `C:\Users\win10\Documents\Sensitive\*` into `C:\Windows\Temp\sensitive_data.txt` (`18:15:00`, Row 9387).
 
-They copied these files back to the Linux pivot (`/tmp/`). Then, at `18:17:01`, they ran an automated SCP script to exfiltrate everything to their Kali machine.  
+They retrieved these 3 files back to `/tmp/` on the Linux web pivot. Then, at `18:17:01`, they ran an automated SCP script to exfiltrate everything to their Kali machine.  
 Our SIEM caught this as a **Rate Anomaly**: the attacker opened **6 separate SSH sessions in 0.57 seconds** to download the stolen files.
 
 ![Rapid SSH Exfiltration Sessions](../assets/screenshots/investigation/wazuh-alerts/wzb-53-exfil-wazuh-sshd-rapid-sessions-burst.jpg)
@@ -371,18 +377,18 @@ The data was stolen and the backdoor was planted. Now, the attacker decided to m
 #### 📋 Complete Evidence Table for Phase 6
 | Evidence File Link | Timestamp | Sensor | What the Alert Shows |
 |:---|:---:|:---:|:---|
-| [`wzb-43-persist-sysmon-dc-net-user-backdoor-add.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-43-persist-sysmon-dc-net-user-backdoor-add.jpg) | `18:07:51` | Sysmon | Attacker typing `net user backdoor ... /add` to create backdoor user |
-| [`wzb-44-persist-dc-eid4720-backdoor-created.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-44-persist-dc-eid4720-backdoor-created.jpg) | `18:07:52` | Domain Controller | Windows Event 4720 logging the creation of account 'backdoor' |
-| [`wzb-45-persist-sysmon-dc-localgroup-admin-add.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-45-persist-sysmon-dc-localgroup-admin-add.jpg) | `18:08:58` | Sysmon | Adding 'backdoor' to local Administrators group on the DC |
-| [`wzb-46-persist-wazuh-dc-domain-admins-add.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-46-persist-wazuh-dc-domain-admins-add.jpg) | `18:08:59` | Wazuh SIEM | **Embedded Milestone (Fig 14)**: Adding backdoor to Domain Admins group |
-| [`wzb-47-persist-dc-eid4728-domain-admins-change.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-47-persist-dc-eid4728-domain-admins-change.jpg) | `18:08:59` | Domain Controller | Windows Event 4728 confirming membership change to Domain Admins |
+| [`wzb-43-persist-sysmon-dc-net-user-backdoor-add.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-43-persist-sysmon-dc-net-user-backdoor-add.jpg) | `18:08:21` | Sysmon | Attacker typing `net user backdoor ... /add` to create backdoor user |
+| [`wzb-44-persist-dc-eid4720-backdoor-created.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-44-persist-dc-eid4720-backdoor-created.jpg) | `18:08:22` | Domain Controller | Windows Event 4720 logging creation of account 'backdoor' (Alert #30) |
+| [`wzb-45-persist-sysmon-dc-localgroup-admin-add.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-45-persist-sysmon-dc-localgroup-admin-add.jpg) | `18:08:27` | Sysmon | Adding 'backdoor' to local Administrators group on the DC (Alert #31) |
+| [`wzb-46-persist-wazuh-dc-domain-admins-add.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-46-persist-wazuh-dc-domain-admins-add.jpg) | `18:09:05` | Wazuh SIEM | **Embedded Milestone (Fig 14)**: Adding backdoor to Domain Admins group (Alerts #32–#33) |
+| [`wzb-47-persist-dc-eid4728-domain-admins-change.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-47-persist-dc-eid4728-domain-admins-change.jpg) | `18:09:05` | Domain Controller | Windows Event 4728 confirming membership change to Domain Admins |
 | [`wzb-48-persist-sysmon-dc-net-user-backdoor-query.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-48-persist-sysmon-dc-net-user-backdoor-query.jpg) | `18:09:05` | Sysmon | Attacker verifying the backdoor account's admin status |
-| [`wzb-49-staging-sysmon-dc-domain-users-txt.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-49-staging-sysmon-dc-domain-users-txt.jpg) | `18:13:42` | Sysmon | Staging domain user directory into `domain_users.txt` |
-| [`wzb-50-staging-sysmon-dc-admin-info-txt.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-50-staging-sysmon-dc-admin-info-txt.jpg) | `18:14:41` | Sysmon | Staging admin tokens and privileges into `admin_info.txt` |
-| [`wzb-51-staging-sysmon-dc-sensitive-data-txt.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-51-staging-sysmon-dc-sensitive-data-txt.jpg) | `18:15:32` | Sysmon | Harvesting confidential files into `sensitive_data.txt` |
-| [`wzb-52-exfil-auditd-staging-files-verified.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-52-exfil-auditd-staging-files-verified.jpg) | `18:16:50` | Auditd | Verifying staged files on the Linux web server prior to exfiltration |
-| [`wzb-53-exfil-wazuh-sshd-rapid-sessions-burst.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-53-exfil-wazuh-sshd-rapid-sessions-burst.jpg) | `18:17:01` | Wazuh SIEM | **Embedded Milestone (Fig 15)**: Rate anomaly alert catching 6 rapid SCP download sessions |
-| [`wzb-68-persist-dc-eid4738-backdoor-modified-json.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-68-persist-dc-eid4738-backdoor-modified-json.jpg) | `18:24:35` | Domain Controller | Detailed JSON record of Event ID 4738 user modification |
+| [`wzb-49-staging-sysmon-dc-domain-users-txt.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-49-staging-sysmon-dc-domain-users-txt.jpg) | `18:13:58` | Sysmon | Staging domain user directory into `domain_users.txt` on DC (Row 9364) |
+| [`wzb-50-staging-sysmon-dc-admin-info-txt.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-50-staging-sysmon-dc-admin-info-txt.jpg) | `18:14:03` | Sysmon | Staging admin tokens and privileges into `admin_info.txt` on DC (Row 9369) |
+| [`wzb-51-staging-sysmon-dc-sensitive-data-txt.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-51-staging-sysmon-dc-sensitive-data-txt.jpg) | `18:15:00` | Sysmon | Harvesting confidential files from `C:\Users\win10\Documents\Sensitive\*` into `sensitive_data.txt` on Win10 (Row 9387) |
+| [`wzb-52-exfil-auditd-staging-files-verified.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-52-exfil-auditd-staging-files-verified.jpg) | `18:17:09` | Auditd | Verifying staged files on Linux web server prior to exfiltration (Row 9393) |
+| [`wzb-53-exfil-wazuh-sshd-rapid-sessions-burst.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-53-exfil-wazuh-sshd-rapid-sessions-burst.jpg) | `18:17:30` | Wazuh SIEM | **Embedded Milestone (Fig 15)**: Rate anomaly alert catching 6 rapid SCP download sessions (Alert #37) |
+| [`wzb-68-persist-dc-eid4738-backdoor-modified-json.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-68-persist-dc-eid4738-backdoor-modified-json.jpg) | `18:36:34` | Domain Controller | Post-reboot Event ID 4738 user modification record (Alert #46) |
 
 ---
 
@@ -397,11 +403,11 @@ Leave unmistakable proof of total network compromise, simulate a ransomware atta
 In the final 7 minutes, the attacker launched a simultaneous attack on **both** Windows computers using Impacket WMI:
 
 1. **Domain Controller (`18:17` – `18:21`):**
-   * Pushed a defacement image called `hacked.bmp`.
+   * Pushed a defacement image called `hacked.bmp` to `C:\Users\Public\hacked.bmp`.
    * Modified the Windows Registry (`HKCU\Control Panel\Desktop\Wallpaper`) so the desktop wallpaper was forced to `hacked.bmp`. Wazuh fired Rule `92041`.
    * Created fake encrypted files (`passwords.enc`, `documents.enc`) and dropped an extortion ransom note:
      ```
-     YOU HAVE BEEN HACKED. Contact: eclipse@manic.me > README_HACKED.txt
+     YOU HAVE BEEN HACKED. Contact: eclipse@manic ^| eclipsemanic.me > README_HACKED.txt
      ```
    * Forced the Domain Controller to reboot immediately: `shutdown /r /t 0`.
 
@@ -423,12 +429,12 @@ At `18:24:32`, both computers rebooted. When the screens turned back on, the des
 #### 📋 Complete Evidence Table for Phase 7
 | Evidence File Link | Timestamp | Sensor | What the Alert Shows |
 |:---|:---:|:---:|:---|
-| [`wzb-54-impact-sysmon-dc-wallpaper-bmp-drop.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-54-impact-sysmon-dc-wallpaper-bmp-drop.jpg) | `18:17:45` | Sysmon | Defacement wallpaper image (`hacked.bmp`) dropped on DC |
-| [`wzb-55-impact-wazuh-dc-wallpaper-registry-add.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-55-impact-wazuh-dc-wallpaper-registry-add.jpg) | `18:18:20` | Wazuh SIEM | **Embedded Milestone (Fig 16)**: Wallpaper registry key altered on DC |
-| [`wzb-56-impact-sysmon-dc-wallpaperstyle-registry.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-56-impact-sysmon-dc-wallpaperstyle-registry.jpg) | `18:18:21` | Sysmon | Wallpaper style set to stretched on DC |
-| [`wzb-57-impact-sysmon-dc-ransom-note-and-payload.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-57-impact-sysmon-dc-ransom-note-and-payload.jpg) | `18:19:11` | Sysmon | `README_HACKED.txt` ransom note dropped on DC |
-| [`wzb-58-impact-sysmon-dc-dummy-passwords-enc.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-58-impact-sysmon-dc-dummy-passwords-enc.jpg) | `18:19:35` | Sysmon | Simulated encrypted dummy file `passwords.enc` created on DC |
-| [`wzb-59-impact-wazuh-dc-forced-reboot.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-59-impact-wazuh-dc-forced-reboot.jpg) | `18:20:45` | Wazuh SIEM | Forced system shutdown initiated on Domain Controller |
+| [`wzb-54-impact-sysmon-dc-wallpaper-bmp-drop.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-54-impact-sysmon-dc-wallpaper-bmp-drop.jpg) | `18:20:00` | Sysmon | Defacement wallpaper image (`hacked.bmp`) dropped on DC (Row 9413) |
+| [`wzb-55-impact-wazuh-dc-wallpaper-registry-add.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-55-impact-wazuh-dc-wallpaper-registry-add.jpg) | `18:20:15` | Wazuh SIEM | **Embedded Milestone (Fig 16)**: Wallpaper registry key altered on DC |
+| [`wzb-56-impact-sysmon-dc-wallpaperstyle-registry.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-56-impact-sysmon-dc-wallpaperstyle-registry.jpg) | `18:20:16` | Sysmon | Wallpaper style set to stretched on DC |
+| [`wzb-57-impact-sysmon-dc-ransom-note-and-payload.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-57-impact-sysmon-dc-ransom-note-and-payload.jpg) | `18:20:17` | Sysmon | `README_HACKED.txt` ransom note dropped on DC (Row 9426) |
+| [`wzb-58-impact-sysmon-dc-dummy-passwords-enc.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-58-impact-sysmon-dc-dummy-passwords-enc.jpg) | `18:20:35` | Sysmon | Simulated encrypted dummy file `passwords.enc` created on DC |
+| [`wzb-59-impact-wazuh-dc-forced-reboot.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-59-impact-wazuh-dc-forced-reboot.jpg) | `18:20:56` | Wazuh SIEM | Forced system shutdown initiated on Domain Controller (`shutdown /r /t 0`) |
 | [`wzb-60-impact-auditd-workstation-wmiexec-fanout.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-60-impact-auditd-workstation-wmiexec-fanout.jpg) | `18:21:04` | Auditd | **Embedded Milestone (Fig 17)**: WMIexec command targeting workstation 192.168.56.20 |
 | [`wzb-61-impact-win10-eid4624-admin-remote-logon.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-61-impact-win10-eid4624-admin-remote-logon.jpg) | `18:22:24` | Win10 Log | Remote administrative logon accepted on Windows 10 |
 | [`wzb-62-impact-wazuh-win10-wallpaper-reg-add.jpg`](../assets/screenshots/investigation/wazuh-alerts/wzb-62-impact-wazuh-win10-wallpaper-reg-add.jpg) | `18:24:01` | Wazuh SIEM | Wallpaper registry defacement executed on Windows 10 |
@@ -449,7 +455,7 @@ graph TD
     M1["1. Sudoers Blunder<br/>(www-data NOPASSWD Python)"] --> R1["Webshell became root in 10s"]
     M2["2. Flat DMZ Network<br/>(No firewall between Web & Windows)"] --> R2["Linux box could talk directly to DC"]
     M3["3. Excessive Service Rights<br/>(HANK_SHERMAN had DCSync)"] --> R3["Attacker dumped all domain hashes"]
-    M4["4. Weak Service Password<br/>(Password123!)"] --> R3
+    M4["4. Weak Service Password<br/>(Password123)"] --> R3
     M5["5. Ancient Protocols Enabled<br/>(LLMNR / NetBIOS)"] --> R4["Workstation gave up its hash to Responder"]
     M6["6. Direct Root SSH Open<br/>(PermitRootLogin Yes)"] --> R5["Permanent, unmonitored backdoor"]
     M7["7. Unrestricted WMI<br/>(No lateral movement blocks)"] --> R6["Remote reboot & defacement across all PCs"]
@@ -463,12 +469,12 @@ graph TD
 * **What went wrong:** Our public web server (`192.168.56.30`) was in the exact same subnet as our Domain Controller (`192.168.56.10`) and employee workstation (`192.168.56.20`).
 * **Why it was fatal:** Once the web server was hacked, the attacker could easily scan internal machines, listen to broadcast traffic with Responder, and connect directly to Windows management ports (SMB 445, RPC 135). A proper DMZ blocks all web servers from initiating connections into the corporate LAN.
 
-### 3. Dangerous DCSync Permissions on a Service Account
-* **What went wrong:** The service account `HANK_SHERMAN` was granted `DS-Replication-Get-Changes-All`.
-* **Why it was fatal:** This permission should **only ever belong to Domain Controllers**. It gives an account the power to ask the Domain Controller for a copy of the password database. Once the attacker got the password for this account, they had the entire company's password database.
+### 3. Service Account Placed in Domain Admins (Kerberoasting to DCSync)
+* **What went wrong:** BadBlood placed the service account `HANK_SHERMAN` into the `Domain Admins` group with a registered SPN and a weak dictionary password (`Password123`).
+* **Why it was fatal:** `Domain Admins` inherently possess directory replication rights (`DS-Replication-Get-Changes-All`). Any domain user can Kerberoast an SPN without administrative rights. Because the password was an easy dictionary term, cracking it instantly elevated the attacker to Domain Admin, allowing them to DCSync the entire forest database.
 
 ### 4. Weak Service Account Password
-* **What went wrong:** `HANK_SHERMAN` had a simple 12-character password: `Password123!`.
+* **What went wrong:** `HANK_SHERMAN` had a simple 12-character password: `Password123`.
 * **Why it was fatal:** In Active Directory, any user can request a Kerberos ticket for any service account and crack it offline (Kerberoasting). A weak password guaranteed the attacker could crack it in minutes.
 
 ### 5. Ancient Broadcast Protocols Left Enabled (LLMNR / NetBIOS)
@@ -503,7 +509,7 @@ Here are the exact technical indicators to search for in your environment:
 | Indicator Type | Exact Value | Location | Context |
 |:---|:---|:---|:---|
 | **Webshell** | `shell.php` | `/var/www/html/dvwa/hackable/uploads/` | Malicious PHP script uploaded by attacker |
-| **SSH Key** | `ssh-ed25519 AAAAC3NzaC11ZD11NTE5AAAAIACi7TGj+OejU781Wt/16/im7sLXOR1jben7h94DmDJ5 kali@kali` | `/root/.ssh/authorized_keys` | Attacker's persistent SSH public key |
+| **SSH Key** | `ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIACi7TGj+OejU78IWt/I6/im7sLXOR1jben7h94DmDJ5 kali@kali` | `/root/.ssh/authorized_keys` | Attacker's persistent SSH public key |
 | **Backdoor User** | `backdoor` | Active Directory Domain | Rogue account created and added to `Domain Admins` |
 | **Compromised User** | `AD.LAB\win10` | Workstation | User credentials stolen via LLMNR poisoning |
 | **Compromised SPN** | `HANK_SHERMAN` | Active Directory | Service account Kerberoasted and abused for DCSync |
@@ -511,7 +517,7 @@ Here are the exact technical indicators to search for in your environment:
 | **DCSync Extract** | `/tmp/dcsync_output.ntds` | Linux Web Pivot | Complete Active Directory NTDS database dump |
 | **Staged Data** | `C:\Windows\Temp\domain_users.txt` | Domain Controller | Export of all domain user accounts |
 | **Staged Data** | `C:\Windows\Temp\admin_info.txt` | Domain Controller | Export of administrative privileges |
-| **Staged Data** | `C:\Windows\Temp\sensitive_data.txt`| Domain Controller | Harvested confidential documents |
+| **Staged Data** | `C:\Windows\Temp\sensitive_data.txt`| Win10 Workstation | Harvested confidential documents |
 | **Defacement Asset**| `hacked.bmp` | Windows Desktop Wallpapers | Image forced as desktop background on DC and Win10 |
 | **Ransom Note** | `README_HACKED.txt` | DC & Workstation Desktops | Simulated ransomware extortion note |
 | **Dummy Encrypted** | `passwords.enc`, `documents.enc` | DC & Workstation Desktops | Simulated encrypted ransomware files |
@@ -521,9 +527,9 @@ Here are the exact technical indicators to search for in your environment:
 | Account | Material Type | Hash / Key Value |
 |:---|:---|:---|
 | `AD.LAB\Administrator` | NTLM Hash | `aad3b435b514e4eeaad3b435b51404ee:cc8147f79ec91200a3ee2c2ebc65f9fb` |
-| **`AD.LAB\krbtgt`** | **Master NTLM Hash** | **`611a8cdcc21cb3fe3bf3a4c2f4e05f6e`** |
+| **`AD.LAB\krbtgt`** | **Master NTLM Hash** | **`611a8cdcc21cb3fe3bf3a4c2f4e05f60`** |
 | `AD.LAB\win10` | Plain-Text Password | `Secur3Lab!` (Cracked from NetNTLMv2 hash) |
-| `AD.LAB\HANK_SHERMAN`| Plain-Text Password | `Password123!` (Cracked from Kerberos TGS ticket) |
+| `AD.LAB\HANK_SHERMAN`| Plain-Text Password | `Password123` (Cracked from Kerberos TGS ticket) |
 | `AD.LAB` Domain SID | Domain Security ID | `S-1-5-21-3315718683-193253855-3518612541` |
 
 ---
@@ -581,7 +587,7 @@ By understanding the story of how this happened, removing our systemic mistakes,
 **Report Status:** FINAL / COMPLETED  
 **Investigated by:** SOC Lab DFIR Incident Commander  
 **Companion Documents:**  
-* 📋 [Initial-Triage and Investigation.md](Initial-Triage%20and%20Investigation.md) *(How we handled the live queue)*  
+* 📋 [Initial-Triage-and-Investigation.md](Initial-Triage-and-Investigation.md) *(How we handled the live queue)*  
 * 🛡️ [Immediate-Containment-Execution.md](Immediate-Containment-Execution.md) *(How we locked the attacker out)*  
 * 🗂️ [Cases/](Cases/) *(Official TheHive case records)*  
 * 📸 [assets/screenshots/investigation/wazuh-alerts/](../assets/screenshots/investigation/wazuh-alerts/) *(Raw evidentiary screenshots)*

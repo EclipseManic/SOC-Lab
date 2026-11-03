@@ -1,6 +1,6 @@
 # Case 01 — Web Application Compromise
 
-> **Status:** Draft, not yet validated  
+> **Status:** Closed / Validated  
 > **TheHive case ID:** `CAS-001-WEBCOMP`  
 > **Severity:** High  
 > **TLP / PAP:** `TLP:AMBER / PAP:AMBER`  
@@ -9,7 +9,7 @@
 
 ## Summary
 
-The adversary initiated an external attack campaign targeting the public-facing Damn Vulnerable Web Application (DVWA) hosted at `192.168.56.30` from Kali Linux (`192.168.232.135`). Following automated port scanning and directory fuzzing, the adversary performed credential brute-forcing against `/dvwa/login.php` and exploited a SQL injection flaw to dump the user credentials table. After cracking the administrative hash offline, the adversary authenticated to DVWA, uploaded an executable PHP web shell (`shell.php`), spawned an interactive Python reverse shell connecting back to Kali (`4444/TCP`), and abused a passwordless sudo Python misconfiguration (`sudo /usr/bin/python3` GTFOBins) to obtain local `root` privileges.
+The adversary initiated an external attack campaign targeting the public-facing Damn Vulnerable Web Application (DVWA) hosted at `192.168.56.30` from Kali Linux (`192.168.232.135`). Following automated port scanning and directory fuzzing, the adversary performed credential brute-forcing against `/login.php` and exploited a SQL injection flaw to dump the user credentials table. After cracking the administrative hash offline, the adversary authenticated to DVWA, uploaded an executable PHP web shell (`shell.php`), spawned an interactive named-pipe FIFO Netcat (`/usr/bin/nc.openbsd`) reverse shell connecting back to Kali (`4444/TCP`), and abused a passwordless sudo Python misconfiguration (`sudo /usr/bin/python3` GTFOBins) to obtain local `root` privileges.
 
 ---
 
@@ -17,13 +17,13 @@ The adversary initiated an external attack campaign targeting the public-facing 
 
 | Stage | Attack | Investigation | Detection Status |
 |---|---|---|---|
-| 01 | [Reconnaissance](../../02-Attack-Simulation/Stages/stage-01-recon.md) | [stage-01](../Stages/stage-01-recon.md) | **Detected** (Suricata SID 3400001, 3400002 & Wazuh Rule 100410) |
-| 02 | [Brute force](../../02-Attack-Simulation/Stages/stage-02-bruteforce.md) | [stage-02](../Stages/stage-02-bruteforce.md) | **Detected** (Wazuh Rule 100213 & Suricata SID 2000547) |
-| 03 | [SQL injection](../../02-Attack-Simulation/Stages/stage-03-sqli.md) | [stage-03](../Stages/stage-03-sqli.md) | **Detected** (Suricata SID 2010963 & Wazuh Rule 31106) |
-| 04 | [Hash cracking](../../02-Attack-Simulation/Stages/stage-04-hash-crack.md) | [stage-04](../Stages/stage-04-hash-crack.md) | **Detection gap** (DG-04: Inherent offline cracking) |
-| 05 | [Web shell upload](../../02-Attack-Simulation/Stages/stage-05-webshell.md) | [stage-05](../Stages/stage-05-webshell.md) | **Detected** (Suricata SID 2019284 / Wazuh Rule 100199 / Auditd) |
-| 06 | [Reverse shell](../../02-Attack-Simulation/Stages/stage-06-reverse-shell.md) | [stage-06](../Stages/stage-06-reverse-shell.md) | **Detected** (Suricata SID 3400020 & Wazuh Rule 100199) |
-| 07 | [Privilege escalation](../../02-Attack-Simulation/Stages/stage-07-privesc.md) | [stage-07](../Stages/stage-07-privesc.md) | **Detected** (Wazuh Rule 5402 (PAM) & Auditd web_process_creation) |
+| 01 | [Reconnaissance](../../02-Attack-Simulation/Stages/stage-01-recon.md) | [Phase 1 Deep Dive](../Deep-Dive-Attack-Chain-Investigation.md#phase-1-rattling-the-doorknobs-reconnaissance--web-exploitation) | **Detected** (Suricata SID 3400001, 3400002 & Wazuh Rule 100410) |
+| 02 | [Brute force](../../02-Attack-Simulation/Stages/stage-02-bruteforce.md) | [Phase 1 Deep Dive](../Deep-Dive-Attack-Chain-Investigation.md#phase-1-rattling-the-doorknobs-reconnaissance--web-exploitation) | **Detected** (Wazuh Rule 100213 & Suricata SID 2000547) |
+| 03 | [SQL injection](../../02-Attack-Simulation/Stages/stage-03-sqli.md) | [Phase 1 Deep Dive](../Deep-Dive-Attack-Chain-Investigation.md#phase-1-rattling-the-doorknobs-reconnaissance--web-exploitation) | **Detected** (Suricata SID 2010963 & Wazuh Rule 31106) |
+| 04 | [Hash cracking](../../02-Attack-Simulation/Stages/stage-04-hash-crack.md) | [Phase 1 Deep Dive](../Deep-Dive-Attack-Chain-Investigation.md#phase-1-rattling-the-doorknobs-reconnaissance--web-exploitation) | **Detection gap** (DG-04: Inherent offline cracking) |
+| 05 | [Web shell upload](../../02-Attack-Simulation/Stages/stage-05-webshell.md) | [Phase 2 Deep Dive](../Deep-Dive-Attack-Chain-Investigation.md#phase-2-the-10-second-mistake-webshell-to-instant-root) | **Detected** (Suricata SID 2019284 / Wazuh Rule 100199 / Auditd) |
+| 06 | [Reverse shell](../../02-Attack-Simulation/Stages/stage-06-reverse-shell.md) | [Phase 2 Deep Dive](../Deep-Dive-Attack-Chain-Investigation.md#phase-2-the-10-second-mistake-webshell-to-instant-root) | **Detected** (Suricata SID 3400020 & Wazuh Rule 100199) |
+| 07 | [Privilege escalation](../../02-Attack-Simulation/Stages/stage-07-privesc.md) | [Phase 2 Deep Dive](../Deep-Dive-Attack-Chain-Investigation.md#phase-2-the-10-second-mistake-webshell-to-instant-root) | **Detected** (Wazuh Rule 5402 (PAM) & Auditd web_process_creation) |
 
 ---
 
@@ -40,15 +40,15 @@ The adversary initiated an external attack campaign targeting the public-facing 
 
 ## Timeline
 
-| Time | Event | Source | Evidence |
+| Time (IST) | Event | Source | Evidentiary Alert Capture |
 |---|---|---|---|
-| T0 | External port scan and directory fuzzing from 192.168.232.135 | Suricata / Wazuh | [Attack 01](..\../assets/screenshots/attack-simulation/1.png) · [Alert 01](..\../assets/screenshots/detection-engineering/1.png) |
-| T+2m | Automated Python credential brute-force burst against `/login.php` | Suricata / Wazuh | [Attack 05](..\../assets/screenshots/attack-simulation/6.png) · [Alert 02](..\../assets/screenshots/detection-engineering/2.png) |
-| T+5m | SQL injection payload submitted dumping credentials | Suricata | [Attack 09](..\../assets/screenshots/attack-simulation/8.png) · [Alert 03](..\../assets/screenshots/detection-engineering/3.png) |
-| T+8m | Offline Hashcat MD5 password cracking on Kali | Offline GPU | [Attack 13](..\../assets/screenshots/attack-simulation/10.png) · DG-04 |
-| T+11m | Malicious PHP file uploaded to /var/www/html/hackable/uploads/ | Wazuh / Auditd | [Attack 16](..\../assets/screenshots/attack-simulation/12.png) · [Alert 04](..\../assets/screenshots/detection-engineering/4.png) |
-| T+13m | Python reverse shell spawned to 192.168.232.135:4444 | Wazuh Auditd | [Attack 19](..\../assets/screenshots/attack-simulation/15.png) · [Alert 05](..\../assets/screenshots/detection-engineering/5.png) |
-| T+16m | Passwordless sudo Python execution granting effective root and reading /etc/shadow | Wazuh Auditd | [Attack 23](..\../assets/screenshots/attack-simulation/17.png) · [Alert 06](..\../assets/screenshots/detection-engineering/6.png) |
+| `17:10:08` | External port scan and directory fuzzing from 192.168.232.135 | Suricata / Wazuh | [`wzb-04-recon-suricata-nmap-syn-scan.jpg`](../../assets/screenshots/investigation/wazuh-alerts/wzb-04-recon-suricata-nmap-syn-scan.jpg) |
+| `17:18:02` | Automated Python credential brute-force burst against `/login.php` | Suricata / Wazuh | [`wzb-10-bruteforce-python-requests-login.jpg`](../../assets/screenshots/investigation/wazuh-alerts/wzb-10-bruteforce-python-requests-login.jpg) |
+| `17:19:58` | SQL injection payload submitted dumping credentials table (`1' UNION SELECT...-- -`) | Suricata | [`wzb-11-sqli-suricata-select-user.jpg`](../../assets/screenshots/investigation/wazuh-alerts/wzb-11-sqli-suricata-select-user.jpg) |
+| `17:20:30` | Offline Hashcat MD5 password cracking on Kali | Offline GPU | *Offline Activity (DG-04)* |
+| `17:21:44` | Malicious PHP file uploaded to `/var/www/html/dvwa/hackable/uploads/shell.php` | Wazuh / Auditd | [`wzb-12-webshell-dvwa-post-upload.jpg`](../../assets/screenshots/investigation/wazuh-alerts/wzb-12-webshell-dvwa-post-upload.jpg) |
+| `17:24:03` | Netcat named-pipe FIFO reverse shell spawned to `192.168.232.135:4444` (`stty sane` at 17:25:22) | Wazuh Auditd | [`wzb-15-revshell-auditd-stty-sane.jpg`](../../assets/screenshots/investigation/wazuh-alerts/wzb-15-revshell-auditd-stty-sane.jpg) |
+| `17:25:36` | Passwordless sudo Python execution (`sudo /usr/bin/python3`) granting instant root | Wazuh PAM | [`wzb-17-privesc-pam-sudo-python-root.jpg`](../../assets/screenshots/investigation/wazuh-alerts/wzb-17-privesc-pam-sudo-python-root.jpg) |
 
 ---
 
@@ -58,7 +58,7 @@ The adversary initiated an external attack campaign targeting the public-facing 
 |---|---|---|
 | **IP** | `192.168.232.135` | External adversary workstation (Kali Linux) |
 | **IP** | `192.168.56.30` | Compromised web server (DVWA) |
-| **File** | `/var/www/html/hackable/uploads/shell.php` | Web shell uploaded via application flaw |
+| **File** | `/var/www/html/dvwa/hackable/uploads/shell.php` | Web shell uploaded via application flaw |
 | **Hash (MD5)** | `5f4dcc3b5aa765d61d8327deb882cf99` | Extracted admin password hash |
 | **User** | `www-data` | Web service account used for initial code execution |
 | **Binary** | `/usr/bin/python3` | Sudoers NOPASSWD binary abused for root privilege escalation |
@@ -70,7 +70,7 @@ The adversary initiated an external attack campaign targeting the public-facing 
 - [x] Triage initial web port scan and directory fuzzing alerts
 - [x] Review Suricata eve.json for SQL injection payload
 - [x] Inspect Apache access logs for unauthorized file upload endpoint requests
-- [x] Locate and quarantine uploaded web shell `shell.php`
+- [x] Locate and quarantine uploaded web shell `shell.php` to `/root/forensics_quarantine/`
 - [x] Terminate reverse shell socket connection to `192.168.232.135:4444`
 - [x] Remediate sudoers misconfiguration (remove NOPASSWD for `/usr/bin/python3`)
 - [x] Rotate all extracted database passwords and enforce salted SHA-256/bcrypt hashing

@@ -2,7 +2,7 @@
 
 > **Status:** Complete — evidence attached  
 > **Case:** [Case 03](../../04-Investigation/Cases/case-03-domain-compromise.md)  
-> **Investigation:** [Stage 20](../../04-Investigation/Stages/stage-20-impact.md)  
+> **Investigation:** [Phase 7 Deep Dive](../../04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-7-the-final-punch-simulated-ransomware-defacement--forced-reboots)  
 > **Evidence:** [attack](..\../assets/screenshots/attack-simulation/58.5.png) · [alert](..\../assets/screenshots/detection-engineering/21.png)
 
 ## Objective

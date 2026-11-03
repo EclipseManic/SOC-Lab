@@ -14,7 +14,7 @@ To avoid fragmenting a single orchestrated enterprise intrusion into twenty disc
 ```
 04-Investigation/
 ├── README.md                                           # Master navigation & investigation guide (this file)
-├── Initial-Triage and Investigation.md                 # Tier 1: Alert triage, queue sorting & pipeline critique
+├── Initial-Triage-and-Investigation.md                 # Tier 1: Alert triage, queue sorting & pipeline critique
 ├── Immediate-Containment-Execution.md                  # Tier 1: Live tactical containment & lockout execution
 ├── Deep-Dive-Attack-Chain-Investigation.md             # Tier 1: Definitive forensic attack chain storyline & root cause
 └── Cases/                                              # Tier 2: TheHive Case Management Records
@@ -31,9 +31,18 @@ These three master documents constitute the primary forensic records of this cam
 
 | Document | Operational Scope | Key Analyst Findings & Artifacts |
 |:---|:---|:---|
-| **[`Initial-Triage and Investigation.md`](Initial-Triage%20and%20Investigation.md)** | **Queue Triage & Alert Analysis** | • Prioritization of **46 TheHive alerts** by severity (Critical → High → Medium)<br>• Comprehensive Master Triage Register<br>• Technical critique of **8 detection pipeline flaws** (over-alerting, raw IP titles, static regex matching)<br>• 6-window chronological timeline supported by 26 triage screenshots |
+| **[`Initial-Triage-and-Investigation.md`](Initial-Triage-and-Investigation.md)** | **Queue Triage & Alert Analysis** | • Prioritization of **46 TheHive alerts** by severity (Critical → High → Medium)<br>• Comprehensive Master Triage Register<br>• Technical critique of **8 detection pipeline flaws** (over-alerting, raw IP titles, static regex matching)<br>• 6-window chronological timeline supported by 26 triage screenshots |
 | **[`Immediate-Containment-Execution.md`](Immediate-Containment-Execution.md)** | **Operational Threat Containment** | • **7 sequential containment actions** severing attacker footholds<br>• Velociraptor VQL artifact collection & enterprise PowerShell workflows<br>• Before/after forensic states across Linux DMZ and Windows DC/Workstation<br>• Photographic proof of adversary lockout supported by 15 containment screenshots |
 | **[`Deep-Dive-Attack-Chain-Investigation.md`](Deep-Dive-Attack-Chain-Investigation.md)** | **Master Forensic Deep-Dive** | • **7-phase end-to-end attack chain narrative** connecting every alert and host action<br>• Deep-dive technical breakdown of **7 systemic organizational vulnerabilities**<br>• Master Indicators of Compromise (IoC) Register (network, host, accounts, hashes)<br>• Strategic Active Directory, DMZ, and SIEM hardening roadmap<br>• Complete 68-screenshot forensic telemetry index (`wzb-01` to `wzb-68`) |
+
+---
+
+> [!NOTE]
+> ### ⏱️ Telemetry Ingestion Latency, Buffer Flushing & Multi-Sensor Arrival Mechanics
+> When analyzing timelines across network sensors, Linux kernel hooks, Windows event logs, and SOAR case cards, minor timestamp offsets (1–3 seconds, or up to minutes for interactive shells) naturally occur:
+> 1. **SOAR Fast-Path vs. OpenSearch Indexing:** `wazuh-integratord` hooks directly into the core engine in memory, dispatching Level >= 8 alerts to `custom-thehive` in < 0.2 ms. OpenSearch Dashboard indexing requires Filebeat buffer flushing and cluster indexing, meaning TheHive incident cases frequently register **1–3 seconds before** the dashboard displays them.
+> 2. **Linux Shell `PROMPT_COMMAND` Flushing:** Auditd command-line logging (`bashcmd`) relies on `PROMPT_COMMAND`, which executes **only after a command terminates** and the prompt returns. Long-running or interactive tools (`Responder.py`, `wmiexec.py`) log to Suricata and Windows in real-time on wire arrival, while `bashcmd` writes to disk only when the operator exits or interrupts (`Ctrl+C`).
+> 3. **Live Campaign Multi-Attempt Sequences:** Live execution involved realistic operator retries (e.g. quote handling, syntax adjustments). TheHive anchored the alert card to the first trigger in its 5-second aggregation window, while specific Wazuh Dashboard screenshots reflect subsequent iterations in that attempt cluster.
 
 ---
 
@@ -100,7 +109,7 @@ Our deep-dive investigation identified **three catastrophic security failures** 
 
 1. **The Sudoers Blunder (`www-data` NOPASSWD Python):** The public web server granted passwordless root execution for Python. Once the attacker achieved arbitrary webshell upload, they escalated to `root` in **10 seconds** via a one-line Python OS shell command.
 2. **The Flawed DMZ Architecture:** The internet-facing web server had unrestricted Layer 2/3 connectivity to internal corporate networks, permitting LLMNR broadcast poisoning (Responder) and remote administrative RPC/WMI directly into the Active Directory Domain Controller.
-3. **The Excessive Service Account Privilege:** Service account `HANK_SHERMAN` held `DS-Replication-Get-Changes-All` rights. Once Kerberoasted, the attacker used DCSync to replicate the domain database and compromise the master `krbtgt` password hash, establishing permanent domain control.
+3. **The Domain Admin Service Account (Kerberoasting to DCSync):** BadBlood populated service account `HANK_SHERMAN` as a member of `Domain Admins` with a weak dictionary password (`Password123`) and registered SPN. Once Kerberoasted and cracked offline, the attacker abused its built-in directory replication privileges (DCSync) to dump the entire NTDS database, compromise the master `krbtgt` password hash, and forge an enterprise Golden Ticket.
 
 ---
 
@@ -108,7 +117,7 @@ Our deep-dive investigation identified **three catastrophic security failures** 
 
 To navigate the investigation, we recommend the following progression:
 
-1. **Begin with Initial Triage:** Read **[`Initial-Triage and Investigation.md`](Initial-Triage%20and%20Investigation.md)** to see how a tier-1/tier-2 analyst processes an unread alert queue and identifies false positives vs. true breaches.
+1. **Begin with Initial Triage:** Read **[`Initial-Triage-and-Investigation.md`](Initial-Triage-and-Investigation.md)** to see how a tier-1/tier-2 analyst processes an unread alert queue and identifies false positives vs. true breaches.
 2. **Review Live Containment:** Read **[`Immediate-Containment-Execution.md`](Immediate-Containment-Execution.md)** to observe how the active footholds were severed across Linux and Windows hosts using Velociraptor and PowerShell.
 3. **Analyze the Deep-Dive Attack Chain:** Read **[`Deep-Dive-Attack-Chain-Investigation.md`](Deep-Dive-Attack-Chain-Investigation.md)** for the complete forensic narrative, root-cause vulnerability analysis, and strategic enterprise remediation roadmap.
 4. **Inspect Case Summaries:** Review the individual TheHive case records in **[`Cases/`](Cases/)** for case observables, task breakdowns, and formal closure verdicts.

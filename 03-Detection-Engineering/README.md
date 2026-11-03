@@ -309,6 +309,27 @@ A critical architectural distinction in this SOC lab is understanding **how the 
 
 ---
 
+### 5.3 Telemetry Ingestion Latency, Buffer Flushing & Multi-Sensor Arrival Mechanics
+
+In a production hybrid SOC environment, security events never arrive in a perfectly synchronized millisecond lockstep. When reviewing raw timestamps across network wire captures, Linux kernel hooks, Windows endpoint event logs, OpenSearch dashboards, and TheHive cases, analysts will observe small, expected timing offsets (typically 1–3 seconds, or up to minutes for interactive shells). These variances are **inherent architectural realities of enterprise log transport and shell execution**:
+
+> [!NOTE]
+> **Understanding Telemetry Arrival Latencies Across the Defensive Stack:**
+>
+> 1. **TheHive Webhook Dispatch vs. OpenSearch Dashboard Indexing:**
+>    * **The Fast Path (TheHive):** Wazuh's `wazuh-integratord` hooks directly into the core analysis engine (`analysisd`) in memory. The millisecond a rule hits Level >= 8, `integratord` forks `custom-thehive.py`, appending the alert to the local SQLite WAL queue in **< 0.2 ms**.
+>    * **The Buffered Path (Wazuh Dashboard):** Displaying that same alert in the Wazuh Dashboard requires Filebeat to read `alerts.json`, package events into batches, transmit them over the encrypted WireGuard tunnel, and wait for OpenSearch to index them into shard storage. As a result, incident cases frequently register in TheHive **1 to 3 seconds before** the corresponding event appears in the OpenSearch dashboard query UI.
+>
+> 2. **Linux Shell Telemetry (`PROMPT_COMMAND` Hook Execution):**
+>    * Linux command-line auditing (`bashcmd`) on the DVWA pivot relies on Bash's `PROMPT_COMMAND` hook. In Unix systems, `PROMPT_COMMAND` executes **only after a command terminates** and the shell redraws the next command prompt.
+>    * When long-running or interactive tools execute (such as `Responder.py`, `wmiexec.py`, or interactive subshells), Suricata and target Windows machines log network traffic and remote process creations **in real-time** as packets arrive. In contrast, `bashcmd` flushes to `/var/log/bash_commands.log` only after the operator interrupts (`Ctrl+C`) or exits the process, creating an expected forensic interval between host execution start and bashcmd journal writes.
+>
+> 3. **Live Campaign Multi-Attempt Iterations vs. Alert Window Anchoring:**
+>    * Because the 20 attack stages were executed live as a continuous 74-minute campaign, realistic operator retries occurred (e.g., formatting quotes in `net group "Domain Admins"`, adjusting proxy chains, or retrying commands).
+>    * TheHive's asynchronous correlation engine groups events within a 5-second sliding correlation window, anchoring the case creation timestamp to the **first trigger** in the cluster. Meanwhile, specific forensic screenshots captured in the Wazuh Dashboard may depict subsequent execution instances within that same multi-attempt sequence.
+
+---
+
 ## 6. Directory Index: Where to Find the Raw Code & Rules
 
 All configuration files, rulesets, and detection scripts are organized in dedicated subdirectories:
