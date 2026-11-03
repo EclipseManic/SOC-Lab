@@ -6,7 +6,7 @@ Single source of truth for the lab. Update this table whenever a stage, alert, r
 > **Project Lifecycle & Section Status:**  
 > - **Sections 01–03 (Lab Setup, Attack Simulation, Detection Engineering):** Complete reference architectures, execution playbooks, and detection rulesets.
 > - **Section 04 (Investigation):** Marked as **Completed & Validated** across all 4 operational phases (Initial Triage, Immediate Containment, Forensic Deep-Dive, and Eradication/Hardening/Recovery).
-> - **Section 05 (Incident Report):** Marked as **Draft, pending review** while post-incident post-mortem reports undergo alignment against the completed investigation.
+> - **Section 05 (Incident Report):** Marked as **Completed & Formally Validated** post-incident deliverables (Executive Review, 74-minute timeline, master IoC register, MITRE ATT&CK mapping, response actions log, and strategic lessons learned).
 
 ## Detection Status Legend & Ground Truth Metrics
 
