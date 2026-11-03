@@ -17,6 +17,7 @@ To avoid fragmenting a single orchestrated enterprise intrusion into twenty disc
 ├── Initial-Triage-and-Investigation.md                 # Tier 1: Alert triage, queue sorting & pipeline critique
 ├── Immediate-Containment-Execution.md                  # Tier 1: Live tactical containment & lockout execution
 ├── Deep-Dive-Attack-Chain-Investigation.md             # Tier 1: Definitive forensic attack chain storyline & root cause
+├── Eradication-Hardening-and-Recovery.md               # Tier 1: Root-cause remediation, asset recovery & case closure
 └── Cases/                                              # Tier 2: TheHive Case Management Records
     ├── case-01-web-compromise.md                       # Case 01: Perimeter breach, SQLi, webshell & sudo privesc
     ├── case-02-lateral-movement.md                     # Case 02: Pivot persistence, LLMNR poisoning & DCSync
@@ -27,13 +28,14 @@ To avoid fragmenting a single orchestrated enterprise intrusion into twenty disc
 
 ## 🛡️ Tier 1: Core Incident Response Records
 
-These three master documents constitute the primary forensic records of this campaign:
+These four master documents constitute the primary forensic and operational records of this campaign:
 
 | Document | Operational Scope | Key Analyst Findings & Artifacts |
 |:---|:---|:---|
 | **[`Initial-Triage-and-Investigation.md`](Initial-Triage-and-Investigation.md)** | **Queue Triage & Alert Analysis** | • Prioritization of **46 TheHive alerts** by severity (Critical → High → Medium)<br>• Comprehensive Master Triage Register<br>• Technical critique of **8 detection pipeline flaws** (over-alerting, raw IP titles, static regex matching)<br>• 6-window chronological timeline supported by 26 triage screenshots |
 | **[`Immediate-Containment-Execution.md`](Immediate-Containment-Execution.md)** | **Operational Threat Containment** | • **7 sequential containment actions** severing attacker footholds<br>• Velociraptor VQL artifact collection & enterprise PowerShell workflows<br>• Before/after forensic states across Linux DMZ and Windows DC/Workstation<br>• Photographic proof of adversary lockout supported by 15 containment screenshots |
 | **[`Deep-Dive-Attack-Chain-Investigation.md`](Deep-Dive-Attack-Chain-Investigation.md)** | **Master Forensic Deep-Dive** | • **7-phase end-to-end attack chain narrative** connecting every alert and host action<br>• Deep-dive technical breakdown of **7 systemic organizational vulnerabilities**<br>• Master Indicators of Compromise (IoC) Register (network, host, accounts, hashes)<br>• Strategic Active Directory, DMZ, and SIEM hardening roadmap<br>• Complete 68-screenshot forensic telemetry index (`wzb-01` to `wzb-68`) |
+| **[`Eradication-Hardening-and-Recovery.md`](Eradication-Hardening-and-Recovery.md)** | **Eradication, Hardening & Recovery** | • **Permanent eradication of all 7 root causes** (sudoers Python, SSH root, upload execution, AD backdoor, SPN, LLMNR/NetBIOS, DMZ egress)<br>• 3-pass cryptographic shredding of `/opt/Responder` and `/tmp/` staging dumps<br>• Enterprise credential rotation, `Protected Users` enrollment & `krbtgt` KVNO 4 verification<br>• Complete disposition of all **46 TheHive alerts** and formal closure of Cases 01–03 supported by 14 eradication & case closure screenshots |
 
 ---
 
@@ -95,6 +97,7 @@ All telemetry datasets, evidence captures, and production configurations referen
   * [`assets/screenshots/investigation/initial-triage/`](../assets/screenshots/investigation/initial-triage/): 26 queue triage & chronological evidence captures.
   * [`assets/screenshots/investigation/containment/`](../assets/screenshots/investigation/containment/): 15 live response & containment execution captures.
   * [`assets/screenshots/investigation/wazuh-alerts/`](../assets/screenshots/investigation/wazuh-alerts/): 68 chronological SIEM alert captures (`wzb-01` to `wzb-68`).
+  * [`assets/screenshots/investigation/eradication/`](../assets/screenshots/investigation/eradication/): 14 eradication, vulnerability hardening & TheHive case closure captures.
 * **Telemetry Data Files:**
   * [`assets/files/alerts/wazuh_alerts.csv`](../assets/files/alerts/wazuh_alerts.csv): 808 curated SIEM alert records.
   * [`assets/files/alerts/thehive_alerts.json`](../assets/files/alerts/thehive_alerts.json): 46 correlated TheHive incident alerts.
@@ -120,4 +123,5 @@ To navigate the investigation, we recommend the following progression:
 1. **Begin with Initial Triage:** Read **[`Initial-Triage-and-Investigation.md`](Initial-Triage-and-Investigation.md)** to see how a tier-1/tier-2 analyst processes an unread alert queue and identifies false positives vs. true breaches.
 2. **Review Live Containment:** Read **[`Immediate-Containment-Execution.md`](Immediate-Containment-Execution.md)** to observe how the active footholds were severed across Linux and Windows hosts using Velociraptor and PowerShell.
 3. **Analyze the Deep-Dive Attack Chain:** Read **[`Deep-Dive-Attack-Chain-Investigation.md`](Deep-Dive-Attack-Chain-Investigation.md)** for the complete forensic narrative, root-cause vulnerability analysis, and strategic enterprise remediation roadmap.
-4. **Inspect Case Summaries:** Review the individual TheHive case records in **[`Cases/`](Cases/)** for case observables, task breakdowns, and formal closure verdicts.
+4. **Execute Eradication, Hardening & Recovery:** Read **[`Eradication-Hardening-and-Recovery.md`](Eradication-Hardening-and-Recovery.md)** for the permanent elimination of all 7 root causes, file shredding, AD sanitization, and full recovery verification.
+5. **Inspect Case Summaries:** Review the individual TheHive case records in **[`Cases/`](Cases/)** for case observables, task breakdowns, and formal closure verdicts.

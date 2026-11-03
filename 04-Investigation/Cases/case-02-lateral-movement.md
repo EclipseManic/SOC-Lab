@@ -4,6 +4,12 @@
 > **TheHive case ID:** `CAS-002-LATMOVE`  
 > **Severity:** Critical  
 > **TLP / PAP:** `TLP:AMBER / PAP:AMBER`  
+> **Master Incident Tag:** `INC-2026-1018-ALPHA`  
+> **Linked Alerts:** 8 Ingested Alerts (Alerts #16, #17, #19–#24)  
+> **Eradication Playbook:** [`Eradication-Hardening-and-Recovery.md`](../Eradication-Hardening-and-Recovery.md#step-3-active-directory-account-eradication-privileged-demotion--kerberos-invalidation-pc-dc)
+
+![TheHive Case 02 Closed](../../assets/screenshots/investigation/eradication/thehive_case02_closed.png)  
+*Figure 1: TheHive 5 Case Record for `CAS-002-LATMOVE` showing 8 linked alerts, pivot eradication verification, and formal closure verdict.*  
 
 ---
 
@@ -71,9 +77,12 @@ Following root privilege escalation on the DVWA host (`192.168.56.30`), the adve
 - [x] Triage SSH persistence and root authentication alerts on DVWA pivot
 - [x] Disable LLMNR and NetBIOS over TCP/IP across domain workstations via GPO
 - [x] Force immediate domain-wide password reset for `win10` and `HANK_SHERMAN`
-- [x] Remove SPN registration and Domain Admin membership from `HANK_SHERMAN`
+- [x] Strip `Domain Admins` & `Administrators` memberships from service account `HANK_SHERMAN`
+- [x] Delete SPN `MSSQLSvc/PC-DC.ad.lab:1433` from `HANK_SHERMAN` and enforce AES128/AES256 Kerberos encryption
+- [x] Globally disable LLMNR (`EnableMulticast = 0`) & NetBIOS over TCP/IP (`NetbiosOptions = 2`) across all Windows hosts
+- [x] Cryptographically shred `/tmp/*.hash` dumps and purge `/opt/Responder` from Linux pivot host
 - [x] Enable NTDS diagnostic logging (`15 Field Engineering` = 5) to alert on LDAP search volume
-- [x] Initiate double `krbtgt` password reset procedure to invalidate all Kerberos tickets
+- [x] Complete double `krbtgt` password reset procedure (incrementing KVNO to 4) to invalidate all forged Kerberos tickets
 
 ---
 

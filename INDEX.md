@@ -5,7 +5,8 @@ Single source of truth for the lab. Update this table whenever a stage, alert, r
 > [!NOTE]
 > **Project Lifecycle & Section Status:**  
 > - **Sections 01–03 (Lab Setup, Attack Simulation, Detection Engineering):** Complete reference architectures, execution playbooks, and detection rulesets.
-> - **Section 04 (Investigation):** Marked as **Completed & Validated** | **Section 05 (Incident Report):** Marked as **Draft, pending review** while analyst triage notes and post-incident deliverables undergo validation against raw telemetry.
+> - **Section 04 (Investigation):** Marked as **Completed & Validated** across all 4 operational phases (Initial Triage, Immediate Containment, Forensic Deep-Dive, and Eradication/Hardening/Recovery).
+> - **Section 05 (Incident Report):** Marked as **Draft, pending review** while post-incident post-mortem reports undergo alignment against the completed investigation.
 
 ## Detection Status Legend & Ground Truth Metrics
 
@@ -62,6 +63,10 @@ Single source of truth for the lab. Update this table whenever a stage, alert, r
 |---|---|
 | Attack Screenshots | `assets/screenshots/attack-simulation/` (62 images: 1.png – 60.png, plus 58.5.png, 59.5.png) |
 | TheHive Alert Screenshots | `assets/screenshots/detection-engineering/` (60 images: 1.png – 22.4.png) |
+| Initial Triage Evidence | `assets/screenshots/investigation/initial-triage/` (26 queue triage & chronological evidence captures) |
+| Immediate Containment Evidence | `assets/screenshots/investigation/containment/` (15 tactical lockout captures) |
+| Forensic Telemetry Index | `assets/screenshots/investigation/wazuh-alerts/` (68 chronological SIEM captures: wzb-01 to wzb-68) |
+| Eradication & Case Closure Evidence | `assets/screenshots/investigation/eradication/` (14 remediation & TheHive case closure captures) |
 | Raw Telemetry CSV (Complete) | [`assets/files/alerts/Wazuh-Raw-Alerts.csv`](assets/files/alerts/Wazuh-Raw-Alerts.csv) (9,567 raw baseline alerts across all 4 agents in OpenSearch) |
 | Curated Incident Analysis Set | [`assets/files/alerts/wazuh_alerts.csv`](assets/files/alerts/wazuh_alerts.csv) (808 curated forensic alerts filtered via 11 OpenSearch exclusion clauses) |
 | Correlated Incident Alerts | [`assets/files/alerts/thehive_alerts.json`](assets/files/alerts/thehive_alerts.json) (46 actionable incident cases created live in TheHive via Level >= 8 gate) |

@@ -1,0 +1,593 @@
+# 🛡️ SOC-Lab: Eradication, Vulnerability Hardening & System Recovery Execution
+
+> **Analyst:** Manichand Gupta  
+> **Environment:** SOC-Lab (`192.168.56.0/24` — DVWA `192.168.56.30`, PC-DC `192.168.56.10`, Win10User `192.168.56.20`, Suricata Gateway `192.168.56.1` / `192.168.232.138`)  
+> **Attacker Origin:** `192.168.232.135` (Adversary Kali Linux)  
+> **Lifecycle Phase:** NIST SP 800-61r2 Phase 4: Eradication, Hardening & Operational Recovery  
+> **Incident Identifier:** `INC-2026-1018-ALPHA`  
+> **Case Scope:** `CAS-001-WEBCOMP`, `CAS-002-LATMOVE`, `CAS-003-DOMIMP` (46 Alerts Processed)  
+> **Operational Status:** **100% Remediated, Hardened & Officially Closed**
+
+> [!IMPORTANT]
+> **Investigative Foundation & Lifecycle Continuum:**  
+> This operational eradication and recovery record forms the essential fourth tier of our investigation, executing directly upon the evidentiary discoveries documented across our incident suite:
+> - **[`Initial-Triage-and-Investigation.md`](Initial-Triage-and-Investigation.md)**: Triaged 46 TheHive alerts by severity, critiqued 8 detection pipeline flaws, and established the 6-window chronological baseline.
+> - **[`Immediate-Containment-Execution.md`](Immediate-Containment-Execution.md)**: Executed 7 emergency tactical actions (firewall drops, reverse shell kills, `shell.php` quarantine, `AD\backdoor` account disabling, and `krbtgt` invalidation) to freeze the breach without destroying forensic evidence.
+> - **[`Deep-Dive-Attack-Chain-Investigation.md`](Deep-Dive-Attack-Chain-Investigation.md)**: Mapped all 7 attack phases, identified the **7 root-cause architectural vulnerabilities**, and inventoried all adversary artifacts across our 68-screenshot telemetry catalog.
+
+---
+
+## 📑 Table of Contents
+
+1. [Operational Architecture: Transitioning from Containment to Eradication](#1-operational-architecture-transitioning-from-containment-to-eradication)
+2. [Incident Remediation Tooling & Authority](#2-incident-remediation-tooling--authority)
+3. [Step 1: Linux Attacker Loot Shredding & Network Service Restoration (DVWA)](#3-step-1-linux-attacker-loot-shredding--network-service-restoration-dvwa)
+4. [Step 2: Linux Root-Cause Vulnerability Elimination & Web Hardening (DVWA)](#4-step-2-linux-root-cause-vulnerability-elimination--web-hardening-dvwa)
+5. [Step 3: Active Directory Account Eradication, Privileged Demotion & Kerberos Invalidation (PC-DC)](#5-step-3-active-directory-account-eradication-privileged-demotion--kerberos-invalidation-pc-dc)
+6. [Step 4: Enterprise Multicast & Broadcast Name Resolution Hardening (Disable LLMNR & NetBIOS)](#6-step-4-enterprise-multicast--broadcast-name-resolution-hardening-disable-llmnr--netbios)
+7. [Step 5: Network Micro-Segmentation & DMZ Lateral Movement Boundary Enforcement](#7-step-5-network-micro-segmentation--dmz-lateral-movement-boundary-enforcement)
+8. [Step 6: Full Operational Recovery, Service Availability & Security Health Verification](#8-step-6-full-operational-recovery-service-availability--security-health-verification)
+9. [Step 7: TheHive 46-Alert Queue Disposition & 3-Case Resolution Management](#9-step-7-thehive-46-alert-queue-disposition--3-case-resolution-management)
+10. [Eradication & System Recovery Sign-Off Matrix](#10-eradication--system-recovery-sign-off-matrix)
+
+---
+
+# 1. Operational Architecture: Transitioning from Containment to Eradication
+
+In accordance with the **NIST SP 800-61r2 Computer Security Incident Handling Guide** and the SANS Incident Handling methodology, incident response comprises distinct operational boundaries:
+
+```mermaid
+flowchart LR
+    A["<b>Phase 2: Detection & Triage</b><br>Initial-Triage (46 Alerts)<br>SIEM/SOAR Ingestion"] --> B["<b>Phase 3: Containment</b><br>Immediate-Containment<br>Freeze Footholds & Isolate"]
+    B --> C["<b>Forensic Deep-Dive</b><br>Deep-Dive Attack Chain<br>Identify 7 Root Causes"]
+    C --> D["<b>Phase 4: Eradication</b><br>Eradication & Hardening<br>Purge Loot & Patch Flaws"]
+    D --> E["<b>Phase 4: Recovery</b><br>Health Diagnostics<br>Verify Production Baseline"]
+    E --> F["<b>Phase 5: Post-Incident</b><br>Incident Report & Closure<br>Formal Case Sign-off"]
+
+    style A fill:#1c2430,stroke:#58a6ff,stroke-width:2px,color:#fff
+    style B fill:#1c2430,stroke:#d29922,stroke-width:2px,color:#fff
+    style C fill:#1c2430,stroke:#8957e5,stroke-width:2px,color:#fff
+    style D fill:#1c2430,stroke:#238636,stroke-width:2px,color:#fff
+    style E fill:#1c2430,stroke:#238636,stroke-width:2px,color:#fff
+    style F fill:#1c2430,stroke:#388bfd,stroke-width:2px,color:#fff
+```
+
+### Why Containment Was Intentionally Paused Short of Eradication
+During **Immediate Containment** ([`Immediate-Containment-Execution.md`](Immediate-Containment-Execution.md)), our sole priority was **adversary lockout and forensic preservation**:
+1. We **isolated** the network origin (`192.168.232.135`) and terminated active network connections (`pkill nc.openbsd`).
+2. We moved `shell.php` to `/root/forensics_quarantine/` with `chmod 000` rather than deleting it so cryptographic checksums could be generated.
+3. We **disabled** rogue user `AD\backdoor` (`UserAccountControl: ACCOUNTDISABLE`) rather than deleting it so its Security Identifier (`S-1-5-21-384912093-1948201948-294019284-1108`) could be traced across historical Windows Event logs.
+
+With forensic deep-dive analysis fully completed ([`Deep-Dive-Attack-Chain-Investigation.md`](Deep-Dive-Attack-Chain-Investigation.md)), we now move into **Phase 4: Eradication, Hardening & Recovery**:
+- **Eradication:** Completely and irreversibly purge all adversary implants, staging caches, harvested hash dumps, and rogue user accounts from production disk and directory storage.
+- **Hardening:** Permanently remediate all 7 systemic architectural flaws so that repeating the exact offensive exploit sequence produces immediate failure.
+- **Recovery:** Restore impacted business services, validate replication and authentication pipelines, verify SIEM agent integrity, and formally close all 46 alerts across TheHive's 3 master cases.
+
+---
+
+# 2. Incident Remediation Tooling & Authority
+
+All actions documented in this playbook were executed strictly through authorized, auditable enterprise management channels:
+
+1. **Velociraptor DFIR Live Response Platform (`Linux.Sys.BashShell`):**
+   - Direct execution on the Suricata Gateway (`192.168.56.1`) and DVWA Linux Server (`192.168.56.30`).
+   - Ensures encrypted, non-interactive execution that leaves an immutable audit trail with microsecond precision while bypassing interactive TTY shell sessions.
+2. **Enterprise PowerShell (RSAT Active Directory & CIM/WMI Engine):**
+   - Direct administrative execution on Domain Controller `PC-DC` (`192.168.56.10`) and Workstation `Win10User` (`192.168.56.20`).
+   - Provides native AD object modification, Group Policy registry enforcement, and CimSession hardware adapter reconfigurations.
+3. **TheHive 5.2 SOAR Incident Management Console:**
+   - Centralized review and disposition of all 46 imported telemetry alerts.
+   - Formal case promotion, task sign-off, observable tagging, and operational closure under master incident identifier `INC-2026-1018-ALPHA`.
+
+---
+
+# 3. Step 1: Linux Attacker Loot Shredding & Network Service Restoration (DVWA)
+
+> 🎯 **Objective:** Securely wipe all adversary staging dumps and credential caches left in `/tmp/` and `/opt/`, and restore the local DNS resolution service hijacked by the adversary's LLMNR/DNS poisoner.  
+> 💻 **Target:** DVWA Linux Server (`192.168.56.30`)  
+> 🔧 **Channel:** Velociraptor Live Response (`Linux.Sys.BashShell`)
+
+### Tactical Context & Forensic Verification
+During Phases 4 through 7 of the attack, the adversary used DVWA as their internal staging and pivoting platform:
+- Captured NTLMv2 and Kerberos hashes were cached in `/tmp/win10.hash` and `/tmp/hank.hash`.
+- Full DCSync NTDS password dumps were written to `/tmp/dcsync_output.txt`.
+- Forged Kerberos Golden Tickets were generated as `/tmp/admin.ccache`.
+- Staged exfiltration bundles were stored in `/tmp/domain_users.txt`, `/tmp/admin_info.txt`, `/tmp/sensitive_data.txt`, and defacement payload `/tmp/hacked.bmp`.
+- The Netcat reverse shell named pipe was created at `/tmp/f`.
+- The adversary deployed Responder into `/opt/Responder` and disabled `systemd-resolved` to prevent UDP port 53 binding conflicts with Responder's rogue DNS poisoner.
+
+Because verified forensic images and cryptographic checksums were already archived into `/root/forensics_quarantine/` during deep-dive investigation, all working copies must now be permanently destroyed to eliminate lingering credential exposure.
+
+### Execution Script:
+```bash
+# ==============================================================================
+# 1. FORENSIC VERIFICATION: Ensure evidence is preserved in quarantine
+# ==============================================================================
+ls -la /root/forensics_quarantine/
+sha256sum /root/forensics_quarantine/*
+
+# ==============================================================================
+# 2. ADVERSARY LOOT ERADICATION: 3-pass cryptographic shredding of staging dumps
+# ==============================================================================
+shred -u -z -n 3 /tmp/win10.hash \
+                 /tmp/hank.hash \
+                 /tmp/dcsync_output* \
+                 /tmp/admin.ccache \
+                 /tmp/domain_users.txt \
+                 /tmp/admin_info.txt \
+                 /tmp/sensitive_data.txt \
+                 /tmp/hacked.bmp \
+                 /tmp/f
+
+# ==============================================================================
+# 3. ADVERSARY TOOLING REMOVAL: Purge rogue Responder and Impacket directories
+# ==============================================================================
+rm -rf /opt/Responder /opt/impacket
+
+# Verify /tmp directory clean state
+ls -la /tmp/
+
+# ==============================================================================
+# 4. SYSTEM SERVICE RESTORATION: Unmask and restart systemd-resolved DNS resolver
+# ==============================================================================
+systemctl unmask systemd-resolved
+systemctl enable --now systemd-resolved
+systemctl is-active systemd-resolved
+
+# Confirm stub listener bound to 127.0.0.53:53 and upstream AD DNS configured
+resolvectl status
+```
+
+### 📸 Proof of Execution:
+![DVWA loot shredding and systemd-resolved restoration](../assets/screenshots/investigation/eradication/slot_01_eradication_dvwa_loot_wiped.png)  
+*Figure 1: Velociraptor console demonstrating 3-pass zero overwrite shredding of 9 adversary staging files, deletion of `/opt/Responder`, and operational restoration of `systemd-resolved` DNS stub resolver.*
+
+---
+
+# 4. Step 2: Linux Root-Cause Vulnerability Elimination & Web Hardening (DVWA)
+
+> 🎯 **Objective:** Permanently eliminate Root Cause Flaw 1 (Sudoers NOPASSWD Python), Flaw 2 (Permissive SSH root logon), and Flaw 3 (Arbitrary PHP execution in web upload directory).  
+> 💻 **Target:** DVWA Linux Server (`192.168.56.30`)  
+> 🔧 **Channel:** Velociraptor Live Response (`Linux.Sys.BashShell`)
+
+### Vulnerability Breakdown & Remediation Rationale
+1. **Root Cause Flaw 1 (`www-data` Sudoers NOPASSWD Python):** The web service user was granted unrestricted passwordless root execution for `/usr/bin/python3`. In Stage 07, the attacker used `sudo python3 -c 'import os; os.system("/bin/bash")'` (GTFOBins) to achieve instant root in under 10 seconds.
+   - *Fix:* Purge the directive from `/etc/sudoers` and `/etc/sudoers.d/`, validate syntax via `visudo -c`, and verify with `sudo -u www-data sudo -l`.
+2. **Root Cause Flaw 2 (Permissive OpenSSH Server Configuration):** OpenSSH permitted direct interactive root logins (`PermitRootLogin yes`) and password authentication, enabling the attacker to inject an ED25519 public key and log in directly as root (Alert #16, `wzb-20`).
+   - *Fix:* Enforce `PermitRootLogin no` and `PasswordAuthentication no` in `/etc/ssh/sshd_config` and reload SSHD.
+3. **Root Cause Flaw 3 (Arbitrary Web Upload Script Execution):** The `/var/www/html/dvwa/hackable/uploads/` directory lacked execution restrictions, allowing `shell.php` to execute as a native web process under Apache.
+   - *Fix:* Deploy an immutable `.htaccess` file explicitly disabling PHP engine interpretation (`php_flag engine off`) and blocking all executable script MIME types (`Require all denied`).
+
+### Execution Script:
+```bash
+# ==============================================================================
+# 1. REMEDIATE FLAW 1: Purge Sudoers NOPASSWD Python misconfiguration
+# ==============================================================================
+grep -E 'www-data|python' /etc/sudoers /etc/sudoers.d/* 2>/dev/null
+sed -i '/www-data.*python3/d' /etc/sudoers
+rm -f /etc/sudoers.d/www-data
+
+# Validate sudoers configuration syntax
+visudo -c
+
+# Defensive verification: Test www-data sudo rights
+sudo -u www-data sudo -l
+# Expected Output: "Sorry, user www-data may not run sudo on dvwa."
+
+# ==============================================================================
+# 2. REMEDIATE FLAW 2: Enforce Hardened OpenSSH Daemon Configuration
+# ==============================================================================
+sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
+sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
+sed -i 's/^#\?PermitEmptyPasswords.*/PermitEmptyPasswords no/' /etc/ssh/sshd_config
+
+# Validate SSHD syntax and reload daemon
+sshd -t
+systemctl restart sshd
+
+# Verify runtime SSH configuration
+sshd -T | grep -E 'permitrootlogin|passwordauthentication'
+
+# ==============================================================================
+# 3. REMEDIATE FLAW 3: Deploy Execution-Blocking .htaccess in Uploads Directory
+# ==============================================================================
+cat << 'EOF' > /var/www/html/dvwa/hackable/uploads/.htaccess
+# Security Hardening: Block all script execution in uploads directory
+<FilesMatch "\.(php|php5|phtml|phar|inc|cgi|pl|py)$">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+
+Options -ExecCGI -Indexes
+EOF
+
+# Enforce strict filesystem ownership and permissions
+chown -R www-data:www-data /var/www/html/dvwa/hackable/uploads/
+chmod 750 /var/www/html/dvwa/hackable/uploads/
+chmod 644 /var/www/html/dvwa/hackable/uploads/.htaccess
+
+# Reload Apache web server
+apache2ctl configtest
+systemctl reload apache2
+
+# ==============================================================================
+# 4. DEFENSIVE VERIFICATION: Confirm PHP execution is rejected with HTTP 403
+# ==============================================================================
+echo '<?php echo "EXPLOIT_EXECUTED"; ?>' > /var/www/html/dvwa/hackable/uploads/canary.php
+curl -i -s http://127.0.0.1/dvwa/hackable/uploads/canary.php | head -n 5
+rm -f /var/www/html/dvwa/hackable/uploads/canary.php
+```
+
+### 📸 Proof of Execution:
+![DVWA sudoers remediation and SSH hardening](../assets/screenshots/investigation/eradication/slot_02_eradication_dvwa_sudoers_patched.png)  
+*Figure 2: Velociraptor console demonstrating syntax-validated removal of `www-data` sudoers privilege, confirmation of access denial (`Sorry, user www-data may not run sudo on dvwa`), and OpenSSH hardening.*
+
+![DVWA upload execution blocker verified](../assets/screenshots/investigation/eradication/slot_03_eradication_dvwa_upload_blocked.png)  
+*Figure 3: Apache configuration test confirming `.htaccess` deployment in `/hackable/uploads/` and live curl request returning `HTTP/1.1 403 Forbidden` for PHP script requests.*
+
+---
+
+# 5. Step 3: Active Directory Account Eradication, Privileged Demotion & Kerberos Invalidation (PC-DC)
+
+> 🎯 **Objective:** Permanently delete the adversary's backdoor account (`AD\backdoor`), demote compromised service account `HANK_SHERMAN`, revoke SPN mappings, enforce Protected Users enrollment, and complete the `krbtgt` password invalidation cycle.  
+> 💻 **Target:** Active Directory Domain Controller `PC-DC` (`192.168.56.10`)  
+> 🔧 **Channel:** Enterprise PowerShell (RSAT Module)
+
+### Vulnerability Breakdown & Remediation Rationale
+1. **Adversary Persistence (`AD\backdoor`):** Created in Stage 17 via Impacket `wmiexec` (Alert #30, EID 4720). In containment, it was disabled and group memberships were stripped to preserve the object SID. With forensic deep-dive finished, it must be permanently deleted from Active Directory.
+2. **Root Cause Flaw 4 (`HANK_SHERMAN` Domain Admin Service Account):** BadBlood configured service account `HANK_SHERMAN` with a registered Service Principal Name (`MSSQLSvc/PC-DC.ad.lab:1433`) while concurrently granting it membership in `Domain Admins`. This allowed the attacker to Kerberoast the account (Alert #23), crack its weak password (`Password123`), and immediately invoke DCSync via DRSUAPI.
+   - *Fix:* Strip `HANK_SHERMAN` from `Domain Admins` and `Administrators`, delete the SPN mapping via `Set-ADUser -ServicePrincipalNames @{Remove=...}`, enforce AES-128/AES-256 Kerberos encryption types, and rotate its password to a 32-character complex string.
+3. **Root Cause Flaw 5 (Credential Exposure & Golden Ticket Forgery):** DCSync dumped all domain NTLM hashes, enabling Pass-the-Hash and Golden Ticket generation using the `krbtgt` key (`...f4e05f60`).
+   - *Fix:* Enroll `Administrator` and `HANK_SHERMAN` into the Active Directory **`Protected Users`** security group. This prevents LSASS caching of plaintext credentials, forces Kerberos with AES encryption, and disables NTLM authentication and credential delegation. Confirm `krbtgt` has completed its two-pass password rotation (incrementing Key Version Number `msDS-KeyVersionNumber` to 4), permanently invalidating all forged Golden Tickets.
+
+### Execution Script:
+```powershell
+# ==============================================================================
+# 1. PERMANENT ERADICATION: Delete rogue account AD\backdoor from Active Directory
+# ==============================================================================
+$backdoor = Get-ADUser -Filter "SamAccountName -eq 'backdoor'" -Properties MemberOf, SID, WhenCreated
+if ($backdoor) {
+    Write-Host "[*] Purging rogue object: $($backdoor.DistinguishedName) (SID: $($backdoor.SID))" -ForegroundColor Yellow
+    Remove-ADUser -Identity "backdoor" -Confirm:$false -Verbose
+}
+
+# Defensive Verification: Ensure object no longer exists
+$verifyBackdoor = Get-ADUser -Filter "SamAccountName -eq 'backdoor'"
+if (-not $verifyBackdoor) {
+    Write-Host "[+] SUCCESS: AD\backdoor permanently eradicated from Active Directory database." -ForegroundColor Green
+}
+
+# ==============================================================================
+# 2. PRIVILEGE DEMOTION & SPN PURGE: Hardening service account HANK_SHERMAN
+# ==============================================================================
+# Strip privileged administrative group memberships
+Remove-ADGroupMember -Identity "Domain Admins" -Members "HANK_SHERMAN" -Confirm:$false
+Remove-ADGroupMember -Identity "Administrators" -Members "HANK_SHERMAN" -Confirm:$false
+
+# Eradicate SPN to eliminate Kerberoasting attack surface
+Set-ADUser -Identity "HANK_SHERMAN" -ServicePrincipalNames @{Remove="MSSQLSvc/PC-DC.ad.lab:1433"}
+
+# Enforce modern AES Kerberos encryption (prohibit RC4-HMAC)
+Set-ADUser -Identity "HANK_SHERMAN" -KerberosEncryptionType AES128,AES256
+
+# Rotate service account to a 32-character cryptographically random password
+$NewHankPass = ConvertTo-SecureString "H@nk$h3rm@n_S3cur3_32Ch@r_R0t@t10n!" -AsPlainText -Force
+Set-ADAccountPassword -Identity "HANK_SHERMAN" -NewPassword $NewHankPass -Reset
+
+# ==============================================================================
+# 3. ENTERPRISE CREDENTIAL ROTATION & PROTECTED USERS ENROLLMENT
+# ==============================================================================
+# Rotate Enterprise Domain Administrator password
+$NewAdminPass = ConvertTo-SecureString "P@ssw0rd_Ent3rpr1s3_Adm1n_9988!!#" -AsPlainText -Force
+Set-ADAccountPassword -Identity "Administrator" -NewPassword $NewAdminPass -Reset
+
+# Rotate Win10 Workstation User password
+$NewWin10Pass = ConvertTo-SecureString "W1n10_S3cur3_W0rkst@t10n_P@ss2026!" -AsPlainText -Force
+Set-ADAccountPassword -Identity "win10" -NewPassword $NewWin10Pass -Reset
+
+# Enroll high-privilege identities into the Protected Users security group
+Add-ADGroupMember -Identity "Protected Users" -Members "Administrator", "HANK_SHERMAN"
+
+# ==============================================================================
+# 4. DEFENSIVE VERIFICATION: Confirm Protected Users and krbtgt status
+# ==============================================================================
+Get-ADGroupMember -Identity "Protected Users" | Select-Object SamAccountName, DistinguishedName
+Get-ADUser -Identity "krbtgt" -Properties PasswordLastSet, msDS-KeyVersionNumber | Select-Object SamAccountName, PasswordLastSet, msDS-KeyVersionNumber
+```
+
+### 📸 Proof of Execution:
+![Active Directory backdoor account deleted](../assets/screenshots/investigation/eradication/slot_04_eradication_ad_backdoor_deleted.png)  
+*Figure 4: Active Directory PowerShell console confirming object inspection and permanent removal (`Remove-ADUser`) of `AD\backdoor` from the NTDS.dit database.*
+
+![Service account HANK_SHERMAN demoted and SPN purged](../assets/screenshots/investigation/eradication/slot_05_eradication_ad_hank_demoted.png)  
+*Figure 5: PowerShell console demonstrating removal of `HANK_SHERMAN` from `Domain Admins`, elimination of SPN `MSSQLSvc/PC-DC.ad.lab:1433`, and enforcement of AES128/AES256 Kerberos encryption.*
+
+![Protected Users enrollment and krbtgt KVNO verified](../assets/screenshots/investigation/eradication/slot_06_eradication_ad_protected_users.png)  
+*Figure 6: Verification of `Administrator` and `HANK_SHERMAN` enrolled in the `Protected Users` security group, alongside `krbtgt` Key Version Number incremented to KVNO 4.*
+
+---
+
+# 6. Step 4: Enterprise Multicast & Broadcast Name Resolution Hardening (Disable LLMNR & NetBIOS)
+
+> 🎯 **Objective:** Permanently eliminate Root Cause Flaw 6 by disabling unauthenticated Link-Local Multicast Name Resolution (LLMNR) and NetBIOS over TCP/IP across all Windows domain endpoints.  
+> 💻 **Scope:** `PC-DC` (`192.168.56.10`) and `Win10User` (`192.168.56.20`)  
+> 🔧 **Channel:** Enterprise PowerShell (Group Policy Registry & CIM Networking Methods)
+
+### Vulnerability Breakdown & Remediation Rationale
+In Stage 10, the adversary launched Responder on DVWA (`192.168.56.30`). When workstation `Win10User` (`192.168.56.20`) attempted to resolve a non-existent SMB share (`\\CORP-FILE-01`), it broadcasted LLMNR (UDP 5355) and NetBIOS Name Service (UDP 137) queries across the `192.168.56.0/24` broadcast domain. Responder spoofed authoritative answers, forced WebDAV/NTLM authentication via `DavSetCookie` (`rundll32.exe`, Alert #28, `wzb-28`), and captured the `AD.LAB\win10` NetNTLMv2 challenge-response hash.
+
+By disabling LLMNR at the DNS client level and setting `NetbiosOptions = 2` (Disable NetBIOS over TCP/IP) on every network interface, Windows hosts strictly require authoritative unicast DNS queries from the Domain Controller (`192.168.56.10`). Rogue broadcast spoofers can no longer intercept authentication requests.
+
+### Execution Script:
+```powershell
+# ==============================================================================
+# 1. DISABLE LLMNR: Group Policy Registry Key Enforcement
+# ==============================================================================
+$DNSClientPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient"
+if (-not (Test-Path $DNSClientPath)) {
+    New-Item -Path $DNSClientPath -Force | Out-Null
+}
+Set-ItemProperty -Path $DNSClientPath -Name "EnableMulticast" -Value 0 -Type DWord
+
+# Verify LLMNR is disabled (0 = Disabled, 1 = Enabled)
+$llmnrStatus = (Get-ItemProperty -Path $DNSClientPath).EnableMulticast
+Write-Host "[+] LLMNR EnableMulticast Value: $llmnrStatus (0 = Fully Disabled)" -ForegroundColor Green
+
+# ==============================================================================
+# 2. DISABLE NETBIOS OVER TCP/IP: CIM Hardware Adapter Reconfiguration
+# ==============================================================================
+# NetbiosOptions: 0 = Default/DHCP, 1 = Enabled, 2 = Disabled
+$Adapters = Get-CimInstance -ClassName Win32_NetworkAdapterConfiguration -Filter "IPEnabled = True"
+foreach ($Adapter in $Adapters) {
+    Write-Host "[*] Disabling NetBIOS on interface: $($Adapter.Description)..." -ForegroundColor Cyan
+    $Adapter | Invoke-CimMethod -MethodName SetTcpipNetbios -Arguments @{TcpipNetbiosOptions = 2} | Out-Null
+}
+
+# ==============================================================================
+# 3. DEFENSIVE VERIFICATION: Inspect active interface parameters
+# ==============================================================================
+Get-CimInstance -ClassName Win32_NetworkAdapterConfiguration -Filter "IPEnabled = True" | 
+    Select-Object Description, IPAddress, TcpipNetbiosOptions
+```
+
+### 📸 Proof of Execution:
+![Disabling LLMNR and NetBIOS over TCP/IP](../assets/screenshots/investigation/eradication/slot_07_eradication_llmnr_netbios_disabled.png)  
+*Figure 7: Windows PowerShell execution verifying registry configuration `EnableMulticast = 0` and CIM network adapter reconfiguration setting `TcpipNetbiosOptions = 2`.*
+
+---
+
+# 7. Step 5: Network Micro-Segmentation & DMZ Lateral Movement Boundary Enforcement
+
+> 🎯 **Objective:** Permanently eliminate Root Cause Flaw 7 by enforcing strict zero-trust network boundaries between the DMZ web server (`192.168.56.30`) and the internal Active Directory subnet (`192.168.56.0/24`).  
+> 💻 **Scope:** Suricata Gateway Firewall (`192.168.56.1` / `192.168.232.138`) & DVWA Host (`192.168.56.30`)  
+> 🔧 **Channel:** Velociraptor Live Response (`Linux.Sys.BashShell`)
+
+### Vulnerability Breakdown & Remediation Rationale
+The primary catalyst for total domain compromise was the absence of internal egress filtering. Once root was obtained on DVWA, the attacker leveraged `192.168.56.30` to launch internal port scans (Stage 09), capture internal broadcast traffic (Stage 10), query Active Directory LDAP directly (Stage 12), request Kerberos service tickets (Stage 13), execute DCSync RPC replication (Stage 14), and execute remote WMI/SMB commands against `192.168.56.10` and `192.168.56.20` (Stages 15, 17, 20).
+
+To enforce proper DMZ architecture, we implement dual-layer micro-segmentation:
+1. **Gateway Firewall Forward Rules:** Drop and reject all traffic originating from DVWA DMZ destined for internal Windows infrastructure ports (Kerberos 88, NetBIOS 137-139, RPC 135, LDAP 389/636, SMB 445, GC 3268/3269, RDP 3389, WinRM 5985/5986).
+2. **DVWA Host Output Rules:** Reject all outbound traffic directed to `192.168.56.10` and `192.168.56.20`, permitting outbound connections exclusively to the central SOC monitoring infrastructure (Wazuh Agent TCP 1514/1515 and Velociraptor TLS 8000 on `192.168.56.1`).
+
+### Execution Script:
+```bash
+# ==============================================================================
+# 1. GATEWAY FIREWALL (192.168.56.1): Inter-subnet micro-segmentation rules
+# ==============================================================================
+# Reject outbound DMZ TCP connections to internal Windows Directory & RPC services
+iptables -I FORWARD 1 -s 192.168.56.30 -d 192.168.56.0/24 \
+    -p tcp -m multiport --dports 88,135,139,389,445,636,3268,3269,3389,5985,5986 \
+    -j REJECT --reject-with icmp-port-unreachable
+
+# Reject outbound DMZ UDP connections to internal Kerberos, NetBIOS, and LDAP services
+iptables -I FORWARD 2 -s 192.168.56.30 -d 192.168.56.0/24 \
+    -p udp -m multiport --dports 88,137,138,389 \
+    -j REJECT --reject-with icmp-port-unreachable
+
+# ==============================================================================
+# 2. DVWA HOST (192.168.56.30): Strict host-level egress lockdown
+# ==============================================================================
+# Prohibit direct IP communication to Domain Controller and Workstation
+iptables -A OUTPUT -d 192.168.56.10 -j REJECT --reject-with icmp-admin-prohibited
+iptables -A OUTPUT -d 192.168.56.20 -j REJECT --reject-with icmp-admin-prohibited
+
+# Explicitly permit SOC telemetry transit to Gateway Wazuh and Velociraptor endpoints
+iptables -A OUTPUT -p tcp -d 192.168.56.1 -m multiport --dports 1514,1515,8000 -j ACCEPT
+
+# Save rules to persist across system reboots
+netfilter-persistent save
+
+# ==============================================================================
+# 3. DEFENSIVE VERIFICATION: Review active rule drop counters
+# ==============================================================================
+iptables -L FORWARD -n -v --line-numbers | head -n 6
+```
+
+### 📸 Proof of Execution:
+![DMZ firewall micro-segmentation verified](../assets/screenshots/investigation/eradication/slot_08_eradication_dmz_firewall_hardened.png)  
+*Figure 8: Gateway firewall console verifying active kernel-level micro-segmentation rules rejecting outbound TCP/UDP Active Directory ports from DVWA to `192.168.56.0/24`.*
+
+---
+
+# 8. Step 6: Full Operational Recovery, Service Availability & Security Health Verification
+
+> 🎯 **Objective:** Validate production service health across all endpoints, confirm Active Directory replication and directory integrity, ensure clean workstation desktop environments, and verify SIEM telemetry health.  
+> 💻 **Scope:** All 4 Network Hosts (`192.168.56.1`, `192.168.56.10`, `192.168.56.20`, `192.168.56.30`)  
+> 🔧 **Channel:** Multi-Platform Enterprise Health Checks
+
+### Comprehensive Verification Matrix:
+1. **DVWA Web Application Health:**
+   - Public HTTP endpoint responds with `HTTP 200 OK` in < 20 ms.
+   - Database connection verified with updated database credentials (`S0C_S3cur3_Db_P@ssw0rd_2026!`).
+   - Web root and upload directory are clean; canary script executions return `HTTP 403 Forbidden`.
+2. **Active Directory Forest Health (`PC-DC`):**
+   - Microsoft Domain Controller Diagnostics (`dcdiag`) validates all 5 essential directory tests (`Connectivity`, `Advertising`, `FSMOCheck`, `Replication`, `Services`) with `Passed test` status.
+   - Active Directory replication (`repadmin /showrepl`) confirms 0 failures across all naming contexts.
+   - User authentication over Kerberos functions correctly for legitimate domain users using rotated credentials.
+3. **Enterprise Workstation State (`Win10User`):**
+   - User `win10` successfully logs in via Kerberos authentication.
+   - Desktop defacement completely resolved: `README_HACKED.txt` and simulated `.enc` files removed; default Windows wallpaper registry parameters verified.
+4. **Wazuh Monitoring Fabric State:**
+   - Wazuh Manager validates all 4 connected agents (`Suricata-GW` 001, `DVWA-Server` 002, `DomainWin10` 003, `Win10User` 004) in **Active** status.
+   - Zero critical alerts (`Level >= 8`) generated across the entire 60-minute post-remediation monitoring window.
+
+### Execution Script:
+```powershell
+# ==============================================================================
+# 1. WEB SERVICE VERIFICATION (Run from SOC Analyst Console)
+# ==============================================================================
+curl -s -o /dev/null -w "HTTP Status: %{http_code} | Latency: %{time_total}s\n" http://192.168.56.30/login.php
+
+# ==============================================================================
+# 2. ACTIVE DIRECTORY DIAGNOSTICS (Run on Domain Controller PC-DC)
+# ==============================================================================
+dcdiag /test:Replication /test:Advertising /test:FSMOCheck /test:Services | Select-String -Pattern "passed test"
+
+# ==============================================================================
+# 3. WAZUH AGENT CONTROLLER FABRIC STATUS (Run on Wazuh Manager)
+# ==============================================================================
+/var/ossec/bin/agent_control -l
+```
+
+### 📸 Proof of Execution:
+![Production health and Wazuh agent verification](../assets/screenshots/investigation/eradication/slot_09_eradication_health_verification.png)  
+*Figure 9: Unified health verification demonstrating DVWA HTTP 200 availability, DCDiag directory tests passing, and all 4 Wazuh security agents active with zero security alerts.*
+
+---
+
+# 9. Step 7: TheHive 46-Alert Queue Disposition & 3-Case Resolution Management
+
+> 🎯 **Objective:** Review the entire 46-alert operational queue in TheHive, dismiss 3 confirmed false positives with documented rationale, correlate 43 confirmed breach alerts into 3 operational cases, complete all investigative tasks, and officially close each case with formal resolution verdicts.  
+> 💻 **Console:** TheHive 5.2 SOAR Platform (`https://192.168.56.1:9000`)  
+> 🏷️ **Master Incident Tag:** `INC-2026-1018-ALPHA`
+
+### Comprehensive 46-Alert Queue Disposition Rationale
+Every alert ingested by TheHive from Wazuh was individually audited by the incident response team:
+- **3 False Positives Dismissed (6.5%):**
+  1. **Alert #01 (17:10:08 IST):** *External Nmap TCP 4444 SYN Probe* — Dismissed as perimeter network scanning noise. Prior to the upload of `shell.php` in Stage 06, no service was listening on port 4444. The packet was dropped with TCP RST.
+  2. **Alert #06 (17:16:45 IST):** *Web App Shellshock HTTP Canary Probe* — Dismissed as web vulnerability scanner noise. Nikto injected an Apache Shellshock canary string into HTTP headers; Apache returned HTTP 404 with no code execution.
+  3. **Alert #18 (17:31:25 IST):** *Internal Subnet TCP 4444 SYN Probe* — Dismissed as internal network sweep noise. During internal reconnaissance from DVWA, Nmap swept `192.168.56.10:4444`; target returned TCP RST.
+- **43 True Positive Alerts Promoted into 3 Master Cases (93.5%):**
+  - **Case 01 (`CAS-001-WEBCOMP`):** Grouped **13 alerts** covering perimeter reconnaissance, credential brute-forcing, SQL injection credential extraction, web shell injection, reverse shell execution, and sudo root escalation.
+  - **Case 02 (`CAS-002-LATMOVE`):** Grouped **8 alerts** covering SSH root persistence, internal network discovery, LLMNR broadcast poisoning, BloodHound reconnaissance, Kerberoasting, and DCSync replication.
+  - **Case 03 (`CAS-003-DOMIMP`):** Grouped **22 alerts** covering Pass-the-Hash arrival on the Domain Controller, Golden Ticket forgery, `AD\backdoor` creation, Domain Admins elevation, sensitive data staging, SCP exfiltration, and dual-endpoint defacement/ransomware impact.
+
+### Master Alert Disposition Matrix (46 Total Alerts):
+
+| Alert # | Time (IST) | Detection Rule & Event Name | Ingestion Source | Assigned Action / Target Case | Resolution Disposition |
+|:---:|:---:|:---|:---:|:---:|:---:|
+| **#01** | `17:10:08` | ET SCAN Potential SSH / Port 4444 SYN Probe | Suricata Gateway | **None (Dismissed)** | **Ignored / False Positive** |
+| **#02** | `17:10:14` | ET SCAN Nmap OS Detection Probe Sequence | Suricata Gateway | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
+| **#03** | `17:10:14` | ET SCAN Nmap Scripting Engine User-Agent | Suricata Gateway | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
+| **#04** | `17:10:15` | ET SCAN Suspicious Inbound Port Sweep | Suricata Gateway | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
+| **#05** | `17:16:45` | Web Vulnerability Scanner Directory Fuzzing | Wazuh / Apache | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
+| **#06** | `17:16:45` | ET WEB_SERVER Shellshock HTTP Canary Header | Suricata Gateway | **None (Dismissed)** | **Ignored / False Positive** |
+| **#07** | `17:17:02` | Excessive HTTP 404 Responses (Dirbuster) | Wazuh / Apache | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
+| **#08** | `17:17:58` | Python-Requests User-Agent Detected on Web Root | Suricata Gateway | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
+| **#09** | `17:18:01` | Automated HTTP Authentication Brute-Force Burst | Wazuh / Apache | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
+| **#10** | `17:18:02` | ET WEB_SERVER Multiple Failed Login Attempts | Suricata Gateway | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
+| **#11** | `17:19:58` | DVWA SQLi UNION SELECT Credential Dump | Suricata / Wazuh | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
+| **#12** | `17:21:44` | Suspicious PHP Web Shell Upload (`shell.php`) | Wazuh / Auditd | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
+| **#13** | `17:21:49` | Web Shell OS Command Execution (`/usr/bin/id`) | Wazuh / Auditd | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
+| **#14** | `17:24:03` | Netcat Outbound Reverse Shell Connection (4444) | Suricata Gateway | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
+| **#15** | `17:25:36` | Sudoers Misconfiguration Abuse (`sudo python3`) | Wazuh PAM / Auditd | Case 01 (`CAS-001-WEBCOMP`) | **Resolved / True Positive** |
+| **#16** | `17:29:43` | Inbound Root SSH Interactive Logon | Wazuh SSHD | Case 02 (`CAS-002-LATMOVE`) | **Resolved / True Positive** |
+| **#17** | `17:31:19` | Internal Subnet Reconnaissance Sweep (ens37) | Suricata Gateway | Case 02 (`CAS-002-LATMOVE`) | **Resolved / True Positive** |
+| **#18** | `17:31:25` | Internal Subnet TCP 4444 SYN Probe | Suricata Gateway | **None (Dismissed)** | **Ignored / False Positive** |
+| **#19** | `17:37:10` | Responder Poisoning: LLMNR / NetBIOS Request | Wazuh / Auditd | Case 02 (`CAS-002-LATMOVE`) | **Resolved / True Positive** |
+| **#20** | `17:37:10` | Suspicious rundll32 WebDAV Authentication | Win10 Sysmon | Case 02 (`CAS-002-LATMOVE`) | **Resolved / True Positive** |
+| **#21** | `17:38:29` | Harvested NTLMv2 Hash Written to `/tmp/win10.hash` | Linux Auditd | Case 02 (`CAS-002-LATMOVE`) | **Resolved / True Positive** |
+| **#22** | `18:01:02` | BloodHound AD LDAP Ingestion Burst | Wazuh / Auditd | Case 02 (`CAS-002-LATMOVE`) | **Resolved / True Positive** |
+| **#23** | `18:01:18` | Kerberoasting Service Ticket Request (TGS-REQ) | Suricata / Wazuh | Case 02 (`CAS-002-LATMOVE`) | **Resolved / True Positive** |
+| **#24** | `18:02:43` | DCSync DRSUAPI Directory Replication Command | Wazuh SSHD / Auditd | Case 02 (`CAS-002-LATMOVE`) | **Resolved / True Positive** |
+| **#25** | `18:04:46` | Pass-the-Hash Remote NTLM Logon (Event 4624) | Wazuh (PC-DC) | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#26** | `18:04:46` | Privileged Special Logon Assigned (Event 4672) | Wazuh (PC-DC) | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#27** | `18:04:47` | Impacket wmiexec Command Process Fan-Out | Win Sysmon EID 1 | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#28** | `18:06:40` | Kerberos Golden Ticket Forged on Pivot Host | Linux Auditd | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#29** | `18:08:21` | Rogue User `backdoor` Created via CMD (EID 1) | Win Sysmon EID 1 | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#30** | `18:08:22` | AD User Account Created (`backdoor`, EID 4720) | Wazuh (PC-DC) | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#31** | `18:08:27` | Account Added to Local Administrators (EID 4732) | Wazuh (PC-DC) | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#32** | `18:09:05` | Account Added to Domain Admins Group (EID 1) | Win Sysmon EID 1 | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#33** | `18:09:05` | High-Privilege Group Membership Added (EID 4728) | Wazuh (PC-DC) | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#34** | `18:13:58` | Automated AD Data Collection (`net user /domain`) | Win Sysmon EID 1 | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#35** | `18:14:03` | Staging Data Written to `domain_users.txt` | Win Sysmon EID 11 | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#36** | `18:15:00` | Workstation Document Harvested (`sensitive_data.txt`) | Win10 Sysmon | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#37** | `18:17:30` | Rapid SCP Administrative Exfiltration Burst | Wazuh SSHD | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#38** | `18:18:22` | Root SSH Reconnection Following Exfiltration | Wazuh SSHD | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#39** | `18:20:12` | Malicious Wallpaper Written (`C:\Users\Public\hacked.bmp`)| Win Sysmon EID 11 | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#40** | `18:20:14` | Desktop Wallpaper Registry Tampering (EID 13) | Win Sysmon EID 13 | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#41** | `18:20:45` | Extortion Ransom Note Dropped (`README_HACKED.txt`)| Win Sysmon EID 11 | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#42** | `18:21:05` | Simulated Ransomware File Encryption (`*.enc`) | Win Sysmon EID 11 | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#43** | `18:21:40` | Immediate Forced System Reboot (`shutdown /r /t 0`)| Win Sysmon EID 1 | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#44** | `18:22:15` | Workstation Forced System Reboot (`shutdown /r /t 0`)| Win10 Sysmon | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#45** | `18:24:00` | Post-Reboot Domain Controller Startup Event | Win EventLog 6005 | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+| **#46** | `18:24:14` | Post-Reboot Backdoor Execution via `wmiexec` | Win Sysmon EID 1 | Case 03 (`CAS-003-DOMIMP`) | **Resolved / True Positive** |
+
+---
+
+### TheHive Case 01: `CAS-001-WEBCOMP`
+- **Case Name:** Perimeter Breach, SQL Injection, Web Shell & Sudo Root Escalation
+- **Scope:** Stages 01 through 07 | 13 Linked Alerts (#02–#05, #07–#15)
+- **Status:** **RESOLVED** | **Verdict:** **True Positive** | **Impact:** **With Impact**
+- **Closure Actions:** Terminated port 4444 reverse shell; moved `shell.php` to `/root/forensics_quarantine/` with `chmod 000`; removed `www-data` NOPASSWD Python from `/etc/sudoers`; deployed execution-blocking `.htaccess` in `/hackable/uploads/`; rotated MariaDB `dvwa` user and application `admin` passwords; hardened OpenSSH daemon with `PermitRootLogin no`.
+
+![TheHive Case 01 Closed](../assets/screenshots/investigation/eradication/thehive_case01_closed.png)  
+*Figure 10: TheHive 5 Case Record for `CAS-001-WEBCOMP` showing 13 linked alerts, 7 completed remediation tasks, and formal closure verdict.*
+
+---
+
+### TheHive Case 02: `CAS-002-LATMOVE`
+- **Case Name:** Pivot SSH Persistence, Broadcast Poisoning, BloodHound & DCSync
+- **Scope:** Stages 08 through 14 | 8 Linked Alerts (#16, #17, #19–#24)
+- **Status:** **RESOLVED** | **Verdict:** **True Positive** | **Impact:** **With Impact**
+- **Closure Actions:** Purged injected ED25519 root SSH public key; shredded harvested hash caches (`/tmp/win10.hash`, `/tmp/hank.hash`); deleted `/opt/Responder`; unmasked and restored `systemd-resolved` DNS stub resolver; globally disabled LLMNR (`EnableMulticast = 0`) and NetBIOS (`NetbiosOptions = 2`) across Windows endpoints; stripped `HANK_SHERMAN` from `Domain Admins`; deleted SPN `MSSQLSvc/PC-DC.ad.lab:1433`; rotated domain account passwords.
+
+![TheHive Case 02 Closed](../assets/screenshots/investigation/eradication/thehive_case02_closed.png)  
+*Figure 11: TheHive 5 Case Record for `CAS-002-LATMOVE` showing 8 linked alerts, pivot eradication verification, and formal closure verdict.*
+
+---
+
+### TheHive Case 03: `CAS-003-DOMIMP`
+- **Case Name:** Pass-the-Hash Lateral Movement, Golden Ticket Forgery, AD Backdoor & Ransomware Defacement
+- **Scope:** Stages 15 through 20 | 22 Linked Alerts (#25 through #46)
+- **Status:** **RESOLVED** | **Verdict:** **True Positive** | **Impact:** **With Impact**
+- **Closure Actions:** Permanently deleted rogue account `AD\backdoor` via `Remove-ADUser`; completed double-reset of `krbtgt` password (incrementing KVNO to 4 to invalidate Golden Tickets); enrolled `Administrator` and `HANK_SHERMAN` in `Protected Users`; shredded staged exfiltration files and quarantined ransomware artifacts (`README_HACKED.txt`, `*.enc`); restored Windows desktop wallpaper registry; implemented DMZ egress micro-segmentation.
+
+![TheHive Case 03 Closed](../assets/screenshots/investigation/eradication/thehive_case03_closed.png)  
+*Figure 12: TheHive 5 Case Record for `CAS-003-DOMIMP` showing 22 linked alerts, forest-wide identity hardening, and formal closure verdict.*
+
+---
+
+### Consolidated Case Management & Queue Verification
+With all 3 cases resolved and all 46 alerts accounted for, the operational alert queue and case dashboards confirm clean closure:
+
+![TheHive Cases Overview Dashboard](../assets/screenshots/investigation/eradication/thehive_cases_overview_resolved.png)  
+*Figure 13: TheHive Cases Overview Dashboard displaying 100% resolution (3/3 cases resolved) with True Positive / With Impact verdicts.*
+
+![TheHive Alert Queue Cleared](../assets/screenshots/investigation/eradication/thehive_alert_queue_cleared.png)  
+*Figure 14: TheHive Ingestion Queue verifying 0 pending unhandled alerts (43 promoted to cases, 3 dismissed as benign noise).*
+
+---
+
+# 10. Eradication & System Recovery Sign-Off Matrix
+
+| Flaw / Asset # | Root Cause Vulnerability | Operational Eradication Action Taken | Verification Standard | Operational Verdict | Sign-Off Lead |
+|:---:|:---|:---|:---|:---:|:---:|
+| **Root Flaw 1** | `www-data` NOPASSWD Python in `/etc/sudoers` | Purged directive from `/etc/sudoers`; removed `/etc/sudoers.d/www-data`; verified via `visudo -c` | `sudo -u www-data sudo -l` returns *Sorry, user www-data may not run sudo* | **PERMANENTLY REMEDIATED** | Lead SOC Analyst |
+| **Root Flaw 2** | Permissive OpenSSH configuration (`PermitRootLogin yes`) | Set `PermitRootLogin no` & `PasswordAuthentication no`; purged rogue authorized_keys; restarted SSHD | `sshd -T` confirms root login denied; direct root SSH attempts rejected | **PERMANENTLY REMEDIATED** | Lead SOC Analyst |
+| **Root Flaw 3** | Unrestricted script execution in web upload directory | Deployed `.htaccess` denying script engines; set directory permissions to `chmod 750` | HTTP request to upload canary returns `HTTP 403 Forbidden` | **PERMANENTLY REMEDIATED** | Lead SOC Analyst |
+| **Root Flaw 4** | High-privilege service account `HANK_SHERMAN` in `Domain Admins` | Stripped account from `Domain Admins` & `Administrators`; purged SPN via `Set-ADUser`; enforced AES encryption | `Get-ADUser` confirms empty `MemberOf` and `ServicePrincipalNames` | **PERMANENTLY REMEDIATED** | Lead SOC Analyst |
+| **Root Flaw 5** | Unprotected administrative credentials & Golden Ticket risk | Enrolled `Administrator` into `Protected Users`; rotated domain passwords; twice-reset `krbtgt` password | `Get-ADGroupMember "Protected Users"` verified; `krbtgt` KVNO incremented to 4 | **PERMANENTLY REMEDIATED** | Lead SOC Analyst |
+| **Root Flaw 6** | Unauthenticated broadcast name resolution (LLMNR & NetBIOS) | Enforced registry `EnableMulticast = 0`; reconfigured CIM adapters to `NetbiosOptions = 2` | Multicast UDP 5355 and UDP 137 queries completely silenced | **PERMANENTLY REMEDIATED** | Lead SOC Analyst |
+| **Root Flaw 7** | Unrestricted DMZ-to-Internal lateral network routing | Implemented gateway & host iptables egress drops on internal AD ports (88, 135, 389, 445) | Outbound connection attempts from DVWA to internal subnet rejected | **PERMANENTLY REMEDIATED** | Lead SOC Analyst |
+| **Loot Shredding** | Harvested hashes, DCSync dumps & staging bundles in `/tmp/` | Executed 3-pass cryptographic shredding (`shred -u -z -n 3`) on 9 staging files; purged `/opt/Responder` | `ls -la /tmp/` confirms 0 adversary files; `systemd-resolved` active | **PERMANENTLY PURGED** | Lead SOC Analyst |
+| **Account Purge** | Rogue Active Directory backdoor identity `AD\backdoor` | Permanently eradicated object via `Remove-ADUser -Identity "backdoor" -Confirm:$false` | `Get-ADUser -Filter "SamAccountName -eq 'backdoor'"` returns null | **PERMANENTLY PURGED** | Lead SOC Analyst |
+| **Desktop State** | Defaced workstation wallpaper and extortion ransom notes | Quarantined extortion notes and `.enc` files; reset wallpaper registry keys; executed `RUNDLL32` refresh | Workstation desktop clean; registry points to default system theme | **PERMANENTLY RESTORED** | Lead SOC Analyst |
+| **SIEM Fabric** | 4-agent security telemetry monitoring integrity | Validated all 4 Wazuh agents Active; verified OpenSearch alert rate at 0 critical alerts | `/var/ossec/bin/agent_control -l` confirms 100% agent connectivity | **HEALTHY & ACTIVE** | Lead SOC Analyst |
+| **SOAR Queue** | 46 raw incoming alerts across 3 campaign scopes | Triaged 3 FPs as Ignored; promoted 43 breach alerts into Cases 01–03; completed all tasks; closed cases | TheHive dashboard verifies 0 pending alerts; 3/3 cases marked Resolved | **OFFICIALLY RESOLVED** | Lead SOC Analyst |

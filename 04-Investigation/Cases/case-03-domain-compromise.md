@@ -4,6 +4,12 @@
 > **TheHive case ID:** `CAS-003-DOMIMP`  
 > **Severity:** Critical  
 > **TLP / PAP:** `TLP:AMBER / PAP:AMBER`  
+> **Master Incident Tag:** `INC-2026-1018-ALPHA`  
+> **Linked Alerts:** 22 Ingested Alerts (Alerts #25 through #46)  
+> **Eradication Playbook:** [`Eradication-Hardening-and-Recovery.md`](../Eradication-Hardening-and-Recovery.md#step-7-thehive-46-alert-queue-disposition--3-case-resolution-management)
+
+![TheHive Case 03 Closed](../../assets/screenshots/investigation/eradication/thehive_case03_closed.png)  
+*Figure 1: TheHive 5 Case Record for `CAS-003-DOMIMP` showing 22 linked alerts, forest-wide identity hardening, and formal closure verdict.*  
 
 ---
 
@@ -71,11 +77,14 @@ Armed with the dumped domain NTLM hashes from DCSync, the adversary executed Pas
 
 - [x] Isolate external adversary IP `192.168.232.135` via iptables on the Gateway
 - [x] Terminate unauthorized WMI remote execution sessions (`taskkill /F /IM cmd.exe`)
-- [x] Disable rogue domain account `AD\backdoor` (preserving SID for forensic tracking)
-- [x] Strip `AD\backdoor` from Domain Admins and Administrators groups
-- [x] Quarantine staged reconnaissance files and extortion notes to `C:\Forensics_Quarantine\`
-- [x] Revert desktop wallpaper registry keys (`Wallpaper` and `WallpaperStyle`)
-- [x] Perform dual `krbtgt` password resets to purge forged Kerberos Golden Tickets
+- [x] Disable rogue domain account `AD\backdoor` during containment to preserve SID for forensic timeline
+- [x] Permanently eradicate rogue account `AD\backdoor` via `Remove-ADUser` during eradication phase
+- [x] Strip `AD\backdoor` and `HANK_SHERMAN` from Domain Admins and Administrators groups
+- [x] Enroll `Administrator` and `HANK_SHERMAN` into Active Directory `Protected Users` security group
+- [x] Securely shred staged data files (`domain_users.txt`, `admin_info.txt`, `sensitive_data.txt`, `hacked.bmp`)
+- [x] Revert desktop wallpaper registry keys (`Wallpaper` and `WallpaperStyle`) and refresh UI parameters
+- [x] Perform dual `krbtgt` password resets (KVNO 4) to purge forged Kerberos Golden Tickets
+- [x] Implement DMZ egress micro-segmentation rejecting outbound Windows AD ports from `192.168.56.30`
 
 ---
 
