@@ -3,11 +3,11 @@
 > **Production Configuration & Artifacts:**
 > - Complete XML Ruleset: [`local_rules.xml`](local_rules.xml)
 > - Custom Log Decoders: [`local_decoder.xml`](local_decoder.xml)
-> - Wazuh Manager Config: [`ossec.conf`](..\../assets/configs/ossec.conf)
-> - Ingestion Hook: [`custom-thehive`](..\../assets/scripts/custom-thehive)
-> - Correlation Engine: [`custom-thehive.py`](..\../assets/scripts/custom-thehive.py)
-> - Flush Daemon: [`thehive-flush.service`](..\../assets/scripts/thehive-flush.service)
-> - Tool Fingerprints: [`tool_fingerprints.json`](..\../assets/scripts/tool_fingerprints.json)
+> - Wazuh Manager Config: [`ossec.conf`](../../assets/configs/ossec.conf)
+> - Ingestion Hook: [`custom-thehive`](../../assets/scripts/custom-thehive)
+> - Correlation Engine: [`custom-thehive.py`](../../assets/scripts/custom-thehive.py)
+> - Flush Daemon: [`thehive-flush.service`](../../assets/scripts/thehive-flush.service)
+> - Tool Fingerprints: [`tool_fingerprints.json`](../../assets/scripts/tool_fingerprints.json)
 
 ---
 
@@ -15,7 +15,7 @@
 
 Wazuh functions as the centralized SIEM and correlation engine in the SOC lab. It ingests multi-source telemetry from enrolled agents (`Suricata Gateway`, `DVWA`, `Win10User`, and `DomainWin10`), normalizes raw logs using custom and built-in decoders, and evaluates events against `local_rules.xml`.
 
-Alerts matching level $\ge 8$ (or designated high-priority SIDs) are passed via Wazuh's integration mechanism to [`custom-thehive`](..\../assets/scripts/custom-thehive), which persists them in an SQLite WAL queue before asynchronous correlation and dispatch to TheHive 5.
+Alerts matching level $\ge 8$ (or designated high-priority SIDs) are passed via Wazuh's integration mechanism to [`custom-thehive`](../../assets/scripts/custom-thehive), which persists them in an SQLite WAL queue before asynchronous correlation and dispatch to TheHive 5.
 
 ### Ruleset Composition in `local_rules.xml`
 The production ruleset contains **148 total `<rule id>` definitions**:
@@ -23,7 +23,7 @@ The production ruleset contains **148 total `<rule id>` definitions**:
 - **15 Core Rule Overwrites (`id < 100000`, `overwrite="yes"`):** Elevation of critical core rules (e.g., elevating Suricata Rule `86601` to Level 8 for TheHive forwarding; PAM authentication elevation).
 - **87 Noise Suppression Rules (`level="0"`):** Zero-overhead filtering dropping background hypervisor, OS service, and machine account polling.
 
-[![Wazuh Log Ingestion & Rules Engine Flow](..\../assets/diagrams/Wazuh%20Log%20Ingestion%20to%20TheHive%20Flow.png)](..\../assets/diagrams/Wazuh%20Log%20Ingestion%20to%20TheHive%20Flow.png)
+[![Wazuh Log Ingestion & Rules Engine Flow](../../assets/diagrams/Wazuh%20Log%20Ingestion%20to%20TheHive%20Flow.png)](../../assets/diagrams/Wazuh%20Log%20Ingestion%20to%20TheHive%20Flow.png)
 
 ---
 
@@ -304,13 +304,13 @@ In Wazuh's default ruleset (`0025-suricata_rules.xml`), Rule `86601` (`Suricata:
 
 ## 6. Alert Exports & Telemetry Datasets
 
-The repository provides two empirical alert export datasets in [`..\../assets/files/alerts/`](..\../assets/files/alerts/):
+The repository provides two empirical alert export datasets in [`../../assets/files/alerts/`](../../assets/files/alerts/):
 
 | Dataset File | Records | Scope & Content |
 |---|---|---|
-| [`Wazuh-Raw-Alerts.csv`](..\../assets/files/alerts/Wazuh-Raw-Alerts.csv) | **9,567 rows** | Complete baseline raw alert export across all 4 agents (`DVWA`: 8,114, `Suricata`: 1,168, `DomainWin10`: 168, `Win10User`: 117) indexed in OpenSearch following detection rule evaluation. Contains raw rule descriptions, agent names, and JSON-encoded event objects in `full_log`. |
-| [`wazuh_alerts.csv`](..\../assets/files/alerts/wazuh_alerts.csv) | **808 rows** | Analyst-curated forensic analysis dataset. Created by applying 11 OpenSearch `must_not` exclusion filters on the Wazuh Dashboard to strip 404 scan floods, SCA scans, and background services, isolating genuine attack steps for triage. |
-| [`thehive_alerts.json`](..\../assets/files/alerts/thehive_alerts.json) | **46 alerts** | Actionable incident cases created LIVE during simulation execution directly from the raw stream via the Wazuh Level >= 8 integration gate and the `thecustomhive` two-tier correlation daemon. |
+| [`Wazuh-Raw-Alerts.csv`](../../assets/files/alerts/Wazuh-Raw-Alerts.csv) | **9,567 rows** | Complete baseline raw alert export across all 4 agents (`DVWA`: 8,114, `Suricata`: 1,168, `DomainWin10`: 168, `Win10User`: 117) indexed in OpenSearch following detection rule evaluation. Contains raw rule descriptions, agent names, and JSON-encoded event objects in `full_log`. |
+| [`wazuh_alerts.csv`](../../assets/files/alerts/wazuh_alerts.csv) | **808 rows** | Analyst-curated forensic analysis dataset. Created by applying 11 OpenSearch `must_not` exclusion filters on the Wazuh Dashboard to strip 404 scan floods, SCA scans, and background services, isolating genuine attack steps for triage. |
+| [`thehive_alerts.json`](../../assets/files/alerts/thehive_alerts.json) | **46 alerts** | Actionable incident cases created LIVE during simulation execution directly from the raw stream via the Wazuh Level >= 8 integration gate and the `thecustomhive` two-tier correlation daemon. |
 
 ### CSV Structure
 Both CSV exports contain three core columns:

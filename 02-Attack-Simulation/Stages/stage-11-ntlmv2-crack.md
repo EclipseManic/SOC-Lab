@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached  
 > **Case:** [Case 02](../../04-Investigation/Cases/case-02-lateral-movement.md)  
 > **Investigation:** [Phase 4 Deep Dive](../../04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-4-poisoning-the-well-stealing-windows-passwords-with-responder)  
-> **Evidence:** [attack](..\../assets/screenshots/attack-simulation/31.png) · [alert (none)](../../03-Detection-Engineering/README.md#challenge-3-the-honest-gap-register-why-80-detection-is-real-security)
+> **Evidence:** [attack](../../assets/screenshots/attack-simulation/31.png) · [alert (none)](../../03-Detection-Engineering/README.md#challenge-3-the-honest-gap-register-why-80-detection-is-real-security)
 
 ---
 
@@ -49,10 +49,10 @@ Because NetNTLMv2 challenge-response hashes cannot be used directly in Pass-the-
 
 ### Attack Screenshots
 
-![Transferring Captured Hash via SCP and Running Hashcat](..\../assets/screenshots/attack-simulation/31.png)
+![Transferring Captured Hash via SCP and Running Hashcat](../../assets/screenshots/attack-simulation/31.png)
 *Figure 11.1: Exfiltrating `win10.hash` from DVWA pivot (`192.168.56.30`) to Kali (`/tmp/win10.hash`) and starting Hashcat mode 5600 dictionary attack.*
 
-![Hashcat Recovered Plaintext Password](..\../assets/screenshots/attack-simulation/32.png)
+![Hashcat Recovered Plaintext Password](../../assets/screenshots/attack-simulation/32.png)
 *Figure 11.2: Hashcat output displaying successfully cracked NetNTLMv2 hash for `WIN10::AD` revealing the plaintext password `Secur***ab!`.*
 
 ### Alert Screenshots
