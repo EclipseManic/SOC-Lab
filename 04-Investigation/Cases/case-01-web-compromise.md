@@ -4,6 +4,12 @@
 > **TheHive case ID:** `CAS-001-WEBCOMP`  
 > **Severity:** High  
 > **TLP / PAP:** `TLP:AMBER / PAP:AMBER`  
+> **Master Incident Tag:** `INC-2026-1018-ALPHA`  
+> **Linked Alerts:** 13 Ingested Alerts (Alerts #02–#05, #07–#15)  
+> **Eradication Playbook:** [`Eradication-Hardening-and-Recovery.md`](../Eradication-Hardening-and-Recovery.md#step-2-linux-root-cause-vulnerability-elimination--web-hardening-dvwa)
+
+![TheHive Case 01 Closed](../../assets/screenshots/investigation/eradication/thehive_case01_closed.png)  
+*Figure 1: TheHive 5 Case Record for `CAS-001-WEBCOMP` showing 13 linked alerts, completed remediation tasks, and formal closure verdict.*  
 
 ---
 
@@ -72,8 +78,11 @@ The adversary initiated an external attack campaign targeting the public-facing 
 - [x] Inspect Apache access logs for unauthorized file upload endpoint requests
 - [x] Locate and quarantine uploaded web shell `shell.php` to `/root/forensics_quarantine/`
 - [x] Terminate reverse shell socket connection to `192.168.232.135:4444`
-- [x] Remediate sudoers misconfiguration (remove NOPASSWD for `/usr/bin/python3`)
-- [x] Rotate all extracted database passwords and enforce salted SHA-256/bcrypt hashing
+- [x] Remediate sudoers misconfiguration (remove NOPASSWD for `/usr/bin/python3`, verified via `visudo -c`)
+- [x] Deploy `.htaccess` in `/hackable/uploads/` blocking PHP/CGI script execution (verified via HTTP 403 Forbidden)
+- [x] Enforce SSH daemon hardening (`PermitRootLogin no`, `PasswordAuthentication no`)
+- [x] Rotate all extracted database passwords (`dvwa` DB user and web `admin` password)
+- [x] Eradicate adversary temporary staging files and unmask `systemd-resolved` DNS service
 
 ---
 
