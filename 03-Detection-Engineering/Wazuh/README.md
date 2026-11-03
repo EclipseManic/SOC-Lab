@@ -17,6 +17,13 @@ Wazuh functions as the centralized SIEM and correlation engine in the SOC lab. I
 
 Alerts matching level $\ge 8$ (or designated high-priority SIDs) are passed via Wazuh's integration mechanism to [`custom-thehive`](../../assets/scripts/custom-thehive), which persists them in an SQLite WAL queue before asynchronous correlation and dispatch to TheHive 5.
 
+> [!NOTE]
+> ### ⏱️ Pipeline Latency Dynamics: TheHive Fast-Path vs. OpenSearch Indexing & Prompt Flushing
+> When evaluating log arrival timestamps across the detection pipeline, analysts should note three operational architectural nuances:
+> 1. **SOAR Fast-Path Delivery:** `wazuh-integratord` reads directly from `analysisd` in memory the moment a rule matches. Level $\ge 8$ alerts reach `custom-thehive` and are posted to TheHive 5 within **< 0.2 ms**. In contrast, the Wazuh Dashboard displays events only after Filebeat ships `alerts.json`, OpenSearch indexes the batch, and the web UI executes its search query—introducing a **1–3 second visual latency**. As a result, TheHive alert cards naturally record timestamps slightly earlier than indexed dashboard views.
+> 2. **Bash Telemetry Flushing (`PROMPT_COMMAND`):** On Linux hosts (`DVWA`), command-line telemetry is captured via Bash's `PROMPT_COMMAND` hook, which executes and flushes to disk only **after** a command exits or interrupts (`Ctrl+C`). Long-running commands (such as `Responder.py` or interactive sessions) trigger Suricata network alerts and Windows target logs immediately upon network/RPC interaction, while the attacker's `bashcmd` entry is committed to disk only when returning to the terminal prompt.
+> 3. **Interactive Simulation Multi-Attempts:** During live red-team adversary simulation, human operators often perform syntax trial-and-error (e.g. quote escaping, port testing). TheHive captures the first trigger within its 5-second correlation window, while analysts may capture Wazuh dashboard screenshots of subsequent successful executions.
+
 ### Ruleset Composition in `local_rules.xml`
 The production ruleset contains **148 total `<rule id>` definitions**:
 - **133 Custom Laboratory Rules (`id >= 100000`):** Behavioral detections, process fan-outs, Impacket tracking, and custom web shell decoders.
