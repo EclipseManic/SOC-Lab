@@ -25,7 +25,7 @@ This document details the operational actions executed across all four phases of
 
 All containment and eradication procedures were executed through centralized enterprise management platforms without utilizing adversary-compromised interactive TTY channels:
 
-- **Velociraptor Live Response Platform (`Linux.Sys.BashShell`):** Executed non-interactive, auditable remediation scripts on the Suricata Gateway (`192.168.56.1`) and DVWA Server (`192.168.56.30`) over TLS-encrypted agent polling.
+- **Velociraptor Live Response Platform (`Linux.Sys.BashShell`):** Executed non-interactive, auditable remediation scripts on the Suricata Gateway (`192.168.56.150`) and DVWA Server (`192.168.56.30`) over TLS-encrypted agent polling.
 - **Enterprise PowerShell (RSAT & CIM Modules):** Executed administrative remediation on Domain Controller `PC-DC` (`192.168.56.10`) and Workstation `Win10User` (`192.168.56.20`).
 - **TheHive 5 SOAR Platform:** Executed alert queue triage, task tracking, case correlation, and formal case resolution.
 
@@ -37,7 +37,7 @@ All containment and eradication procedures were executed through centralized ent
 > 🎯 **Objective:** Sever adversary communications, terminate active footholds, and isolate malicious files while preserving forensic integrity for deep-dive root cause analysis.
 
 ### Action 1: Perimeter Firewall Isolation & Adversary Block
-- **Target:** Suricata Gateway (`192.168.56.1` / `192.168.232.138`)
+- **Target:** Suricata Gateway (`192.168.56.150` / `192.168.232.162`)
 - **Execution Command:**
   ```bash
   iptables -I INPUT 1 -s 192.168.232.135 -j DROP
@@ -92,7 +92,7 @@ All containment and eradication procedures were executed through centralized ent
   klist purge
   Get-ADUser -Identity "krbtgt" -Properties PasswordLastSet, msDS-KeyVersionNumber
   ```
-- **Verification:** Key Version Number (`msDS-KeyVersionNumber`) incremented to 4; forged Golden Tickets rejected by KDC.
+- **Verification:** Key Version Number (`msDS-KeyVersionNumber`) incremented to 3; forged Golden Tickets rejected by KDC.
 - **Evidence:** [`slot_05a_containment_dc_krbtgt_reset.png`](../06-Resources/screenshots/initial-triage-action/slot_05a_containment_dc_krbtgt_reset.png)
 
 ### Action 6: Workstation Staged File Quarantine & Wallpaper Restoration
@@ -128,10 +128,11 @@ All containment and eradication procedures were executed through centralized ent
 > 📖 **Primary Operational Record:** [`04-Investigation/Eradication-Hardening-and-Recovery.md`](../04-Investigation/Eradication-Hardening-and-Recovery.md)  
 > 🎯 **Objective:** Permanently eliminate all 7 root causes, shred adversary staging files, sanitize Active Directory, and enforce zero-trust network micro-segmentation.
 
-### Step 1: Linux Attacker Loot Shredding & Network Service Restoration
+### Step 1: Adversary Anti-Forensics Audit & Network Service Restoration
 - **Target:** DVWA Server (`192.168.56.30`)
 - **Actions:**
-  - 3-pass zero overwrite shredding (`shred -u -z -n 3`) of 9 staging files: `/tmp/win10.hash`, `/tmp/hank.hash`, `/tmp/dcsync_output.txt`, `/tmp/admin.ccache`, `/tmp/domain_users.txt`, `/tmp/admin_info.txt`, `/tmp/sensitive_data.txt`, `/tmp/hacked.bmp`, `/tmp/f`.
+  - Audited root command history (`history | grep "rm"`) and Auditd execution logs, uncovering the adversary's track-covering deletion of all 9 staging files in `/tmp/` (`/tmp/win10.hash`, `/tmp/hank.hash`, `/tmp/dcsync_output.txt`, `/tmp/admin.ccache`, `/tmp/domain_users.txt`, `/tmp/admin_info.txt`, `/tmp/sensitive_data.txt`, `/tmp/hacked.bmp`, `/tmp/f`).
+  - Verified clean `/tmp/` state with `ls -la /tmp/` and confirmed zero unlinked open file descriptors remain via `lsof +L1 /tmp`.
   - Recursive removal of rogue Responder installation: `rm -rf /opt/Responder /opt/impacket`.
   - Operational restoration of local DNS stub resolver: `systemctl unmask systemd-resolved && systemctl enable --now systemd-resolved`.
 - **Evidence:** [`slot_01_eradication_dvwa_loot_wiped.png`](../06-Resources/screenshots/deep-investigation-action/slot_01_eradication_dvwa_loot_wiped.png)
@@ -160,7 +161,7 @@ All containment and eradication procedures were executed through centralized ent
 - **Evidence:** [`slot_07_eradication_llmnr_netbios_disabled.png`](../06-Resources/screenshots/deep-investigation-action/slot_07_eradication_llmnr_netbios_disabled.png)
 
 ### Step 5: Network Micro-Segmentation & DMZ Lateral Lockdown
-- **Target:** Gateway Firewall (`192.168.56.1`) and DVWA Host (`192.168.56.30`)
+- **Target:** Gateway Firewall (`192.168.56.150`) and DVWA Host (`192.168.56.30`)
 - **Actions:**
   - Implemented Gateway iptables FORWARD rules rejecting outbound TCP/UDP 88, 135, 137-139, 389, 445, 636, 3268, 3389, 5985 from DVWA to `192.168.56.0/24`.
   - Configured DVWA OUTPUT rules dropping traffic to `192.168.56.10` and `192.168.56.20`, permitting only SOC monitoring ports (1514, 1515, 8000).
@@ -204,7 +205,7 @@ The entire 46-alert operational queue in TheHive 5 was audited, disposed, and re
 | **Reverse Shell Kill** | DVWA (`192.168.56.30`) | `pkill -9 nc.openbsd` | Netstat port 4444 clear | **SEVERED** | Lead SOC Analyst |
 | **Web Shell Quarantine** | DVWA (`192.168.56.30`) | Moved to `/root/forensics_quarantine/` (`chmod 000`) | Quarantined; `ls` verified | **QUARANTINED** | Lead SOC Analyst |
 | **Root SSH Purge** | DVWA (`192.168.56.30`) | Purged ED25519 key; killed active TTYs | `authorized_keys` clean; `who` clear | **PURGED** | Lead SOC Analyst |
-| **Loot Shredding** | DVWA (`192.168.56.30`) | 3-pass zero overwrite on 9 files in `/tmp/` | `/tmp/` clean; `/opt/Responder` deleted | **SHREDDED** | Lead SOC Analyst |
+| **Anti-Forensics Audit & Loot Purge** | DVWA (`192.168.56.30`) | Audited adversary `rm` track-covering in history; verified `/tmp/` clean | `/tmp/` clean; `systemd-resolved` active | **VERIFIED & PURGED** | Lead SOC Analyst |
 | **DNS Service Restore** | DVWA (`192.168.56.30`) | Unmasked & enabled `systemd-resolved` | Stub resolver bound to 127.0.0.53:53 | **OPERATIONAL** | Lead SOC Analyst |
 | **Sudoers Patch** | DVWA (`192.168.56.30`) | Purged `www-data` NOPASSWD Python | `sudo -u www-data sudo -l` denied | **PATCHED** | Lead SOC Analyst |
 | **SSH Hardening** | DVWA (`192.168.56.30`) | Set `PermitRootLogin no` & `PasswordAuth no` | `sshd -T` confirms root login denied | **HARDENED** | Lead SOC Analyst |
@@ -212,7 +213,7 @@ The entire 46-alert operational queue in TheHive 5 was audited, disposed, and re
 | **AD Backdoor Purge** | `PC-DC` (`192.168.56.10`) | `Remove-ADUser -Identity "backdoor"` | `Get-ADUser` returns null | **PERMANENTLY PURGED** | Lead SOC Analyst |
 | **HANK_SHERMAN Demotion** | `PC-DC` (`192.168.56.10`) | Stripped DA; deleted SPN; forced AES | Empty `MemberOf` & `SPN` verified | **DEMOTED & HARDENED** | Lead SOC Analyst |
 | **Protected Users** | `PC-DC` (`192.168.56.10`) | Added `Administrator` & `HANK_SHERMAN` | Membership verified; NTLM denied | **ENROLLED** | Lead SOC Analyst |
-| **krbtgt Double Reset** | `PC-DC` (`192.168.56.10`) | Reset password twice; purged ticket cache | `msDS-KeyVersionNumber` = 4 | **INVALIDATED** | Lead SOC Analyst |
+| **krbtgt Double Reset** | `PC-DC` (`192.168.56.10`) | Reset password twice; purged ticket cache | `msDS-KeyVersionNumber` = 3 | **INVALIDATED** | Lead SOC Analyst |
 | **LLMNR/NetBIOS Disable**| `PC-DC` & `Win10User` | Registry `EnableMulticast=0`, CIM `NetbiosOptions=2` | Multicast queries completely silenced | **DISABLED** | Lead SOC Analyst |
 | **Micro-Segmentation** | Gateway & DVWA | iptables drops on AD ports (88, 135, 389, 445) | Outbound lateral connection rejected | **ENFORCED** | Lead SOC Analyst |
 | **Service Recovery** | All Hosts | Health tests: curl HTTP 200, DCDiag, Wazuh | All tests passed; 4 agents active | **HEALTHY & RESTORED** | Lead SOC Analyst |

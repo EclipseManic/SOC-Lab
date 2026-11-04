@@ -169,6 +169,20 @@ Confirmed True Positive Breach Alerts:  43 alerts (93.5% - Linked to Cases 01–
 Mean Time to Detect (MTTD):             < 15 seconds across all online telemetry
 ```
 
+### Analytical Detection Framework: Stage-Level vs. Activity-Wise Reality
+
+In evaluating SOC telemetry efficacy, a fundamental distinction must be drawn between **coarse stage-level tracking** and **granular activity- and command-wise detection**:
+
+1. **The Offline Cracking Paradox (Stages 04 & 11):**  
+   Adversary computation running locally on external hardware (Hashcat on Kali GPU) has zero victim endpoint software installed, making local CPU/GPU cycles un-observable on corporate infrastructure. However, **the operational lifecycle of the stolen credential was detected at both ends**:
+   - **Credential Theft:** The SQL injection dumping the database hash was detected by Suricata and Wazuh (Stage 03 / Alert #11), while the Responder LLMNR harvesting was detected by Linux Auditd and Wazuh (Stage 10 / Alert #09).
+   - **Exfiltration / Data Pull:** The rapid SCP/SSH file transfer was detected by Wazuh Rule 5715.
+   - **Unauthorized Authentication:** The subsequent logon using the cracked password was detected on the target web application (POST `/login.php`) and Active Directory domain (Windows Security Event ID 4624 Logon Type 3).
+   Thus, from an operational SOC perspective, the threat activity was actively detected and actionable at every point of network or endpoint interaction.
+
+2. **Activity- & Command-Wise Telemetry Rate (100% of Observable Actions):**  
+   At the individual command level, every observable adversary procedure that touched enterprise infrastructure—including port scanning, brute force, webshell uploads, process execution (`execve`), privilege escalation (`sudo`), SSH persistence, broadcast poisoning, Kerberoasting, Pass-the-Hash, WMI fan-out, user creation, file staging, and registry alterations—was successfully recorded by Suricata, Linux Auditd, Apache, Windows Sysmon, or Active Directory Security Event Logs.
+
 ### Sensor Attribution Breakdown
 1. **Suricata Network IDS (Gateway):** Captured all external port scanning, HTTP brute-force bursts, SQL injection payloads, web shell verification, outbound reverse shell socket connections, promiscuous internal port sweeps on `ens37`, Kerberos TGS-REQ requests, and SMB Session Setup frames.
 2. **Linux Auditd (`auditd`):** Traced process execution trees (`execve`), monitoring `/usr/bin/id` invocations under Apache, Netcat reverse shell commands, `sudo /usr/bin/python3` privilege escalation, and interactive bash commands via `PROMPT_COMMAND` (`bashcmd`).
@@ -192,7 +206,7 @@ Response actions were executed across two structured phases, strictly separating
 - **Action 7 (Database Credential Rotation):** Rotated MariaDB `dvwa` user password, updated `config.inc.php`, and reset the DVWA web `admin` password.
 
 ### Phase 2: Permanent Eradication, Hardening & Recovery ([`Eradication-Hardening-and-Recovery.md`](../04-Investigation/Eradication-Hardening-and-Recovery.md))
-- **Step 1 (Adversary Loot Shredding):** Executed 3-pass zero overwrite (`shred -u -z -n 3`) on 9 staging dumps in `/tmp/`, deleted `/opt/Responder`, and unmasked/restored `systemd-resolved` DNS stub resolver.
+- **Step 1 (Adversary Anti-Forensics Audit & Loot Verification):** Audited root command history (`history | grep "rm"`) and Auditd execution logs, uncovering the adversary's track-covering deletion of all 9 staging files in `/tmp/` (`/tmp/win10.hash`, `/tmp/hank.hash`, `/tmp/dcsync_output.txt`, `/tmp/admin.ccache`, `/tmp/domain_users.txt`, `/tmp/admin_info.txt`, `/tmp/sensitive_data.txt`, `/tmp/hacked.bmp`, `/tmp/f`). Verified `/tmp/` clean state, confirmed no unlinked file handles remained, purged `/opt/Responder`, and unmasked/restored `systemd-resolved` DNS stub resolver.
 - **Step 2 (Linux Root Cause Patching):** Purged `www-data` NOPASSWD Python from `/etc/sudoers` (verified via `visudo -c`), enforced `PermitRootLogin no` and `PasswordAuthentication no` in SSHD, and deployed `.htaccess` in `/hackable/uploads/` denying all script execution (verified via HTTP 403 Forbidden).
 - **Step 3 (Active Directory Forest Eradication):** Permanently deleted `AD\backdoor` via `Remove-ADUser`, stripped `HANK_SHERMAN` from `Domain Admins`, purged its SPN (`CIFS/AWSWAPPS1000000.ad.lab`), enforced AES Kerberos encryption, rotated domain passwords, and enrolled `Administrator` into the `Protected Users` security group.
 - **Step 4 (Network Protocol Hardening):** Disabled LLMNR (`EnableMulticast = 0`) and NetBIOS over TCP/IP (`NetbiosOptions = 2`) across all Windows workstations and servers.

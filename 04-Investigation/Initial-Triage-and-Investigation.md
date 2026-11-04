@@ -8,7 +8,7 @@
 > **Companion Incident Response Records:**  
 > - For the step-by-step live response commands, Velociraptor and PowerShell execution workflows, before/after states, and photographic proof of containment across all VMs, see **[`Immediate-Containment-Execution.md`](Immediate-Containment-Execution.md)**.
 > - For the end-to-end forensic deep-dive of the complete 7-phase attack chain, root-cause vulnerability analysis, 68-screenshot telemetry index, and strategic enterprise hardening roadmap, see **[`Deep-Dive-Attack-Chain-Investigation.md`](Deep-Dive-Attack-Chain-Investigation.md)**.
-> - For permanent post-investigation remediation, attacker staging shredding, Active Directory hardening, and closing cases in TheHive, see **[`Eradication-Hardening-and-Recovery.md`](Eradication-Hardening-and-Recovery.md)**.
+> - For permanent post-investigation remediation, adversary anti-forensics audit and staging artifact purge, Active Directory hardening, and closing cases in TheHive, see **[`Eradication-Hardening-and-Recovery.md`](Eradication-Hardening-and-Recovery.md)**.
 
 > [!NOTE]
 > ### ⏱️ Telemetry Timestamp Variations & Simulation Iteration Mechanics

@@ -10,7 +10,7 @@
 **Cross-Linked Incident Records:**
 - [Initial Alert Triage & Triage Register](Initial-Triage-and-Investigation.md) *(Preliminary queue triage of 46 TheHive alerts, false positive analysis, and 6-window timeline)*
 - [Immediate Operational Containment Execution](Immediate-Containment-Execution.md) *(Step-by-step live response commands, Velociraptor VQL workflows, and lockout verification)*
-- [Eradication, Vulnerability Hardening & System Recovery](Eradication-Hardening-and-Recovery.md) *(Permanent elimination of all 7 root causes, file shredding, Active Directory hardening, and closing cases in TheHive)*
+- [Eradication, Vulnerability Hardening & System Recovery](Eradication-Hardening-and-Recovery.md) *(Permanent elimination of all 7 root causes, adversary anti-forensics audit, Active Directory hardening, and closing cases in TheHive)*
 
 ---
 

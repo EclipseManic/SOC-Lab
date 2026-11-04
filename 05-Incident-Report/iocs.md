@@ -50,13 +50,13 @@ This register provides the definitive, unredacted catalog of Indicators of Compr
 | `/var/www/html/dvwa/hackable/uploads/shell.php` | DVWA (`192.168.56.30`) | PHP Web Shell | `N/A (Ephemeral Web Shell / Purged)` | Uploaded via DVWA upload flaw; accepted `?cmd=` parameters for arbitrary web execution. | **HIGH (Confirmed)** |
 | `/root/.ssh/authorized_keys` | DVWA (`192.168.56.30`) | Configuration | `ssh-ed25519 AAAAC3NzaC1lZDI1NTE5...` | Target of SSH persistence injection containing the adversary's ED25519 public key. | **HIGH (Confirmed)** |
 | `/tmp/f` | DVWA (`192.168.56.30`) | Named Pipe (FIFO) | N/A (Special Device) | Created via `mkfifo /tmp/f` to establish bidirectional Netcat reverse shell on port 4444. | **HIGH (Confirmed)** |
-| `/tmp/win10.hash` | DVWA (`192.168.56.30`) | Text Hash Dump | `N/A (Ephemeral Hash Cache / Shredded)` | Captured NetNTLMv2 challenge-response hash for `win10` written by Responder. | **HIGH (Confirmed)** |
-| `/tmp/hank.hash` | DVWA (`192.168.56.30`) | Text Hash Dump | `N/A (Ephemeral Hash Cache / Shredded)` | Kerberoasted RC4-HMAC service ticket hash extracted via `GetUserSPNs.py`. | **HIGH (Confirmed)** |
-| `/tmp/dcsync_output.txt` | DVWA (`192.168.56.30`) | Text Dump | `N/A (Ephemeral NTDS Dump / Shredded)` | Raw DCSync NTDS directory dump containing all domain account NTLM hashes. | **HIGH (Confirmed)** |
-| `/tmp/admin.ccache` | DVWA (`192.168.56.30`) | Kerberos Ticket | `N/A (Ephemeral Ticket / Shredded)` | Forged Kerberos Golden Ticket forged with compromised `krbtgt` NTLM key. | **HIGH (Confirmed)** |
-| `C:\Windows\Temp\domain_users.txt` | `PC-DC` (`192.168.56.10`) | Text File | `N/A (Ephemeral Staging / Shredded)` | Staged reconnaissance output of `net user /domain` command. | **HIGH (Confirmed)** |
-| `C:\Windows\Temp\admin_info.txt` | `PC-DC` (`192.168.56.10`) | Text File | `N/A (Ephemeral Staging / Shredded)` | Staged reconnaissance output of `net localgroup Administrators` command. | **HIGH (Confirmed)** |
-| `C:\Windows\Temp\sensitive_data.txt` | `Win10User` (`192.168.56.20`) | Text File | `N/A (Ephemeral Staging / Shredded)` | Harvested confidential workstation documents staged for exfiltration. | **HIGH (Confirmed)** |
+| `/tmp/win10.hash` | DVWA (`192.168.56.30`) | Text Hash Dump | `N/A (Ephemeral Staging / Adversary Track-Covering Deletion via rm / Verified Clean by Analyst)` | Captured NetNTLMv2 challenge-response hash for `win10` written by Responder. | **HIGH (Confirmed)** |
+| `/tmp/hank.hash` | DVWA (`192.168.56.30`) | Text Hash Dump | `N/A (Ephemeral Staging / Adversary Track-Covering Deletion via rm / Verified Clean by Analyst)` | Kerberoasted RC4-HMAC service ticket hash extracted via `GetUserSPNs.py`. | **HIGH (Confirmed)** |
+| `/tmp/dcsync_output.txt` | DVWA (`192.168.56.30`) | Text Dump | `N/A (Ephemeral Staging / Adversary Track-Covering Deletion via rm / Verified Clean by Analyst)` | Raw DCSync NTDS directory dump containing all domain account NTLM hashes. | **HIGH (Confirmed)** |
+| `/tmp/admin.ccache` | DVWA (`192.168.56.30`) | Kerberos Ticket | `N/A (Ephemeral Staging / Adversary Track-Covering Deletion via rm / Verified Clean by Analyst)` | Forged Kerberos Golden Ticket forged with compromised `krbtgt` NTLM key. | **HIGH (Confirmed)** |
+| `C:\Windows\Temp\domain_users.txt` | `PC-DC` (`192.168.56.10`) | Text File | `N/A (Ephemeral Staging / Adversary Track-Covering Deletion via rm / Verified Clean by Analyst)` | Staged reconnaissance output of `net user /domain` command. | **HIGH (Confirmed)** |
+| `C:\Windows\Temp\admin_info.txt` | `PC-DC` (`192.168.56.10`) | Text File | `N/A (Ephemeral Staging / Adversary Track-Covering Deletion via rm / Verified Clean by Analyst)` | Staged reconnaissance output of `net localgroup Administrators` command. | **HIGH (Confirmed)** |
+| `C:\Windows\Temp\sensitive_data.txt` | `Win10User` (`192.168.56.20`) | Text File | `N/A (Ephemeral Staging / Adversary Track-Covering Deletion via rm / Verified Clean by Analyst)` | Harvested confidential workstation documents staged for exfiltration. | **HIGH (Confirmed)** |
 | `C:\Users\Public\hacked.bmp` | `PC-DC` & `Win10User` | Bitmap Image | `N/A (Defacement Bitmap / Quarantined)` | Malicious red defacement bitmap deployed and set as system desktop wallpaper. | **HIGH (Confirmed)** |
 | `Desktop\README_HACKED.txt` | `PC-DC` & `Win10User` | Text Ransom Note | `N/A (Extortion Note / Quarantined)` | Simulated ransomware extortion note demanding cryptocurrency ransom. | **HIGH (Confirmed)** |
 | `Desktop\passwords.enc` | `PC-DC` & `Win10User` | Encrypted Dummy | `N/A (Simulated Ransomware / Quarantined)`| Dummy encrypted artifact simulating ransomware encryption impact. | **HIGH (Confirmed)** |
@@ -96,8 +96,8 @@ This register provides the definitive, unredacted catalog of Indicators of Compr
 | DVWA Admin Password | MD5 | `5f4dcc3b5aa765d61d8327deb882cf99` | Stage 03 (SQLi) | Rotated to salted hash in MariaDB. |
 | Workstation User Hash | NetNTLMv2 | `win10::AD:1122334455667788:B5F2A8...` | Stage 10 (Responder) | Account password rotated; LLMNR disabled. |
 | Kerberoast TGS Ticket | Kerberos 5 TGS-REP | `$krb5tgs$23$*HANK_SHERMAN$AD.LAB...` | Stage 13 (Kerberoast) | SPN deleted; account demoted; AES enforced. |
-| Compromised krbtgt Hash | NTLM | `611a8cdcc21cb3fe3bf3a4c2f4e05f60` | Stage 14 (DCSync) | Password reset twice; KVNO incremented to 4. |
-| Forged Golden Ticket | Kerberos TGT (ccache) | Staged as `/tmp/admin.ccache` (KVNO 2) | Stage 16 (ticketer.py) | Invalidated via krbtgt double reset; shredded. |
+| Compromised krbtgt Hash | NTLM | `611a8cdcc21cb3fe3bf3a4c2f4e05f60` | Stage 14 (DCSync) | Password reset twice; KVNO incremented to 3. |
+| Forged Golden Ticket | Kerberos TGT (ccache) | Staged as `/tmp/admin.ccache` (KVNO 2) | Stage 16 (ticketer.py) | Invalidated via krbtgt double reset; verified deleted. |
 | Injected Root SSH Key | OpenSSH ED25519 | `ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIACi7TGj+OejU78IWt/I6/im7sLXOR1jben7h94DmDJ5 kali@kali` | Stage 08 (SSH Persist) | Purged from `/root/.ssh/authorized_keys`. |
 
 ---
