@@ -117,7 +117,7 @@ During **Phase 4 (Eradication & Hardening)** ([`Eradication-Hardening-and-Recove
 - [x] **Flaw 2 (Permissive SSH Root Logins):** Enforced `PermitRootLogin no` and `PasswordAuthentication no` in `/etc/ssh/sshd_config`; restarted SSH daemon.
 - [x] **Flaw 3 (Web Upload Script Execution):** Deployed `.htaccess` denying script engines in `/hackable/uploads/`; tested and verified HTTP 403 Forbidden.
 - [x] **Flaw 4 (Service Account in Domain Admins):** Stripped `HANK_SHERMAN` from `Domain Admins`; deleted SPN `CIFS/AWSWAPPS1000000.ad.lab`; enforced AES Kerberos encryption.
-- [x] **Flaw 5 (Credential Exposure & Golden Tickets):** Enrolled `Administrator` and `HANK_SHERMAN` into `Protected Users` security group; completed double `krbtgt` password reset (KVNO 4).
+- [x] **Flaw 5 (Credential Exposure & Golden Tickets):** Enrolled `Administrator` and `HANK_SHERMAN` into `Protected Users` security group; completed double `krbtgt` password reset (KVNO 3).
 - [x] **Flaw 6 (Insecure LLMNR & NetBIOS):** Globally disabled LLMNR (`EnableMulticast = 0`) and NetBIOS over TCP/IP (`NetbiosOptions = 2`) across all Windows workstations and servers.
 - [x] **Flaw 7 (Flat DMZ Network Routing):** Enforced gateway and host iptables micro-segmentation rejecting outbound Windows AD ports from DVWA into `192.168.56.0/24`.
 
