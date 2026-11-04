@@ -663,7 +663,22 @@ def get_full_log_text(a):
     m=safe_get(a,"data.win.system.message")
     if m: return m.strip().strip('"')
     return json.dumps(a,indent=2)[:FULL_LOG_FALLBACK_MAX_CHARS]
-def severity_from_level(l):
+def severity_from_level(l, a=None):
+    if a:
+        suri_sev = safe_get(a, "data.alert.severity") or safe_get(a, "data.signature_severity")
+        if suri_sev is not None:
+            try:
+                suri_sev = int(suri_sev)
+                tags = build_tags(a) if isinstance(a, dict) else []
+                is_kev = any("cisa" in str(t).lower() or "kev" in str(t).lower() for t in tags)
+                if suri_sev == 1:
+                    return 4 if is_kev else 3
+                elif suri_sev == 2:
+                    return 2
+                elif suri_sev >= 3:
+                    return 1
+            except (TypeError, ValueError):
+                pass
     try: l=int(l)
     except (TypeError,ValueError): return 2
     if l>=15: return 4
@@ -700,7 +715,7 @@ def build_alert_payload(a):
     if kd: dl+=["### Key Details",kd,""]
     dl+=["### Full Log",f"```\n{fl}\n```"]
     ms=parse_iso_to_epoch_ms(ts)
-    return {"type":"wazuh_alert","source":"wazuh","sourceRef":f"{aid}-{rid}","title":f"[{ag}] {rd}"[:200],"description":"\n".join(dl),"severity":severity_from_level(lv),"tlp":TLP,"pap":PAP,"tags":build_tags(a),"observables":build_observables(a),"date":ms,"lastSyncDate":ms}
+    return {"type":"wazuh_alert","source":"wazuh","sourceRef":f"{aid}-{rid}","title":f"[{ag}] {rd}"[:200],"description":"\n".join(dl),"severity":severity_from_level(lv,a),"tlp":TLP,"pap":PAP,"tags":build_tags(a),"observables":build_observables(a),"date":ms,"lastSyncDate":ms}
 def extract_process_ids(a):
     p=safe_get(a,"data.win.eventdata.processId"); pp=safe_get(a,"data.win.eventdata.parentProcessId")
     if p or pp: return p,pp,"windows"
@@ -1063,7 +1078,7 @@ def _precompute_stage(a):
     """Pure-CPU stage rendering (regex/hex-decode/full-alert JSON dump). MUST be called
     BEFORE BEGIN IMMEDIATE: holding the SQLite RESERVED write lock across this work
     serializes concurrent Wazuh workers for no reason. Pure function of the alert dict."""
-    rid=str(safe_get(a,"rule.id","unknown")); rd=safe_get(a,"rule.description","Wazuh Alert"); sv=severity_from_level(safe_get(a,"rule.level",0)); ts=safe_get(a,"timestamp","n/a")
+    rid=str(safe_get(a,"rule.id","unknown")); rd=safe_get(a,"rule.description","Wazuh Alert"); sv=severity_from_level(safe_get(a,"rule.level",0),a); ts=safe_get(a,"timestamp","n/a")
     kd=build_key_details(a) or ""; fl=get_full_log_text(a); ob=build_observables(a); tg=build_tags(a)
     return (rid,rd,sv,ts,kd,fl,ob,tg)
 def _insert_stage_light(c,gt,tid,a,rf,pre=None):
@@ -1294,7 +1309,7 @@ def confirm_thehive_alert_gone(tid):
         return False
 def render_and_push_sync(gt,tid,stages):
     ti,de=GROUP_RENDERERS[gt](stages)
-    ok,rt,ra=patch_thehive_alert_sync(tid,ti,de,_merge_tags(stages,extra_tags=[gt,f"stages:{len(stages)}"]),_merge_observables(stages),max(s["severity"] for s in stages),parse_iso_to_epoch_ms(stages[-1]["timestamp"]))
+    ok,rt,ra=patch_thehive_alert_sync(tid,ti,de,_merge_tags(stages,extra_tags=[gt,f"occurrences:{len(stages)}"]),_merge_observables(stages),max(s["severity"] for s in stages),parse_iso_to_epoch_ms(stages[-1]["timestamp"]))
     return (ok,rt,ra)
 
 # ---------------- ingest: ZERO HTTP, O(1), atomic dedup ----------------
@@ -1536,7 +1551,7 @@ def flush_claimed_group(gt,tid):
             try: wc.execute("UPDATE pending_groups SET source_ref=? WHERE group_type=? AND thehive_alert_id=?",(sref,gt,tid)); wc.commit()
             except Exception: pass
             finally: wc.close()
-        p={"type":"wazuh_alert","source":"wazuh","sourceRef":sref,"title":ti,"description":de,"severity":ms,"tlp":TLP,"pap":PAP,"tags":_merge_tags(stages,extra_tags=[gt,f"stages:{len(stages)}"]),"observables":_merge_observables(stages),"date":em,"lastSyncDate":parse_iso_to_epoch_ms(stages[-1]["timestamp"])}
+        p={"type":"wazuh_alert","source":"wazuh","sourceRef":sref,"title":ti,"description":de,"severity":ms,"tlp":TLP,"pap":PAP,"tags":_merge_tags(stages,extra_tags=[gt,f"occurrences:{len(stages)}"]),"observables":_merge_observables(stages),"date":em,"lastSyncDate":parse_iso_to_epoch_ms(stages[-1]["timestamp"])}
         ok,rt,real,resp,ra=create_thehive_alert_sync(p)
         if not ok and not rt and _create_needs_reconcile(resp):
             # Server-side dedup fired (type+source+sourceRef already exists): NO duplicate
