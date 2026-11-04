@@ -83,7 +83,7 @@ Armed with the dumped domain NTLM hashes from DCSync, the adversary executed Pas
 - [x] Enroll `Administrator` and `HANK_SHERMAN` into Active Directory `Protected Users` security group
 - [x] Securely shred staged data files (`domain_users.txt`, `admin_info.txt`, `sensitive_data.txt`, `hacked.bmp`)
 - [x] Revert desktop wallpaper registry keys (`Wallpaper` and `WallpaperStyle`) and refresh UI parameters
-- [x] Perform dual `krbtgt` password resets (KVNO 4) to purge forged Kerberos Golden Tickets
+- [x] Perform dual `krbtgt` password resets (KVNO 3) to purge forged Kerberos Golden Tickets
 - [x] Implement DMZ egress micro-segmentation rejecting outbound Windows AD ports from `192.168.56.30`
 
 ---
