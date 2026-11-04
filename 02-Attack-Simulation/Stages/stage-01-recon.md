@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached
 > **Case:** [Case 01](../../04-Investigation/Cases/case-01-web-compromise.md)
 > **Investigation:** [Phase 1 Deep Dive](../../04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-1-rattling-the-doorknobs-reconnaissance--web-exploitation)
-> **Evidence:** [attack](../../assets/screenshots/attack-simulation/) · [alert](../../assets/screenshots/detection-engineering/)
+> **Evidence:** [attack](../../assets/screenshots/attack-simulation/) · [alert](../../assets/screenshots/thehive-alert/)
 
 ## Objective
 
@@ -59,16 +59,16 @@ gobuster dir -u http://192.168.56.30/ -w /usr/share/wordlists/dirb/common.txt -x
 
 ### Alert Screenshots
 
-![TheHive Alert Overview - Network and Scan Alerts](../../assets/screenshots/detection-engineering/1.png)
+![TheHive Alert Overview - Network and Scan Alerts](../../assets/screenshots/thehive-alert/1.png)
 *Figure 1.6: TheHive alert dashboard showing Suricata Nmap and multi-port scan detections.*
 
-![TheHive Alert Detail - Nmap Tool Campaign Detected by Suricata](../../assets/screenshots/detection-engineering/1.1.png)
+![TheHive Alert Detail - Nmap Tool Campaign Detected by Suricata](../../assets/screenshots/thehive-alert/1.1.png)
 *Figure 1.7: Detailed Suricata alert for Nmap OS detection probe and SYN port scan (rule 86601).*
 
-![TheHive Alert Detail - Suricata Unknown Scanner Multi-Port Probe](../../assets/screenshots/detection-engineering/1.2.png)
+![TheHive Alert Detail - Suricata Unknown Scanner Multi-Port Probe](../../assets/screenshots/thehive-alert/1.2.png)
 *Figure 1.8: Suricata alert tracking multi-port scan across SSH, MySQL, and database ports.*
 
-![TheHive Alert Detail - Suricata POSSBL Port Scan and OS Detection](../../assets/screenshots/detection-engineering/1.3.png)
+![TheHive Alert Detail - Suricata POSSBL Port Scan and OS Detection](../../assets/screenshots/thehive-alert/1.3.png)
 *Figure 1.9: Raw Suricata alert details captured in TheHive alert wzb-3a8045a03c.*
 
 ## Alert observed

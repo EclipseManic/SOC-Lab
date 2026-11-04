@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached
 > **Case:** [Case 02](../../04-Investigation/Cases/case-02-lateral-movement.md)
 > **Investigation:** [Phase 4 Deep Dive](../../04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-4-poisoning-the-well-stealing-windows-passwords-with-responder)
-> **Evidence:** [attack](../../assets/screenshots/attack-simulation/) · [alert](../../assets/screenshots/detection-engineering/)
+> **Evidence:** [attack](../../assets/screenshots/attack-simulation/) · [alert](../../assets/screenshots/thehive-alert/)
 
 ## Objective
 
@@ -70,16 +70,16 @@ win10::AD:112233***8899:b4a78***e31
 
 ### Alert Screenshots
 
-![TheHive Alert 9 — LLMNR Poisoning and Rogue Traffic Overview](../../assets/screenshots/detection-engineering/9.png)
+![TheHive Alert 9 — LLMNR Poisoning and Rogue Traffic Overview](../../assets/screenshots/thehive-alert/9.png)
 *Figure 4: TheHive Alert 9 overview showing detection of LLMNR/NBT-NS multicast poisoning and rogue authentication responses.*
 
-![TheHive Alert 9.1 — Multicast Poisoning Rule Trigger](../../assets/screenshots/detection-engineering/9.1.png)
+![TheHive Alert 9.1 — Multicast Poisoning Rule Trigger](../../assets/screenshots/thehive-alert/9.1.png)
 *Figure 5: Alert rule trigger details for rogue LLMNR/mDNS answers detected on the internal subnet.*
 
-![TheHive Alert 9.2 — Rogue Authentication and SMB Anomaly](../../assets/screenshots/detection-engineering/9.2.png)
+![TheHive Alert 9.2 — Rogue Authentication and SMB Anomaly](../../assets/screenshots/thehive-alert/9.2.png)
 *Figure 6: Suricata and Wazuh event telemetry capturing unauthorized SMB challenge-response exchange.*
 
-![TheHive Alert 9.3 — Host Telemetry for Apache Stop and Port Bind](../../assets/screenshots/detection-engineering/9.3.png)
+![TheHive Alert 9.3 — Host Telemetry for Apache Stop and Port Bind](../../assets/screenshots/thehive-alert/9.3.png)
 *Figure 7: Wazuh host monitoring alert on `dvwa` logging the termination of `apache2` followed by Python binding to privileged network ports.*
 
 ## Alert observed

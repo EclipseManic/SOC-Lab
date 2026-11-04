@@ -66,7 +66,7 @@ The evidence sets below are published in the public repository. The attack scree
 |---|---|---|
 | **Master Blueprint Document** | [`../assets/files/attack-chain-full.pdf`](../assets/files/attack-chain-full.pdf) (redacted) | Redacted copy of the single-source PDF describing the full attack chain and threat model. |
 | **Attacker-Side Screenshots** | [`../assets/screenshots/attack-simulation/`](../assets/screenshots/attack-simulation/) (original) | 62 high-resolution screenshots (`1.png` through `60.png`, plus `58.5.png` and `59.5.png`) showing terminal commands, tool executions, browser actions, and GUI validations. |
-| **SOC & Alert Screenshots** | [`../assets/screenshots/detection-engineering/`](../assets/screenshots/detection-engineering/) | 60 screenshots showing fired alerts, triage views, rule classifications, and event telemetry in TheHive, Wazuh, and Suricata. |
+| **SOC & Alert Screenshots** | [`../assets/screenshots/thehive-alert/`](../assets/screenshots/thehive-alert/) | 60 screenshots showing fired alerts, triage views, rule classifications, and event telemetry in TheHive, Wazuh, and Suricata. |
 | **Incident Response Screenshots** | `05-Incident-Report/Response_Action-Screenshot/` | No screenshot files are present in this folder. |
 
 ---

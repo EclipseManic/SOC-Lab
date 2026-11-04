@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached  
 > **Case:** [Case 02](../../04-Investigation/Cases/case-02-lateral-movement.md)  
 > **Investigation:** [Phase 4 Deep Dive](../../04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-4-poisoning-the-well-stealing-windows-passwords-with-responder)  
-> **Evidence:** [attack](../../assets/screenshots/attack-simulation/33.png) · [alert](../../assets/screenshots/detection-engineering/10.png)
+> **Evidence:** [attack](../../assets/screenshots/attack-simulation/33.png) · [alert](../../assets/screenshots/thehive-alert/10.png)
 
 ---
 
@@ -86,10 +86,10 @@ This finding identified a direct, high-impact compromise route: requesting and c
 
 ### Alert Screenshots
 
-![TheHive Alert List - Pivot Logon Activity](../../assets/screenshots/detection-engineering/10.png)
+![TheHive Alert List - Pivot Logon Activity](../../assets/screenshots/thehive-alert/10.png)
 *Figure 12.9: TheHive alert overview displaying multiple Wazuh logon activity alerts for ROOT on DVWA during enumeration pivot setup.*
 
-![TheHive Alert Details - Wazuh Rule 5715](../../assets/screenshots/detection-engineering/10.1.png)
+![TheHive Alert Details - Wazuh Rule 5715](../../assets/screenshots/thehive-alert/10.1.png)
 *Figure 12.10: TheHive alert detail showing Wazuh Rule 5715 triggered by SSH logon bursts from Kali (`192.168.232.135`) to DVWA (`192.168.56.30`) to execute and retrieve BloodHound telemetry.*
 
 ---

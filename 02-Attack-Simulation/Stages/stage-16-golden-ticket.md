@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached  
 > **Case:** [Case 03](../../04-Investigation/Cases/case-03-domain-compromise.md)  
 > **Investigation:** [Phase 5 Deep Dive](../../04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-5-becoming-god-in-active-directory-kerberoasting-dcsync--the-golden-ticket)  
-> **Evidence:** [attack](../../assets/screenshots/attack-simulation/49.png) · [alert](../../assets/screenshots/detection-engineering/14.png)
+> **Evidence:** [attack](../../assets/screenshots/attack-simulation/49.png) · [alert](../../assets/screenshots/thehive-alert/14.png)
 
 ## Objective
 
@@ -52,7 +52,7 @@ To validate the ticket, the attacker exported the environment variable `KRB5CCNA
 
 ### Detection & Alert Screenshots
 
-![TheHive alert for SSH session and remote access telemetry](../../assets/screenshots/detection-engineering/14.png)
+![TheHive alert for SSH session and remote access telemetry](../../assets/screenshots/thehive-alert/14.png)
 *Figure 16.4: TheHive Alert 14 recording SSH authentication activity on the DVWA pivot supporting remote staging operations.*
 
 ## Alert observed

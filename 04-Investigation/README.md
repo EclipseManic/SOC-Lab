@@ -94,10 +94,10 @@ Every technique executed during the offensive campaign maps directly to our defe
 All telemetry datasets, evidence captures, and production configurations referenced across the investigation are consolidated in the repository asset hub:
 
 * **Investigation Screenshots:**
-  * [`assets/screenshots/investigation/initial-triage/`](../assets/screenshots/investigation/initial-triage/): 26 queue triage & chronological evidence captures.
-  * [`assets/screenshots/investigation/containment/`](../assets/screenshots/investigation/containment/): 15 live response & containment execution captures.
-  * [`assets/screenshots/investigation/wazuh-alerts/`](../assets/screenshots/investigation/wazuh-alerts/): 68 chronological SIEM alert captures (`wzb-01` to `wzb-68`).
-  * [`assets/screenshots/investigation/eradication/`](../assets/screenshots/investigation/eradication/): 14 eradication, vulnerability hardening & TheHive case closure captures.
+  * [`assets/screenshots/initial-triage/`](../assets/screenshots/initial-triage/): 26 queue triage & chronological evidence captures.
+  * [`assets/screenshots/initial-triage-action/`](../assets/screenshots/initial-triage-action/): 15 live response & containment execution captures.
+  * [`assets/screenshots/wazuh-deep-investigation/`](../assets/screenshots/wazuh-deep-investigation/): 68 chronological SIEM alert captures (`wzb-01` to `wzb-68`).
+  * [`assets/screenshots/deep-investigation-action/`](../assets/screenshots/deep-investigation-action/): 14 eradication, vulnerability hardening & TheHive case closure captures.
 * **Telemetry Data Files:**
   * [`assets/files/alerts/wazuh_alerts.csv`](../assets/files/alerts/wazuh_alerts.csv): 808 curated SIEM alert records.
   * [`assets/files/alerts/thehive_alerts.json`](../assets/files/alerts/thehive_alerts.json): 46 correlated TheHive incident alerts.
