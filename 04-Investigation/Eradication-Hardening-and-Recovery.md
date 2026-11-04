@@ -10,7 +10,7 @@
 
 
 
-> **Environment:** SOC-Lab (`192.168.56.0/24` — DVWA `192.168.56.30`, PC-DC `192.168.56.10`, Win10User `192.168.56.20`, Suricata Gateway `192.168.56.1` / `192.168.232.138`)  
+> **Environment:** SOC-Lab (`192.168.56.0/24` — DVWA `192.168.56.30`, PC-DC `192.168.56.10`, Win10User `192.168.56.20`, Suricata Gateway `192.168.56.150` / `192.168.232.162`)  
 
 
 
@@ -90,7 +90,7 @@
 
 
 
-3. [Step 1: Linux Attacker Loot Shredding & Network Service Restoration (DVWA)](#3-step-1-linux-attacker-loot-shredding--network-service-restoration-dvwa)
+3. [Step 1: Adversary Anti-Forensics Audit, Staging File Purge & Network Service Restoration (DVWA)](#3-step-1-adversary-anti-forensics-audit-staging-file-purge--network-service-restoration-dvwa)
 
 
 
@@ -286,7 +286,7 @@ All actions documented in this playbook were executed strictly through authorize
 
 
 
-   - Direct execution on the Suricata Gateway (`192.168.56.1`) and DVWA Linux Server (`192.168.56.30`).
+   - Direct execution on the Suricata Gateway (`192.168.56.150`) and DVWA Linux Server (`192.168.56.30`).
 
 
 
@@ -330,257 +330,77 @@ All actions documented in this playbook were executed strictly through authorize
 
 
 
-# 3. Step 1: Linux Attacker Loot Shredding & Network Service Restoration (DVWA)
+# 3. Step 1: Adversary Anti-Forensics Audit, Staging File Purge & Network Service Restoration (DVWA)
 
-
-
-
-
-
-
-> 🎯 **Objective:** Securely wipe all adversary staging dumps and credential caches left in `/tmp/` and `/opt/`, and restore the local DNS resolution service hijacked by the adversary's LLMNR/DNS poisoner.  
-
-
-
+> 🎯 **Objective:** Audit adversary track-covering deletion commands in root bash history, verify the purge of all 9 staging artifacts in `/tmp/`, permanently remove rogue tooling (`/opt/Responder`), and restore the local `systemd-resolved` DNS resolution service.  
 > 💻 **Target:** DVWA Linux Server (`192.168.56.30`)  
-
-
-
 > 🔧 **Channel:** Velociraptor Live Response (`Linux.Sys.BashShell`)
-
-
-
-
-
-
 
 ### Tactical Context & Forensic Verification
 
+During Phases 4 through 7 of the attack, the adversary utilized DVWA as their internal staging and pivoting platform, generating 9 critical intermediate files in `/tmp/`:
 
+- Captured NTLMv2 and Kerberos hashes: `/tmp/win10.hash` and `/tmp/hank.hash`.
+- Full DCSync NTDS password dump: `/tmp/dcsync_output.txt`.
+- Forged Kerberos Golden Ticket: `/tmp/admin.ccache`.
+- Staged exfiltration dumps: `/tmp/domain_users.txt`, `/tmp/admin_info.txt`, `/tmp/sensitive_data.txt`.
+- Workstation defacement bitmap: `/tmp/hacked.bmp`.
+- Netcat reverse shell named pipe: `/tmp/f`.
+- The adversary also deployed Responder into `/opt/Responder` and disabled `systemd-resolved` to prevent UDP port 53 binding conflicts with Responder's rogue DNS poisoner.
 
-During Phases 4 through 7 of the attack, the adversary used DVWA as their internal staging and pivoting platform:
+#### Adversary Anti-Forensics (Track-Covering via `rm`):
+Prior to disconnecting their interactive sessions, the adversary attempted to thwart post-incident forensic discovery by executing `rm` commands to delete all 9 intermediate staging files from `/tmp/`:
+```bash
+rm /tmp/win10.hash /tmp/hank.hash /tmp/dcsync_output.txt /tmp/admin.ccache /tmp/domain_users.txt /tmp/admin_info.txt /tmp/sensitive_data.txt /tmp/hacked.bmp /tmp/f
+```
 
-
-
-- Captured NTLMv2 and Kerberos hashes were cached in `/tmp/win10.hash` and `/tmp/hank.hash`.
-
-
-
-- Full DCSync NTDS password dumps were written to `/tmp/dcsync_output.txt`.
-
-
-
-- Forged Kerberos Golden Tickets were generated as `/tmp/admin.ccache`.
-
-
-
-- Staged exfiltration bundles were stored in `/tmp/domain_users.txt`, `/tmp/admin_info.txt`, `/tmp/sensitive_data.txt`, and defacement payload `/tmp/hacked.bmp`.
-
-
-
-- The Netcat reverse shell named pipe was created at `/tmp/f`.
-
-
-
-- The adversary deployed Responder into `/opt/Responder` and disabled `systemd-resolved` to prevent UDP port 53 binding conflicts with Responder's rogue DNS poisoner.
-
-
-
-
-
-
-
-Because verified forensic images and cryptographic checksums were already archived into `/root/forensics_quarantine/` during deep-dive investigation, all working copies must now be permanently destroyed to eliminate lingering credential exposure.
-
-
-
-
-
-
+#### Analyst Forensic Discovery & Verification Actions:
+During live response and forensic auditing of DVWA, the incident response team inspected the root command history (`history | grep "rm"`) and Linux Auditd records. The shell history explicitly confirmed the adversary's deletion attempts, revealing the exact filenames and paths of the compromised staging files. The analyst then verified that `/tmp/` was clean (`ls -la /tmp/`), verified no lingering unlinked file descriptors remained open, purged `/opt/Responder`, unmasked and restarted `systemd-resolved`, and validated upstream DNS resolution.
 
 ### Execution Script:
 
-
-
 ```bash
+# ==============================================================================
+# 1. ADVERSARY ANTI-FORENSICS AUDIT: Review root command history for rm cleanup
+# ==============================================================================
+history | grep "rm"
 
-
+# Output confirms adversary executed:
+# rm /tmp/win10.hash /tmp/hank.hash /tmp/dcsync_output.txt /tmp/admin.ccache #    /tmp/domain_users.txt /tmp/admin_info.txt /tmp/sensitive_data.txt /tmp/hacked.bmp /tmp/f
 
 # ==============================================================================
-
-
-
-# 1. FORENSIC VERIFICATION: Ensure evidence is preserved in quarantine
-
-
-
+# 2. FILESYSTEM AUDIT: Verify /tmp/ directory clean state & unlinked descriptors
 # ==============================================================================
-
-
-
-ls -la /root/forensics_quarantine/
-
-
-
-sha256sum /root/forensics_quarantine/*
-
-
-
-
-
-
-
-# ==============================================================================
-
-
-
-# 2. ADVERSARY LOOT ERADICATION: 3-pass cryptographic shredding of staging dumps
-
-
-
-# ==============================================================================
-
-
-
-shred -u -z -n 3 /tmp/win10.hash \
-
-
-
-                 /tmp/hank.hash \
-
-
-
-                 /tmp/dcsync_output* \
-
-
-
-                 /tmp/admin.ccache \
-
-
-
-                 /tmp/domain_users.txt \
-
-
-
-                 /tmp/admin_info.txt \
-
-
-
-                 /tmp/sensitive_data.txt \
-
-
-
-                 /tmp/hacked.bmp \
-
-
-
-                 /tmp/f
-
-
-
-
-
-
-
-# ==============================================================================
-
-
-
-# 3. ADVERSARY TOOLING REMOVAL: Purge rogue Responder and Impacket directories
-
-
-
-# ==============================================================================
-
-
-
-rm -rf /opt/Responder /opt/impacket
-
-
-
-
-
-
-
-# Verify /tmp directory clean state
-
-
-
 ls -la /tmp/
 
-
-
-
-
-
+# Confirm no lingering processes hold open unlinked handles to deleted files
+lsof +L1 /tmp 2>/dev/null || true
 
 # ==============================================================================
+# 3. ADVERSARY TOOLING REMOVAL: Purge rogue Responder and Impacket directories
+# ==============================================================================
+rm -rf /opt/Responder /opt/impacket
 
+# Verify /opt directory clean state
+ls -la /opt/
 
-
+# ==============================================================================
 # 4. SYSTEM SERVICE RESTORATION: Unmask and restart systemd-resolved DNS resolver
-
-
-
 # ==============================================================================
-
-
-
 systemctl unmask systemd-resolved
-
-
-
 systemctl enable --now systemd-resolved
-
-
-
 systemctl is-active systemd-resolved
 
-
-
-
-
-
-
 # Confirm stub listener bound to 127.0.0.53:53 and upstream AD DNS configured
-
-
-
 resolvectl status
-
-
-
 ```
-
-
-
-
-
-
 
 ### 📸 Proof of Execution:
 
-
-
-![DVWA loot shredding and systemd-resolved restoration](../06-Resources/screenshots/deep-investigation-action/slot_01_eradication_dvwa_loot_wiped.png)  
-
-
-
-*Figure 1: Velociraptor console demonstrating 3-pass zero overwrite shredding of 9 adversary staging files, deletion of `/opt/Responder`, and operational restoration of `systemd-resolved` DNS stub resolver.*
-
-
-
-
-
-
+![DVWA loot verification and systemd-resolved restoration](../06-Resources/screenshots/deep-investigation-action/slot_01_eradication_dvwa_loot_wiped.png)  
+*Figure 1: Analyst console review demonstrating forensic audit of the adversary's rm track-covering cleanup in root bash history (history | grep "rm"), verification of clean /tmp/ state, purge of /opt/Responder, and operational restoration of systemd-resolved DNS stub resolver.*
 
 ---
-
-
-
-
-
-
 
 <a id="step-2-linux-root-cause-vulnerability-elimination--web-hardening-dvwa"></a>
 
@@ -2324,7 +2144,7 @@ Every alert ingested by TheHive from Wazuh was individually audited by the incid
 
 
 
-- **Closure Actions:** Purged injected ED25519 root SSH public key; shredded harvested hash caches (`/tmp/win10.hash`, `/tmp/hank.hash`); deleted `/opt/Responder`; unmasked and restored `systemd-resolved` DNS stub resolver; globally disabled LLMNR (`EnableMulticast = 0`) and NetBIOS (`NetbiosOptions = 2`) across Windows endpoints; stripped `HANK_SHERMAN` from `Domain Admins`; deleted SPN `CIFS/AWSWAPPS1000000.ad.lab`; rotated domain account passwords.
+- **Closure Actions:** Purged injected ED25519 root SSH public key; audited adversary rm deletion of harvested hash caches (`/tmp/win10.hash`, `/tmp/hank.hash`); deleted `/opt/Responder`; unmasked and restored `systemd-resolved` DNS stub resolver; globally disabled LLMNR (`EnableMulticast = 0`) and NetBIOS (`NetbiosOptions = 2`) across Windows endpoints; stripped `HANK_SHERMAN` from `Domain Admins`; deleted SPN `CIFS/AWSWAPPS1000000.ad.lab`; rotated domain account passwords.
 
 
 
@@ -2368,7 +2188,7 @@ Every alert ingested by TheHive from Wazuh was individually audited by the incid
 
 
 
-- **Closure Actions:** Permanently deleted rogue account `AD\backdoor` via `Remove-ADUser`; completed double-reset of `krbtgt` password (incrementing KVNO to 3 to invalidate Golden Tickets); enrolled `Administrator` and `HANK_SHERMAN` in `Protected Users`; shredded staged exfiltration files and quarantined ransomware artifacts (`README_HACKED.txt`, `*.enc`); restored Windows desktop wallpaper registry; implemented DMZ egress micro-segmentation.
+- **Closure Actions:** Permanently deleted rogue account `AD\backdoor` via `Remove-ADUser`; completed double-reset of `krbtgt` password (incrementing KVNO to 3 to invalidate Golden Tickets); enrolled `Administrator` and `HANK_SHERMAN` in `Protected Users`; verified adversary rm deletion of staged exfiltration files and quarantined ransomware artifacts (`README_HACKED.txt`, `*.enc`); restored Windows desktop wallpaper registry; implemented DMZ egress micro-segmentation.
 
 
 
@@ -2484,7 +2304,7 @@ With all 3 cases resolved and all 46 alerts accounted for, the operational alert
 
 
 
-| **Loot Shredding** | Harvested hashes, DCSync dumps & staging bundles in `/tmp/` | Executed 3-pass cryptographic shredding (`shred -u -z -n 3`) on 9 staging files; purged `/opt/Responder` | `ls -la /tmp/` confirms 0 adversary files; `systemd-resolved` active | **PERMANENTLY PURGED** | Lead SOC Analyst |
+| **Anti-Forensics Audit & Loot Purge** | 9 intermediate staging files in `/tmp/` | Audited adversary rm track-covering in `history | grep rm`; verified `/tmp/` clean state; purged `/opt/Responder` | `ls -la /tmp/` confirms 0 adversary files; `systemd-resolved` active | **VERIFIED & PURGED** | Lead SOC Analyst |
 
 
 
