@@ -23,7 +23,7 @@ Following root privilege escalation on the DVWA host (`192.168.56.30`), the adve
 
 | Stage | Attack | Investigation | Detection Status |
 |---|---|---|---|
-| 08 | [SSH persistence](../../02-Attack-Simulation/Stages/stage-08-ssh-persistence.md) | [Phase 3 Deep Dive](../Deep-Dive-Attack-Chain-Investigation.md#phase-3-making-themselves-at-home-ssh-persistence--finding-windows) | **Detected** (Wazuh Rule 5715 Level 8 & Rule 100215) |
+| 08 | [SSH persistence](../../02-Attack-Simulation/Stages/stage-08-ssh-persistence.md) | [Phase 3 Deep Dive](../Deep-Dive-Attack-Chain-Investigation.md#phase-3-making-themselves-at-home-ssh-persistence--finding-windows) | **Detected** (Wazuh Rule 550 [FIM] & Rule 5715 [SSH Auth], with Rule 100220 host shell capture) |
 | 09 | [Internal discovery](../../02-Attack-Simulation/Stages/stage-09-internal-discovery.md) | [Phase 3 Deep Dive](../Deep-Dive-Attack-Chain-Investigation.md#phase-3-making-themselves-at-home-ssh-persistence--finding-windows) | **Logging gap** (Suricata SID 3400001, 3400002 on ens37; DG-09) |
 | 10 | [Responder poisoning](../../02-Attack-Simulation/Stages/stage-10-responder.md) | [Phase 4 Deep Dive](../Deep-Dive-Attack-Chain-Investigation.md#phase-4-poisoning-the-well-stealing-windows-passwords-with-responder) | **Detected** (Wazuh bashcmd: uid:0 Responder.py execution on pivot) |
 | 11 | [NTLMv2 cracking](../../02-Attack-Simulation/Stages/stage-11-ntlmv2-crack.md) | [Phase 4 Deep Dive](../Deep-Dive-Attack-Chain-Investigation.md#phase-4-poisoning-the-well-stealing-windows-passwords-with-responder) | **Detection gap** (DG-11: Inherent offline cracking) |
@@ -37,8 +37,8 @@ Following root privilege escalation on the DVWA host (`192.168.56.30`), the adve
 
 | Source | What it contributed |
 |---|---|
-| **Suricata** | Dual-interface NIDS: promiscuous capture on `ens37` observed internal subnet port sweeps from DVWA (SIDs 3400001, 3400002, 3400020) and Kerberos TGS-REQ wire frames during Kerberoasting (SID 2019922). |
-| **Wazuh** | Monitored Linux authentication on DVWA: authorized_keys modification (Rule 550 / 100215) and interactive root SSH logons (Rule 5715 elevated to Level 8) providing end-to-end pivot visibility. In addition, Wazuh's custom host shell auditing pipeline (`bashcmd` / Rule 100220 Level 5) captured verbatim adversary commands on the pivot host across rows 9139–9286 in `Wazuh-Raw-Alerts.csv` (nmap discovery sweep, Responder.py start and hash copy, BloodHound execution, GetUserSPNs.py Kerberoasting, and secretsdump.py DCSync). Monitored Windows domain member events (`DomainWin10` agent on DC and `Win10User` agent on workstation). |
+| **Suricata** | Dual-interface NIDS: promiscuous capture on `ens37` observed internal subnet port sweeps from DVWA (SIDs 3400001, 3400002, 3400020) and Kerberos TGS-REQ wire frames during Kerberoasting (SID 2019922 `ET EXPLOIT Possible GoldenPac Priv Esc in-use`). |
+| **Wazuh** | Monitored Linux authentication on DVWA: authorized_keys modification (Rule 550 FIM & Rule 100220 host shell capture) and interactive root SSH logons (Rule 5715 elevated to Level 8) providing end-to-end pivot visibility. In addition, Wazuh's custom host shell auditing pipeline (`bashcmd` / Rule 100220 Level 5) captured verbatim adversary commands on the pivot host across rows 9139–9286 in `Wazuh-Raw-Alerts.csv` (nmap discovery sweep, Responder.py start and hash copy, BloodHound execution, GetUserSPNs.py Kerberoasting, and secretsdump.py DCSync). Monitored Windows domain member events (`DomainWin10` agent on DC and `Win10User` agent on workstation). |
 | **TheHive** | Aggregated pivot logons and network IDS alerts into correlated incident cases. |
 | **Velociraptor** | Queried Active Directory audit events, inspected `/root/.ssh/authorized_keys` and `/tmp/hank.hash` on DVWA pivot. |
 

