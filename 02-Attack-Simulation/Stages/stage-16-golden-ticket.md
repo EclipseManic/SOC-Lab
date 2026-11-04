@@ -59,13 +59,14 @@ To validate the ticket, the attacker exported the environment variable `KRB5CCNA
 
 | Source | Rule / Event Description | Rule ID | TheHive Alert Title | Severity | Status |
 |---|---|---|---|---|---|
-| Wazuh (Pivot Host) | sshd: authentication success (Pivot Session Alert) | 5715 (Level 8) | `[2x] [DVWA] Logon activity: ROOT @ 192.168.232.135` (`14.png`) | Medium (2) | Pivot-Only Coverage (SSH login alerted in TheHive; technique verified via host command telemetry Rule 100220) |
-| Wazuh (Host Command Audit) | Bash command by root: `python3 ticketer.py -nthash 611a8... -domain-sid S-1-5-21...` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9306) | High | Detected (Golden Ticket Forgery) |
+| Wazuh (Host Command Audit) | Bash command by root: `python3 /usr/local/bin/ticketer.py -nthash ...` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9306) | High | **Detected (Verbatim Command Capture)** |
 | Wazuh (Host Command Audit) | Bash command by root: `export KRB5CCNAME=/tmp/Administrator.ccache` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9307) | Medium | Detected (Kerberos Cache Activation) |
-| Active Directory / Kerberos | Kerberos TGS request without matching AS-REQ / RC4 encryption | Event ID 4769 | Local DC Security Log (Unforwarded due to level filter) | Medium | Detected (Local DC Log) |
+| Wazuh (Pivot Host) | sshd: authentication success (Pivot Session Alert) | Rule 5715 (Level 8) | `[2x] [DVWA] Logon activity: ROOT @ 192.168.232.135` (`14.png`) | Medium | Pivot-Only Coverage |
+| Active Directory / Kerberos | Kerberos TGS request without matching AS-REQ / RC4 encryption | Event ID 4769 | Local DC Security Log (`Security.evtx`) | Medium | Detected (Local DC Telemetry) |
 
 > [!NOTE]
-> While the Domain Controller cannot distinguish a forged Golden Ticket from a legitimate TGT (as the ticket is cryptographically valid under the stolen krbtgt key), the execution of `ticketer.py` was logged directly on the DVWA pivot host under **Wazuh Rule 100220** at 18:06:40 IST (`Wazuh-Raw-Alerts.csv` Row 9306): python3 /usr/local/bin/ticketer.py -nthash 611a8cdcc21cb3fe3bf3a4c2f4e05f60 -domain-sid S-1-5-21-3315718683-193253855-3518612541 -domain ad.lab Administrator, followed immediately by ticket staging via `export KRB5CCNAME=/tmp/Administrator.ccache` (Row 9307). Upon ticket presentation, detection also occurred on the DC via Event ID 4769.
+> **Telemetry Attribution & Pipeline Execution (Rule 100220):**  
+> While the Domain Controller cannot distinguish a forged Golden Ticket from a legitimate TGT (as the ticket is cryptographically valid under the stolen `krbtgt` key), Impacket `ticketer.py` was launched interactively on the DVWA pivot at `18:06:40 IST` (`Wazuh-Raw-Alerts.csv` Row 9306): `python3 /usr/local/bin/ticketer.py -nthash 611a8cdcc21cb3fe3bf3a4c2f4e05f60 -domain-sid S-1-5-21-3315718683-193253855-3518612541 -domain ad.lab Administrator`, followed immediately by Kerberos cache staging (`export KRB5CCNAME=/tmp/Administrator.ccache`, Row 9307). As a Level 5 rule, Rule 100220 recorded the command locally on DVWA and indexed into OpenSearch without SIEM-to-SOAR escalation. Meanwhile, the pivot SSH session used to run it triggered TheHive Alert 14 (`wzb-8d45b2d236` via elevated Rule 5715), and subsequent ticket presentation generated Event ID 4769 in local DC EVTX logs.
 
 ## MITRE ATT&CK
 

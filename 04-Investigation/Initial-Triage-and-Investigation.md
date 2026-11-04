@@ -237,9 +237,10 @@ Our pipeline maps Wazuh `rule.level` directly to TheHive severity using static t
 - **False Critical / High:** Failed Nikto Shellshock header (#06 = Critical) and external Nmap scan (#03 = High).
 - **False Medium (Should be Critical):** Web SQLi + shell.php upload (#11), Netcat reverse shell (#14 – #15), root SSH login from attacker IP (#16), GoldenPac DC exploit (#23), wmiexec.py on DC (#25 – #29, #32), BACKDOOR user creation (#30), and simulated ransomware + forced reboots (#39 – #45).
 
-### How to fix it:
+### How to fix it (Implemented in Pipeline):
 
-Promote Wazuh rule `100613` (Impacket wmiexec detected), `mkfifo / nc.openbsd` reverse shells, ET EXPLOIT GoldenPac, Event ID 4720 (`60109` add_user on DC), and `shutdown /r` / `.enc` file drops to **Critical (Sev 4)**, and downgrade unauthenticated scanner 404 / 400 bursts to **Low (Sev 1)**.
+1. **Refactored `custom-thehive.py` (`severity_from_level`):** The integration script directly parses Suricata's native `data.alert.severity` / `data.signature_severity` from EVE-JSON rather than routing all network alerts through the generic Level 8 wrapper. Suricata Severity 1 signatures now map directly to TheHive **High (3)** or **Critical (4)** (if CISA-KEV tagged), while routine scans are downgraded to **Low (1)**.
+2. **Rule Elevation in `local_rules.xml`:** Wazuh rule `100613` (Impacket wmiexec detected), Netcat reverse shells, and Domain Controller privilege modifications evaluate with elevated levels to prevent high-impact adversary techniques from being buried as informational noise.
 
 ## ⚠️ Flaw 2: Missing [TOOL:...] Detection Tags (Only Nmap Was Named; Everything Else Was Missed or Tagged unknown-scanner)
 

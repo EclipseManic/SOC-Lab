@@ -53,9 +53,9 @@ Following root privilege escalation on the DVWA host (`192.168.56.30`), the adve
 | `17:31:19` | Internal subnet discovery sweep against `192.168.56.0/24` | Suricata (`ens37`) | [`wzb-22-discovery-suricata-internal-nmap.jpg`](../../06-Resources/screenshots/wazuh-deep-investigation/wzb-22-discovery-suricata-internal-nmap.jpg) |
 | `17:37:10` | Responder LLMNR/NetBIOS poisoning capturing `win10` NetNTLMv2 hash | Win10 Sysmon / Auditd | [`wzb-28-responder-win10-rundll32-davsetcookie.jpg`](../../06-Resources/screenshots/wazuh-deep-investigation/wzb-28-responder-win10-rundll32-davsetcookie.jpg) |
 | `17:38:29` | NetNTLMv2 hash saved to `/tmp/win10.hash` for offline Hashcat cracking | Linux Pivot Auditd | [`wzb-29-responder-auditd-ntlmv2-hash-harvested.jpg`](../../06-Resources/screenshots/wazuh-deep-investigation/wzb-29-responder-auditd-ntlmv2-hash-harvested.jpg) |
-| `18:00:57` | BloodHound LDAP query volume from DVWA to DC (`18:01:02` root SSH session) | Wazuh SSHD / Auditd | [`wzb-31-bloodhound-auditd-python-ingest.jpg`](../../06-Resources/screenshots/wazuh-deep-investigation/wzb-31-bloodhound-auditd-python-ingest.jpg) |
-| `18:01:18` | Kerberoasting TGS-REQ requested for `HANK_SHERMAN` SPN via GetUserSPNs.py | Suricata / Wazuh | [`wzb-33-kerberoast-auditd-getuserspns.jpg`](../../06-Resources/screenshots/wazuh-deep-investigation/wzb-33-kerberoast-auditd-getuserspns.jpg) |
-| `18:02:43` | DCSync replication dumping domain hashes via DRSUAPI (secretsdump.py) | Linux Pivot Auditd | [`wzb-34-dcsync-auditd-secretsdump-ntds.jpg`](../../06-Resources/screenshots/wazuh-deep-investigation/wzb-34-dcsync-auditd-secretsdump-ntds.jpg) |
+| `18:00:57` | BloodHound LDAP query volume from DVWA to DC (`18:01:00` root SSH session) | Wazuh Rule 5715 / Rule 100220 (`bloodhound.py`) | [`wzb-31-bloodhound-auditd-python-ingest.jpg`](../../06-Resources/screenshots/wazuh-deep-investigation/wzb-31-bloodhound-auditd-python-ingest.jpg) |
+| `18:01:18` | Kerberoasting TGS-REQ requested for `HANK_SHERMAN` SPN via GetUserSPNs.py | Suricata SID 2019922 / Wazuh Rule 100220 (`GetUserSPNs.py`) | [`wzb-33-kerberoast-auditd-getuserspns.jpg`](../../06-Resources/screenshots/wazuh-deep-investigation/wzb-33-kerberoast-auditd-getuserspns.jpg) |
+| `18:02:43` | DCSync replication dumping domain hashes via DRSUAPI (secretsdump.py) | Wazuh Rule 5715 / Rule 100220 (`secretsdump.py`) | [`wzb-34-dcsync-auditd-secretsdump-ntds.jpg`](../../06-Resources/screenshots/wazuh-deep-investigation/wzb-34-dcsync-auditd-secretsdump-ntds.jpg) |
 
 ---
 

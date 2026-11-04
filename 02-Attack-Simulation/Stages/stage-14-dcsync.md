@@ -75,18 +75,16 @@ The extraction of the `Administrator` NTLM hash (`cc814***9fb`) immediately enab
 
 ## Alert observed
 
-| Source | Rule | Rule ID | TheHive Alert | Severity | Status |
+| Source | Rule / Event Description | Rule ID | TheHive Alert Title | Severity | Status |
 |---|---|---|---|---|---|
-| Wazuh (Pivot Host) | sshd: authentication success (Interactive Pivot Session) | Rule 5715 (Level 8) | `[2x] [DVWA] Logon activity: ROOT @ 192.168.232.135` (`14.png`) | Medium | Pivot-Only Coverage (SSH login alerted in TheHive; technique verified via host command telemetry Rule 100220) |
-| Wazuh (Host Command Audit) | Bash command by root: `python3 secretsdump.py ... -outputfile /tmp/dcsync_output` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9274) | High | DETECTED (Verbatim DCSync Capture) |
-| Wazuh (Host Command Audit) | Bash command by root: `cat /tmp/dcsync_output.ntds` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9276) | Medium | DETECTED (Loot Inspection Capture) |
+| Wazuh (Host Command Audit) | Bash command by root: `python3 /usr/local/bin/secretsdump.py ...` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9274) | High | **Detected (Verbatim Command Capture)** |
+| Wazuh (Host Command Audit) | Bash command by root: `cat /tmp/dcsync_output.ntds` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9276) | Medium | Detected (Loot Inspection Capture) |
+| Wazuh (Pivot Host) | sshd: authentication success (Interactive Pivot Session) | Rule 5715 (Level 8) | `[2x] [DVWA] Logon activity: ROOT @ 192.168.232.135` (`12.png`) | Medium | Pivot-Only Coverage |
+| Active Directory (Domain Controller) | Directory Service Replication Access (DS-Replication-Get-Changes) | Event ID 4662 | Local DC Security Log (`Security.evtx`) | High | Detected (Local DC Telemetry) |
 
-### Detection Analysis
-
-- **Verbatim DCSync Command Capture (Rule 100220):** The definitive ground-truth evidence of DCSync execution on the host was captured by Wazuh Rule 100220 at `18:02:40 IST` (`Wazuh-Raw-Alerts.csv` Row 9274):  
-  `python3 /usr/local/bin/secretsdump.py ad.lab/HANK_SHERMAN:'Password123'@192.168.56.10 -outputfile /tmp/dcsync_output`. This was immediately followed by the adversary inspecting the dumped credentials (`cat /tmp/dcsync_output.ntds`, Row 9276) and executing `lookupsid.py` (Row 9286) to extract the Domain SID.
-- **Pivot Telemetry (TheHive Alert):** Wazuh Rule 5715 logged the administrative SSH session on `192.168.56.30` used to initiate `secretsdump.py` and transfer the 240KB NTDS dump to Kali. This generated the alert displayed in Figure 14.4 (`14.png`).
-- **Domain Controller Telemetry (Local Audit):** Domain Controller `PC-DC.ad.lab` logged **Windows Security Event ID 4662** ("An operation was performed on an object") in `Security.evtx` recording the replication rights invocation. Note that while EID 4662 was captured in local DC event logs, it did not trigger an alert $\ge 8$ in Wazuh, so the alert routed to TheHive was the pivot SSH session:
+> [!NOTE]
+> **Telemetry Attribution & Pipeline Execution (Rule 100220):**  
+> Impacket `secretsdump.py` was launched interactively on the DVWA pivot at `18:02:40 IST` (`Wazuh-Raw-Alerts.csv` Row 9274): `python3 /usr/local/bin/secretsdump.py ad.lab/HANK_SHERMAN:'Password123'@192.168.56.10 -outputfile /tmp/dcsync_output`, followed by credential file inspection (`cat /tmp/dcsync_output.ntds`, Row 9276) and Domain SID extraction (`lookupsid.py`, Row 9286). As a Level 5 rule, Rule 100220 recorded the commands locally on DVWA and indexed into OpenSearch without SIEM-to-SOAR escalation. Meanwhile, the pivot SSH session used to run it was elevated to Level 8 (Rule 5715) and triggered TheHive Alert 12 (`wzb-4174e3672e`), while Domain Controller Event ID 4662 remained recorded in local DC event logs without crossing the Level 8 SOAR gate:
   - **Account Name:** `HANK_SHERMAN`
   - **Object Server:** `DS`
   - **Access Mask:** `0x100` (Control Access)

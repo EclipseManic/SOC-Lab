@@ -84,22 +84,16 @@ With the plaintext password of an active Domain Administrator in hand, the attac
 
 ## Alert observed
 
-| Source | Rule | Rule ID | TheHive Alert | Severity | Status |
+| Source | Rule / Signature | Rule ID | TheHive Alert | Severity | Status |
 |---|---|---|---|---|---|
-| Wazuh / Windows Security | sshd: authentication success / Kerberos TGS Request Anomaly | Rule 5715 / Event 4769 | `[2x] [DVWA] Logon activity: ROOT @ 192.168.232.135` | Medium | DETECTED |
-| Wazuh (Host Command Audit) | Bash command by root: `python3 GetUserSPNs.py ... -request` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9264) | High | DETECTED (Verbatim Tool Capture) |
+| Wazuh (Host Command Audit) | Bash command by root: `python3 /usr/local/bin/GetUserSPNs.py ... -request` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9264) | High | **Detected (Verbatim Command Capture)** |
+| Suricata (Router ens37) | ET EXPLOIT Possible GoldenPac Priv Esc in-use (TGS-REQ wire frame) | Rule 86601 / SID 2019922 | `[Suricata] Alert - ET EXPLOIT Possible GoldenPac...` (`13.png`) | Medium | Detected (Wire Heuristic) |
+| Wazuh (Pivot Host) | sshd: authentication success (pivot session used for Kerberoasting) | Rule 5715 (Level 8) | `[2x] [DVWA] Logon activity: ROOT @ 192.168.232.135` (`11.png`) | Medium | Detected (Pivot Session) |
+| Active Directory (Domain Controller) | Kerberos service ticket requested (RC4-HMAC `0x17`) | Event ID 4769 | Local DC Security Log (`Security.evtx`) | Medium | Detected (Local DC Telemetry) |
 
-### Detection Analysis
-
-- **Host Command Forensic Ground Truth (Rule 100220):** While Suricata captured the TGS request on the wire (SID 2019922) and Wazuh alerted on the pivot SSH session (Rule 5715), Wazuh Rule 100220 recorded the literal offensive command executed on the DVWA pivot at `18:01:18 IST` (`Wazuh-Raw-Alerts.csv` Row 9264):  
-  `python3 /usr/local/bin/GetUserSPNs.py ad.lab/win10:'Secur3Lab!' -dc-ip 192.168.56.10 -request -outputfile /tmp/hank.hash 2>/dev/null`. This confirmed both the targeted identity (`HANK_SHERMAN`) and the destination hash output file (`/tmp/hank.hash`).
-- **Pivot Host Telemetry:** Wazuh monitored the inbound SSH sessions on `192.168.56.30`, grouping and forwarding authentication alerts (`Rule 5715`) to TheHive.
-- **Domain Controller Telemetry:** Domain Controller `PC-DC.ad.lab` recorded **Windows Security Event ID 4769** ("A Kerberos service ticket was requested"):
-  - **Account Name:** `win10@AD.LAB`
-  - **Service Name:** `HANK_SHERMAN`
-  - **Ticket Options:** `0x40810000`
-  - **Ticket Encryption Type:** `0x17` (RC4-HMAC-MD5)
-  - **Client IP Address:** `::ffff:192.168.56.30`
+> [!NOTE]
+> **Telemetry Attribution & Pipeline Execution (Rule 100220):**  
+> Impacket `GetUserSPNs.py` was executed interactively on the DVWA pivot at `18:01:18 IST` (`Wazuh-Raw-Alerts.csv` Row 9264): `python3 /usr/local/bin/GetUserSPNs.py ad.lab/win10:'Secur3Lab!' -dc-ip 192.168.56.10 -request -outputfile /tmp/hank.hash 2>/dev/null`. As a Level 5 rule, Rule 100220 recorded the command locally on DVWA and indexed into OpenSearch without SIEM-to-SOAR escalation. Concurrently, the unrouted Kerberos traffic on VMnet2 tripped Suricata signature SID `2019922` via elevated Rule 86601 (`wzb-c1e2642eb2`), and the pivot SSH session triggered Rule 5715 (`wzb-1d2d7fb4b8`), both arriving in TheHive.
 
 ---
 
