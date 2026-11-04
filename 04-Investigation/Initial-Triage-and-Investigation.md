@@ -317,6 +317,16 @@ Alert #02's Time span metadata (`17:10:09.913 IST` → `18:19:03.500 IST`) shows
 
 Bound the correlation window in `custom-thehive.py`: close a grouped alert after a fixed timeout (e.g., 5–10 minutes without new sub-events) and split the bundle whenever the gap between sub-events exceeds a threshold, so post-compromise activity from the same source lands in a fresh, correctly-prioritized alert instead of silently extending a stale scanner bundle.
 
+## ⚠️ Flaw 9: TheHive Case Export Metric Mismatch (`timeToTriage` Reflecting Export Interval Rather Than Operational Triage)
+
+### What went wrong:
+
+In `TheHive-Case-Export.json`, the platform calculates `timeToTriage` and `timeToQualify` as ~1.45 billion milliseconds (~16.8 days) across all three cases (`1,453,134,811` ms for Case 01, `1,453,600,844` ms for Case 02). This occurred because TheHive computes this metric strictly as `caseCreatedAt - alertDate`. The raw attack telemetry was generated during the live lab exercise (`alertDate`), while formal case grouping, task association, and JSON export occurred during the subsequent post-exercise reporting phase (`caseCreatedAt`). In contrast, automated detection speed was sub-second to a few seconds (`timeToDetect: 2516–6600 ms`).
+
+### How to fix it:
+
+In operational reporting, derive MTTR/MTTD metrics from telemetry timestamps and triage log timestamps rather than raw uncalibrated SOAR export deltas, or configure TheHive case templates to backdate case creation to the first ingested alert timestamp when promoting historical exercise alerts.
+
 ---
 
 # 5. Deep-Dive Chronological Evidence Walkthrough by Time Window
