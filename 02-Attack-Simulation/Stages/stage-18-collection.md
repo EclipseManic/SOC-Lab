@@ -77,6 +77,8 @@ Using native command concatenation, the attacker executed `cmd /c "type C:\Users
 
 | Source | Rule / Event Description | Rule ID | TheHive Alert Title | Severity | Status |
 |---|---|---|---|---|---|
+| Wazuh (Host Command Audit) | Bash command by root: `python3 wmiexec.py -hashes :cc814... Administrator@192.168.56.20` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9391) | High | Detected (Workstation WMI Execution) |
+| Wazuh (Host Command Audit) | Bash command by root: `ls /tmp/domain_users.txt /tmp/admin_info.txt /tmp/sensitive_data.txt` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9393) | Medium | Detected (Staged Loot Verification) |
 | Wazuh / Sysmon | Impacket wmiexec detected (`net user /domain > domain_users.txt`) | 100613 | `[FANOUT x2] [DomainWin10] parent PID 4432` | Medium (2) | Detected |
 | Wazuh / Sysmon | Impacket wmiexec detected (`whoami /all > admin_info.txt`) | 100613 | `[FANOUT x2] [DomainWin10] parent PID 4432` | Medium (2) | Detected |
 | Wazuh / Sysmon | Impacket wmiexec detected (`type C:\Users\win10\Documents\Sensitive\* > sensitive_data.txt`) | 100613 | `[FANOUT x3] [Win10User] parent PID 4008` | Medium (2) | Detected |

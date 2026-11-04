@@ -87,9 +87,12 @@ With the plaintext password of an active Domain Administrator in hand, the attac
 | Source | Rule | Rule ID | TheHive Alert | Severity | Status |
 |---|---|---|---|---|---|
 | Wazuh / Windows Security | sshd: authentication success / Kerberos TGS Request Anomaly | Rule 5715 / Event 4769 | `[2x] [DVWA] Logon activity: ROOT @ 192.168.232.135` | Medium | DETECTED |
+| Wazuh (Host Command Audit) | Bash command by root: `python3 GetUserSPNs.py ... -request` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9264) | High | DETECTED (Verbatim Tool Capture) |
 
 ### Detection Analysis
 
+- **Host Command Forensic Ground Truth (Rule 100220):** While Suricata captured the TGS request on the wire (SID 2019922) and Wazuh alerted on the pivot SSH session (Rule 5715), Wazuh Rule 100220 recorded the literal offensive command executed on the DVWA pivot at `18:01:18 IST` (`Wazuh-Raw-Alerts.csv` Row 9264):  
+  `python3 /usr/local/bin/GetUserSPNs.py ad.lab/win10:'Secur3Lab!' -dc-ip 192.168.56.10 -request -outputfile /tmp/hank.hash 2>/dev/null`. This confirmed both the targeted identity (`HANK_SHERMAN`) and the destination hash output file (`/tmp/hank.hash`).
 - **Pivot Host Telemetry:** Wazuh monitored the inbound SSH sessions on `192.168.56.30`, grouping and forwarding authentication alerts (`Rule 5715`) to TheHive.
 - **Domain Controller Telemetry:** Domain Controller `PC-DC.ad.lab` recorded **Windows Security Event ID 4769** ("A Kerberos service ticket was requested"):
   - **Account Name:** `win10@AD.LAB`

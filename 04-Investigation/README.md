@@ -99,8 +99,8 @@ All telemetry datasets, evidence captures, and production configurations referen
   * [`06-Resources/screenshots/wazuh-deep-investigation/`](../06-Resources/screenshots/wazuh-deep-investigation/): 68 chronological SIEM alert captures (`wzb-01` to `wzb-68`).
   * [`06-Resources/screenshots/deep-investigation-action/`](../06-Resources/screenshots/deep-investigation-action/): 14 eradication, vulnerability hardening & TheHive case closure captures.
 * **Telemetry Data Files:**
-  * [`06-Resources/files/alerts/wazuh_alerts.csv`](../06-Resources/files/alerts/wazuh_alerts.csv): 808 curated SIEM alert records.
-  * [`06-Resources/files/alerts/thehive_alerts.json`](../06-Resources/files/alerts/thehive_alerts.json): 46 correlated TheHive incident alerts.
+  * [`06-Resources/alerts/wazuh_alerts.csv`](../06-Resources/alerts/wazuh_alerts.csv): 808 curated SIEM alert records.
+  * [`06-Resources/alerts/thehive_alerts.json`](../06-Resources/alerts/thehive_alerts.json): 46 correlated TheHive incident alerts.
 * **Architecture Diagrams:**
   * [`06-Resources/diagrams/`](../06-Resources/diagrams/): Complete master network, dual-pathway flow, and IR lifecycle blueprints.
 

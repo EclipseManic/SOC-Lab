@@ -127,6 +127,11 @@ echo "192.168.56.10 PC-DC.ad.lab ad.lab" >> /etc/hosts
 | Source | Rule / Signature | Rule ID | TheHive Alert | Severity | Status |
 |---|---|---|---|---|---|
 | Suricata / Wazuh | Network Port Scanning / Internal Reconnaissance Sweep | Suricata SIDs 3400001, 3400002, 3400020 / Wazuh 86601 | Alert 8 (`8.png`, `8.1.png`) | Medium | Detected |
+| Wazuh (Host Command Audit) | Bash command by root: `nmap -sV -O 192.168.56.0/24 --open` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9184) | Medium | Detected (Forensic Command Capture) |
+
+> [!NOTE]
+> **Host-Side vs. Wire Detection:**  
+> While the internal virtual switches did not log the sweep (creating an internal target logging gap DG-09), Suricata caught the internal wire frames on interface `ens37` (Alert 8), and Wazuh Rule 100220 captured the exact command-line execution (`nmap -sV -O 192.168.56.0/24 --open`) on the DVWA pivot at `17:31:19 IST` (Row 9184), followed by the perimeter subnet scan at `17:32:27 IST` (Row 9215).
 
 ## MITRE ATT&CK
 

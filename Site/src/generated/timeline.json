@@ -118,7 +118,7 @@
       "endOffsetSeconds": 1200,
       "timestamp": "11:59:43",
       "telemetryEvent": "Attacker SSH key written & root interactive SSH session",
-      "sourceSensor": "Wazuh Rule 550 (Syscheck FIM) / Wazuh 5715",
+      "sourceSensor": "Wazuh Rule 550 (FIM) / Rule 5715 / Rule 100220 (echo ... >> authorized_keys)",
       "evidenceReference": "TheHive Alert 7 · Wazuh Telemetry wzb-19"
     },
     {
@@ -130,7 +130,7 @@
       "endOffsetSeconds": 1260,
       "timestamp": "12:00:49",
       "telemetryEvent": "Internal subnet multi-port sweep (192.168.56.0/24)",
-      "sourceSensor": "Suricata SIDs 3400001, 3400002, 3400020 (ens37 capture)",
+      "sourceSensor": "Suricata SIDs 3400001, 3400002 (ens37) / Wazuh Rule 100220 (nmap -sV -O)",
       "evidenceReference": "TheHive Alert 8 · Wazuh Telemetry wzb-22"
     },
     {
@@ -142,7 +142,7 @@
       "endOffsetSeconds": 1440,
       "timestamp": "12:04:27",
       "telemetryEvent": "SharpHound/BloodHound LDAP query sweep targeting PC-DC",
-      "sourceSensor": "Wazuh Rule 5715 (Pivot root SSH logon alerted)",
+      "sourceSensor": "Wazuh Rule 5715 / Wazuh Rule 100220 (bloodhound.py)",
       "evidenceReference": "TheHive Alert 10 · Wazuh Telemetry wzb-31"
     },
     {
@@ -154,7 +154,7 @@
       "endOffsetSeconds": 1560,
       "timestamp": "12:06:26",
       "telemetryEvent": "Responder launched on DVWA capturing win10 hash",
-      "sourceSensor": "Wazuh bashcmd (uid:0 Responder.py)",
+      "sourceSensor": "Wazuh Rule 100220 (bashcmd: uid:0 Responder.py & hash copy)",
       "evidenceReference": "TheHive Alert 9 · Wazuh Telemetry wzb-27"
     },
     {
@@ -190,7 +190,7 @@
       "endOffsetSeconds": 3180,
       "timestamp": "12:33:52",
       "telemetryEvent": "Impacket secretsdump.py DRSUAPI directory replication",
-      "sourceSensor": "Wazuh Rule 5715 (Pivot root SSH logon alerted)",
+      "sourceSensor": "Wazuh Rule 5715 / Wazuh Rule 100220 (bloodhound.py)",
       "evidenceReference": "TheHive Alert 12 · Wazuh Telemetry wzb-34"
     },
     {
@@ -250,7 +250,7 @@
       "endOffsetSeconds": 4140,
       "timestamp": "12:49:02",
       "telemetryEvent": "Forged Kerberos TGT (Golden Ticket) tested via pivot",
-      "sourceSensor": "Wazuh Rule 5715 (Pivot root SSH logon alerted)",
+      "sourceSensor": "Wazuh Rule 5715 / Wazuh Rule 100220 (bloodhound.py)",
       "evidenceReference": "TheHive Alert 14 · Wazuh Telemetry wzb-38"
     },
     {

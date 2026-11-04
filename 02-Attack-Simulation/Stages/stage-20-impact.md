@@ -152,6 +152,7 @@ Stage 20 generated a massive, high-fidelity alert burst spanning network intrusi
 
 | Source | Rule / Event Description | Rule ID | TheHive Alert Title | Severity | Status |
 |---|---|---|---|---|---|
+| Wazuh (Host Command Audit) | Bash command by root: `python3 wmiexec.py ...` (DC & Win10 Impact) | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Rows 9443, 9501) | High | Detected (Impact Fan-Out Capture) |
 | Wazuh / Linux SSH | sshd: authentication success (staging `hacked.bmp`) | 5715 | `[2x] [DVWA] Logon activity: ROOT @ 192.168.232.135` | Medium (2) | Detected |
 | Wazuh / Sysmon | Impacket wmiexec fan-out on PC-DC (registry, ransom notes, shutdown) | 100613 | `[FANOUT x9] [DomainWin10] parent PID 4432` | Medium (2) | Detected |
 | Wazuh / Sysmon | Value added to registry key has Base64-like pattern (Wallpaper on PC-DC) | 92041 | `[FANOUT x1] [DomainWin10] parent PID 6500` | Medium (2) | Detected |

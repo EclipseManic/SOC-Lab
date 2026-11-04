@@ -48,3 +48,5 @@ desktop.ini
 *.bak
 *.zip
 *.rar
+*SOC-Lab-Chat-Export*
+SOC-Lab-Chat-Export/*

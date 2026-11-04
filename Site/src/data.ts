@@ -822,8 +822,8 @@ export const evidenceItems = [
     label: "Raw Alert Exports",
     value: "Captured",
     tone: "teal",
-    note: "Authentic TheHive 5 alert JSON and Wazuh alert CSV exports preserved in ..\../06-Resources/files/alerts/.",
-    path: "..\../06-Resources/files/alerts/",
+    note: "Authentic TheHive 5 alert JSON and Wazuh alert CSV exports preserved in ..\../06-Resources/alerts/.",
+    path: "..\../06-Resources/alerts/",
   },
   {
     label: "Architecture diagram",

@@ -93,8 +93,15 @@ hostname
 
 | Source | Rule / Signature | Rule ID | TheHive Alert | Severity | Status |
 |---|---|---|---|---|---|
-| Wazuh (FIM / Syscheck) | File added/modified in /root/.ssh/ (authorized_keys) | Wazuh Syscheck | Alert 7 (`7.png`, `7.1.png`) | High | Detected |
-| Wazuh (Auth) | SSH successful authentication for root user from external IP | Wazuh SSH Ruleset | Alert 7 (`7.2.png`) | High | Detected |
+| Wazuh (FIM / Syscheck) | File added/modified in /root/.ssh/ (authorized_keys) | Wazuh Syscheck (Rule 550) | Alert 7 (`7.png`, `7.1.png`) | High | Detected |
+| Wazuh (Auth) | SSH successful authentication for root user from external IP | Wazuh SSH Ruleset (Rule 5715) | Alert 7 (`7.2.png`) | High | Detected |
+| Wazuh (Host Command Audit) | Bash command by root: `echo "ssh-ed25519..." >> /root/.ssh/authorized_keys` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9164) | Medium | Detected (Forensic Command Capture) |
+
+> [!NOTE]
+> **Verbatim Command Telemetry (Rule 100220):**  
+> While FIM (Rule 550) and SSHD (Rule 5715) alerted to TheHive upon file write and session logon, the custom `bashcmd` telemetry pipeline on DVWA captured the verbatim key injection command under **Wazuh Rule 100220** at `17:29:19 IST` (`Wazuh-Raw-Alerts.csv` Row 9164):  
+> `echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIACi7TGj+OejU78IWt/I6/im7sLXOR1jben7h94DmDJ5 kali@kali" >> /root/.ssh/authorized_keys`  
+> In addition, preceding permission setup commands (`chmod 700 /root/.ssh`, `chmod 600 /root/.ssh/authorized_keys`) were recorded in rows 9155–9161.
 
 ## MITRE ATT&CK
 

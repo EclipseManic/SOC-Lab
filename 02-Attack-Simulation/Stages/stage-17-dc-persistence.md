@@ -91,6 +91,7 @@ This stage generated a heavy alert volume across Wazuh host monitoring and TheHi
 
 | Source | Rule / Event Description | Rule ID | TheHive Alert Title | Severity | Status |
 |---|---|---|---|---|---|
+| Wazuh (Host Command Audit) | Bash command by root: `python3 wmiexec.py -k -no-pass ad.lab/Administrator@PC-DC.ad.lab` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9373) | High | Detected (Kerberos WMI Execution) |
 | Wazuh / Sysmon | Impacket wmiexec execution fan-out (`cmd.exe /Q /c net user ...`) | 100613 | `[FANOUT x3] [DomainWin10] parent PID 4432` | Medium (2) | Detected |
 | Wazuh / Windows Security | User account enabled or created (Event ID 4720, 4722) | 60109 | `[3x] [DomainWin10] Logon activity: BACKDOOR @ local` | Medium (2) | Detected |
 | Wazuh / Windows Security | User account changed (Event ID 4738) | 60110 | `[3x] [DomainWin10] Logon activity: BACKDOOR @ local` | Medium (2) | Detected |
