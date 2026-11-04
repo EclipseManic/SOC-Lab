@@ -75,7 +75,7 @@ function parseStageStatus(rawStatus) {
       hasOperationalAlert: true,
     };
   }
-  if (/Operational Coverage/i.test(rawStatus)) {
+  if (/Operational Coverage|Pivot-Only Coverage/i.test(rawStatus)) {
     return {
       status: "Detected",
       coverageClass: "operational-coverage",

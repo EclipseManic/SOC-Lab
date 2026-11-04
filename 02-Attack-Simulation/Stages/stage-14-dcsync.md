@@ -77,7 +77,7 @@ The extraction of the `Administrator` NTLM hash (`cc814***9fb`) immediately enab
 
 | Source | Rule | Rule ID | TheHive Alert | Severity | Status |
 |---|---|---|---|---|---|
-| Wazuh (Pivot Host) | sshd: authentication success (Interactive Pivot Session) | Rule 5715 (Level 8) | `[2x] [DVWA] Logon activity: ROOT @ 192.168.232.135` (`14.png`) | Medium | DETECTED (Pivot Alerted) |
+| Wazuh (Pivot Host) | sshd: authentication success (Interactive Pivot Session) | Rule 5715 (Level 8) | `[2x] [DVWA] Logon activity: ROOT @ 192.168.232.135` (`14.png`) | Medium | Pivot-Only Coverage (SSH login alerted in TheHive; technique verified via host command telemetry Rule 100220) |
 | Wazuh (Host Command Audit) | Bash command by root: `python3 secretsdump.py ... -outputfile /tmp/dcsync_output` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9274) | High | DETECTED (Verbatim DCSync Capture) |
 | Wazuh (Host Command Audit) | Bash command by root: `cat /tmp/dcsync_output.ntds` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9276) | Medium | DETECTED (Loot Inspection Capture) |
 
