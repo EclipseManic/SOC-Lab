@@ -8,9 +8,9 @@
 
 The entire laboratory architecture—from the isolated attacker workstation on VMware to the split-cloud SIEM infrastructure—is captured in the master topology diagram below:
 
-[![SOC Lab Complete Architecture](../assets/diagrams/SOC_Lab_Architecture.png)](../assets/diagrams/SOC_Lab_Architecture.png)
+[![SOC Lab Complete Architecture](../06-Resources/diagrams/SOC_Lab_Architecture.png)](../06-Resources/diagrams/SOC_Lab_Architecture.png)
 
-*Figure 1: Master architecture blueprint of the SOC Lab ([view full-resolution 4K asset](../assets/diagrams/SOC_Lab_Architecture.png)).*
+*Figure 1: Master architecture blueprint of the SOC Lab ([view full-resolution 4K asset](../06-Resources/diagrams/SOC_Lab_Architecture.png)).*
 
 > [!IMPORTANT]
 > **Scope Boundary — Baseline Setup vs. Attack Chain Execution:**
@@ -85,7 +85,7 @@ Routing in this hybrid lab coordinates three distinct traffic paths: attacker tr
 - **How we fixed it:** We disabled NAT masquerading for all victim traffic entering the WireGuard tunnel (`wg0`). On the cloud hub (`10.8.0.1`), we added a static kernel return route directing `192.168.56.0/24` back through `10.8.0.2`.
 - **The payoff:** Wazuh Manager sees and registers the authentic IP address of every victim host (`192.168.56.10`, `.20`, `.30`). Every alert, correlation rule, and investigation artifact maps cleanly to the exact compromised machine.
 
-[![Secure Network Topology Infographic](../assets/diagrams/Secure%20Network%20Topology%20Infographic.png)](../assets/diagrams/Secure%20Network%20Topology%20Infographic.png)
+[![Secure Network Topology Infographic](../06-Resources/diagrams/Secure%20Network%20Topology%20Infographic.png)](../06-Resources/diagrams/Secure%20Network%20Topology%20Infographic.png)
 
 ---
 
@@ -93,7 +93,7 @@ Routing in this hybrid lab coordinates three distinct traffic paths: attacker tr
 
 The environment is cleanly divided into four zones:
 
-[![Lab Segmentation & Network Zones](../assets/diagrams/Neon%20Cybersecurity%20Lab%20Network%20Diagram.png)](../assets/diagrams/Neon%20Cybersecurity%20Lab%20Network%20Diagram.png)
+[![Lab Segmentation & Network Zones](../06-Resources/diagrams/Neon%20Cybersecurity%20Lab%20Network%20Diagram.png)](../06-Resources/diagrams/Neon%20Cybersecurity%20Lab%20Network%20Diagram.png)
 
 ### Zone 1: Attacker Zone (Kali Linux)
 - **Subnet:** `192.168.232.0/24` (VMware VMnet8 NAT)
@@ -135,7 +135,7 @@ The environment is cleanly divided into four zones:
 
 The entire detection pipeline operates in 7 clean steps:
 
-[![7-Step Automated Incident Response Pipeline](../assets/diagrams/Neon%20Cybersecurity%20Incident%20Response%20Pipeline.png)](../assets/diagrams/Neon%20Cybersecurity%20Incident%20Response%20Pipeline.png)
+[![7-Step Automated Incident Response Pipeline](../06-Resources/diagrams/Neon%20Cybersecurity%20Incident%20Response%20Pipeline.png)](../06-Resources/diagrams/Neon%20Cybersecurity%20Incident%20Response%20Pipeline.png)
 
 ---
 

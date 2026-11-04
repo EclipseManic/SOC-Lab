@@ -562,7 +562,7 @@ resolvectl status
 
 
 
-![DVWA loot shredding and systemd-resolved restoration](../assets/screenshots/deep-investigation-action/slot_01_eradication_dvwa_loot_wiped.png)  
+![DVWA loot shredding and systemd-resolved restoration](../06-Resources/screenshots/deep-investigation-action/slot_01_eradication_dvwa_loot_wiped.png)  
 
 
 
@@ -902,7 +902,7 @@ curl -i http://127.0.0.1/hackable/uploads/canary.php
 
 
 
-![DVWA sudoers remediation and SSH hardening](../assets/screenshots/deep-investigation-action/slot_02_eradication_dvwa_sudoers_patched.png)
+![DVWA sudoers remediation and SSH hardening](../06-Resources/screenshots/deep-investigation-action/slot_02_eradication_dvwa_sudoers_patched.png)
 
 
 
@@ -914,7 +914,7 @@ curl -i http://127.0.0.1/hackable/uploads/canary.php
 
 
 
-![DVWA default security level hardened to impossible](../assets/screenshots/deep-investigation-action/slot_02b_eradication_dvwa_impossible_security.png)
+![DVWA default security level hardened to impossible](../06-Resources/screenshots/deep-investigation-action/slot_02b_eradication_dvwa_impossible_security.png)
 
 
 
@@ -926,7 +926,7 @@ curl -i http://127.0.0.1/hackable/uploads/canary.php
 
 
 
-![DVWA upload execution blocker verified](../assets/screenshots/deep-investigation-action/slot_03_eradication_dvwa_upload_blocked.png)
+![DVWA upload execution blocker verified](../06-Resources/screenshots/deep-investigation-action/slot_03_eradication_dvwa_upload_blocked.png)
 
 
 
@@ -1318,7 +1318,7 @@ Get-ADUser -Identity "krbtgt" -Properties PasswordLastSet, msDS-KeyVersionNumber
 
 
 
-![Active Directory backdoor account deleted](../assets/screenshots/deep-investigation-action/slot_04_eradication_ad_backdoor_deleted.png)  
+![Active Directory backdoor account deleted](../06-Resources/screenshots/deep-investigation-action/slot_04_eradication_ad_backdoor_deleted.png)  
 
 
 
@@ -1330,7 +1330,7 @@ Get-ADUser -Identity "krbtgt" -Properties PasswordLastSet, msDS-KeyVersionNumber
 
 
 
-![Service account HANK_SHERMAN demoted and SPN purged](../assets/screenshots/deep-investigation-action/slot_05_eradication_ad_hank_demoted.png)  
+![Service account HANK_SHERMAN demoted and SPN purged](../06-Resources/screenshots/deep-investigation-action/slot_05_eradication_ad_hank_demoted.png)  
 
 
 
@@ -1342,7 +1342,7 @@ Get-ADUser -Identity "krbtgt" -Properties PasswordLastSet, msDS-KeyVersionNumber
 
 
 
-![Protected Users enrollment and krbtgt KVNO verified](../assets/screenshots/deep-investigation-action/slot_06_eradication_ad_protected_users.png)  
+![Protected Users enrollment and krbtgt KVNO verified](../06-Resources/screenshots/deep-investigation-action/slot_06_eradication_ad_protected_users.png)  
 
 
 
@@ -1354,7 +1354,7 @@ Get-ADUser -Identity "krbtgt" -Properties PasswordLastSet, msDS-KeyVersionNumber
 
 
 
-![Enterprise Desktop Wallpaper Restored and Ransomware Cleaned](../assets/screenshots/deep-investigation-action/slot_06b_eradication_desktop_wallpaper_restored.png)
+![Enterprise Desktop Wallpaper Restored and Ransomware Cleaned](../06-Resources/screenshots/deep-investigation-action/slot_06b_eradication_desktop_wallpaper_restored.png)
 
 
 
@@ -1550,7 +1550,7 @@ Get-CimInstance -ClassName Win32_NetworkAdapterConfiguration -Filter "IPEnabled 
 
 
 
-![Disabling LLMNR and NetBIOS over TCP/IP](../assets/screenshots/deep-investigation-action/slot_07_eradication_llmnr_netbios_disabled.png)  
+![Disabling LLMNR and NetBIOS over TCP/IP](../06-Resources/screenshots/deep-investigation-action/slot_07_eradication_llmnr_netbios_disabled.png)  
 
 
 
@@ -1770,7 +1770,7 @@ iptables -L OUTPUT -n -v --line-numbers
 
 
 
-![DMZ firewall micro-segmentation verified](../assets/screenshots/deep-investigation-action/slot_08_eradication_dmz_firewall_hardened.png)  
+![DMZ firewall micro-segmentation verified](../06-Resources/screenshots/deep-investigation-action/slot_08_eradication_dmz_firewall_hardened.png)  
 
 
 
@@ -1954,7 +1954,7 @@ dcdiag /test:Replication /test:Advertising /test:FSMOCheck /test:Services | Sele
 
 
 
-![Production health and Wazuh agent verification](../assets/screenshots/deep-investigation-action/slot_09_eradication_health_verification.png)  
+![Production health and Wazuh agent verification](../06-Resources/screenshots/deep-investigation-action/slot_09_eradication_health_verification.png)  
 
 
 
@@ -2026,7 +2026,7 @@ Every alert ingested by TheHive from Wazuh was individually audited by the incid
 
 
 
-![TheHive False Positives Dismissed](../assets/screenshots/thehive-cases/thehive_false_positives_dismissed.png)  
+![TheHive False Positives Dismissed](../06-Resources/screenshots/thehive-cases/thehive_false_positives_dismissed.png)  
 
 *Figure 9b: TheHive 5 Alerts Console filtered by `Status: FalsePositive`, demonstrating all 3 non-actionable scanner alerts (#01, #06, #18) officially dismissed and archived with documented SOC analyst rationales.*
 
@@ -2288,7 +2288,7 @@ Every alert ingested by TheHive from Wazuh was individually audited by the incid
 
 
 
-![TheHive Case 01 Closed](../assets/screenshots/thehive-cases/thehive_case01_closed.png)  
+![TheHive Case 01 Closed](../06-Resources/screenshots/thehive-cases/thehive_case01_closed.png)  
 
 
 
@@ -2332,7 +2332,7 @@ Every alert ingested by TheHive from Wazuh was individually audited by the incid
 
 
 
-![TheHive Case 02 Closed](../assets/screenshots/thehive-cases/thehive_case02_closed.png)  
+![TheHive Case 02 Closed](../06-Resources/screenshots/thehive-cases/thehive_case02_closed.png)  
 
 
 
@@ -2376,7 +2376,7 @@ Every alert ingested by TheHive from Wazuh was individually audited by the incid
 
 
 
-![TheHive Case 03 Closed](../assets/screenshots/thehive-cases/thehive_case03_closed.png)  
+![TheHive Case 03 Closed](../06-Resources/screenshots/thehive-cases/thehive_case03_closed.png)  
 
 
 
@@ -2408,7 +2408,7 @@ With all 3 cases resolved and all 46 alerts accounted for, the operational alert
 
 
 
-![TheHive Cases Overview Dashboard](../assets/screenshots/thehive-cases/thehive_cases_overview_resolved.png)  
+![TheHive Cases Overview Dashboard](../06-Resources/screenshots/thehive-cases/thehive_cases_overview_resolved.png)  
 
 
 
@@ -2420,7 +2420,7 @@ With all 3 cases resolved and all 46 alerts accounted for, the operational alert
 
 
 
-![TheHive Alert Queue Cleared](../assets/screenshots/thehive-cases/thehive_alert_queue_cleared.png)  
+![TheHive Alert Queue Cleared](../06-Resources/screenshots/thehive-cases/thehive_alert_queue_cleared.png)  
 
 
 

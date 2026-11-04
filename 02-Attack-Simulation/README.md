@@ -9,7 +9,7 @@ This section documents the 20-stage adversary campaign executed against the lab 
 > [!IMPORTANT]
 > The primary blueprint and single source of truth for this entire adversary campaign is the comprehensive attack chain document:
 > 
-> 📄 **[`attack-chain-full.pdf`](../assets/files/attack-chain-full.pdf) (redacted public copy)** *(the unredacted original is retained locally)*
+> 📄 **[`attack-chain-full.pdf`](../06-Resources/files/attack-chain-full.pdf) (redacted public copy)** *(the unredacted original is retained locally)*
 >
 > This reference document details the complete end-to-end attack narrative, threat actor profiling, operational steps, and intended progression from external reconnaissance through domain compromise and ransomware/defacement impact. The stage write-ups in this directory document the live execution, telemetry, and evidence generated while carrying out that blueprint in the isolated lab.
 
@@ -17,8 +17,8 @@ This section documents the 20-stage adversary campaign executed against the lab 
 
 ## Campaign Structure & Cases
 
-[![Attack Simulation 20-Stage Kill Chain Roadmap](../assets/diagrams/Attack%20Simulation%2020-Stage%20Kill%20Chain%20Roadmap.png)](../assets/diagrams/Attack%20Simulation%2020-Stage%20Kill%20Chain%20Roadmap.png)
-*Figure 1: Full 20-stage attack simulation lifecycle mapped across the 3 investigation cases, showing detection statuses and tool vectors ([view full asset](../assets/diagrams/Attack%20Simulation%2020-Stage%20Kill%20Chain%20Roadmap.png)).*
+[![Attack Simulation 20-Stage Kill Chain Roadmap](../06-Resources/diagrams/Attack%20Simulation%2020-Stage%20Kill%20Chain%20Roadmap.png)](../06-Resources/diagrams/Attack%20Simulation%2020-Stage%20Kill%20Chain%20Roadmap.png)
+*Figure 1: Full 20-stage attack simulation lifecycle mapped across the 3 investigation cases, showing detection statuses and tool vectors ([view full asset](../06-Resources/diagrams/Attack%20Simulation%2020-Stage%20Kill%20Chain%20Roadmap.png)).*
 
 The 20 attack simulation stages are grouped into three distinct investigative cases:
 
@@ -64,9 +64,9 @@ The evidence sets below are published in the public repository. The attack scree
 
 | Evidence Set | Location | Details |
 |---|---|---|
-| **Master Blueprint Document** | [`../assets/files/attack-chain-full.pdf`](../assets/files/attack-chain-full.pdf) (redacted) | Redacted copy of the single-source PDF describing the full attack chain and threat model. |
-| **Attacker-Side Screenshots** | [`../assets/screenshots/attack-simulation/`](../assets/screenshots/attack-simulation/) (original) | 62 high-resolution screenshots (`1.png` through `60.png`, plus `58.5.png` and `59.5.png`) showing terminal commands, tool executions, browser actions, and GUI validations. |
-| **SOC & Alert Screenshots** | [`../assets/screenshots/thehive-alert/`](../assets/screenshots/thehive-alert/) | 60 screenshots showing fired alerts, triage views, rule classifications, and event telemetry in TheHive, Wazuh, and Suricata. |
+| **Master Blueprint Document** | [`../06-Resources/files/attack-chain-full.pdf`](../06-Resources/files/attack-chain-full.pdf) (redacted) | Redacted copy of the single-source PDF describing the full attack chain and threat model. |
+| **Attacker-Side Screenshots** | [`../06-Resources/screenshots/attack-simulation/`](../06-Resources/screenshots/attack-simulation/) (original) | 62 high-resolution screenshots (`1.png` through `60.png`, plus `58.5.png` and `59.5.png`) showing terminal commands, tool executions, browser actions, and GUI validations. |
+| **SOC & Alert Screenshots** | [`../06-Resources/screenshots/thehive-alert/`](../06-Resources/screenshots/thehive-alert/) | 60 screenshots showing fired alerts, triage views, rule classifications, and event telemetry in TheHive, Wazuh, and Suricata. |
 | **Incident Response Screenshots** | `05-Incident-Report/Response_Action-Screenshot/` | No screenshot files are present in this folder. |
 
 ---
@@ -96,7 +96,7 @@ Each stage write-up in the [`Stages/`](Stages/) directory adheres to a rigorous,
 4. **Commands:** Verbatim commands executed during the simulation, with sensitive credentials and hashes safely redacted.
 5. **What Happened:** Detailed chronological narrative of the execution, observed outputs, and results.
 6. **Evidence:**
-   - **Attack Evidence:** Markdown-embedded screenshots from `../assets/screenshots/attack-simulation/`.
+   - **Attack Evidence:** Markdown-embedded screenshots from `../06-Resources/screenshots/attack-simulation/`.
    - **Alert Evidence:** Markdown-embedded screenshots from `TheHive_Alert-ScreenShot/` (or explicit Detection Gap reference).
 7. **Alert Observed Table:** Alert source, rule description, rule ID, TheHive alert ID, and severity.
 8. **MITRE ATT&CK Mapping:** Tactic, Technique, Sub-technique, and ATT&CK ID.

@@ -64,7 +64,7 @@ ip route show
 
 ### Telemetry Forwarding Topology
 
-[![On-Prem to Cloud Telemetry Flow](../../assets/diagrams/On-Prem%20to%20Cloud%20Telemetry%20Flow.png)](../../assets/diagrams/On-Prem%20to%20Cloud%20Telemetry%20Flow.png)
+[![On-Prem to Cloud Telemetry Flow](../../06-Resources/diagrams/On-Prem%20to%20Cloud%20Telemetry%20Flow.png)](../../06-Resources/diagrams/On-Prem%20to%20Cloud%20Telemetry%20Flow.png)
 *Figure 1: On-prem agent telemetry transit through the Suricata Gateway, WireGuard tunnel, and private VNet peering into Wazuh Manager.*
 
 ```
@@ -111,7 +111,7 @@ sudo systemctl enable --now wazuh-dashboard
 
 The core configuration file at `/var/ossec/etc/ossec.conf` dictates how the Wazuh engine receives events, handles authentication, evaluates detection rules, and triggers integrations.
 
-The definitive production configuration file is archived at [`../../assets/configs/ossec.conf`](../../assets/configs/ossec.conf). Key configuration stanzas implemented during setup include:
+The definitive production configuration file is archived at [`../../06-Resources/configs/ossec.conf`](../../06-Resources/configs/ossec.conf). Key configuration stanzas implemented during setup include:
 
 ### 1. Global Logging & Queue Buffering
 ```xml
@@ -340,7 +340,7 @@ sudo /var/ossec/bin/wazuh-logtest
 
 ## 7. Two-Tier Asynchronous TheHive Integration (`thecustomhive`)
 
-[![Wazuh-TheHive Neon Alert Pipeline](../../assets/diagrams/Wazuh-TheHive%20Neon%20Alert%20Pipeline.png)](../../assets/diagrams/Wazuh-TheHive%20Neon%20Alert%20Pipeline.png)
+[![Wazuh-TheHive Neon Alert Pipeline](../../06-Resources/diagrams/Wazuh-TheHive%20Neon%20Alert%20Pipeline.png)](../../06-Resources/diagrams/Wazuh-TheHive%20Neon%20Alert%20Pipeline.png)
 *Figure 2: Two-tier asynchronous alert correlation pipeline from Wazuh Manager Level ≥ 8 trigger into TheHive 5 case management.*
 
 ```
@@ -361,7 +361,7 @@ When an alert with `level >= 8` fires, Wazuh executes `/var/ossec/integrations/c
 
 ```bash
 # 1. Install the wrapper script from repository resources
-sudo cp /path/to/SOC-Lab/../../assets/scripts/custom-thehive /var/ossec/integrations/custom-thehive
+sudo cp /path/to/SOC-Lab/../../06-Resources/scripts/custom-thehive /var/ossec/integrations/custom-thehive
 sudo chmod 750 /var/ossec/integrations/custom-thehive
 sudo chown root:wazuh /var/ossec/integrations/custom-thehive
 
@@ -380,12 +380,12 @@ sudo chmod 660 /var/ossec/logs/correlation_state.db*
 ```
 
 ### Tier 2: Asynchronous Correlation Daemon (`thehive-flush.service`)
-The daemon script [`custom-thehive.py`](../../assets/scripts/custom-thehive.py) runs as a background systemd service on a 5-second polling loop. It reads queued events, groups bursts, deduplicates identical alerts, applies the tool catalog [`tool_fingerprints.json`](../../assets/scripts/tool_fingerprints.json), and delivers correlated alert batches to TheHive REST API across private VNet peering:
+The daemon script [`custom-thehive.py`](../../06-Resources/scripts/custom-thehive.py) runs as a background systemd service on a 5-second polling loop. It reads queued events, groups bursts, deduplicates identical alerts, applies the tool catalog [`tool_fingerprints.json`](../../06-Resources/scripts/tool_fingerprints.json), and delivers correlated alert batches to TheHive REST API across private VNet peering:
 
 ```bash
 # 1. Copy the correlation engine script and fingerprint catalog
-sudo cp /path/to/SOC-Lab/../../assets/scripts/custom-thehive.py /var/ossec/integrations/custom-thehive.py
-sudo cp /path/to/SOC-Lab/../../assets/scripts/tool_fingerprints.json /var/ossec/integrations/tool_fingerprints.json
+sudo cp /path/to/SOC-Lab/../../06-Resources/scripts/custom-thehive.py /var/ossec/integrations/custom-thehive.py
+sudo cp /path/to/SOC-Lab/../../06-Resources/scripts/tool_fingerprints.json /var/ossec/integrations/tool_fingerprints.json
 sudo chmod 750 /var/ossec/integrations/custom-thehive.py
 sudo chown root:wazuh /var/ossec/integrations/custom-thehive.py /var/ossec/integrations/tool_fingerprints.json
 
@@ -505,6 +505,6 @@ nc -zv 10.122.0.4 9000
 | [thehive.md](thehive.md) | Cloud Setup | TheHive VM — WireGuard, routing, and case management |
 | [Wazuh Detection Rules](../../03-Detection-Engineering/Wazuh/README.md) | Detection Engineering | Complete documentation of `local_rules.xml` and rule architecture |
 | [Wazuh Decoders Catalog](../../03-Detection-Engineering/Wazuh/README.md#3-decoders-catalog-local_decoderxml) | Detection Engineering | Custom decoders catalog in `local_decoder.xml` |
-| [Wazuh Manager Config](../../assets/configs/ossec.conf) | Server Config | Full production `ossec.conf` file |
-| [CDB Internal Bins List](../../assets/configs/lists/wazuh-internal-bins) | CDB List | Binary lookup table suppressing syscollector auditd loop |
+| [Wazuh Manager Config](../../06-Resources/configs/ossec.conf) | Server Config | Full production `ossec.conf` file |
+| [CDB Internal Bins List](../../06-Resources/configs/lists/wazuh-internal-bins) | CDB List | Binary lookup table suppressing syscollector auditd loop |
 | [custom-thehive Pipeline](../../03-Detection-Engineering/README.md#5-telemetry-architecture-live-soar-ingestion-vs-analyst-dashboard-triage) | Pipeline Architecture | Two-tier correlation engine and alert grouping design |

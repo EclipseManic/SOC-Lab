@@ -13,7 +13,7 @@
 | **Lead Analyst** | Manichand Gupta (Lead SOC Incident Responder) |
 | **Related Cases** | [Case 01 (`CAS-001-WEBCOMP`)](../04-Investigation/Cases/case-01-web-compromise.md), [Case 02 (`CAS-002-LATMOVE`)](../04-Investigation/Cases/case-02-lateral-movement.md), [Case 03 (`CAS-003-DOMIMP`)](../04-Investigation/Cases/case-03-domain-compromise.md) |
 
-[![Consolidated Incident Response 74-Minute Timeline](../assets/diagrams/Consolidated%20Incident%20Response%2074-Minute%20Timeline.png)](../assets/diagrams/Consolidated%20Incident%20Response%2074-Minute%20Timeline.png)
+[![Consolidated Incident Response 74-Minute Timeline](../06-Resources/diagrams/Consolidated%20Incident%20Response%2074-Minute%20Timeline.png)](../06-Resources/diagrams/Consolidated%20Incident%20Response%2074-Minute%20Timeline.png)
 *Figure 1: Full chronological incident timeline spanning 74 minutes ($T_0$ to $T_0 + 74\text{m}$), correlating attacker milestones (top) against blue-team detection alerts across Suricata, Auditd, Wazuh, Sysmon, and TheHive (bottom).*
 
 ---

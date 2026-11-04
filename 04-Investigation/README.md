@@ -2,7 +2,7 @@
 
 Welcome to the **Incident Investigation** section of the SOC Lab repository. This directory represents the defender and DFIR (Digital Forensics and Incident Response) analyst view of the campaign. It documents the end-to-end journey from initial alert triage and queue prioritization, through live host containment and artifact collection, to forensic root-cause analysis and enterprise hardening.
 
-[![SOC Analyst Investigation Lifecycle](../assets/diagrams/SOC%20Analyst%20Investigation%20Lifecycle.png)](../assets/diagrams/SOC%20Analyst%20Investigation%20Lifecycle.png)
+[![SOC Analyst Investigation Lifecycle](../06-Resources/diagrams/SOC%20Analyst%20Investigation%20Lifecycle.png)](../06-Resources/diagrams/SOC%20Analyst%20Investigation%20Lifecycle.png)
 *Figure 1: SOC Analyst Investigation Lifecycle from alert ingestion to case resolution and post-incident remediation.*
 
 ---
@@ -94,15 +94,15 @@ Every technique executed during the offensive campaign maps directly to our defe
 All telemetry datasets, evidence captures, and production configurations referenced across the investigation are consolidated in the repository asset hub:
 
 * **Investigation Screenshots:**
-  * [`assets/screenshots/initial-triage/`](../assets/screenshots/initial-triage/): 26 queue triage & chronological evidence captures.
-  * [`assets/screenshots/initial-triage-action/`](../assets/screenshots/initial-triage-action/): 15 live response & containment execution captures.
-  * [`assets/screenshots/wazuh-deep-investigation/`](../assets/screenshots/wazuh-deep-investigation/): 68 chronological SIEM alert captures (`wzb-01` to `wzb-68`).
-  * [`assets/screenshots/deep-investigation-action/`](../assets/screenshots/deep-investigation-action/): 14 eradication, vulnerability hardening & TheHive case closure captures.
+  * [`06-Resources/screenshots/initial-triage/`](../06-Resources/screenshots/initial-triage/): 26 queue triage & chronological evidence captures.
+  * [`06-Resources/screenshots/initial-triage-action/`](../06-Resources/screenshots/initial-triage-action/): 15 live response & containment execution captures.
+  * [`06-Resources/screenshots/wazuh-deep-investigation/`](../06-Resources/screenshots/wazuh-deep-investigation/): 68 chronological SIEM alert captures (`wzb-01` to `wzb-68`).
+  * [`06-Resources/screenshots/deep-investigation-action/`](../06-Resources/screenshots/deep-investigation-action/): 14 eradication, vulnerability hardening & TheHive case closure captures.
 * **Telemetry Data Files:**
-  * [`assets/files/alerts/wazuh_alerts.csv`](../assets/files/alerts/wazuh_alerts.csv): 808 curated SIEM alert records.
-  * [`assets/files/alerts/thehive_alerts.json`](../assets/files/alerts/thehive_alerts.json): 46 correlated TheHive incident alerts.
+  * [`06-Resources/files/alerts/wazuh_alerts.csv`](../06-Resources/files/alerts/wazuh_alerts.csv): 808 curated SIEM alert records.
+  * [`06-Resources/files/alerts/thehive_alerts.json`](../06-Resources/files/alerts/thehive_alerts.json): 46 correlated TheHive incident alerts.
 * **Architecture Diagrams:**
-  * [`assets/diagrams/`](../assets/diagrams/): Complete master network, dual-pathway flow, and IR lifecycle blueprints.
+  * [`06-Resources/diagrams/`](../06-Resources/diagrams/): Complete master network, dual-pathway flow, and IR lifecycle blueprints.
 
 ---
 
