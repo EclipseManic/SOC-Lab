@@ -42,6 +42,7 @@ This directory is the centralized, single-source-of-truth asset repository for t
 
 | Subdirectory | Category | File Count | Purpose |
 |:---|:---|:---:|:---|
+| [screenshots/](screenshots/README.md) | **Master Screenshot Evidence** | **251** | **Comprehensive empirical evidence catalog across all 7 categories below** |
 | [`screenshots/attack-simulation/`](screenshots/attack-simulation/) | Attack Telemetry | 62 | Visual proof of offensive commands executed during stages 01 through 20 |
 | [`screenshots/thehive-alert/`](screenshots/thehive-alert/) | Detection Alerts | 60 | TheHive alert cards, rule matches, and NIDS event details |
 | [`screenshots/thehive-cases/`](screenshots/thehive-cases/) | SOAR Case Management | 9 | TheHive 5 case records, completed task lists, cleared alert queue, and dismissed false positives |
