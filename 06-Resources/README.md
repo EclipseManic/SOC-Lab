@@ -1,56 +1,138 @@
 # 📁 06 — Master Enterprise Resources Repository (`06-Resources/`)
 
-This directory is the centralized, single-source-of-truth asset repository for the SOC Lab. All evidentiary screenshots, diagrams, telemetry datasets, configuration files, detection rules, and automation scripts are organized here in a structured, intuitive directory tree.
+This directory is the centralized, definitive asset and evidence repository for the entire enterprise SOC Lab. It consolidates all **251 empirical photographic captures**, architectural diagrams, SIEM telemetry datasets, SOAR database exports, detection engineering rules, server configuration profiles, and automation daemons under a single, rigorously structured hierarchy.
 
 ---
 
-## 🌳 Asset Directory Tree
+## 🌳 Master Asset Directory Tree
 
 ```
 06-Resources/
-├── screenshots/                                # All empirical photographic evidence (7 top-level directories, zero subdirectories)
-│   ├── attack-simulation/                      # 62 adversary perspective screenshots (Stages 01–20)
-│   ├── thehive-alert/                          # 60 TheHive alert & sensor triage captures
-│   ├── thehive-cases/                          # 9 TheHive 5 case closure, task verification & FP dismissal captures
-│   ├── initial-triage/                         # 26 queue triage & chronological evidence captures
-│   ├── initial-triage-action/                  # 15 live tactical containment & lockout verification captures
-│   ├── wazuh-deep-investigation/               # 68 verified SIEM & endpoint alert screenshots (wzb-01 to wzb-68)
-│   └── deep-investigation-action/              # 11 live host eradication, vulnerability hardening & recovery captures
-├── diagrams/                                   # High-resolution architectural, flow, and network diagrams
-├── files/                                      # Master datasets, reports, and blueprints
-│   ├── Alerts-wazuh-thive/                     # Raw SIEM logs, CSVs, and TheHive alert JSON
-│   ├── hive-cases-export-file/                 # Live database export from TheHive 5 platform
+├── screenshots/                                # All empirical photographic evidence (7 flat categories, 0 subdirectories)
+│   ├── attack-simulation/                      # 62 adversary-perspective execution captures (Stages 01–20)
+│   ├── thehive-alert/                          # 60 TheHive 5 detection alert cards, rule matches & NIDS events
+│   ├── thehive-cases/                          # 9 TheHive 5 case closure records, task verifications & FP dismissals
+│   ├── initial-triage/                         # 26 queue triage, severity rankings & chronological bundle captures
+│   ├── initial-triage-action/                  # 15 live tactical containment & attacker lockout verification captures
+│   ├── wazuh-deep-investigation/               # 68 chronological SIEM & endpoint telemetry alerts (wzb-01 to wzb-68)
+│   └── deep-investigation-action/              # 11 host eradication, vulnerability hardening & fleet health captures
+├── diagrams/                                   # 15 high-resolution architectural, network topology, and IR pipeline diagrams
+├── files/                                      # Master raw datasets, SOAR database exports, and documentation manuals
+│   ├── alerts/ (Alerts-wazuh-thive/)           # Raw SIEM logs (Wazuh-Raw-Alerts.csv), TheHive JSON (thehive_alerts.json)
+│   ├── cases/ (hive-cases-export-file/)        # Live database export from TheHive 5 platform (TheHive-Case-Export.json)
 │   └── attack-chain-full-commands.pdf          # 20-stage attack simulation master command manual
 ├── rules/                                      # Production detection engineering rule definitions
-│   ├── auditd/                                 # Linux Auditd kernel syscall monitoring rules (audit.rules)
+│   ├── auditd/                                 # Linux Auditd kernel syscall monitoring profile (audit.rules)
 │   ├── suricata/                               # Suricata NIDS signatures & thresholds (custom.rules, threshold.config)
-│   ├── wazuh/                                  # Wazuh custom decoders & correlation rules (local_decoder.xml, local_rules.xml)
-│   └── sysmon/                                 # Windows Sysmon XML event filtering profile (sysmonconfig.xml)
+│   ├── sysmon/                                 # Microsoft Windows Sysmon event filtering profile (sysmonconfig.xml)
+│   └── wazuh/                                  # Wazuh custom decoders & correlation rules (local_decoder.xml, local_rules.xml)
 ├── configs/                                    # Server and agent configuration profiles
-│   ├── ossec.conf                              # Wazuh server master configuration
+│   ├── ossec.conf                              # Wazuh server master configuration profile
 │   └── lists/                                  # Constant database lists (wazuh-internal-bins)
-└── scripts/                                    # Automation daemons, API webhooks, and fingerprint utilities
-    ├── custom-thehive                          # Wazuh integration executable
-    ├── custom-thehive.py                       # TheHive alert dispatching daemon
-    ├── thehive-flush.service                   # Systemd queue maintenance service
-    └── tool_fingerprints.json                  # Adversary tooling signature definitions
+└── scripts/                                    # Automation daemons, webhook integrations, and fingerprint databases
+    ├── custom-thehive                          # Shell wrapper executable invoked by Wazuh integrator
+    ├── custom-thehive.py                       # Python daemon formatting and dispatching alerts to TheHive API
+    ├── thehive-flush.service                   # Systemd service unit for automated alert queue maintenance
+    └── tool_fingerprints.json                  # Adversary tooling signature definitions and hash lookup table
 ```
 
 ---
 
-## 📑 Directory Purpose & Contents
+## 📸 1. Empirical Screenshot Evidence Catalog (`screenshots/`)
 
-| Subdirectory | Category | File Count | Purpose |
-|:---|:---|:---:|:---|
-| [screenshots/](screenshots/README.md) | **Master Screenshot Evidence** | **251** | **Comprehensive empirical evidence catalog across all 7 categories below** |
-| [`screenshots/attack-simulation/`](screenshots/attack-simulation/) | Attack Telemetry | 62 | Visual proof of offensive commands executed during stages 01 through 20 |
-| [`screenshots/thehive-alert/`](screenshots/thehive-alert/) | Detection Alerts | 60 | TheHive alert cards, rule matches, and NIDS event details |
-| [`screenshots/thehive-cases/`](screenshots/thehive-cases/) | SOAR Case Management | 9 | TheHive 5 case records, completed task lists, cleared alert queue, and dismissed false positives |
-| [`screenshots/initial-triage/`](screenshots/initial-triage/) | Incident Triage | 26 | Queue triage by severity, chronological event sorting, and initial analysis |
-| [`screenshots/initial-triage-action/`](screenshots/initial-triage-action/) | Tactical Containment | 15 | Live Velociraptor VQL and host command execution proving attacker lockout |
-| [`screenshots/wazuh-deep-investigation/`](screenshots/wazuh-deep-investigation/) | Forensic Telemetry | 68 | Chronological Wazuh SIEM alerts (`wzb-01` to `wzb-68`) covering the complete attack chain |
-| [`screenshots/deep-investigation-action/`](screenshots/deep-investigation-action/) | Eradication & Hardening | 11 | Host-level proof of root-cause elimination, ransomware cleanup, wallpaper restoration, and firewall drops |
-| [`diagrams/`](diagrams/) | Architecture | 15 | Master network topology, dual-pathway data flow, and IR pipeline diagrams |
-| [`rules/`](rules/) | Detection Rules | 6 | Production rules for Linux Auditd, Suricata NIDS, Wazuh SIEM, and Windows Sysmon |
-| [`configs/`](configs/) | Server Configurations | 2 | Wazuh manager configuration (`ossec.conf`) and internal binary lookup lists |
-| [`scripts/`](scripts/) | Integrations & Tools | 4 | Wazuh-to-TheHive integration daemons, systemd unit files, and fingerprint databases |
+All 251 screenshots reside within 7 non-nested, dedicated directories. Every file is stored in a clean web format (`.png` / `.jpg`) with zero raw or containerized formats (`.jxl` removed).
+
+| Directory | Scope & Category | Files | Target Hosts / Platform | Description & Investigative Role |
+|:---|:---|:---:|:---|:---|
+| [`screenshots/attack-simulation/`](screenshots/attack-simulation/) | Adversary Execution | 62 | Kali Linux (`192.168.232.135`) targeting DVWA, Windows 10, & Domain Controller | Captures documenting the offensive execution across Stages 01 to 20: Nmap scans, Hydra brute force, SQL injection, webshell execution, sudo privesc, SSH persistence, Responder poisoning, BloodHound LDAP collection, Kerberoasting, Secretsdump DCSync, Pass-the-Hash, Golden Ticket forgery, backdoor account creation, archive collection, SCP exfiltration, and ransomware detonation. |
+| [`screenshots/thehive-alert/`](screenshots/thehive-alert/) | Detection Alert Cards | 60 | TheHive 5 Platform (`http://10.122.0.4:9000`) | Alert cards generated by the Wazuh-to-TheHive integration engine (`custom-thehive.py`). Displays alert titles, severity levels (Medium, High, Critical), MITRE ATT&CK tactic tags, observables (IPs, hashes, paths), rule IDs, and raw log payloads from Suricata NIDS, Auditd, Apache, and Sysmon. |
+| [`screenshots/thehive-cases/`](screenshots/thehive-cases/) | SOAR Case Management | 9 | TheHive 5 Platform (`http://10.122.0.4:9000`) | Official record of case resolution and queue clearing: master cases table in green `Resolved / Closed` status (`thehive_cases_overview_resolved.png`), individual resolution views for Cases 01, 02, and 03 (`thehive_case01_closed.png`, `02`, `03`), verified task completion checklists (`thehive_case01_tasks.png`, `02`, `03`), formal dismissal of scanner false positives (`thehive_false_positives_dismissed.png`), and the cleared alert queue showing *"No alert has been found"* (`thehive_alert_queue_cleared.png`). |
+| [`screenshots/initial-triage/`](screenshots/initial-triage/) | Triage & Queue Analysis | 26 | TheHive 5 Alert Ingestion Queue | Visual record of Tier-1/Tier-2 queue triage: severity sorting (`slot_01_thehive_severity_queue.png`), chronological event sorting (`slot_01.5_part1.png`, `part2.png`), and inspection cards across the 46 alert events (Nmap probes, Nikto canary, 22-event web compromise bundle, Auditd execution, reverse shells, SSH persistence, GoldenPac, WMIexec, backdoor account creation, data staging, and ransomware deployment). |
+| [`screenshots/initial-triage-action/`](screenshots/initial-triage-action/) | Tactical Containment | 15 | Live host terminals (Gateway, DVWA, DC, Workstation) | Host-level execution verifying immediate attacker lockout: iptables perimeter firewall drop of `192.168.232.135` (`slot_01`), webshell quarantine (`slot_02a`), upload folder cleanup (`slot_02b`), SSH key deletion (`slot_03`), disabling the Active Directory `backdoor` account (`slot_04a/b`), Active Directory `krbtgt` double password reset (`slot_05a/b`), workstation ransomware quarantine and wallpaper restoration (`slot_06a-e`), and database password rotation (`slot_07`). |
+| [`screenshots/wazuh-deep-investigation/`](screenshots/wazuh-deep-investigation/) | Forensic Telemetry | 68 | Wazuh Manager (`https://10.122.1.4`) | Comprehensive chronological SIEM alert series (`wzb-01` to `wzb-68`) covering all 20 attack stages: external recon (`wzb-01`–`wzb-08`), web exploitation (`wzb-09`–`wzb-14`), reverse shells & sudo escalation (`wzb-15`–`wzb-18`), SSH persistence & internal sweeps (`wzb-19`–`wzb-24`), Responder poisoning (`wzb-25`–`wzb-30`), AD collection & Kerberoasting (`wzb-31`–`wzb-33`), DCSync & Pass-the-Hash (`wzb-34`–`wzb-37`), Golden Ticket & WMI lateral movement (`wzb-38`–`wzb-41`), alert surge histogram (`wzb-42`), rogue account creation (`wzb-43`–`wzb-48`), staging & exfiltration (`wzb-49`–`wzb-53`), and ransomware registry defacement & reboots (`wzb-54`–`wzb-68`). |
+| [`screenshots/deep-investigation-action/`](screenshots/deep-investigation-action/) | Eradication & Hardening | 11 | Hardened VM consoles (DVWA, DC, Workstation, Wazuh) | Proof of root-cause vulnerability elimination and recovery: shredding `/tmp/` staging loot and removing Responder (`slot_01`), revoking NOPASSWD Python sudoers and disabling root SSH (`slot_02`), locking DVWA to `impossible` security (`slot_02b`), deploying `.htaccess` and `AllowOverride All` blocking PHP uploads (`slot_03`), deleting AD `backdoor` account (`slot_04`), demoting `HANK_SHERMAN` and clearing SPN (`slot_05`), enrolling privileged accounts in Protected Users (`slot_06`), Win32 wallpaper restoration (`slot_06b`), disabling LLMNR/NetBIOS (`slot_07`), DMZ firewall egress hardening (`slot_08`), and Wazuh 5-agent fleet health verification (`slot_09`). |
+
+---
+
+## 🗺️ 2. Architectural & Pipeline Diagrams (`diagrams/`)
+
+This directory contains the 15 master architectural, topological, pipeline, and forensic workflow diagrams created for the laboratory:
+
+| Diagram Filename | Subject Area | Primary Focus & Description |
+|:---|:---|:---|
+| `Attack Simulation 20-Stage Kill Chain Roadmap.png` | Offensive Progression | 20-stage adversary path from external web recon to Active Directory ransomware |
+| `Consolidated Incident Response 74-Minute Timeline.png` | Incident Correlation | Minute-by-minute timeline correlating attacker milestones against blue-team detection alerts |
+| `Cybersecurity Lab-to-Detection Mapping.png` | Engineering Matrix | Mapping between laboratory hosts, attack vectors, and defensive telemetry sensors |
+| `Life of an Alert End-to-End Walkthrough.png` | Telemetry Pipeline | End-to-end journey of an event from endpoint syscall/packet capture to TheHive alert card |
+| `Neon Cybersecurity Incident Response Pipeline.png` | Incident Lifecycle | The 4-phase incident handling cycle: Triage, Containment, Deep-Dive, and Hardening |
+| `Neon Cybersecurity Lab Network Diagram.png` | Network Topology | Dual-subnet configuration showing DMZ (`192.168.232.0/24`) and Internal AD (`192.168.56.0/24`) |
+| `Neon Cybersecurity Network Architecture Diagram.png` | Infrastructure | High-level topology illustrating firewall boundaries, monitoring interfaces, and cloud SIEM |
+| `Neon Suricata Network Defense Diagram.png` | Network Security | Suricata NIDS placement on dual-homed gateway inspecting WAN and LAN traffic |
+| `On-Prem to Cloud Telemetry Flow.png` | Cloud Telemetry | Secure TLS log forwarding from on-premise local VMs to Google Cloud SIEM/SOAR |
+| `SOC Analyst Investigation Lifecycle.png` | SOC Operations | Standard operating procedure for triage, case promotion, evidence collection, and closure |
+| `SOC Telemetry Dual-Pathway Architecture.png` | Data Architecture | Dual-path log ingestion: Host-based (Wazuh/Sysmon/Auditd) and Network-based (Suricata) |
+| `SOC_Lab_Architecture.png` | Master Architecture | Complete enterprise laboratory overview featuring all 6 virtual machines and their roles |
+| `Secure Network Topology Infographic.png` | Visual Infographic | Detailed network layout highlighting IP assignments, open ports, and routing rules |
+| `Wazuh Log Ingestion to TheHive Flow.png` | SOAR Integration | Technical data flow showing Wazuh server rule triggering and Python daemon webhook dispatch |
+| `Wazuh-TheHive Neon Alert Pipeline.png` | Pipeline Architecture | Visual schematic of Wazuh-to-TheHive automated alert forwarding and triage queues |
+
+---
+
+## 📄 3. Telemetry Datasets, Case Exports & Blueprints (`files/`)
+
+This directory houses the raw data dumps, SIEM event logs, SOAR platform database exports, and master command manuals:
+
+| File / Subdirectory | Format | Records | Primary Operational Purpose |
+|:---|:---:|:---:|:---|
+| `attack-chain-full-commands.pdf` | PDF | 20 Stages | Master command manual detailing every offensive command, parameter, and script syntax used across Stages 01–20. |
+| `alerts/Wazuh-Raw-Alerts.csv` | CSV | 9,567 Logs | Complete raw SIEM event dump recorded by Wazuh across the entire 74-minute attack exercise. |
+| `alerts/thehive_alerts.json` | JSON | 46 Alerts | Complete JSON data structure of all 46 alerts ingested into TheHive 5 platform, including extracted observables. |
+| `alerts/wazuh_alerts.csv` | CSV | 809 Rows | Curated dataset of key investigative alerts filtered for priority triage and forensic analysis. |
+| `cases/TheHive-Case-Export.json` | JSON | 346 KB | Complete live database export from TheHive 5 platform containing Cases 01, 02, and 03, task records, and observables. |
+
+---
+
+## 🛡️ 4. Detection Engineering Rule Definitions (`rules/`)
+
+Production-tested detection rules, signatures, decoders, and filtering profiles implemented across the defensive stack:
+
+| Subdirectory | Primary File(s) | Scope | Detection Capability |
+|:---|:---|:---|:---|
+| [`rules/auditd/`](rules/auditd/) | `audit.rules` | Linux Auditd | Kernel syscall auditing on DVWA web server; detects command execution (`execve`), shell privilege transitions (`setuid`), and SSH persistence via `authorized_keys`. |
+| [`rules/suricata/`](rules/suricata/) | `custom.rules`, `threshold.config` | Suricata NIDS | Perimeter network signature inspection; detects TCP SYN sweeps, Nikto scans, SQL injection payloads, webshell requests, and suspicious Kerberos GoldenPac traffic. |
+| [`rules/sysmon/`](rules/sysmon/) | `sysmonconfig.xml` | Windows Sysmon | Endpoint event filtering on `PC-DC` and `Win10User`; tracks command-line process creation (EID 1), remote WMI invocation, and ransomware registry modifications (EID 13). |
+| [`rules/wazuh/`](rules/wazuh/) | `local_decoder.xml`, `local_rules.xml` | Wazuh SIEM | Central correlation engine (1,314 lines of production rules); normalizes multi-source telemetry, maps events to MITRE ATT&CK techniques, and triggers SOAR webhooks for Level $\ge 8$ alerts. |
+
+---
+
+## ⚙️ 5. Server & Agent Configuration Profiles (`configs/`)
+
+Master configuration profiles and lookup databases operating the SIEM manager and sensor fleet:
+
+| File / Directory | Target Platform | Description |
+|:---|:---|:---|
+| `configs/ossec.conf` | Wazuh Manager (`/var/ossec/etc/ossec.conf`) | Master configuration defining log collection ports (`1514/1515`), custom webhook integration parameters (`custom-thehive`), and agent registration policies. |
+| `configs/lists/wazuh-internal-bins` | CDB List (`/var/ossec/etc/lists/`) | Constant Database (CDB) list containing known benign operating system binaries, utilized in correlation rules to differentiate authorized administration from Living-off-the-Land (LotL) adversary techniques. |
+
+---
+
+## 📜 6. Automation Daemons & Webhook Integrations (`scripts/`)
+
+Executable scripts, daemon units, and fingerprint lookups powering automated alert dispatch and threat intelligence enrichment:
+
+| File | Language / Type | Operational Function |
+|:---|:---:|:---|
+| `scripts/custom-thehive` | Shell Executable | Wrapper script invoked by the Wazuh manager whenever an alert meets the Level $\ge 8$ threshold. Forwards event JSON paths to `custom-thehive.py`. |
+| `scripts/custom-thehive.py` | Python 3 | Core integration engine: extracts MITRE ATT&CK tags and observables (IPs, hashes, filenames), formats payloads into TheHive 5 schema, and posts alerts to `http://10.122.0.4:9000/api/v1/alert`. |
+| `scripts/thehive-flush.service` | Systemd Unit | Automated queue maintenance service ensuring low-latency alert ingestion and preventing unbounded database accumulation on the cloud SOAR instance. |
+| `scripts/tool_fingerprints.json` | JSON Config | Threat intelligence signature database mapping adversary tool hashes, user-agents, and execution flags to automated alert enrichment tags. |
+
+---
+
+## 🔗 Master Repository Navigation
+
+- **01 — Laboratory Setup & Infrastructure**: [`01-Lab-Setup/README.md`](../01-Lab-Setup/README.md)
+- **02 — Adversary Attack Simulation Manual**: [`02-Attack-Simulation/README.md`](../02-Attack-Simulation/README.md)
+- **03 — Detection Engineering Architecture**: [`03-Detection-Engineering/README.md`](../03-Detection-Engineering/README.md)
+- **04 — Incident Investigation & Triage**: [`04-Investigation/README.md`](../04-Investigation/README.md)
+- **05 — Post-Mortem Incident Report**: [`05-Incident-Report/README.md`](../05-Incident-Report/README.md)
