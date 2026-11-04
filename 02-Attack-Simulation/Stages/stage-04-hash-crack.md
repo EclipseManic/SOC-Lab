@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached
 > **Case:** [Case 01](../../04-Investigation/Cases/case-01-web-compromise.md)
 > **Investigation:** [Phase 1 Deep Dive](../../04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-1-rattling-the-doorknobs-reconnaissance--web-exploitation)
-> **Evidence:** [attack](../../06-Resources/screenshots/attack-simulation/) · [alert](../../06-Resources/screenshots/thehive-alert/)
+> **Evidence:** [attack](../../06-Resources/screenshots/attack-simulation/10.png) · [alert (none)](../../03-Detection-Engineering/README.md#challenge-3-the-honest-gap-register-why-80-detection-is-real-security)
 
 ## Objective
 
