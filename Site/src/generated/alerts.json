@@ -1,5 +1,5 @@
 {
-  "source": "06-Resources/files/alerts/thehive_alerts.json",
+  "source": "06-Resources/alerts/thehive_alerts.json",
   "count": 46,
   "timeToDetect": {
     "unit": "milliseconds",

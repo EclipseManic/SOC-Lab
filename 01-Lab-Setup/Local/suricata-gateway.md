@@ -158,8 +158,8 @@ The production rule baseline pulls from two active rule sources:
 2. **`aleksibovellan/nmap`** — Targeted Nmap scanning and OS probe detection rules.
 
 Tuning and suppression files deployed:
-- Custom detection rules: [`custom.rules`](../../03-Detection-Engineering/Suricata/custom.rules) $\rightarrow$ `/etc/suricata/rules/custom.rules`
-- Alert rate-limiting & suppression: [`threshold.config`](../../03-Detection-Engineering/Suricata/threshold.config) $\rightarrow$ `/etc/suricata/rules/threshold.config`
+- Custom detection rules: [`custom.rules`](../../06-Resources/rules/suricata/custom.rules) $\rightarrow$ `/etc/suricata/rules/custom.rules`
+- Alert rate-limiting & suppression: [`threshold.config`](../../06-Resources/rules/suricata/threshold.config) $\rightarrow$ `/etc/suricata/rules/threshold.config`
 - Class suppression (`disable.conf`): Suppresses noisy `protocol-command-decode` classtype events.
 - Signature modification (`modify.conf`): Modifies SID 3400004 to monitor port 1514 (Wazuh event transport) alongside 51820 (WireGuard).
 

@@ -86,10 +86,12 @@ win10::AD:112233***8899:b4a78***e31
 
 | Source | Rule / Signature | Rule ID | TheHive Alert | Severity | Status |
 |---|---|---|---|---|---|
-| Linux Auth / Pivot Host (DVWA) | Wazuh bashcmd logging (uid:0 Responder.py execution) | Wazuh `bashcmd` | Pivot Logged (Sheet Row 9233 / CSV Row 9231) (`9.png`–`9.3.png`) | High | **Detected (Pivot Logged)** |
+| Wazuh (Host Command Audit) | Bash command by root: `python3 /opt/Responder/Responder.py -I ens33 -wd` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Rows 9233, 9242) (`9.png`–`9.3.png`) | High | **Detected (Verbatim Command Capture)** |
+| Wazuh (Host Command Audit) | Bash command by root: `cp /opt/Responder/logs/SMB-NTLMv2-SSP-... /tmp/win10.hash` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9244) | Medium | Detected (Hash Loot Staging) |
 
 > [!NOTE]
-> **Telemetry Attribution:** Responder was launched interactively on the DVWA pivot (`python3 Responder.py -I ens33 -wd`), logged locally via Wazuh `bashcmd` at Level 5 without SIEM-to-SOAR escalation. The separate SMB NTLM session setup alerts (`wzb-7a4a134d1b`, SIDs 2067085–2067087) occurred at 12:53:59 during Stage 20 remote execution.
+> **Telemetry Attribution & Pipeline Execution (Rule 100220):**  
+> Responder was launched interactively on the DVWA pivot (`python3 /opt/Responder/Responder.py -I ens33 -wd`) and recorded by Wazuh Rule 100220 (`bashcmd` pipeline) at `17:36:26 IST` (Row 9233) and `17:37:25 IST` (Row 9242). Preceding preparatory commands—stopping Apache (`systemctl stop apache2`, Row 9226) and disabling systemd-resolved DNSStubListener (Row 9227)—and the subsequent hash copy command (`cp ... /tmp/win10.hash`, Row 9244 at `17:38:29 IST`) were all captured verbatim. As a Level 5 rule, Rule 100220 provides ground-truth SIEM indexing in OpenSearch without triggering high-volume SOAR alert fatigue.
 
 ## MITRE ATT&CK
 

@@ -1,7 +1,7 @@
 # Sysmon Telemetry Baseline — Windows Endpoint Auditing
 
 > **Production Configuration & Artifacts:**
-> - Modular Configuration: [`sysmonconfig.xml`](sysmonconfig.xml)
+> - Modular Configuration: [`sysmonconfig.xml`](../../06-Resources/rules/sysmon/sysmonconfig.xml)
 > - Target Deployment: Domain Controller (`192.168.56.10`, Server 2022 / Agent: `DomainWin10`) & Windows 10 Workstation (`192.168.56.20`, Win10 Pro N / Agent: `Win10User`)
 > - Version: Microsoft Sysmon v15.20 (64-bit service `Sysmon64`)
 > - Wazuh Ingestion: `Microsoft-Windows-Sysmon/Operational` eventchannel
@@ -12,7 +12,7 @@
 
 System Monitor (Sysmon) provides deep endpoint activity tracking on Windows targets. While standard Windows Security Event Logs (`Security.evtx`) record authentication and high-level process launches, Sysmon captures granular execution metadata, including full process command lines, parent-child relationships, hashes (MD5, SHA256), named pipe activity, and registry value manipulations.
 
-In this lab, Sysmon is deployed using a tailored, high-signal 90-line baseline ([`sysmonconfig.xml`](sysmonconfig.xml)) engineered to capture adversary execution, network staging, and persistence without exhausting VM memory or disk I/O on constrained endpoints.
+In this lab, Sysmon is deployed using a tailored, high-signal 90-line baseline ([`sysmonconfig.xml`](../../06-Resources/rules/sysmon/sysmonconfig.xml)) engineered to capture adversary execution, network staging, and persistence without exhausting VM memory or disk I/O on constrained endpoints.
 
 ---
 
@@ -94,7 +94,7 @@ Wazuh agents on `DomainWin10` and `Win10User` collect Sysmon operational events 
 </localfile>
 ```
 
-Wazuh correlates Sysmon events with custom rules in [`03-Detection-Engineering/Wazuh/local_rules.xml`](../Wazuh/local_rules.xml):
+Wazuh correlates Sysmon events with custom rules in [`03-Detection-Engineering/Wazuh/local_rules.xml`](../../06-Resources/rules/wazuh/local_rules.xml):
 - **Rule 100613 (Level 10):** Flags Impacket `wmiexec` commands spawning `cmd.exe /Q /c` with `ADMIN$\__<id>` output redirection (fired on both `DomainWin10` and `Win10User`).
 - **Rule 92041 (Level 5 / Sysmon Registry):** Caught `reg.exe` modifying `Wallpaper` and `WallpaperStyle` registry values during Stage 20 impact.
 - **Rules 100100–100102 (Level 12):** Detects `Run`/`RunOnce`, Winlogon, and IFEO Debugger autostart registry persistence.

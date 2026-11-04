@@ -99,9 +99,12 @@ This finding identified a direct, high-impact compromise route: requesting and c
 | Source | Rule | Rule ID | TheHive Alert | Severity | Status |
 |---|---|---|---|---|---|
 | Wazuh / TheHive | sshd: authentication success / High-volume LDAP enumeration | Rule 5715 | `[4x] [DVWA] Logon activity: ROOT @ 192.168.232.135` | Medium | DETECTED |
+| Wazuh (Host Command Audit) | Bash command by root: `cd /tmp && python3 -m bloodhound ...` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9259) | Medium | DETECTED (Forensic Command Capture) |
 
 ### Detection Analysis
 
+- **Verbatim Pivot Command Capture (Rule 100220):** While Domain Controller PC-DC lacked LDAP volume query auditing (Event ID 1644, Documented Gap DG-12), the attack pivot host captured the complete BloodHound command under **Wazuh Rule 100220** at `18:01:00 IST` (`Wazuh-Raw-Alerts.csv` Row 9259):  
+  `cd /tmp && python3 -m bloodhound -d ad.lab -u win10 -p 'Secur3Lab!' -dc PC-DC.ad.lab -ns 192.168.56.10 -c All --zip`, providing the defensive team with exact attribution of the enumeration parameters.
 - **Detection Pipeline:** The multiple administrative SSH sessions initiated from the Kali workstation (`192.168.232.135`) to the DVWA pivot host (`192.168.56.30`) generated auth log entries captured by the Wazuh agent. Wazuh Rule 5715 triggered and forwarded the correlated alert burst to TheHive.
 - **Correlated Domain Telemetry:** Concurrently, Domain Controller `PC-DC.ad.lab` processed an anomalous volume of LDAP search queries (TCP port 389/636) and SAMR RPC calls originating from a non-Windows, Linux DMZ web server (`192.168.56.30`), generating clear telemetry indicators on the Domain Controller.
 

@@ -67,7 +67,7 @@ Single source of truth for the lab. Update this table whenever a stage, alert, r
 | Immediate Containment Evidence | `06-Resources/screenshots/initial-triage-action/` (15 tactical lockout captures) |
 | Forensic Telemetry Index | `06-Resources/screenshots/wazuh-deep-investigation/` (68 chronological SIEM captures: wzb-01 to wzb-68) |
 | Eradication & Case Closure Evidence | `06-Resources/screenshots/deep-investigation-action/` (14 remediation & TheHive case closure captures) |
-| Raw Telemetry CSV (Complete) | [`06-Resources/files/alerts/Wazuh-Raw-Alerts.csv`](06-Resources/files/alerts/Wazuh-Raw-Alerts.csv) (9,567 raw baseline alerts across all 4 agents in OpenSearch) |
-| Curated Incident Analysis Set | [`06-Resources/files/alerts/wazuh_alerts.csv`](06-Resources/files/alerts/wazuh_alerts.csv) (808 curated forensic alerts filtered via 11 OpenSearch exclusion clauses) |
-| Correlated Incident Alerts | [`06-Resources/files/alerts/thehive_alerts.json`](06-Resources/files/alerts/thehive_alerts.json) (46 actionable incident cases created live in TheHive via Level >= 8 gate) |
-| Master Attack Blueprint | [`06-Resources/files/attack-chain-full.pdf`](06-Resources/files/attack-chain-full.pdf) |
+| Raw Telemetry CSV (Complete) | [`06-Resources/alerts/Wazuh-Raw-Alerts.csv`](06-Resources/alerts/Wazuh-Raw-Alerts.csv) (9,567 raw baseline alerts across all 4 agents in OpenSearch) |
+| Curated Incident Analysis Set | [`06-Resources/alerts/wazuh_alerts.csv`](06-Resources/alerts/wazuh_alerts.csv) (808 curated forensic alerts filtered via 11 OpenSearch exclusion clauses) |
+| Correlated Incident Alerts | [`06-Resources/alerts/thehive_alerts.json`](06-Resources/alerts/thehive_alerts.json) (46 actionable incident cases created live in TheHive via Level >= 8 gate) |
+| Master Attack Blueprint | [`06-Resources/docs/attack-chain-full.pdf`](06-Resources/docs/attack-chain-full.pdf) |

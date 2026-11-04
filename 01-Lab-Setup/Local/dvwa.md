@@ -153,7 +153,7 @@ sudo visudo -c
 
 ## 4. Linux Auditd Deployment & Rule Enforcement
 
-A tailored 58-line audit ruleset ([`audit.rules`](../../03-Detection-Engineering/Auditd/audit.rules)) is deployed to `/etc/audit/rules.d/audit.rules`. Instead of generating millions of noisy syscall events that thrash VM disk I/O, the rules specifically target high-signal adversary techniques:
+A tailored 58-line audit ruleset ([`audit.rules`](../../06-Resources/rules/auditd/audit.rules)) is deployed to `/etc/audit/rules.d/audit.rules`. Instead of generating millions of noisy syscall events that thrash VM disk I/O, the rules specifically target high-signal adversary techniques:
 
 - **Web Server Child Execution:** Audits all `execve` calls spawned under the `www-data` service account (`uid=33`) under key `web_process_creation`.
 - **Staging Directory Execution:** Traces executable execution originating from `/tmp` and `/opt`.

@@ -1,7 +1,7 @@
 # Linux Auditd Baseline — Endpoint Kernel Telemetry
 
 > **Configuration & Artifacts:**
-> - Production Ruleset: [`audit.rules`](audit.rules)
+> - Production Ruleset: [`audit.rules`](../../06-Resources/rules/auditd/audit.rules)
 > - Target Deployment: DVWA Web Server / Pivot Host (`192.168.56.30`, Ubuntu 24.04 LTS)
 > - Ruleset Location: `/etc/audit/rules.d/audit.rules`
 > - Wazuh Ingestion: Native Wazuh Auditd ruleset (`ruleset/rules/0365-auditd_rules.xml`) + Custom `local_rules.xml`
@@ -16,7 +16,7 @@ Linux Auditd provides kernel-level system call and file-system tracking via the 
 
 ## 2. Empirically Verified Telemetry (`key="web_process_creation"`)
 
-Analysis of [`../../06-Resources/files/alerts/Wazuh-Raw-Alerts.csv`](../../06-Resources/files/alerts/Wazuh-Raw-Alerts.csv) confirms that the primary active rule during simulation was:
+Analysis of [`../../06-Resources/alerts/Wazuh-Raw-Alerts.csv`](../../06-Resources/alerts/Wazuh-Raw-Alerts.csv) confirms that the primary active rule during simulation was:
 
 ```text
 -a always,exit -F arch=b64 -S execve -F uid=33 -k web_process_creation
@@ -37,7 +37,7 @@ This rule monitors **all** binary execution system calls (`execve`) initiated by
 
 ## 3. Defense-in-Depth Rules Inventory
 
-In addition to `web_process_creation`, [`audit.rules`](audit.rules) provides comprehensive host coverage across 5 functional areas:
+In addition to `web_process_creation`, [`audit.rules`](../../06-Resources/rules/auditd/audit.rules) provides comprehensive host coverage across 5 functional areas:
 
 | Audit Key | Monitored Action | Syscall / File Target | Defensive Purpose |
 |---|---|---|---|

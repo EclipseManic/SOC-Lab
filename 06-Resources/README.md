@@ -16,11 +16,11 @@ This directory is the centralized, definitive asset and evidence repository for 
 │   ├── initial-triage-action/                  # 15 live tactical containment & attacker lockout verification captures
 │   ├── wazuh-deep-investigation/               # 68 chronological SIEM & endpoint telemetry alerts (wzb-01 to wzb-68)
 │   └── deep-investigation-action/              # 11 host eradication, vulnerability hardening & fleet health captures
+├── alerts/                                     # Master SIEM logs (Wazuh-Raw-Alerts.csv), curated CSV, and TheHive JSON
+├── cases/                                      # Live database export from TheHive 5 platform (TheHive-Case-Export.json)
+├── configs/                                    # Server and agent configuration profiles (ossec.conf, lists/)
 ├── diagrams/                                   # 15 high-resolution architectural, network topology, and IR pipeline diagrams
-├── files/                                      # Master raw datasets, SOAR database exports, and documentation manuals
-│   ├── alerts/ (Alerts-wazuh-thive/)           # Raw SIEM logs (Wazuh-Raw-Alerts.csv), TheHive JSON (thehive_alerts.json)
-│   ├── cases/ (hive-cases-export-file/)        # Live database export from TheHive 5 platform (TheHive-Case-Export.json)
-│   └── attack-chain-full-commands.pdf          # 20-stage attack simulation master command manual
+├── docs/                                       # 20-stage attack simulation master command manual (attack-chain-full.pdf)
 ├── rules/                                      # Production detection engineering rule definitions
 │   ├── auditd/                                 # Linux Auditd kernel syscall monitoring profile (audit.rules)
 │   ├── suricata/                               # Suricata NIDS signatures & thresholds (custom.rules, threshold.config)
@@ -78,17 +78,17 @@ This directory contains the 15 master architectural, topological, pipeline, and 
 
 ---
 
-## 📄 3. Telemetry Datasets, Case Exports & Blueprints (`files/`)
+## 📄 3. Telemetry Datasets, Case Exports & Blueprints (`alerts/`, `cases/`, `docs/`)
 
-This directory houses the raw data dumps, SIEM event logs, SOAR platform database exports, and master command manuals:
+Authoritative raw SIEM event logs, curated investigative datasets, SOAR platform database exports, and master execution manuals:
 
 | File / Subdirectory | Format | Records | Primary Operational Purpose |
 |:---|:---:|:---:|:---|
-| `attack-chain-full-commands.pdf` | PDF | 20 Stages | Master command manual detailing every offensive command, parameter, and script syntax used across Stages 01–20. |
-| `alerts/Wazuh-Raw-Alerts.csv` | CSV | 9,567 Logs | Complete raw SIEM event dump recorded by Wazuh across the entire 74-minute attack exercise. |
-| `alerts/thehive_alerts.json` | JSON | 46 Alerts | Complete JSON data structure of all 46 alerts ingested into TheHive 5 platform, including extracted observables. |
-| `alerts/wazuh_alerts.csv` | CSV | 809 Rows | Curated dataset of key investigative alerts filtered for priority triage and forensic analysis. |
-| `cases/TheHive-Case-Export.json` | JSON | 346 KB | Complete live database export from TheHive 5 platform containing Cases 01, 02, and 03, task records, and observables. |
+| [`alerts/Wazuh-Raw-Alerts.csv`](alerts/Wazuh-Raw-Alerts.csv) | CSV | 9,567 Logs | Complete raw SIEM event dump recorded by Wazuh across the entire 74-minute attack exercise. |
+| [`alerts/thehive_alerts.json`](alerts/thehive_alerts.json) | JSON | 46 Alerts | Complete JSON data structure of all 46 alerts ingested into TheHive 5 platform, including extracted observables. |
+| [`alerts/wazuh_alerts.csv`](alerts/wazuh_alerts.csv) | CSV | 808 Rows | Curated dataset of key investigative alerts filtered for priority triage and forensic analysis. |
+| [`cases/TheHive-Case-Export.json`](cases/TheHive-Case-Export.json) | JSON | 346 KB | Complete live database export from TheHive 5 platform containing Cases 01, 02, and 03, task records, and observables. |
+| [`docs/attack-chain-full.pdf`](docs/attack-chain-full.pdf) | PDF | 20 Stages | Master command manual detailing every offensive command, parameter, and script syntax used across Stages 01–20. |
 
 ---
 

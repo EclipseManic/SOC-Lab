@@ -307,7 +307,7 @@ ls -la /var/ossec/etc/lists/wazuh-internal-bins*
 Custom decoders parse unstructured log streams into indexed fields, while custom rules detect attacker techniques across the 20 attack simulation stages.
 
 ### 1. Deploying Custom Decoders (`/var/ossec/etc/decoders/local_decoder.xml`)
-Deployed directly from [`03-Detection-Engineering/Wazuh/local_decoder.xml`](../../03-Detection-Engineering/Wazuh/local_decoder.xml) to handle Suricata JSON payloads, Auditd fields, and Windows command-line extraction:
+Deployed directly from [`03-Detection-Engineering/Wazuh/local_decoder.xml`](../../06-Resources/rules/wazuh/local_decoder.xml) to handle Suricata JSON payloads, Auditd fields, and Windows command-line extraction:
 
 ```bash
 sudo cp /path/to/SOC-Lab/03-Detection-Engineering/Wazuh/local_decoder.xml /var/ossec/etc/decoders/local_decoder.xml
@@ -316,7 +316,7 @@ sudo chmod 660 /var/ossec/etc/decoders/local_decoder.xml
 ```
 
 ### 2. Deploying Custom Detection Rules (`/var/ossec/etc/rules/local_rules.xml`)
-Deployed directly from [`03-Detection-Engineering/Wazuh/local_rules.xml`](../../03-Detection-Engineering/Wazuh/local_rules.xml) (over 1,300 lines of custom rules covering MITRE ATT&CK techniques, LOLBins, web shells, Kerberoasting, DCSync, pass-the-hash, and 87 noise suppression rules):
+Deployed directly from [`03-Detection-Engineering/Wazuh/local_rules.xml`](../../06-Resources/rules/wazuh/local_rules.xml) (over 1,300 lines of custom rules covering MITRE ATT&CK techniques, LOLBins, web shells, Kerberoasting, DCSync, pass-the-hash, and 87 noise suppression rules):
 
 ```bash
 sudo cp /path/to/SOC-Lab/03-Detection-Engineering/Wazuh/local_rules.xml /var/ossec/etc/rules/local_rules.xml

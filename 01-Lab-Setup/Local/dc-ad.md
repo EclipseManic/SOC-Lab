@@ -87,7 +87,7 @@ setspn -L HANK_SHERMAN
 
 ## 3. Sysmon v15.20 Deployment & Configuration
 
-System Monitor (Sysmon 64-bit) is installed using the tailored 90-line baseline configuration ([`sysmonconfig.xml`](../../03-Detection-Engineering/Sysmon/sysmonconfig.xml)):
+System Monitor (Sysmon 64-bit) is installed using the tailored 90-line baseline configuration ([`sysmonconfig.xml`](../../06-Resources/rules/sysmon/sysmonconfig.xml)):
 
 ```powershell
 # Install Sysmon service using the lab baseline configuration schema

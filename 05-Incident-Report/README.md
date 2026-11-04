@@ -73,9 +73,9 @@ All post-mortem analysis across these reports is grounded in the authoritative t
 - **Operational TheHive Alert Coverage:** **16 Stages (80.0%)** (Live actionable tickets delivered to SOC analysts).
 - **Documented Telemetry Limits:** **4 Stages (20.0%)** (2 Inherent Offline Cracking [DG-04, DG-11]; 2 Target Logging Limits [DG-09, DG-12]).
 - **Detection Rule Failures:** **0 Stages (0.0%)** (Zero false negatives where expected telemetry reached an agent).
-- **Total OpenSearch Raw Baseline Events:** **9,567 raw alerts** ([`Wazuh-Raw-Alerts.csv`](../06-Resources/files/alerts/Wazuh-Raw-Alerts.csv)).
-- **Curated Investigation Alert Dataset:** **808 forensic alerts** ([`wazuh_alerts.csv`](../06-Resources/files/alerts/wazuh_alerts.csv)).
-- **Actionable TheHive 5 Incident Tickets:** **46 ingested alerts** ([`thehive_alerts.json`](../06-Resources/files/alerts/thehive_alerts.json)).
+- **Total OpenSearch Raw Baseline Events:** **9,567 raw alerts** ([`Wazuh-Raw-Alerts.csv`](../06-Resources/alerts/Wazuh-Raw-Alerts.csv)).
+- **Curated Investigation Alert Dataset:** **808 forensic alerts** ([`wazuh_alerts.csv`](../06-Resources/alerts/wazuh_alerts.csv)).
+- **Actionable TheHive 5 Incident Tickets:** **46 ingested alerts** ([`thehive_alerts.json`](../06-Resources/alerts/thehive_alerts.json)).
 - **Case Management Resolution:** **3 Cases Resolved / True Positive With Impact** (`CAS-001-WEBCOMP`, `CAS-002-LATMOVE`, `CAS-003-DOMIMP`).
 
 ---

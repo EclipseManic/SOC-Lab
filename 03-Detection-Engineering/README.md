@@ -13,7 +13,7 @@ To understand how detection works in this lab, imagine securing a corporate offi
 | Defensive Layer | Primary Mechanism | Real-World Office Analogy |
 |---|---|---|
 | **1. Suricata NIDS** (Network Wire) | High-speed AF-PACKET promiscuous sniffing on gateway interfaces | **The Perimeter Cameras:** Watches all traffic entering the building and crossing between hallways. |
-| **2. Linux Auditd** (Kernel Syscalls) | Hooks Linux netlink kernel subsystem (execve by uid=33) | **The Server Room Motion Sensor:** Hooks the Linux kernel to watch every command run by web services. |
+| **2. Linux Auditd & Host Shell Auditing** (Kernel & Shell) | Hooks Linux netlink (`execve`) & shell `PROMPT_COMMAND` (`bashcmd`) | **The Server Room Motion Sensor:** Hooks the Linux kernel and shell to record every command typed or executed. |
 | **3. Windows Sysmon** (Endpoint Context) | Deep process creation (EID 1), network (EID 3), registry (EID 13) | **The Desktop Watchdog:** Records process trees, command lines, and registry tampering on Windows. |
 | **4. Wazuh SIEM** (Analysis Brain) | Real-time decoders, local_rules.xml, and CDB memory lookups | **The Central Control Room:** Ingests all sensor feeds, applies rules, silences noise, and sounds alarms. |
 | **5. TheHive 5 + SOAR** (Incident Desk) | Two-tier SQLite WAL queue and async clustering daemon | **The Incident Desk:** Groups related alerts into clean investigation cases for human SOC analysts. |
@@ -64,19 +64,21 @@ When evaluating detection engineering effectiveness, measuring solely by coarse 
 | **Execution** | Invocation of `shell.php?cmd=id` | DVWA | Suricata / Auditd | SID 2019284 / `execve` `/usr/bin/id` | [Alert 4.1](../06-Resources/screenshots/thehive-alert/4.1.png) · [wzb-13](../06-Resources/screenshots/wazuh-deep-investigation/wzb-13-webshell-auditd-id-command.jpg) | **DETECTED** |
 | **Execution** | Named pipe FIFO Netcat reverse shell on TCP 4444 | DVWA | Suricata Gateway | SID 3400020 (Outbound TCP 4444) | [Alert 5](../06-Resources/screenshots/thehive-alert/5.png) · [wzb-15](../06-Resources/screenshots/wazuh-deep-investigation/wzb-15-revshell-auditd-stty-sane.jpg) | **DETECTED** |
 | **Privilege Escalation** | `sudo /usr/bin/python3` (GTFOBins) | DVWA | Linux PAM / Auditd | Wazuh 5402 / `web_process_creation` | [Alert 6](../06-Resources/screenshots/thehive-alert/6.png) · [wzb-17](../06-Resources/screenshots/wazuh-deep-investigation/wzb-17-privesc-pam-sudo-python-root.jpg) | **DETECTED** |
-| **Persistence** | Attacker SSH key written to `authorized_keys` | DVWA | Wazuh FIM / Syscheck | Wazuh Rule 550 (File integrity) | [Alert 7](../06-Resources/screenshots/thehive-alert/7.png) · [wzb-19](../06-Resources/screenshots/wazuh-deep-investigation/wzb-19-ssh-persist-auditd-authorized-keys.jpg) | **DETECTED** |
+| **Persistence** | Attacker SSH key written to `authorized_keys` | DVWA | Wazuh FIM & bashcmd | Wazuh Rule 550 & Rule 100220 (`echo "ssh-ed25519..."`) | [Alert 7](../06-Resources/screenshots/thehive-alert/7.png) · [wzb-19](../06-Resources/screenshots/wazuh-deep-investigation/wzb-19-ssh-persist-auditd-authorized-keys.jpg) | **DETECTED** |
 | **Persistence** | Interactive root SSH session from Kali | DVWA | SSHD / Wazuh | Wazuh Rule 5715 | [Alert 7.1](../06-Resources/screenshots/thehive-alert/7.1.png) · [wzb-20](../06-Resources/screenshots/wazuh-deep-investigation/wzb-20-ssh-persist-key-inject-sshd-login.jpg) | **DETECTED** |
-| **Discovery** | Internal subnet multi-port sweep (`192.168.56.0/24`) | DVWA → LAN | Suricata (`ens37`) | SIDs 3400001, 3400002, 3400020 | [Alert 8](../06-Resources/screenshots/thehive-alert/8.png) · [wzb-22](../06-Resources/screenshots/wazuh-deep-investigation/wzb-22-discovery-suricata-internal-nmap.jpg) | **DETECTED** |
-| **Credential Theft** | Responder LLMNR/NBT-NS daemon launched | DVWA | Linux Auditd | `execve` `Responder.py` (uid:0) | [Alert 9](../06-Resources/screenshots/thehive-alert/9.png) · [wzb-27](../06-Resources/screenshots/wazuh-deep-investigation/wzb-27-responder-auditd-daemon-start.jpg) | **DETECTED** |
-| **Discovery** | BloodHound LDAP queries targeting DC | DVWA → DC | Windows Security | EID 4624 (Logon Type 3) | [Alert 10](../06-Resources/screenshots/thehive-alert/10.png) · [wzb-31](../06-Resources/screenshots/wazuh-deep-investigation/wzb-31-bloodhound-auditd-python-ingest.jpg) | **DETECTED** |
-| **Credential Theft** | Kerberoasting TGS request for `HANK_SHERMAN` | DVWA → DC | Suricata / Wazuh | SID 2019922 / Rule 5715 | [Alert 11](../06-Resources/screenshots/thehive-alert/11.png) · [wzb-33](../06-Resources/screenshots/wazuh-deep-investigation/wzb-33-kerberoast-auditd-getuserspns.jpg) | **DETECTED** |
-| **Lateral Movement** | Pass-the-Hash WMI execution (`wmiexec.py`) | DC / Win10 | Sysmon / Event Log | Sysmon EID 1 / Windows EID 4624 | [Alert 13](../06-Resources/screenshots/thehive-alert/13.png) · [wzb-35](../06-Resources/screenshots/wazuh-deep-investigation/wzb-35-pth-wazuh-eid4624-detection.jpg) | **DETECTED** |
+| **Discovery** | Internal subnet multi-port sweep (`192.168.56.0/24`) | DVWA → LAN | Suricata (`ens37`) & Wazuh | SIDs 3400001, 3400002, 3400020 / Wazuh Rule 100220 (`nmap -sV -O ...`) | [Alert 8](../06-Resources/screenshots/thehive-alert/8.png) · [wzb-22](../06-Resources/screenshots/wazuh-deep-investigation/wzb-22-discovery-suricata-internal-nmap.jpg) | **DETECTED** |
+| **Credential Theft** | Responder LLMNR/NBT-NS daemon launched | DVWA | Linux Auditd & Wazuh bashcmd | `execve` `Responder.py` / Wazuh Rule 100220 (uid:0) | [Alert 9](../06-Resources/screenshots/thehive-alert/9.png) · [wzb-27](../06-Resources/screenshots/wazuh-deep-investigation/wzb-27-responder-auditd-daemon-start.jpg) | **DETECTED** |
+| **Discovery** | BloodHound LDAP queries targeting DC | DVWA → DC | Windows Security & Wazuh | EID 4624 (Logon Type 3) / Wazuh Rule 100220 (`bloodhound.py`) | [Alert 10](../06-Resources/screenshots/thehive-alert/10.png) · [wzb-31](../06-Resources/screenshots/wazuh-deep-investigation/wzb-31-bloodhound-auditd-python-ingest.jpg) | **DETECTED** |
+| **Credential Theft** | Kerberoasting TGS request for `HANK_SHERMAN` | DVWA → DC | Suricata / Wazuh bashcmd | SID 2019922 / Wazuh Rule 100220 (`GetUserSPNs.py`) & Rule 5715 | [Alert 11](../06-Resources/screenshots/thehive-alert/11.png) · [wzb-33](../06-Resources/screenshots/wazuh-deep-investigation/wzb-33-kerberoast-auditd-getuserspns.jpg) | **DETECTED** |
+| **Credential Access** | DCSync NTDS database replication | DVWA → DC | Windows Security / Wazuh | Windows EID 4662 / Wazuh Rule 100220 (`secretsdump.py`) & Rule 5715 | [Alert 12](../06-Resources/screenshots/thehive-alert/12.png) · [wzb-33](../06-Resources/screenshots/wazuh-deep-investigation/wzb-33-kerberoast-auditd-getuserspns.jpg) | **DETECTED** |
+| **Lateral Movement** | Pass-the-Hash WMI execution (`wmiexec.py`) | DC / Win10 | Sysmon / Event Log / Wazuh | Sysmon EID 1 / Windows EID 4624 / Wazuh Rule 100220 & 100613 | [Alert 13](../06-Resources/screenshots/thehive-alert/13.png) · [wzb-35](../06-Resources/screenshots/wazuh-deep-investigation/wzb-35-pth-wazuh-eid4624-detection.jpg) | **DETECTED** |
+| **Credential Access** | Golden Ticket forgery & caching (`ticketer.py`) | DVWA | Wazuh bashcmd & SSHD | Wazuh Rule 100220 (`ticketer.py -nthash...`) & Rule 5715 | [Alert 14](../06-Resources/screenshots/thehive-alert/14.png) · [wzb-38](../06-Resources/screenshots/wazuh-deep-investigation/wzb-38-goldenticket-auditd-ticketer-forgery.jpg) | **DETECTED** |
 | **Persistence** | `net user backdoor P@ssw0rd123! /add` | Domain Controller | Sysmon / Event Log | Sysmon EID 1 / Windows EID 4720 | [Alert 15](../06-Resources/screenshots/thehive-alert/15.png) · [wzb-44](../06-Resources/screenshots/wazuh-deep-investigation/wzb-44-persist-dc-eid4720-backdoor-created.jpg) | **DETECTED** |
 | **Privilege Escalation** | `net group "Domain Admins" backdoor /add` | Domain Controller | Windows Security | EID 4728 (Member added to group) | [Alert 15.5](../06-Resources/screenshots/thehive-alert/15.5.png) · [wzb-46](../06-Resources/screenshots/wazuh-deep-investigation/wzb-46-persist-wazuh-dc-domain-admins-add.jpg) | **DETECTED** |
 | **Exfiltration** | Rapid SCP file transfer burst | DVWA → Kali | SSHD / Wazuh | Wazuh Rule 5715 (Logon burst) | [Alert 17](../06-Resources/screenshots/thehive-alert/17.png) · [wzb-53](../06-Resources/screenshots/wazuh-deep-investigation/wzb-53-exfil-wazuh-sshd-rapid-sessions-burst.jpg) | **DETECTED** |
-| **Impact** | Registry wallpaper defacement (`hacked.bmp`) | Win10 / DC | Windows Sysmon | Sysmon EID 13 (Registry value set) | [Alert 18](../06-Resources/screenshots/thehive-alert/18.png) · [wzb-55](../06-Resources/screenshots/wazuh-deep-investigation/wzb-55-impact-wazuh-dc-wallpaper-registry-add.jpg) | **DETECTED** |
+| **Impact** | Registry wallpaper defacement (`hacked.bmp`) | Win10 / DC | Windows Sysmon / Wazuh | Sysmon EID 13 (Registry set) / Wazuh Rule 100220 (`wmiexec.py`) | [Alert 18](../06-Resources/screenshots/thehive-alert/18.png) · [wzb-55](../06-Resources/screenshots/wazuh-deep-investigation/wzb-55-impact-wazuh-dc-wallpaper-registry-add.jpg) | **DETECTED** |
 | **Impact** | Extortion note & dummy file drops (`.enc`) | Win10 / DC | Windows Sysmon | Sysmon EID 11 (File create) | [Alert 18.1](../06-Resources/screenshots/thehive-alert/18.1.png) · [wzb-57](../06-Resources/screenshots/wazuh-deep-investigation/wzb-57-impact-sysmon-dc-ransom-note-and-payload.jpg) | **DETECTED** |
-| **Impact** | Forced system reboot (`shutdown /r /t 0`) | Win10 / DC | Windows System | System EID 1074 | [Alert 18.2](../06-Resources/screenshots/thehive-alert/18.2.png) · [wzb-59](../06-Resources/screenshots/wazuh-deep-investigation/wzb-59-impact-wazuh-dc-forced-reboot.jpg) | **DETECTED** |
+| **Impact** | Forced system reboot (`shutdown /r /t 0`) | Win10 / DC | Windows System / Sysmon | System EID 1074 / Sysmon EID 1 | [Alert 18.2](../06-Resources/screenshots/thehive-alert/18.2.png) · [wzb-59](../06-Resources/screenshots/wazuh-deep-investigation/wzb-59-impact-wazuh-dc-forced-reboot.jpg) | **DETECTED** |
 
 ---
 
@@ -92,26 +94,28 @@ No single security tool can see everything. In this lab, four complementary dete
 - **What It Does:** Sniffs raw packets passing between the attacker's subnet (`192.168.232.0/24`) and the victim subnet (`192.168.56.0/24`) using high-speed AF-PACKET promiscuous capture.
 - **What It Catches:** Nmap port scans, WhatWeb web scanners, SQL injection payloads in HTTP URIs, and raw Kerberos ticket requests crossing the wire.
 - **Its Blind Spot:** It cannot read encrypted HTTPS or SSH traffic, and it cannot see local commands typed directly on an endpoint.
-- **Detailed Docs:** [`Suricata/README.md`](Suricata/README.md) · Active rules: [`Suricata/custom.rules`](Suricata/custom.rules)
+- **Detailed Docs:** [`Suricata/README.md`](Suricata/README.md) · Active rules: [`06-Resources/rules/suricata/custom.rules`](../06-Resources/rules/suricata/custom.rules)
 
-### Layer 2: The Linux Kernel — Auditd
+### Layer 2: The Linux Kernel & Host Shell Auditing — Auditd & `bashcmd` (Rule 100220)
 - **Where It Lives:** On the DVWA web server and pivot host (`192.168.56.30`).
-- **What It Does:** Hooks directly into the Linux netlink kernel subsystem to audit system calls (`execve`). Specifically, rule `-S execve -F uid=33 -k web_process_creation` monitors **every command executed by the Apache web service user (`www-data`)**.
-- **What It Catches:** When an attacker uploads a PHP web shell or spawns an interactive Python reverse shell, Auditd captures the process binary, command arguments, working directory, and user ID even if the traffic arrived over encrypted channels.
-- **Its Blind Spot:** It only monitors Linux endpoints and has no visibility into network packets or Windows machines.
-- **Detailed Docs:** [`Auditd/README.md`](Auditd/README.md) · Active rules: [`Auditd/audit.rules`](Auditd/audit.rules)
+- **What It Does:** Employs a dual-engine host detection architecture tailored for enterprise application servers:
+  1. **Linux Auditd (`execve` syscalls):** Hooks directly into the Linux netlink kernel subsystem. Rule `-S execve -F uid=33 -k web_process_creation` monitors **every process executed by the Apache web service user (`www-data`)**, capturing binary paths, argument arrays, working directories, and process ancestry.
+  2. **Custom Bash Command Auditing (`bashcmd` pipeline / Wazuh Rule 100220):** Enterprise web servers run headless daemon workloads; interactive command typing is inherently anomalous. Using a global `PROMPT_COMMAND` hook in `/etc/bash.bashrc` and `/etc/profile`, every interactive command typed by `www-data` or escalated to `root` is logged to `/var/log/bashcmd.log`, parsed by Wazuh's `bashcmd` decoder, and evaluated by Rule 100220.
+- **What It Catches:** Auditd catches binary invocations like `/usr/bin/id` or `sudo /usr/bin/python3`. Rule 100220 captures verbatim multi-command chains, compound shell syntax, pipes, and built-ins (`stty sane`, `sudo -l`, `echo "ssh-ed25519..." >> authorized_keys`, `nmap -sV -O ...`, `Responder.py`, `bloodhound.py`, `GetUserSPNs.py`, `secretsdump.py`, `ticketer.py`, `wmiexec.py`).
+- **Its Blind Spot:** It only monitors Linux endpoints and has no visibility into raw wire packets or Windows domain members.
+- **Detailed Docs:** [`Auditd/README.md`](Auditd/README.md) · Active rules: [`06-Resources/rules/auditd/audit.rules`](../06-Resources/rules/auditd/audit.rules) · Wazuh Rule 100220: [`Wazuh/README.md`](Wazuh/README.md#rule-100220--host-shell-execution--interactive-command-auditing-bashcmd)
 
 ### Layer 3: Windows Endpoints — Sysmon & Security Event Logs
 - **Where It Lives:** On the Active Directory Domain Controller (`PC-DC`, `192.168.56.10`) and Windows 10 workstation (`WIN10`, `192.168.56.20`).
 - **What It Does:** Standard Windows Security logs record who logged in (Event ID 4624) and when privileges were assigned (Event ID 4672). Microsoft Sysmon adds deep endpoint forensics: full process command lines (EID 1), network sockets (EID 3), and registry modifications (EID 13).
 - **What It Catches:** Lateral movement via Impacket `wmiexec` (spawning `WmiPrvSE.exe` $\to$ `cmd.exe /Q /c`), command-line reconnaissance (`whoami`, `net user /domain`), and unauthorized desktop wallpaper changes during defacement.
 - **Its Blind Spot:** It only monitors Windows systems.
-- **Detailed Docs:** [`Sysmon/README.md`](Sysmon/README.md) · Active baseline: [`Sysmon/sysmonconfig.xml`](Sysmon/sysmonconfig.xml)
+- **Detailed Docs:** [`Sysmon/README.md`](Sysmon/README.md) · Active baseline: [`06-Resources/rules/sysmon/sysmonconfig.xml`](../06-Resources/rules/sysmon/sysmonconfig.xml)
 
 ### Layer 4: Central Correlation & Analysis — Wazuh SIEM
 - **Where It Lives:** On the private cloud server (`10.122.1.4:1514/TCP`).
-- **What It Does:** Receives real-time event streams from all four endpoint agents. It parses raw text into structured fields using [`local_decoder.xml`](Wazuh/local_decoder.xml), tests them against over 1,300 lines of custom rules in [`local_rules.xml`](Wazuh/local_rules.xml), matches entries against fast Constant Database (CDB) lookup tables, and enforces an alert threshold ($\ge 8$) to send serious emergencies to TheHive.
-- **Detailed Docs:** [`Wazuh/README.md`](Wazuh/README.md) · Rules: [`Wazuh/local_rules.xml`](Wazuh/local_rules.xml)
+- **What It Does:** Receives real-time event streams from all four endpoint agents. It parses raw text into structured fields using [`local_decoder.xml`](../06-Resources/rules/wazuh/local_decoder.xml), tests them against over 1,300 lines of custom rules in [`local_rules.xml`](../06-Resources/rules/wazuh/local_rules.xml), matches entries against fast Constant Database (CDB) lookup tables, and enforces an alert threshold ($\ge 8$) to send serious emergencies to TheHive.
+- **Detailed Docs:** [`Wazuh/README.md`](Wazuh/README.md) · Rules: [`06-Resources/rules/wazuh/local_rules.xml`](../06-Resources/rules/wazuh/local_rules.xml)
 
 ---
 
@@ -347,7 +351,7 @@ A critical architectural distinction in this SOC lab is understanding **how the 
 }
 ```
 
-- **What Remained:** Applying these 11 search filters reduced 9,567 noisy logs down to **808 curated, high-value security events**. This filtered view was exported as [`wazuh_alerts.csv`](../06-Resources/files/alerts/wazuh_alerts.csv), giving the analyst a focused forensic dataset to correlate attack stages, build the master timeline, and verify detections across all 20 stages.
+- **What Remained:** Applying these 11 search filters reduced 9,567 noisy logs down to **808 curated, high-value security events**. This filtered view was exported as [`wazuh_alerts.csv`](../06-Resources/alerts/wazuh_alerts.csv), giving the analyst a focused forensic dataset to correlate attack stages, build the master timeline, and verify detections across all 20 stages.
 
 ---
 
@@ -378,10 +382,10 @@ All configuration files, rulesets, and detection scripts are organized in dedica
 
 | Directory | What's Inside | Defensive Technology | Key Highlights |
 |---|---|---|---|
-| [`Wazuh/`](Wazuh/README.md) | [`local_rules.xml`](Wazuh/local_rules.xml)<br>[`local_decoder.xml`](Wazuh/local_decoder.xml) | Wazuh SIEM 4.14.8 | 1,300+ line tuned ruleset, Impacket wmiexec detection, 87 suppressions |
-| [`Suricata/`](Suricata/README.md) | [`custom.rules`](Suricata/custom.rules)<br>[`threshold.config`](Suricata/threshold.config) | Suricata 7.x NIDS | Nmap OS detection rules, SQLi URIs, rate-limiting configuration |
-| [`Sysmon/`](Sysmon/README.md) | [`sysmonconfig.xml`](Sysmon/sysmonconfig.xml) | Microsoft Sysmon v15.20 | Windows process command lines (EID 1), network sockets, and registry tracking |
-| [`Auditd/`](Auditd/README.md) | [`audit.rules`](Auditd/audit.rules) | Linux Auditd Subsystem | Kernel syscall tracing on `execve`, SUID creation, and identity file watches |
+| [`Wazuh/`](Wazuh/README.md) | [`local_rules.xml`](../06-Resources/rules/wazuh/local_rules.xml)<br>[`local_decoder.xml`](../06-Resources/rules/wazuh/local_decoder.xml) | Wazuh SIEM 4.14.8 | 1,300+ line tuned ruleset, Impacket wmiexec detection, 87 suppressions |
+| [`Suricata/`](Suricata/README.md) | [`custom.rules`](../06-Resources/rules/suricata/custom.rules)<br>[`threshold.config`](../06-Resources/rules/suricata/threshold.config) | Suricata 7.x NIDS | Nmap OS detection rules, SQLi URIs, rate-limiting configuration |
+| [`Sysmon/`](Sysmon/README.md) | [`sysmonconfig.xml`](../06-Resources/rules/sysmon/sysmonconfig.xml) | Microsoft Sysmon v15.20 | Windows process command lines (EID 1), network sockets, and registry tracking |
+| [`Auditd/`](Auditd/README.md) | [`audit.rules`](../06-Resources/rules/auditd/audit.rules) | Linux Auditd Subsystem | Kernel syscall tracing on `execve`, SUID creation, and identity file watches |
 
 ---
 

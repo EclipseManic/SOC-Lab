@@ -96,7 +96,7 @@ Get-WmiObject -Class Win32_NetworkAdapterConfiguration | Where-Object { $_.IPEna
 
 ## 4. Sysmon v15.20 Deployment & Event Filtering
 
-Sysmon is installed using the project's tailored 90-line telemetry baseline ([`sysmonconfig.xml`](../../03-Detection-Engineering/Sysmon/sysmonconfig.xml), schema version `4.90`, SHA256/MD5 hashing). This baseline captures critical post-exploitation and lateral movement indicators without saturating memory or disk I/O on a 4 GB RAM virtual machine:
+Sysmon is installed using the project's tailored 90-line telemetry baseline ([`sysmonconfig.xml`](../../06-Resources/rules/sysmon/sysmonconfig.xml), schema version `4.90`, SHA256/MD5 hashing). This baseline captures critical post-exploitation and lateral movement indicators without saturating memory or disk I/O on a 4 GB RAM virtual machine:
 
 ```powershell
 # Download and install Sysmon 64-bit with the production XML configuration
