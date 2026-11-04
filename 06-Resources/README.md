@@ -90,6 +90,12 @@ Authoritative raw SIEM event logs, curated investigative datasets, SOAR platform
 | [`cases/TheHive-Case-Export.json`](cases/TheHive-Case-Export.json) | JSON | 346 KB | Complete live database export from TheHive 5 platform containing Cases 01, 02, and 03, task records, and observables. |
 | [`docs/attack-chain-full.pdf`](docs/attack-chain-full.pdf) | PDF | 20 Stages | Master command manual detailing every offensive command, parameter, and script syntax used across Stages 01–20. |
 
+> [!NOTE]
+> ### ⏱️ Telemetry & SOAR Metric Audit Note: `timeToTriage` vs. `timeToDetect` in `TheHive-Case-Export.json`
+> Analysts reviewing the raw database export in [`cases/TheHive-Case-Export.json`](cases/TheHive-Case-Export.json) should note an important epoch timing nuance:
+> - **Operational `timeToDetect` (2.5 – 6.6 seconds):** Reflects the automated detection speed from initial telemetry receipt to TheHive alert creation.
+> - **Export `timeToTriage` (~1,453,600,844 ms / ~16.8 days):** TheHive internally computes `timeToTriage` as the difference between original alert ingestion (`alertDate`: `1792323609913`) and the date the case container was formally promoted and exported (`newDate`: `1793776747577`). This ~16.8-day delta represents the calendar interval between raw simulation data generation and final post-exercise case packaging in TheHive, rather than an operational analyst delay. It is retained as unedited platform ground truth but must not be cited as an operational response SLA metric.
+
 ---
 
 ## 🛡️ 4. Detection Engineering Rule Definitions (`rules/`)
