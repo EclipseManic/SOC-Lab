@@ -325,6 +325,11 @@ Both CSV exports contain three core columns:
 - `agent.name`: The reporting agent (`DVWA`, `Suricata`, `DomainWin10` for DC, `Win10User` for Windows 10 workstation).
 - `full_log`: The raw underlying event payload, including Suricata EVE-JSON (with `signature_id`, flow IPs/ports), Windows EventChannel XML/JSON (with `eventID`, `targetUserName`, `logonType`), and Linux Auditd messages (with syscall, binary path, and `key`).
 
+### 📸 Empirical Visual Proof Galleries
+The physical evidentiary captures validating these detection rules are curated in:
+- **[TheHive Alert Cards (`06-Resources/screenshots/thehive-alert/`)](../../06-Resources/screenshots/thehive-alert/)**: 60 empirical alert cards generated live by the Wazuh-to-TheHive integration engine.
+- **[Wazuh Chronological Telemetry (`06-Resources/screenshots/wazuh-deep-investigation/`)](../../06-Resources/screenshots/wazuh-deep-investigation/)**: 68 verified SIEM and endpoint telemetry captures (`wzb-01` to `wzb-68`) tracing detection alerts across all attack stages.
+
 ## 7. Verification Commands
 
 ```bash

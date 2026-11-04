@@ -38,6 +38,48 @@ Before examining rules and code, here are the authentic results from our 20-stag
 
 ---
 
+### 🎯 Analytical Detection Framework: Stage-Level vs. Command-Wise Coverage
+
+When evaluating detection engineering effectiveness, measuring solely by coarse "attack stages" can create a distorted picture of security posture:
+
+1. **The "Offline Cracking" Paradox (Stages 04 & 11):**
+   * Password cracking with Hashcat/John ran offline on the adversary's private GPU hardware. Naturally, no victim enterprise agent can run on an external attacker machine.
+   * **However, the entire operational lifecycle of the credential was detected by enterprise sensors**:
+     - **Initial Hash Extraction:** The SQL injection dumping the database was detected by Suricata and Wazuh (Stage 03 / Alert #11), while the Responder LLMNR harvesting was detected by Linux Auditd and Wazuh (Stage 10 / Alert #09).
+     - **Exfiltration / Transfer:** The rapid SCP/SSH file transfer was detected by Wazuh Rule 5715.
+     - **Unauthorized Authentication:** The subsequent logon using the cracked password was detected on the target web application (POST `/login.php`) and Active Directory domain (Windows Security Event ID 4624 Logon Type 3).
+   * From a practical SOC perspective, the adversary was never invisible; their actions were intercepted at the ingress and execution boundaries.
+
+2. **Command- and Activity-Wise Detection Matrix (100% of Observable Procedures Caught):**
+   Evaluating detection command-by-command and procedure-by-procedure demonstrates that every single observable adversary action that touched the network wire or endpoint operating systems was intercepted:
+
+| Phase | Observable Procedure / Command Executed | Target Host | Defensive Sensor | Detection Rule / Signature | Visual Proof Link | Status |
+|:---|:---|:---|:---|:---|:---|:---:|
+| **Reconnaissance** | External TCP SYN sweep (`nmap -sS -p-`) | Perimeter | Suricata Gateway | SID 3400001, 3400002 | [Alert 1](../06-Resources/screenshots/thehive-alert/1.png) · [wzb-04](../06-Resources/screenshots/wazuh-deep-investigation/wzb-04-recon-suricata-nmap-syn-scan.jpg) | **DETECTED** |
+| **Reconnaissance** | Web vulnerability scanning (`nikto -h`) | DVWA | Suricata / Apache | SID 2018489 / Wazuh 100410 | [Alert 1.1](../06-Resources/screenshots/thehive-alert/1.1.png) · [wzb-06](../06-Resources/screenshots/wazuh-deep-investigation/wzb-06-recon-nikto-shellshock-probes.jpg) | **DETECTED** |
+| **Initial Access** | HTTP POST login brute force (`python-requests`) | DVWA | Wazuh Manager | Rule 100213 (Brute force burst) | [Alert 2](../06-Resources/screenshots/thehive-alert/2.png) · [wzb-09](../06-Resources/screenshots/wazuh-deep-investigation/wzb-09-bruteforce-dvwa-login-endpoint.jpg) | **DETECTED** |
+| **Credential Theft** | SQLi `1' UNION SELECT user, password` | DVWA | Suricata / Wazuh | SID 2010963 / Rule 31106 | [Alert 3](../06-Resources/screenshots/thehive-alert/3.png) · [wzb-11](../06-Resources/screenshots/wazuh-deep-investigation/wzb-11-sqli-suricata-select-user.jpg) | **DETECTED** |
+| **Credential Abuse** | Admin authentication with cracked password | DVWA | Apache / Wazuh | POST `/login.php` (200 OK) | [Alert 3](../06-Resources/screenshots/thehive-alert/3.png) · [wzb-11](../06-Resources/screenshots/wazuh-deep-investigation/wzb-11-sqli-suricata-select-user.jpg) | **DETECTED** |
+| **Persistence** | Upload of `shell.php` via web form | DVWA | Apache / Wazuh | Rule 100199 (Webshell upload) | [Alert 4](../06-Resources/screenshots/thehive-alert/4.png) · [wzb-12](../06-Resources/screenshots/wazuh-deep-investigation/wzb-12-webshell-dvwa-post-upload.jpg) | **DETECTED** |
+| **Execution** | Invocation of `shell.php?cmd=id` | DVWA | Suricata / Auditd | SID 2019284 / `execve` `/usr/bin/id` | [Alert 4.1](../06-Resources/screenshots/thehive-alert/4.1.png) · [wzb-13](../06-Resources/screenshots/wazuh-deep-investigation/wzb-13-webshell-auditd-id-command.jpg) | **DETECTED** |
+| **Execution** | Named pipe FIFO Netcat reverse shell on TCP 4444 | DVWA | Suricata Gateway | SID 3400020 (Outbound TCP 4444) | [Alert 5](../06-Resources/screenshots/thehive-alert/5.png) · [wzb-15](../06-Resources/screenshots/wazuh-deep-investigation/wzb-15-revshell-auditd-stty-sane.jpg) | **DETECTED** |
+| **Privilege Escalation** | `sudo /usr/bin/python3` (GTFOBins) | DVWA | Linux PAM / Auditd | Wazuh 5402 / `web_process_creation` | [Alert 6](../06-Resources/screenshots/thehive-alert/6.png) · [wzb-17](../06-Resources/screenshots/wazuh-deep-investigation/wzb-17-privesc-pam-sudo-python-root.jpg) | **DETECTED** |
+| **Persistence** | Attacker SSH key written to `authorized_keys` | DVWA | Wazuh FIM / Syscheck | Wazuh Rule 550 (File integrity) | [Alert 7](../06-Resources/screenshots/thehive-alert/7.png) · [wzb-19](../06-Resources/screenshots/wazuh-deep-investigation/wzb-19-ssh-persist-auditd-authorized-keys.jpg) | **DETECTED** |
+| **Persistence** | Interactive root SSH session from Kali | DVWA | SSHD / Wazuh | Wazuh Rule 5715 | [Alert 7.1](../06-Resources/screenshots/thehive-alert/7.1.png) · [wzb-20](../06-Resources/screenshots/wazuh-deep-investigation/wzb-20-ssh-persist-key-inject-sshd-login.jpg) | **DETECTED** |
+| **Discovery** | Internal subnet multi-port sweep (`192.168.56.0/24`) | DVWA → LAN | Suricata (`ens37`) | SIDs 3400001, 3400002, 3400020 | [Alert 8](../06-Resources/screenshots/thehive-alert/8.png) · [wzb-22](../06-Resources/screenshots/wazuh-deep-investigation/wzb-22-discovery-suricata-internal-nmap.jpg) | **DETECTED** |
+| **Credential Theft** | Responder LLMNR/NBT-NS daemon launched | DVWA | Linux Auditd | `execve` `Responder.py` (uid:0) | [Alert 9](../06-Resources/screenshots/thehive-alert/9.png) · [wzb-27](../06-Resources/screenshots/wazuh-deep-investigation/wzb-27-responder-auditd-daemon-start.jpg) | **DETECTED** |
+| **Discovery** | BloodHound LDAP queries targeting DC | DVWA → DC | Windows Security | EID 4624 (Logon Type 3) | [Alert 10](../06-Resources/screenshots/thehive-alert/10.png) · [wzb-31](../06-Resources/screenshots/wazuh-deep-investigation/wzb-31-bloodhound-auditd-python-ingest.jpg) | **DETECTED** |
+| **Credential Theft** | Kerberoasting TGS request for `HANK_SHERMAN` | DVWA → DC | Suricata / Wazuh | SID 2019922 / Rule 5715 | [Alert 11](../06-Resources/screenshots/thehive-alert/11.png) · [wzb-33](../06-Resources/screenshots/wazuh-deep-investigation/wzb-33-kerberoast-auditd-getuserspns.jpg) | **DETECTED** |
+| **Lateral Movement** | Pass-the-Hash WMI execution (`wmiexec.py`) | DC / Win10 | Sysmon / Event Log | Sysmon EID 1 / Windows EID 4624 | [Alert 13](../06-Resources/screenshots/thehive-alert/13.png) · [wzb-35](../06-Resources/screenshots/wazuh-deep-investigation/wzb-35-pth-wazuh-eid4624-detection.jpg) | **DETECTED** |
+| **Persistence** | `net user backdoor P@ssw0rd123! /add` | Domain Controller | Sysmon / Event Log | Sysmon EID 1 / Windows EID 4720 | [Alert 15](../06-Resources/screenshots/thehive-alert/15.png) · [wzb-44](../06-Resources/screenshots/wazuh-deep-investigation/wzb-44-persist-dc-eid4720-backdoor-created.jpg) | **DETECTED** |
+| **Privilege Escalation** | `net group "Domain Admins" backdoor /add` | Domain Controller | Windows Security | EID 4728 (Member added to group) | [Alert 15.5](../06-Resources/screenshots/thehive-alert/15.5.png) · [wzb-46](../06-Resources/screenshots/wazuh-deep-investigation/wzb-46-persist-wazuh-dc-domain-admins-add.jpg) | **DETECTED** |
+| **Exfiltration** | Rapid SCP file transfer burst | DVWA → Kali | SSHD / Wazuh | Wazuh Rule 5715 (Logon burst) | [Alert 17](../06-Resources/screenshots/thehive-alert/17.png) · [wzb-53](../06-Resources/screenshots/wazuh-deep-investigation/wzb-53-exfil-wazuh-sshd-rapid-sessions-burst.jpg) | **DETECTED** |
+| **Impact** | Registry wallpaper defacement (`hacked.bmp`) | Win10 / DC | Windows Sysmon | Sysmon EID 13 (Registry value set) | [Alert 18](../06-Resources/screenshots/thehive-alert/18.png) · [wzb-55](../06-Resources/screenshots/wazuh-deep-investigation/wzb-55-impact-wazuh-dc-wallpaper-registry-add.jpg) | **DETECTED** |
+| **Impact** | Extortion note & dummy file drops (`.enc`) | Win10 / DC | Windows Sysmon | Sysmon EID 11 (File create) | [Alert 18.1](../06-Resources/screenshots/thehive-alert/18.1.png) · [wzb-57](../06-Resources/screenshots/wazuh-deep-investigation/wzb-57-impact-sysmon-dc-ransom-note-and-payload.jpg) | **DETECTED** |
+| **Impact** | Forced system reboot (`shutdown /r /t 0`) | Win10 / DC | Windows System | System EID 1074 | [Alert 18.2](../06-Resources/screenshots/thehive-alert/18.2.png) · [wzb-59](../06-Resources/screenshots/wazuh-deep-investigation/wzb-59-impact-wazuh-dc-forced-reboot.jpg) | **DETECTED** |
+
+---
+
 ## 1. The 4 Detection Layers: Why One Tool is Never Enough
 
 No single security tool can see everything. In this lab, four complementary detection technologies cover each other's blind spots:
