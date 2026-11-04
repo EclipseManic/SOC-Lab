@@ -82,7 +82,7 @@ Following root privilege escalation on the DVWA host (`192.168.56.30`), the adve
 - [x] Globally disable LLMNR (`EnableMulticast = 0`) & NetBIOS over TCP/IP (`NetbiosOptions = 2`) across all Windows hosts
 - [x] Cryptographically shred `/tmp/*.hash` dumps and purge `/opt/Responder` from Linux pivot host
 - [x] Enable NTDS diagnostic logging (`15 Field Engineering` = 5) to alert on LDAP search volume
-- [x] Complete double `krbtgt` password reset procedure (incrementing KVNO to 4) to invalidate all forged Kerberos tickets
+- [x] Complete double `krbtgt` password reset procedure (incrementing KVNO to 3) to invalidate all forged Kerberos tickets
 
 ---
 
