@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached  
 > **Case:** [Case 02](../../04-Investigation/Cases/case-02-lateral-movement.md)  
 > **Investigation:** [Phase 5 Deep Dive](../../04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-5-becoming-god-in-active-directory-kerberoasting-dcsync--the-golden-ticket)  
-> **Evidence:** [attack](../../assets/screenshots/attack-simulation/45.png) · [alert](../../assets/screenshots/detection-engineering/12.png)
+> **Evidence:** [attack](../../assets/screenshots/attack-simulation/45.png) · [alert](../../assets/screenshots/thehive-alert/12.png)
 
 ---
 
@@ -68,7 +68,7 @@ The extraction of the `Administrator` NTLM hash (`cc814***9fb`) immediately enab
 
 ### Alert Screenshots
 
-![TheHive Alert - DCSync Execution Activity](../../assets/screenshots/detection-engineering/12.png)
+![TheHive Alert - DCSync Execution Activity](../../assets/screenshots/thehive-alert/12.png)
 *Figure 14.4: TheHive alert detail capturing Wazuh Rule 5715 triggered by SSH access to the DVWA pivot during the DCSync extraction routine.*
 
 ---

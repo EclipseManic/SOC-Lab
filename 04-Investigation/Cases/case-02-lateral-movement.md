@@ -8,7 +8,7 @@
 > **Linked Alerts:** 8 Ingested Alerts (Alerts #16, #17, #19–#24)  
 > **Eradication Playbook:** [`Eradication-Hardening-and-Recovery.md`](../Eradication-Hardening-and-Recovery.md#5-step-3-active-directory-account-eradication-privileged-demotion--kerberos-invalidation-pc-dc)
 
-![TheHive Case 02 Closed](../../assets/screenshots/investigation/eradication/thehive_case02_closed.png)  
+![TheHive Case 02 Closed](../../assets/screenshots/thehive-cases/thehive_case02_closed.png)  
 *Figure 1: TheHive 5 Case Record for `CAS-002-LATMOVE` showing 8 linked alerts, pivot eradication verification, and formal closure verdict.*  
 
 ---
@@ -48,14 +48,14 @@ Following root privilege escalation on the DVWA host (`192.168.56.30`), the adve
 
 | Time (IST) | Event | Source | Evidentiary Alert Capture |
 |---|---|---|---|
-| `17:26:14` | Attacker public key added to `/root/.ssh/authorized_keys` | Wazuh Auditd | [`wzb-19-ssh-persist-auditd-authorized-keys.jpg`](../../assets/screenshots/investigation/wazuh-alerts/wzb-19-ssh-persist-auditd-authorized-keys.jpg) |
-| `17:29:43` | Inbound root SSH interactive session established from Kali | Wazuh SSHD | [`wzb-20-ssh-persist-key-inject-sshd-login.jpg`](../../assets/screenshots/investigation/wazuh-alerts/wzb-20-ssh-persist-key-inject-sshd-login.jpg) |
-| `17:31:19` | Internal subnet discovery sweep against `192.168.56.0/24` | Suricata (`ens37`) | [`wzb-22-discovery-suricata-internal-nmap.jpg`](../../assets/screenshots/investigation/wazuh-alerts/wzb-22-discovery-suricata-internal-nmap.jpg) |
-| `17:37:10` | Responder LLMNR/NetBIOS poisoning capturing `win10` NetNTLMv2 hash | Win10 Sysmon / Auditd | [`wzb-28-responder-win10-rundll32-davsetcookie.jpg`](../../assets/screenshots/investigation/wazuh-alerts/wzb-28-responder-win10-rundll32-davsetcookie.jpg) |
-| `17:38:29` | NetNTLMv2 hash saved to `/tmp/win10.hash` for offline Hashcat cracking | Linux Pivot Auditd | [`wzb-29-responder-auditd-ntlmv2-hash-harvested.jpg`](../../assets/screenshots/investigation/wazuh-alerts/wzb-29-responder-auditd-ntlmv2-hash-harvested.jpg) |
-| `18:00:57` | BloodHound LDAP query volume from DVWA to DC (`18:01:02` root SSH session) | Wazuh SSHD / Auditd | [`wzb-31-bloodhound-auditd-python-ingest.jpg`](../../assets/screenshots/investigation/wazuh-alerts/wzb-31-bloodhound-auditd-python-ingest.jpg) |
-| `18:01:18` | Kerberoasting TGS-REQ requested for `HANK_SHERMAN` SPN via GetUserSPNs.py | Suricata / Wazuh | [`wzb-33-kerberoast-auditd-getuserspns.jpg`](../../assets/screenshots/investigation/wazuh-alerts/wzb-33-kerberoast-auditd-getuserspns.jpg) |
-| `18:02:43` | DCSync replication dumping domain hashes via DRSUAPI (secretsdump.py) | Linux Pivot Auditd | [`wzb-34-dcsync-auditd-secretsdump-ntds.jpg`](../../assets/screenshots/investigation/wazuh-alerts/wzb-34-dcsync-auditd-secretsdump-ntds.jpg) |
+| `17:26:14` | Attacker public key added to `/root/.ssh/authorized_keys` | Wazuh Auditd | [`wzb-19-ssh-persist-auditd-authorized-keys.jpg`](../../assets/screenshots/wazuh-deep-investigation/wzb-19-ssh-persist-auditd-authorized-keys.jpg) |
+| `17:29:43` | Inbound root SSH interactive session established from Kali | Wazuh SSHD | [`wzb-20-ssh-persist-key-inject-sshd-login.jpg`](../../assets/screenshots/wazuh-deep-investigation/wzb-20-ssh-persist-key-inject-sshd-login.jpg) |
+| `17:31:19` | Internal subnet discovery sweep against `192.168.56.0/24` | Suricata (`ens37`) | [`wzb-22-discovery-suricata-internal-nmap.jpg`](../../assets/screenshots/wazuh-deep-investigation/wzb-22-discovery-suricata-internal-nmap.jpg) |
+| `17:37:10` | Responder LLMNR/NetBIOS poisoning capturing `win10` NetNTLMv2 hash | Win10 Sysmon / Auditd | [`wzb-28-responder-win10-rundll32-davsetcookie.jpg`](../../assets/screenshots/wazuh-deep-investigation/wzb-28-responder-win10-rundll32-davsetcookie.jpg) |
+| `17:38:29` | NetNTLMv2 hash saved to `/tmp/win10.hash` for offline Hashcat cracking | Linux Pivot Auditd | [`wzb-29-responder-auditd-ntlmv2-hash-harvested.jpg`](../../assets/screenshots/wazuh-deep-investigation/wzb-29-responder-auditd-ntlmv2-hash-harvested.jpg) |
+| `18:00:57` | BloodHound LDAP query volume from DVWA to DC (`18:01:02` root SSH session) | Wazuh SSHD / Auditd | [`wzb-31-bloodhound-auditd-python-ingest.jpg`](../../assets/screenshots/wazuh-deep-investigation/wzb-31-bloodhound-auditd-python-ingest.jpg) |
+| `18:01:18` | Kerberoasting TGS-REQ requested for `HANK_SHERMAN` SPN via GetUserSPNs.py | Suricata / Wazuh | [`wzb-33-kerberoast-auditd-getuserspns.jpg`](../../assets/screenshots/wazuh-deep-investigation/wzb-33-kerberoast-auditd-getuserspns.jpg) |
+| `18:02:43` | DCSync replication dumping domain hashes via DRSUAPI (secretsdump.py) | Linux Pivot Auditd | [`wzb-34-dcsync-auditd-secretsdump-ntds.jpg`](../../assets/screenshots/wazuh-deep-investigation/wzb-34-dcsync-auditd-secretsdump-ntds.jpg) |
 
 ---
 

@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached
 > **Case:** [Case 01](../../04-Investigation/Cases/case-01-web-compromise.md)
 > **Investigation:** [Phase 1 Deep Dive](../../04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-1-rattling-the-doorknobs-reconnaissance--web-exploitation)
-> **Evidence:** [attack](../../assets/screenshots/attack-simulation/) · [alert](../../assets/screenshots/detection-engineering/)
+> **Evidence:** [attack](../../assets/screenshots/attack-simulation/) · [alert](../../assets/screenshots/thehive-alert/)
 
 ## Objective
 
@@ -61,10 +61,10 @@ curl -s -b "PHPSESSID=session_token; security=low" \
 
 ### Alert Screenshots
 
-![TheHive Alert - Suricata / Wazuh Detection of Web Traffic](../../assets/screenshots/detection-engineering/3.png)
+![TheHive Alert - Suricata / Wazuh Detection of Web Traffic](../../assets/screenshots/thehive-alert/3.png)
 *Figure 3.3: Wazuh and Suricata events recording suspicious HTTP traffic and scanner signatures in TheHive.*
 
-![TheHive Alert Detail - Suricata ET WEB_SERVER SELECT USER SQL Injection Attempt](../../assets/screenshots/detection-engineering/5.png)
+![TheHive Alert Detail - Suricata ET WEB_SERVER SELECT USER SQL Injection Attempt](../../assets/screenshots/thehive-alert/5.png)
 *Figure 3.4: Suricata rule 100600 alert capturing ET WEB_SERVER SELECT USER SQL Injection Attempt in URI.*
 
 ## Alert observed

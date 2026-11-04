@@ -851,7 +851,7 @@ export const evidenceItems = [
     value: "Captured",
     tone: "teal",
     note: "TheHive alert dashboard and detail captures across all detected stages.",
-    path: "..\../assets/screenshots/detection-engineering/",
+    path: "..\../assets/screenshots/thehive-alert/",
   },
   {
     label: "Detection Coverage",

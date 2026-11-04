@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached
 > **Case:** [Case 02](../../04-Investigation/Cases/case-02-lateral-movement.md)
 > **Investigation:** [Phase 3 Deep Dive](../../04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-3-making-themselves-at-home-ssh-persistence--finding-windows)
-> **Evidence:** [attack](../../assets/screenshots/attack-simulation/) · [alert](../../assets/screenshots/detection-engineering/)
+> **Evidence:** [attack](../../assets/screenshots/attack-simulation/) · [alert](../../assets/screenshots/thehive-alert/)
 
 ## Objective
 
@@ -116,10 +116,10 @@ echo "192.168.56.10 PC-DC.ad.lab ad.lab" >> /etc/hosts
 
 ### Alert Screenshots
 
-![TheHive Alert 8 — Network Port Scanning Overview](../../assets/screenshots/detection-engineering/8.png)
+![TheHive Alert 8 — Network Port Scanning Overview](../../assets/screenshots/thehive-alert/8.png)
 *Figure 8: TheHive Alert 8 overview displaying detection of internal port scanning and network reconnaissance.*
 
-![TheHive Alert 8.1 — Scan Rule Matches and Telemetry](../../assets/screenshots/detection-engineering/8.1.png)
+![TheHive Alert 8.1 — Scan Rule Matches and Telemetry](../../assets/screenshots/thehive-alert/8.1.png)
 *Figure 9: Detailed alert rule breakdown showing Suricata/Wazuh port scan thresholds and event signatures.*
 
 ## Alert observed

@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached
 > **Case:** [Case 01](../../04-Investigation/Cases/case-01-web-compromise.md)
 > **Investigation:** [Phase 2 Deep Dive](../../04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-2-the-10-second-mistake-webshell-to-instant-root)
-> **Evidence:** [attack](../../assets/screenshots/attack-simulation/) · [alert](../../assets/screenshots/detection-engineering/)
+> **Evidence:** [attack](../../assets/screenshots/attack-simulation/) · [alert](../../assets/screenshots/thehive-alert/)
 
 ## Objective
 
@@ -51,13 +51,13 @@ curl -s "http://192.168.56.30/hackable/uploads/shell.php?cmd=id"
 
 ### Alert Screenshots
 
-![TheHive Alert Overview - Suricata Inbound Web Activity Alerts](../../assets/screenshots/detection-engineering/4.png)
+![TheHive Alert Overview - Suricata Inbound Web Activity Alerts](../../assets/screenshots/thehive-alert/4.png)
 *Figure 5.4: TheHive alert dashboard recording Suricata inbound web traffic alerts.*
 
-![TheHive Alert Detail - Suricata Inbound Web Traffic Detection Details](../../assets/screenshots/detection-engineering/4.1.png)
+![TheHive Alert Detail - Suricata Inbound Web Traffic Detection Details](../../assets/screenshots/thehive-alert/4.1.png)
 *Figure 5.5: Suricata rule 100600 alert capturing inbound web request traffic from 192.168.232.135.*
 
-![TheHive Alert Detail - Suricata PHP System Command and Web Shell Execution Detection](../../assets/screenshots/detection-engineering/6.1.png)
+![TheHive Alert Detail - Suricata PHP System Command and Web Shell Execution Detection](../../assets/screenshots/thehive-alert/6.1.png)
 *Figure 5.6: Suricata rule 100600 alerts detecting ET WEB_SERVER PHP System Command in HTTP POST and ET WEB_SERVER Exploit Suspected PHP Injection Attack (cmd=).*
 
 ## Alert observed

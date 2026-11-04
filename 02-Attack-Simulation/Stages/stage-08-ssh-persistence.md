@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached
 > **Case:** [Case 02](../../04-Investigation/Cases/case-02-lateral-movement.md)
 > **Investigation:** [Phase 3 Deep Dive](../../04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-3-making-themselves-at-home-ssh-persistence--finding-windows)
-> **Evidence:** [attack](../../assets/screenshots/attack-simulation/) · [alert](../../assets/screenshots/detection-engineering/)
+> **Evidence:** [attack](../../assets/screenshots/attack-simulation/) · [alert](../../assets/screenshots/thehive-alert/)
 
 ## Objective
 
@@ -80,13 +80,13 @@ hostname
 
 ### Alert Screenshots
 
-![TheHive Alert 7 — SSH Persistence and Root Login Overview](../../assets/screenshots/detection-engineering/7.png)
+![TheHive Alert 7 — SSH Persistence and Root Login Overview](../../assets/screenshots/thehive-alert/7.png)
 *Figure 4: TheHive Alert 7 overview capturing unauthorized SSH persistence and root authentication.*
 
-![TheHive Alert 7.1 — Wazuh FIM File Modification Alert](../../assets/screenshots/detection-engineering/7.1.png)
+![TheHive Alert 7.1 — Wazuh FIM File Modification Alert](../../assets/screenshots/thehive-alert/7.1.png)
 *Figure 5: Wazuh File Integrity Monitoring (FIM / syscheck) detecting modification to `/root/.ssh/authorized_keys`.*
 
-![TheHive Alert 7.2 — Wazuh SSH Root Authentication Log](../../assets/screenshots/detection-engineering/7.2.png)
+![TheHive Alert 7.2 — Wazuh SSH Root Authentication Log](../../assets/screenshots/thehive-alert/7.2.png)
 *Figure 6: Wazuh authentication rule triggering on root login via public key from an external IP address.*
 
 ## Alert observed

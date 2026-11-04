@@ -62,11 +62,11 @@ Single source of truth for the lab. Update this table whenever a stage, alert, r
 | Evidence Set | Location |
 |---|---|
 | Attack Screenshots | `assets/screenshots/attack-simulation/` (62 images: 1.png – 60.png, plus 58.5.png, 59.5.png) |
-| TheHive Alert Screenshots | `assets/screenshots/detection-engineering/` (60 images: 1.png – 22.4.png) |
-| Initial Triage Evidence | `assets/screenshots/investigation/initial-triage/` (26 queue triage & chronological evidence captures) |
-| Immediate Containment Evidence | `assets/screenshots/investigation/containment/` (15 tactical lockout captures) |
-| Forensic Telemetry Index | `assets/screenshots/investigation/wazuh-alerts/` (68 chronological SIEM captures: wzb-01 to wzb-68) |
-| Eradication & Case Closure Evidence | `assets/screenshots/investigation/eradication/` (14 remediation & TheHive case closure captures) |
+| TheHive Alert Screenshots | `assets/screenshots/thehive-alert/` (60 images: 1.png – 22.4.png) |
+| Initial Triage Evidence | `assets/screenshots/initial-triage/` (26 queue triage & chronological evidence captures) |
+| Immediate Containment Evidence | `assets/screenshots/initial-triage-action/` (15 tactical lockout captures) |
+| Forensic Telemetry Index | `assets/screenshots/wazuh-deep-investigation/` (68 chronological SIEM captures: wzb-01 to wzb-68) |
+| Eradication & Case Closure Evidence | `assets/screenshots/deep-investigation-action/` (14 remediation & TheHive case closure captures) |
 | Raw Telemetry CSV (Complete) | [`assets/files/alerts/Wazuh-Raw-Alerts.csv`](assets/files/alerts/Wazuh-Raw-Alerts.csv) (9,567 raw baseline alerts across all 4 agents in OpenSearch) |
 | Curated Incident Analysis Set | [`assets/files/alerts/wazuh_alerts.csv`](assets/files/alerts/wazuh_alerts.csv) (808 curated forensic alerts filtered via 11 OpenSearch exclusion clauses) |
 | Correlated Incident Alerts | [`assets/files/alerts/thehive_alerts.json`](assets/files/alerts/thehive_alerts.json) (46 actionable incident cases created live in TheHive via Level >= 8 gate) |

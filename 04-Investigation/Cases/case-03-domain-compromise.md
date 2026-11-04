@@ -8,7 +8,7 @@
 > **Linked Alerts:** 22 Ingested Alerts (Alerts #25 through #46)  
 > **Eradication Playbook:** [`Eradication-Hardening-and-Recovery.md`](../Eradication-Hardening-and-Recovery.md#9-step-7-thehive-46-alert-queue-disposition--3-case-resolution-management)
 
-![TheHive Case 03 Closed](../../assets/screenshots/investigation/eradication/thehive_case03_closed.png)  
+![TheHive Case 03 Closed](../../assets/screenshots/thehive-cases/thehive_case03_closed.png)  
 *Figure 1: TheHive 5 Case Record for `CAS-003-DOMIMP` showing 22 linked alerts, forest-wide identity hardening, and formal closure verdict.*  
 
 ---
@@ -48,14 +48,14 @@ Armed with the dumped domain NTLM hashes from DCSync, the adversary executed Pas
 
 | Time (IST) | Event | Source | Evidentiary Alert Capture |
 |---|---|---|---|
-| `18:04:46` | Pass-the-Hash remote logon Type 3 via NtLmSsp to PC-DC | Wazuh (PC-DC) | [`wzb-35-pth-wazuh-eid4624-detection.jpg`](../../assets/screenshots/investigation/wazuh-alerts/wzb-35-pth-wazuh-eid4624-detection.jpg) |
-| `18:06:40` | Forged Kerberos TGT (Golden Ticket) generated on pivot host via ticketer.py | Wazuh SSHD / Auditd | [`wzb-38-goldenticket-auditd-ticketer-forgery.jpg`](../../assets/screenshots/investigation/wazuh-alerts/wzb-38-goldenticket-auditd-ticketer-forgery.jpg) |
-| `18:08:21` | Rogue user `backdoor` created (`P@ssw0rd123!`) and added to Domain Admins (`18:09:05`) | Wazuh / Sysmon | [`wzb-46-persist-wazuh-dc-domain-admins-add.jpg`](../../assets/screenshots/investigation/wazuh-alerts/wzb-46-persist-wazuh-dc-domain-admins-add.jpg) |
-| `18:13:58` | Automated DC host data collection (`domain_users.txt`, `admin_info.txt`) | Wazuh / Sysmon | [`wzb-49-staging-sysmon-dc-domain-users-txt.jpg`](../../assets/screenshots/investigation/wazuh-alerts/wzb-49-staging-sysmon-dc-domain-users-txt.jpg) |
-| `18:15:00` | Automated Win10 user document collection (`sensitive_data.txt`) | Win10 Sysmon | [`wzb-51-staging-sysmon-dc-sensitive-data-txt.jpg`](../../assets/screenshots/investigation/wazuh-alerts/wzb-51-staging-sysmon-dc-sensitive-data-txt.jpg) |
-| `18:17:30` | Rapid administrative SSH burst exfiltrating staged files via SCP (6 sessions) | Wazuh SSHD | [`wzb-53-exfil-wazuh-sshd-rapid-sessions-burst.jpg`](../../assets/screenshots/investigation/wazuh-alerts/wzb-53-exfil-wazuh-sshd-rapid-sessions-burst.jpg) |
-| `18:20:00` | Impacket wmiexec fan-out: wallpaper registry defacement, ransom notes & reboot on DC | Wazuh / Sysmon | [`wzb-55-impact-wazuh-dc-wallpaper-registry-add.jpg`](../../assets/screenshots/investigation/wazuh-alerts/wzb-55-impact-wazuh-dc-wallpaper-registry-add.jpg) |
-| `18:21:04` | Workstation lateral fan-out: wallpaper defacement, ransom notes & forced reboot on Win10 | Wazuh / Sysmon | [`wzb-60-impact-auditd-workstation-wmiexec-fanout.jpg`](../../assets/screenshots/investigation/wazuh-alerts/wzb-60-impact-auditd-workstation-wmiexec-fanout.jpg) |
+| `18:04:46` | Pass-the-Hash remote logon Type 3 via NtLmSsp to PC-DC | Wazuh (PC-DC) | [`wzb-35-pth-wazuh-eid4624-detection.jpg`](../../assets/screenshots/wazuh-deep-investigation/wzb-35-pth-wazuh-eid4624-detection.jpg) |
+| `18:06:40` | Forged Kerberos TGT (Golden Ticket) generated on pivot host via ticketer.py | Wazuh SSHD / Auditd | [`wzb-38-goldenticket-auditd-ticketer-forgery.jpg`](../../assets/screenshots/wazuh-deep-investigation/wzb-38-goldenticket-auditd-ticketer-forgery.jpg) |
+| `18:08:21` | Rogue user `backdoor` created (`P@ssw0rd123!`) and added to Domain Admins (`18:09:05`) | Wazuh / Sysmon | [`wzb-46-persist-wazuh-dc-domain-admins-add.jpg`](../../assets/screenshots/wazuh-deep-investigation/wzb-46-persist-wazuh-dc-domain-admins-add.jpg) |
+| `18:13:58` | Automated DC host data collection (`domain_users.txt`, `admin_info.txt`) | Wazuh / Sysmon | [`wzb-49-staging-sysmon-dc-domain-users-txt.jpg`](../../assets/screenshots/wazuh-deep-investigation/wzb-49-staging-sysmon-dc-domain-users-txt.jpg) |
+| `18:15:00` | Automated Win10 user document collection (`sensitive_data.txt`) | Win10 Sysmon | [`wzb-51-staging-sysmon-dc-sensitive-data-txt.jpg`](../../assets/screenshots/wazuh-deep-investigation/wzb-51-staging-sysmon-dc-sensitive-data-txt.jpg) |
+| `18:17:30` | Rapid administrative SSH burst exfiltrating staged files via SCP (6 sessions) | Wazuh SSHD | [`wzb-53-exfil-wazuh-sshd-rapid-sessions-burst.jpg`](../../assets/screenshots/wazuh-deep-investigation/wzb-53-exfil-wazuh-sshd-rapid-sessions-burst.jpg) |
+| `18:20:00` | Impacket wmiexec fan-out: wallpaper registry defacement, ransom notes & reboot on DC | Wazuh / Sysmon | [`wzb-55-impact-wazuh-dc-wallpaper-registry-add.jpg`](../../assets/screenshots/wazuh-deep-investigation/wzb-55-impact-wazuh-dc-wallpaper-registry-add.jpg) |
+| `18:21:04` | Workstation lateral fan-out: wallpaper defacement, ransom notes & forced reboot on Win10 | Wazuh / Sysmon | [`wzb-60-impact-auditd-workstation-wmiexec-fanout.jpg`](../../assets/screenshots/wazuh-deep-investigation/wzb-60-impact-auditd-workstation-wmiexec-fanout.jpg) |
 
 ---
 

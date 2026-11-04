@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached  
 > **Case:** [Case 03](../../04-Investigation/Cases/case-03-domain-compromise.md)  
 > **Investigation:** [Phase 6 Deep Dive](../../04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-6-backdoors--smuggling-domain-persistence--rapid-exfiltration)  
-> **Evidence:** [attack](../../assets/screenshots/attack-simulation/56.png) · [alert](../../assets/screenshots/detection-engineering/19.png)
+> **Evidence:** [attack](../../assets/screenshots/attack-simulation/56.png) · [alert](../../assets/screenshots/thehive-alert/19.png)
 
 ## Objective
 
@@ -45,7 +45,7 @@ Each `scp` invocation spawned an authenticated SSH session on the DVWA host. Whi
 
 ### Detection & Alert Screenshots
 
-![TheHive alert 19 showing clustered SSH authentication during exfiltration](../../assets/screenshots/detection-engineering/19.png)
+![TheHive alert 19 showing clustered SSH authentication during exfiltration](../../assets/screenshots/thehive-alert/19.png)
 *Figure 19.2: TheHive Alert 19 capturing rapid successive SSH successful authentications for root from attacker IP 192.168.232.135.*
 
 ## Alert observed

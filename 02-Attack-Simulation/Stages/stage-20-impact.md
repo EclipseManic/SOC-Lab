@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached  
 > **Case:** [Case 03](../../04-Investigation/Cases/case-03-domain-compromise.md)  
 > **Investigation:** [Phase 7 Deep Dive](../../04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-7-the-final-punch-simulated-ransomware-defacement--forced-reboots)  
-> **Evidence:** [attack](../../assets/screenshots/attack-simulation/58.5.png) · [alert](../../assets/screenshots/detection-engineering/21.png)
+> **Evidence:** [attack](../../assets/screenshots/attack-simulation/58.5.png) · [alert](../../assets/screenshots/thehive-alert/21.png)
 
 ## Objective
 
@@ -116,34 +116,34 @@ When the Windows 10 machine rebooted, the user session was presented with the id
 
 ### Detection & Alert Screenshots
 
-![TheHive alert 20 recording SCP staging logon on DVWA pivot](../../assets/screenshots/detection-engineering/20.png)
+![TheHive alert 20 recording SCP staging logon on DVWA pivot](../../assets/screenshots/thehive-alert/20.png)
 *Figure 20.7: TheHive Alert 20 capturing root SSH logon on DVWA during defacement image staging.*
 
-![TheHive alert list 21 showing multi-rule alert burst on Domain Controller PC-DC](../../assets/screenshots/detection-engineering/21.png)
+![TheHive alert list 21 showing multi-rule alert burst on Domain Controller PC-DC](../../assets/screenshots/thehive-alert/21.png)
 *Figure 20.8: TheHive dashboard showing correlated alerts on PC-DC for process execution and registry modification.*
 
-![Wazuh alert 21.1 capturing wmiexec fan-out commands on PC-DC](../../assets/screenshots/detection-engineering/21.1.png)
+![Wazuh alert 21.1 capturing wmiexec fan-out commands on PC-DC](../../assets/screenshots/thehive-alert/21.1.png)
 *Figure 20.9: Wazuh Sysmon Rule 100613 alert on PC-DC recording registry changes, ransom note generation, and shutdown command.*
 
-![Wazuh alert 21.2 detecting Wallpaper registry key addition on PC-DC](../../assets/screenshots/detection-engineering/21.2.png)
+![Wazuh alert 21.2 detecting Wallpaper registry key addition on PC-DC](../../assets/screenshots/thehive-alert/21.2.png)
 *Figure 20.10: Wazuh Sysmon Rule 92041 detecting `reg.exe` modifying `HKCU\Control Panel\Desktop\Wallpaper` on PC-DC.*
 
-![Wazuh alert 21.3 detecting WallpaperStyle registry modification on PC-DC](../../assets/screenshots/detection-engineering/21.3.png)
+![Wazuh alert 21.3 detecting WallpaperStyle registry modification on PC-DC](../../assets/screenshots/thehive-alert/21.3.png)
 *Figure 20.11: Wazuh Sysmon Rule 92041 detecting modification of `WallpaperStyle` on PC-DC.*
 
-![TheHive alert list 22 showing alerts across Windows 10 and Suricata NIDS](../../assets/screenshots/detection-engineering/22.png)
+![TheHive alert list 22 showing alerts across Windows 10 and Suricata NIDS](../../assets/screenshots/thehive-alert/22.png)
 *Figure 20.12: TheHive dashboard showing alerts on Win10 alongside network-level Suricata NTLM session detection.*
 
-![Wazuh alert 22.1 capturing wmiexec fan-out commands on Win10 workstation](../../assets/screenshots/detection-engineering/22.1.png)
+![Wazuh alert 22.1 capturing wmiexec fan-out commands on Win10 workstation](../../assets/screenshots/thehive-alert/22.1.png)
 *Figure 20.13: Wazuh Sysmon Rule 100613 alert on Win10 recording registry manipulation, extortion notes, and shutdown invocation.*
 
-![Suricata alert 22.2 detecting NTLM session setup over SMB to Win10](../../assets/screenshots/detection-engineering/22.2.png)
+![Suricata alert 22.2 detecting NTLM session setup over SMB to Win10](../../assets/screenshots/thehive-alert/22.2.png)
 *Figure 20.14: Suricata Rule 86601 alerts capturing NTLM Session Setup Negotiate, Challenge, and Auth flows from pivot to Win10.*
 
-![Wazuh alert 22.3 detecting Wallpaper registry modification on Win10](../../assets/screenshots/detection-engineering/22.3.png)
+![Wazuh alert 22.3 detecting Wallpaper registry modification on Win10](../../assets/screenshots/thehive-alert/22.3.png)
 *Figure 20.15: Wazuh Sysmon Rule 92041 alert on Win10 capturing `reg.exe` setting wallpaper to `hacked.bmp`.*
 
-![Wazuh alert 22.4 detecting WallpaperStyle registry modification on Win10](../../assets/screenshots/detection-engineering/22.4.png)
+![Wazuh alert 22.4 detecting WallpaperStyle registry modification on Win10](../../assets/screenshots/thehive-alert/22.4.png)
 *Figure 20.16: Wazuh Sysmon Rule 92041 alert on Win10 capturing `reg.exe` modifying `WallpaperStyle`.*
 
 ## Alert observed

@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached  
 > **Case:** [Case 03](../../04-Investigation/Cases/case-03-domain-compromise.md)  
 > **Investigation:** [Phase 5 Deep Dive](../../04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-5-becoming-god-in-active-directory-kerberoasting-dcsync--the-golden-ticket)  
-> **Evidence:** [attack](../../assets/screenshots/attack-simulation/48.png) · [alert](../../assets/screenshots/detection-engineering/13.png)
+> **Evidence:** [attack](../../assets/screenshots/attack-simulation/48.png) · [alert](../../assets/screenshots/thehive-alert/13.png)
 
 ---
 
@@ -54,7 +54,7 @@ With full interactive command execution confirmed on `PC-DC`, the adversary esta
 
 ### Alert Screenshots
 
-![TheHive Alert - Suricata Exploit Alert](../../assets/screenshots/detection-engineering/13.png)
+![TheHive Alert - Suricata Exploit Alert](../../assets/screenshots/thehive-alert/13.png)
 *Figure 15.2: TheHive alert detail displaying Suricata Rule 86601 ("ET EXPLOIT Possible GoldenPac Priv Esc in-use") triggered by network traffic between DVWA (`192.168.56.30`) and Domain Controller `PC-DC` (`192.168.56.10:88`).*
 
 ---

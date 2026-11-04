@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached
 > **Case:** [Case 01](../../04-Investigation/Cases/case-01-web-compromise.md)
 > **Investigation:** [Phase 1 Deep Dive](../../04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-1-rattling-the-doorknobs-reconnaissance--web-exploitation)
-> **Evidence:** [attack](../../assets/screenshots/attack-simulation/) · [alert](../../assets/screenshots/detection-engineering/)
+> **Evidence:** [attack](../../assets/screenshots/attack-simulation/) · [alert](../../assets/screenshots/thehive-alert/)
 
 ## Objective
 
@@ -79,28 +79,28 @@ python dvwa_bruteforce.py
 
 ### Alert Screenshots
 
-![TheHive Alert Overview - Web Attack Bursts and Access Log Alerts](../../assets/screenshots/detection-engineering/2.png)
+![TheHive Alert Overview - Web Attack Bursts and Access Log Alerts](../../assets/screenshots/thehive-alert/2.png)
 *Figure 2.3: TheHive alert inbox displaying multiple correlated Wazuh and Suricata web security alerts.*
 
-![TheHive Alert Details - Wazuh Multiple 400 Errors from Source IP](../../assets/screenshots/detection-engineering/2.1.png)
+![TheHive Alert Details - Wazuh Multiple 400 Errors from Source IP](../../assets/screenshots/thehive-alert/2.1.png)
 *Figure 2.4: Wazuh rule 31151 alert tracking multiple 404 client errors from 192.168.232.135.*
 
-![TheHive Alert Details - Suricata High-Volume HTTP 4xx Burst Detected](../../assets/screenshots/detection-engineering/2.2.png)
+![TheHive Alert Details - Suricata High-Volume HTTP 4xx Burst Detected](../../assets/screenshots/thehive-alert/2.2.png)
 *Figure 2.5: Suricata rule 100410 alert for high-volume HTTP 4xx error bursts exceeding 100 in 60s.*
 
-![TheHive Alert Details - Wazuh Web Application Shellshock Attempt Alerts](../../assets/screenshots/detection-engineering/2.3.png)
+![TheHive Alert Details - Wazuh Web Application Shellshock Attempt Alerts](../../assets/screenshots/thehive-alert/2.3.png)
 *Figure 2.6: Wazuh rule 31168 critical alert flagging Shellshock attack patterns in web requests.*
 
-![TheHive Alert Details - Wazuh Sensitive Path Watchlist Match (/etc/passwd)](../../assets/screenshots/detection-engineering/2.4.png)
+![TheHive Alert Details - Wazuh Sensitive Path Watchlist Match (/etc/passwd)](../../assets/screenshots/thehive-alert/2.4.png)
 *Figure 2.7: Wazuh watchlist rule triggering on sensitive file access attempts targeting /etc/passwd.*
 
-![TheHive Alert Details - Wazuh Multiple Common Web Attacks from Same Source](../../assets/screenshots/detection-engineering/2.5.png)
+![TheHive Alert Details - Wazuh Multiple Common Web Attacks from Same Source](../../assets/screenshots/thehive-alert/2.5.png)
 *Figure 2.8: Wazuh rule 31153 alert aggregating multiple common web attack signatures.*
 
-![TheHive Alert Details - Wazuh Multiple XSS Attempts from Source IP](../../assets/screenshots/detection-engineering/2.6.png)
+![TheHive Alert Details - Wazuh Multiple XSS Attempts from Source IP](../../assets/screenshots/thehive-alert/2.6.png)
 *Figure 2.9: Wazuh rule 31154 alert tracking cross-site scripting attack vectors.*
 
-![TheHive Alert Details - Suricata Unicode Directory Traversal Alert](../../assets/screenshots/detection-engineering/2.7.png)
+![TheHive Alert Details - Suricata Unicode Directory Traversal Alert](../../assets/screenshots/thehive-alert/2.7.png)
 *Figure 2.10: Suricata rule 86601 alert detecting Unicode directory traversal attempts in HTTP traffic.*
 
 ## Alert observed
