@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached
 > **Case:** [Case 01](../../04-Investigation/Cases/case-01-web-compromise.md)
 > **Investigation:** [Phase 1 Deep Dive](../../04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-1-rattling-the-doorknobs-reconnaissance--web-exploitation)
-> **Evidence:** [attack](../../assets/screenshots/attack-simulation/) · [alert](../../assets/screenshots/thehive-alert/)
+> **Evidence:** [attack](../../06-Resources/screenshots/attack-simulation/) · [alert](../../06-Resources/screenshots/thehive-alert/)
 
 ## Objective
 
@@ -39,10 +39,10 @@ hashcat -m 0 -a 0 /tmp/dvwa_hashes.txt /usr/share/wordlists/rockyou.txt
 
 ### Attack Screenshots
 
-![Hashes Stored and Hashcat Invocation](../../assets/screenshots/attack-simulation/10.png)
+![Hashes Stored and Hashcat Invocation](../../06-Resources/screenshots/attack-simulation/10.png)
 *Figure 4.1: Extracted MD5 hashes written to /tmp/dvwa_hashes.txt and Hashcat execution initiation.*
 
-![Hashcat Plaintext Recovery Results](../../assets/screenshots/attack-simulation/11.png)
+![Hashcat Plaintext Recovery Results](../../06-Resources/screenshots/attack-simulation/11.png)
 *Figure 4.2: Hashcat status output confirming all four target hashes cracked successfully in under 1 second.*
 
 ### Alert Screenshots

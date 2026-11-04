@@ -42,8 +42,8 @@ Before examining rules and code, here are the authentic results from our 20-stag
 
 No single security tool can see everything. In this lab, four complementary detection technologies cover each other's blind spots:
 
-[![Cybersecurity Lab-to-Detection Mapping](../assets/diagrams/Cybersecurity%20Lab-to-Detection%20Mapping.png)](../assets/diagrams/Cybersecurity%20Lab-to-Detection%20Mapping.png)
-*Figure 1: Full-stack detection mapping connecting physical & virtual machines to their defensive inspection layers ([view full asset](../assets/diagrams/Cybersecurity%20Lab-to-Detection%20Mapping.png)).*
+[![Cybersecurity Lab-to-Detection Mapping](../06-Resources/diagrams/Cybersecurity%20Lab-to-Detection%20Mapping.png)](../06-Resources/diagrams/Cybersecurity%20Lab-to-Detection%20Mapping.png)
+*Figure 1: Full-stack detection mapping connecting physical & virtual machines to their defensive inspection layers ([view full asset](../06-Resources/diagrams/Cybersecurity%20Lab-to-Detection%20Mapping.png)).*
 
 ### Layer 1: The Network Wire — Suricata NIDS
 - **Where It Lives:** On the dual-homed Security Gateway (`192.168.232.162` / `192.168.56.150`).
@@ -77,8 +77,8 @@ No single security tool can see everything. In this lab, four complementary dete
 
 To see how all these pieces fit together in real life, let's trace **Stage 05 (Web Shell Upload & Command Execution)** step-by-step from the attacker's keyboard to the analyst's screen:
 
-[![Life of an Alert End-to-End Walkthrough](../assets/diagrams/Life%20of%20an%20Alert%20End-to-End%20Walkthrough.png)](../assets/diagrams/Life%20of%20an%20Alert%20End-to-End%20Walkthrough.png)
-*Figure 2: End-to-end detection pipeline tracing Stage 05 web shell execution from adversary command execution across multi-sensor capture, WireGuard transit, Wazuh decoding, SQLite WAL buffering, to TheHive 5 incident case ([view full asset](../assets/diagrams/Life%20of%20an%20Alert%20End-to-End%20Walkthrough.png)).*
+[![Life of an Alert End-to-End Walkthrough](../06-Resources/diagrams/Life%20of%20an%20Alert%20End-to-End%20Walkthrough.png)](../06-Resources/diagrams/Life%20of%20an%20Alert%20End-to-End%20Walkthrough.png)
+*Figure 2: End-to-end detection pipeline tracing Stage 05 web shell execution from adversary command execution across multi-sensor capture, WireGuard transit, Wazuh decoding, SQLite WAL buffering, to TheHive 5 incident case ([view full asset](../06-Resources/diagrams/Life%20of%20an%20Alert%20End-to-End%20Walkthrough.png)).*
 
 ```
 [ Step 1: Attacker Action ]
@@ -137,7 +137,7 @@ Here are the three biggest challenges we tackled:
   3. *VMware Guest Tools:* Hypervisor background polling (`vmtoolsd.exe`) continually created background process and named pipe noise.
 - **How We Fixed It:**
   - We wrote **87 custom suppression rules** in `local_rules.xml` that drop benign background events to `level="0"`.
-  - For the syscollector loop, we created a compiled Constant Database (CDB) lookup table at [`../assets/configs/lists/wazuh-internal-bins`](../assets/configs/lists/wazuh-internal-bins). Custom Rule `100280` performs an instantaneous memory lookup against this list. If the command was run by a known system binary, it is silently dropped without alerting.
+  - For the syscollector loop, we created a compiled Constant Database (CDB) lookup table at [`../06-Resources/configs/lists/wazuh-internal-bins`](../06-Resources/configs/lists/wazuh-internal-bins). Custom Rule `100280` performs an instantaneous memory lookup against this list. If the command was run by a known system binary, it is silently dropped without alerting.
   - For Windows computer accounts, Rule `100603` uses regex negation (`negate="yes">^SYSTEM$|^LOCAL SERVICE$|\$$</field>`) to ensure alerts fire **only when a human user account** is granted administrative attack privileges.
 - **The Payoff:** False alarms dropped by over 95%, leaving only genuine red-team activity.
 
@@ -145,8 +145,8 @@ Here are the three biggest challenges we tackled:
 
 ### Challenge 2: The Webhook Bottleneck (Why Shuffle SOAR Was Replaced)
 
-[![Wazuh Log Ingestion to TheHive Flow](../assets/diagrams/Wazuh%20Log%20Ingestion%20to%20TheHive%20Flow.png)](../assets/diagrams/Wazuh%20Log%20Ingestion%20to%20TheHive%20Flow.png)
-*Figure 3: Multi-source log ingestion, decoders, and Level 8 threshold gate ([view full asset](../assets/diagrams/Wazuh%20Log%20Ingestion%20to%20TheHive%20Flow.png)).*
+[![Wazuh Log Ingestion to TheHive Flow](../06-Resources/diagrams/Wazuh%20Log%20Ingestion%20to%20TheHive%20Flow.png)](../06-Resources/diagrams/Wazuh%20Log%20Ingestion%20to%20TheHive%20Flow.png)
+*Figure 3: Multi-source log ingestion, decoders, and Level 8 threshold gate ([view full asset](../06-Resources/diagrams/Wazuh%20Log%20Ingestion%20to%20TheHive%20Flow.png)).*
 
 - **The Problem:** We originally used [Shuffle SOAR](https://shuffler.io/) to receive alerts from Wazuh via webhooks and push them to TheHive. But when we simulated aggressive attacks (like Nikto web fuzzing or rapid Nmap port scans), Shuffle completely collapsed:
   1. *Dropped Packets:* Floods of 400 webhooks in 10 seconds overwhelmed Shuffle's HTTP listeners, silently dropping critical alerts.
@@ -155,7 +155,7 @@ Here are the three biggest challenges we tackled:
 - **How We Fixed It (`thecustomhive` Two-Tier Pipeline):**
   We replaced Shuffle with a custom, high-speed Python automation pipeline:
 
-[![Wazuh-TheHive Neon Alert Pipeline](../assets/diagrams/Wazuh-TheHive%20Neon%20Alert%20Pipeline.png)](../assets/diagrams/Wazuh-TheHive%20Neon%20Alert%20Pipeline.png)
+[![Wazuh-TheHive Neon Alert Pipeline](../06-Resources/diagrams/Wazuh-TheHive%20Neon%20Alert%20Pipeline.png)](../06-Resources/diagrams/Wazuh-TheHive%20Neon%20Alert%20Pipeline.png)
 *Figure 3: Two-tier asynchronous alert correlation pipeline from Wazuh Manager Level ≥ 8 trigger into TheHive 5 case management.*
 
   - **Tier 1 (Instant Local Buffer — Zero HTTP):** When an alert ($\ge 8$) fires, Wazuh executes `/var/ossec/integrations/custom-thehive`. Instead of making network calls, this lightweight script writes the alert JSON into a local SQLite database running in Write-Ahead Logging (WAL) mode. This executes in under **0.2 milliseconds** locally. The Wazuh engine never freezes or drops an alert.
@@ -240,8 +240,8 @@ Here is the complete traceability matrix mapping all 20 adversary stages across 
 
 A critical architectural distinction in this SOC lab is understanding **how the numbers 9,567, 808, and 46 actually relate to each other**. They are **not** a single linear waterfall; rather, they represent **two distinct operational pathways** originating from the same baseline telemetry stream:
 
-[![SOC Telemetry Dual-Pathway Architecture](../assets/diagrams/SOC%20Telemetry%20Dual-Pathway%20Architecture.png)](../assets/diagrams/SOC%20Telemetry%20Dual-Pathway%20Architecture.png)
-*Figure 4: The dual-pathway telemetry architecture showing the central 9,567 raw alert stream splitting into real-time Level >= 8 SOAR case creation (46 TheHive cases) and post-simulation analyst dashboard triage (808 curated forensic records via 11 exclusion filters) ([view full asset](../assets/diagrams/SOC%20Telemetry%20Dual-Pathway%20Architecture.png)).*
+[![SOC Telemetry Dual-Pathway Architecture](../06-Resources/diagrams/SOC%20Telemetry%20Dual-Pathway%20Architecture.png)](../06-Resources/diagrams/SOC%20Telemetry%20Dual-Pathway%20Architecture.png)
+*Figure 4: The dual-pathway telemetry architecture showing the central 9,567 raw alert stream splitting into real-time Level >= 8 SOAR case creation (46 TheHive cases) and post-simulation analyst dashboard triage (808 curated forensic records via 11 exclusion filters) ([view full asset](../06-Resources/diagrams/SOC%20Telemetry%20Dual-Pathway%20Architecture.png)).*
 
 ```
                               [ Wazuh SIEM Telemetry Ingestion ]
@@ -305,7 +305,7 @@ A critical architectural distinction in this SOC lab is understanding **how the 
 }
 ```
 
-- **What Remained:** Applying these 11 search filters reduced 9,567 noisy logs down to **808 curated, high-value security events**. This filtered view was exported as [`wazuh_alerts.csv`](../assets/files/alerts/wazuh_alerts.csv), giving the analyst a focused forensic dataset to correlate attack stages, build the master timeline, and verify detections across all 20 stages.
+- **What Remained:** Applying these 11 search filters reduced 9,567 noisy logs down to **808 curated, high-value security events**. This filtered view was exported as [`wazuh_alerts.csv`](../06-Resources/files/alerts/wazuh_alerts.csv), giving the analyst a focused forensic dataset to correlate attack stages, build the master timeline, and verify detections across all 20 stages.
 
 ---
 
@@ -352,4 +352,4 @@ All configuration files, rulesets, and detection scripts are organized in dedica
 | [Attack Simulation Directory](../02-Attack-Simulation/README.md) | Red Team | 20-stage adversary simulation execution, scripts, and commands |
 | [Investigation Cases](../04-Investigation/README.md) | Blue Team | Analyst triage playbooks, 3 TheHive cases, and 20 stage investigation notes |
 | [Formal Incident Report](../05-Incident-Report/README.md) | Post-Incident | Post-incident executive review, root cause analysis, and remediation actions |
-| [thecustomhive Source Engine](../assets/scripts/custom-thehive.py) | Automation | Production 2-tier asynchronous alert correlation daemon script |
+| [thecustomhive Source Engine](../06-Resources/scripts/custom-thehive.py) | Automation | Production 2-tier asynchronous alert correlation daemon script |

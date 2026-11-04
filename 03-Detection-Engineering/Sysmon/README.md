@@ -99,7 +99,7 @@ Wazuh correlates Sysmon events with custom rules in [`03-Detection-Engineering/W
 - **Rule 92041 (Level 5 / Sysmon Registry):** Caught `reg.exe` modifying `Wallpaper` and `WallpaperStyle` registry values during Stage 20 impact.
 - **Rules 100100–100102 (Level 12):** Detects `Run`/`RunOnce`, Winlogon, and IFEO Debugger autostart registry persistence.
 - **Rules 100103–100104 (Level 10):** Detects Shell Folders and Service DLL hijack registry persistence.
-- **Rule 61603 (Level 3):** Standard Sysmon Process Creation baseline rule, correlated into `process_fanout` incident groups by [`custom-thehive.py`](../../assets/scripts/custom-thehive.py).
+- **Rule 61603 (Level 3):** Standard Sysmon Process Creation baseline rule, correlated into `process_fanout` incident groups by [`custom-thehive.py`](../../06-Resources/scripts/custom-thehive.py).
 
 ---
 

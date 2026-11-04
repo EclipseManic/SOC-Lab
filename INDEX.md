@@ -61,13 +61,13 @@ Single source of truth for the lab. Update this table whenever a stage, alert, r
 
 | Evidence Set | Location |
 |---|---|
-| Attack Screenshots | `assets/screenshots/attack-simulation/` (62 images: 1.png – 60.png, plus 58.5.png, 59.5.png) |
-| TheHive Alert Screenshots | `assets/screenshots/thehive-alert/` (60 images: 1.png – 22.4.png) |
-| Initial Triage Evidence | `assets/screenshots/initial-triage/` (26 queue triage & chronological evidence captures) |
-| Immediate Containment Evidence | `assets/screenshots/initial-triage-action/` (15 tactical lockout captures) |
-| Forensic Telemetry Index | `assets/screenshots/wazuh-deep-investigation/` (68 chronological SIEM captures: wzb-01 to wzb-68) |
-| Eradication & Case Closure Evidence | `assets/screenshots/deep-investigation-action/` (14 remediation & TheHive case closure captures) |
-| Raw Telemetry CSV (Complete) | [`assets/files/alerts/Wazuh-Raw-Alerts.csv`](assets/files/alerts/Wazuh-Raw-Alerts.csv) (9,567 raw baseline alerts across all 4 agents in OpenSearch) |
-| Curated Incident Analysis Set | [`assets/files/alerts/wazuh_alerts.csv`](assets/files/alerts/wazuh_alerts.csv) (808 curated forensic alerts filtered via 11 OpenSearch exclusion clauses) |
-| Correlated Incident Alerts | [`assets/files/alerts/thehive_alerts.json`](assets/files/alerts/thehive_alerts.json) (46 actionable incident cases created live in TheHive via Level >= 8 gate) |
-| Master Attack Blueprint | [`assets/files/attack-chain-full.pdf`](assets/files/attack-chain-full.pdf) |
+| Attack Screenshots | `06-Resources/screenshots/attack-simulation/` (62 images: 1.png – 60.png, plus 58.5.png, 59.5.png) |
+| TheHive Alert Screenshots | `06-Resources/screenshots/thehive-alert/` (60 images: 1.png – 22.4.png) |
+| Initial Triage Evidence | `06-Resources/screenshots/initial-triage/` (26 queue triage & chronological evidence captures) |
+| Immediate Containment Evidence | `06-Resources/screenshots/initial-triage-action/` (15 tactical lockout captures) |
+| Forensic Telemetry Index | `06-Resources/screenshots/wazuh-deep-investigation/` (68 chronological SIEM captures: wzb-01 to wzb-68) |
+| Eradication & Case Closure Evidence | `06-Resources/screenshots/deep-investigation-action/` (14 remediation & TheHive case closure captures) |
+| Raw Telemetry CSV (Complete) | [`06-Resources/files/alerts/Wazuh-Raw-Alerts.csv`](06-Resources/files/alerts/Wazuh-Raw-Alerts.csv) (9,567 raw baseline alerts across all 4 agents in OpenSearch) |
+| Curated Incident Analysis Set | [`06-Resources/files/alerts/wazuh_alerts.csv`](06-Resources/files/alerts/wazuh_alerts.csv) (808 curated forensic alerts filtered via 11 OpenSearch exclusion clauses) |
+| Correlated Incident Alerts | [`06-Resources/files/alerts/thehive_alerts.json`](06-Resources/files/alerts/thehive_alerts.json) (46 actionable incident cases created live in TheHive via Level >= 8 gate) |
+| Master Attack Blueprint | [`06-Resources/files/attack-chain-full.pdf`](06-Resources/files/attack-chain-full.pdf) |

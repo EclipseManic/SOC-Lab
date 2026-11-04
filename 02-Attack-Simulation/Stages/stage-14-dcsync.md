@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached  
 > **Case:** [Case 02](../../04-Investigation/Cases/case-02-lateral-movement.md)  
 > **Investigation:** [Phase 5 Deep Dive](../../04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-5-becoming-god-in-active-directory-kerberoasting-dcsync--the-golden-ticket)  
-> **Evidence:** [attack](../../assets/screenshots/attack-simulation/45.png) · [alert](../../assets/screenshots/thehive-alert/12.png)
+> **Evidence:** [attack](../../06-Resources/screenshots/attack-simulation/45.png) · [alert](../../06-Resources/screenshots/thehive-alert/12.png)
 
 ---
 
@@ -57,18 +57,18 @@ The extraction of the `Administrator` NTLM hash (`cc814***9fb`) immediately enab
 
 ### Attack Screenshots
 
-![Impacket Secretsdump DCSync Execution](../../assets/screenshots/attack-simulation/45.png)
+![Impacket Secretsdump DCSync Execution](../../06-Resources/screenshots/attack-simulation/45.png)
 *Figure 14.1: Executing `secretsdump.py` from DVWA pivot host using `HANK_SHERMAN` Domain Admin credentials against `192.168.56.10`, initiating DRSUAPI directory replication.*
 
-![SCP Transfer of NTDS Database Dump to Kali](../../assets/screenshots/attack-simulation/46.png)
+![SCP Transfer of NTDS Database Dump to Kali](../../06-Resources/screenshots/attack-simulation/46.png)
 *Figure 14.2: Exfiltrating the 240KB `dcsync_output.ntds` credential dump from DVWA to the Kali attack machine.*
 
-![Inspecting Extracted Hashes from NTDS Dump](../../assets/screenshots/attack-simulation/47.png)
+![Inspecting Extracted Hashes from NTDS Dump](../../06-Resources/screenshots/attack-simulation/47.png)
 *Figure 14.3: Viewing dumped NTLM hashes from `dcsync_output.ntds`, including the built-in Administrator (RID 500) and krbtgt (RID 502) hashes.*
 
 ### Alert Screenshots
 
-![TheHive Alert - DCSync Execution Activity](../../assets/screenshots/thehive-alert/12.png)
+![TheHive Alert - DCSync Execution Activity](../../06-Resources/screenshots/thehive-alert/12.png)
 *Figure 14.4: TheHive alert detail capturing Wazuh Rule 5715 triggered by SSH access to the DVWA pivot during the DCSync extraction routine.*
 
 ---

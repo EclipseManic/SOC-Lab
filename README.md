@@ -2,7 +2,7 @@
 
 I built a small company network in a hybrid cloud lab, executed an end-to-end 20-stage attack campaign—spanning external reconnaissance, web application exploitation, Linux host privilege escalation, network credential theft, and Active Directory domain compromise—and recorded which steps my security tools caught.
 
-[![SOC Lab Complete Architecture](assets/diagrams/SOC_Lab_Architecture.png)](assets/diagrams/SOC_Lab_Architecture.png)
+[![SOC Lab Complete Architecture](06-Resources/diagrams/SOC_Lab_Architecture.png)](06-Resources/diagrams/SOC_Lab_Architecture.png)
 
 **Live interactive report:** <https://soc-lab.eclipsemanic.me/>
 
@@ -10,7 +10,7 @@ I built a small company network in a hybrid cloud lab, executed an end-to-end 20
 
 ## How It Works
 
-[![Conceptual Network Architecture](assets/diagrams/Neon%20Cybersecurity%20Network%20Architecture%20Diagram.png)](assets/diagrams/Neon%20Cybersecurity%20Network%20Architecture%20Diagram.png)
+[![Conceptual Network Architecture](06-Resources/diagrams/Neon%20Cybersecurity%20Network%20Architecture%20Diagram.png)](06-Resources/diagrams/Neon%20Cybersecurity%20Network%20Architecture%20Diagram.png)
 
 The attacker starts outside the network on an isolated subnet. Every perimeter probe crosses a Linux router running a **Suricata** network intrusion detection system (NIDS). Inside the victim network, endpoints run **Wazuh** agents, **Sysmon**, and **Auditd**. All telemetry is forwarded over an encrypted WireGuard VPN to a cloud-hosted SOC stack running **Wazuh SIEM** and **TheHive 5** case management.
 
@@ -26,7 +26,7 @@ The attacker starts outside the network on an isolated subnet. Every perimeter p
 | **03 — Detection Engineering** | [`03-Detection-Engineering/README.md`](03-Detection-Engineering/README.md) | Custom Wazuh detection rules (`local_rules.xml`), Suricata NIDS signatures, Sysmon/Auditd telemetry baselines, and the `thecustomhive` SQLite WAL SOAR daemon. |
 | **04 — Investigation** | [`04-Investigation/README.md`](04-Investigation/README.md) | **Completed & Formally Validated:** SOC analyst triage notes for all 46 TheHive alerts, immediate tactical containment, 7-phase deep-dive attack chain, and permanent eradication playbook. |
 | **05 — Incident Report** | [`05-Incident-Report/README.md`](05-Incident-Report/README.md) | **Completed & Formally Validated:** Formal executive incident report, full chronological attack timeline, complete IOC tables, and remediation engineering backlog. |
-| **06 — Assets & Resources** | [`assets/README.md`](assets/README.md) | Centralized asset repository: evidentiary screenshots, telemetry datasets (9,567 raw baseline alerts, 808 analyst-curated records, 46 TheHive incident cases), detection rules, configs, diagrams, and automation scripts. |
+| **06 — Assets & Resources** | [`06-Resources/README.md`](06-Resources/README.md) | Centralized asset repository: evidentiary screenshots, telemetry datasets (9,567 raw baseline alerts, 808 analyst-curated records, 46 TheHive incident cases), detection rules, configs, diagrams, and automation scripts. |
 | **Master Index** | [`INDEX.md`](INDEX.md) | Master traceability matrix mapping every stage to MITRE ATT&CK techniques, detection rules, alert IDs, and raw evidence files. |
 
 ---

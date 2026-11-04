@@ -8,7 +8,7 @@
 > **Linked Alerts:** 13 Ingested Alerts (Alerts #02–#05, #07–#15)  
 > **Eradication Playbook:** [`Eradication-Hardening-and-Recovery.md`](../Eradication-Hardening-and-Recovery.md#4-step-2-linux-root-cause-vulnerability-elimination--web-hardening-dvwa)
 
-![TheHive Case 01 Closed](../../assets/screenshots/thehive-cases/thehive_case01_closed.png)  
+![TheHive Case 01 Closed](../../06-Resources/screenshots/thehive-cases/thehive_case01_closed.png)  
 *Figure 1: TheHive 5 Case Record for `CAS-001-WEBCOMP` showing 13 linked alerts, completed remediation tasks, and formal closure verdict.*  
 
 ---
@@ -48,13 +48,13 @@ The adversary initiated an external attack campaign targeting the public-facing 
 
 | Time (IST) | Event | Source | Evidentiary Alert Capture |
 |---|---|---|---|
-| `17:10:08` | External port scan and directory fuzzing from 192.168.232.135 | Suricata / Wazuh | [`wzb-04-recon-suricata-nmap-syn-scan.jpg`](../../assets/screenshots/wazuh-deep-investigation/wzb-04-recon-suricata-nmap-syn-scan.jpg) |
-| `17:18:02` | Automated Python credential brute-force burst against `/login.php` | Suricata / Wazuh | [`wzb-10-bruteforce-python-requests-login.jpg`](../../assets/screenshots/wazuh-deep-investigation/wzb-10-bruteforce-python-requests-login.jpg) |
-| `17:19:58` | SQL injection payload submitted dumping credentials table (`1' UNION SELECT...-- -`) | Suricata | [`wzb-11-sqli-suricata-select-user.jpg`](../../assets/screenshots/wazuh-deep-investigation/wzb-11-sqli-suricata-select-user.jpg) |
+| `17:10:08` | External port scan and directory fuzzing from 192.168.232.135 | Suricata / Wazuh | [`wzb-04-recon-suricata-nmap-syn-scan.jpg`](../../06-Resources/screenshots/wazuh-deep-investigation/wzb-04-recon-suricata-nmap-syn-scan.jpg) |
+| `17:18:02` | Automated Python credential brute-force burst against `/login.php` | Suricata / Wazuh | [`wzb-10-bruteforce-python-requests-login.jpg`](../../06-Resources/screenshots/wazuh-deep-investigation/wzb-10-bruteforce-python-requests-login.jpg) |
+| `17:19:58` | SQL injection payload submitted dumping credentials table (`1' UNION SELECT...-- -`) | Suricata | [`wzb-11-sqli-suricata-select-user.jpg`](../../06-Resources/screenshots/wazuh-deep-investigation/wzb-11-sqli-suricata-select-user.jpg) |
 | `17:20:30` | Offline Hashcat MD5 password cracking on Kali | Offline GPU | *Offline Activity (DG-04)* |
-| `17:21:44` | Malicious PHP file uploaded to `/var/www/html/dvwa/hackable/uploads/shell.php` | Wazuh / Auditd | [`wzb-12-webshell-dvwa-post-upload.jpg`](../../assets/screenshots/wazuh-deep-investigation/wzb-12-webshell-dvwa-post-upload.jpg) |
-| `17:24:03` | Netcat named-pipe FIFO reverse shell spawned to `192.168.232.135:4444` (`stty sane` at 17:25:22) | Wazuh Auditd | [`wzb-15-revshell-auditd-stty-sane.jpg`](../../assets/screenshots/wazuh-deep-investigation/wzb-15-revshell-auditd-stty-sane.jpg) |
-| `17:25:36` | Passwordless sudo Python execution (`sudo /usr/bin/python3`) granting instant root | Wazuh PAM | [`wzb-17-privesc-pam-sudo-python-root.jpg`](../../assets/screenshots/wazuh-deep-investigation/wzb-17-privesc-pam-sudo-python-root.jpg) |
+| `17:21:44` | Malicious PHP file uploaded to `/var/www/html/dvwa/hackable/uploads/shell.php` | Wazuh / Auditd | [`wzb-12-webshell-dvwa-post-upload.jpg`](../../06-Resources/screenshots/wazuh-deep-investigation/wzb-12-webshell-dvwa-post-upload.jpg) |
+| `17:24:03` | Netcat named-pipe FIFO reverse shell spawned to `192.168.232.135:4444` (`stty sane` at 17:25:22) | Wazuh Auditd | [`wzb-15-revshell-auditd-stty-sane.jpg`](../../06-Resources/screenshots/wazuh-deep-investigation/wzb-15-revshell-auditd-stty-sane.jpg) |
+| `17:25:36` | Passwordless sudo Python execution (`sudo /usr/bin/python3`) granting instant root | Wazuh PAM | [`wzb-17-privesc-pam-sudo-python-root.jpg`](../../06-Resources/screenshots/wazuh-deep-investigation/wzb-17-privesc-pam-sudo-python-root.jpg) |
 
 ---
 

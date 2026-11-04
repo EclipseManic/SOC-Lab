@@ -45,7 +45,7 @@ All containment and eradication procedures were executed through centralized ent
   iptables -L -n -v | grep 192.168.232.135
   ```
 - **Verification:** Dropped packet counter actively incremented; 0 packets accepted from adversary origin.
-- **Evidence:** [`slot_01_containment_firewall_drop.png`](../assets/screenshots/initial-triage-action/slot_01_containment_firewall_drop.png)
+- **Evidence:** [`slot_01_containment_firewall_drop.png`](../06-Resources/screenshots/initial-triage-action/slot_01_containment_firewall_drop.png)
 
 ### Action 2: DVWA Reverse Shell Termination & Web Shell Quarantine
 - **Target:** DVWA Server (`192.168.56.30`)
@@ -58,7 +58,7 @@ All containment and eradication procedures were executed through centralized ent
   ss -antp | grep 4444
   ```
 - **Verification:** Netstat table confirmed zero active listeners or connections on port 4444; `shell.php` secured in quarantine.
-- **Evidence:** [`slot_02a_containment_dvwa_shells_quarantined.png`](../assets/screenshots/initial-triage-action/slot_02a_containment_dvwa_shells_quarantined.png)
+- **Evidence:** [`slot_02a_containment_dvwa_shells_quarantined.png`](../06-Resources/screenshots/initial-triage-action/slot_02a_containment_dvwa_shells_quarantined.png)
 
 ### Action 3: DVWA Rogue Root SSH Key Eradication & Session Severing
 - **Target:** DVWA Server (`192.168.56.30`)
@@ -69,7 +69,7 @@ All containment and eradication procedures were executed through centralized ent
   who; cat /root/.ssh/authorized_keys
   ```
 - **Verification:** Injected ED25519 public key purged; rogue interactive root TTY sessions killed.
-- **Evidence:** [`slot_03_containment_dvwa_root_ssh_eradication.png`](../assets/screenshots/initial-triage-action/slot_03_containment_dvwa_root_ssh_eradication.png)
+- **Evidence:** [`slot_03_containment_dvwa_root_ssh_eradication.png`](../06-Resources/screenshots/initial-triage-action/slot_03_containment_dvwa_root_ssh_eradication.png)
 
 ### Action 4: Active Directory Rogue Account Lockout (`AD\backdoor`)
 - **Target:** Domain Controller `PC-DC` (`192.168.56.10`)
@@ -81,7 +81,7 @@ All containment and eradication procedures were executed through centralized ent
   Get-ADUser -Identity "backdoor" -Properties Enabled, MemberOf
   ```
 - **Verification:** Account disabled (`Enabled: False`); administrative privileges revoked; object SID preserved for forensic log correlation.
-- **Evidence:** [`slot_04a_containment_dc_backdoor_disabled.png`](../assets/screenshots/initial-triage-action/slot_04a_containment_dc_backdoor_disabled.png)
+- **Evidence:** [`slot_04a_containment_dc_backdoor_disabled.png`](../06-Resources/screenshots/initial-triage-action/slot_04a_containment_dc_backdoor_disabled.png)
 
 ### Action 5: Kerberos Golden Ticket Invalidation (`krbtgt` Double Reset)
 - **Target:** Active Directory Domain Controller (`PC-DC`)
@@ -93,7 +93,7 @@ All containment and eradication procedures were executed through centralized ent
   Get-ADUser -Identity "krbtgt" -Properties PasswordLastSet, msDS-KeyVersionNumber
   ```
 - **Verification:** Key Version Number (`msDS-KeyVersionNumber`) incremented to 4; forged Golden Tickets rejected by KDC.
-- **Evidence:** [`slot_05a_containment_dc_krbtgt_reset.png`](../assets/screenshots/initial-triage-action/slot_05a_containment_dc_krbtgt_reset.png)
+- **Evidence:** [`slot_05a_containment_dc_krbtgt_reset.png`](../06-Resources/screenshots/initial-triage-action/slot_05a_containment_dc_krbtgt_reset.png)
 
 ### Action 6: Workstation Staged File Quarantine & Wallpaper Restoration
 - **Target:** `Win10User` (`192.168.56.20`) & `PC-DC` (`192.168.56.10`)
@@ -107,7 +107,7 @@ All containment and eradication procedures were executed through centralized ent
   RUNDLL32.EXE user32.dll,UpdatePerUserSystemParameters
   ```
 - **Verification:** Malicious files isolated; Windows desktop wallpaper restored to default.
-- **Evidence:** [`slot_06b_containment_wallpaper_remediated.png`](../assets/screenshots/initial-triage-action/slot_06b_containment_wallpaper_remediated.png)
+- **Evidence:** [`slot_06b_containment_wallpaper_remediated.png`](../06-Resources/screenshots/initial-triage-action/slot_06b_containment_wallpaper_remediated.png)
 
 ### Action 7: DVWA Database & Web Application Credential Rotation
 - **Target:** DVWA Server (`192.168.56.30`)
@@ -119,7 +119,7 @@ All containment and eradication procedures were executed through centralized ent
   systemctl restart apache2
   ```
 - **Verification:** SQL-injected database credentials invalidated; web application authentication functional with new secrets.
-- **Evidence:** [`slot_07_containment_dvwa_db_credential_rotation.png`](../assets/screenshots/initial-triage-action/slot_07_containment_dvwa_db_credential_rotation.png)
+- **Evidence:** [`slot_07_containment_dvwa_db_credential_rotation.png`](../06-Resources/screenshots/initial-triage-action/slot_07_containment_dvwa_db_credential_rotation.png)
 
 ---
 
@@ -134,7 +134,7 @@ All containment and eradication procedures were executed through centralized ent
   - 3-pass zero overwrite shredding (`shred -u -z -n 3`) of 9 staging files: `/tmp/win10.hash`, `/tmp/hank.hash`, `/tmp/dcsync_output.txt`, `/tmp/admin.ccache`, `/tmp/domain_users.txt`, `/tmp/admin_info.txt`, `/tmp/sensitive_data.txt`, `/tmp/hacked.bmp`, `/tmp/f`.
   - Recursive removal of rogue Responder installation: `rm -rf /opt/Responder /opt/impacket`.
   - Operational restoration of local DNS stub resolver: `systemctl unmask systemd-resolved && systemctl enable --now systemd-resolved`.
-- **Evidence:** [`slot_01_eradication_dvwa_loot_wiped.png`](../assets/screenshots/deep-investigation-action/slot_01_eradication_dvwa_loot_wiped.png)
+- **Evidence:** [`slot_01_eradication_dvwa_loot_wiped.png`](../06-Resources/screenshots/deep-investigation-action/slot_01_eradication_dvwa_loot_wiped.png)
 
 ### Step 2: Linux Root Cause Elimination & Web Hardening
 - **Target:** DVWA Server (`192.168.56.30`)
@@ -142,7 +142,7 @@ All containment and eradication procedures were executed through centralized ent
   - Sudoers Hardening: Purged `www-data ALL=(ALL) NOPASSWD: /usr/bin/python3` from `/etc/sudoers`; validated syntax via `visudo -c`; verified access denial via `sudo -u www-data sudo -l`.
   - SSH Hardening: Set `PermitRootLogin no` and `PasswordAuthentication no` in `/etc/ssh/sshd_config`; restarted SSH daemon.
   - Upload Execution Lockdown: Deployed `.htaccess` denying script engines in `/var/www/html/dvwa/hackable/uploads/`; set filesystem permissions to `chmod 750`; verified via test curl returning `HTTP 403 Forbidden`.
-- **Evidence:** [`slot_02_eradication_dvwa_sudoers_patched.png`](../assets/screenshots/deep-investigation-action/slot_02_eradication_dvwa_sudoers_patched.png), [`slot_03_eradication_dvwa_upload_blocked.png`](../assets/screenshots/deep-investigation-action/slot_03_eradication_dvwa_upload_blocked.png)
+- **Evidence:** [`slot_02_eradication_dvwa_sudoers_patched.png`](../06-Resources/screenshots/deep-investigation-action/slot_02_eradication_dvwa_sudoers_patched.png), [`slot_03_eradication_dvwa_upload_blocked.png`](../06-Resources/screenshots/deep-investigation-action/slot_03_eradication_dvwa_upload_blocked.png)
 
 ### Step 3: Active Directory Account Eradication & Forest Hardening
 - **Target:** Domain Controller `PC-DC` (`192.168.56.10`)
@@ -150,21 +150,21 @@ All containment and eradication procedures were executed through centralized ent
   - Permanent Backdoor Removal: Executed `Remove-ADUser -Identity "backdoor" -Confirm:$false`.
   - Service Account Demotion: Stripped `HANK_SHERMAN` from `Domain Admins` & `Administrators`; purged SPN `CIFS/AWSWAPPS1000000.ad.lab` via `Set-ADUser`; enforced AES128/AES256 Kerberos encryption; rotated password to 32-character complex secret.
   - Protected Users Group Enrollment: Enrolled `Administrator` and `HANK_SHERMAN` into `Protected Users` security group, disabling NTLM caching, DES/RC4 encryption, and credential delegation.
-- **Evidence:** [`slot_04_eradication_ad_backdoor_deleted.png`](../assets/screenshots/deep-investigation-action/slot_04_eradication_ad_backdoor_deleted.png), [`slot_05_eradication_ad_hank_demoted.png`](../assets/screenshots/deep-investigation-action/slot_05_eradication_ad_hank_demoted.png), [`slot_06_eradication_ad_protected_users.png`](../assets/screenshots/deep-investigation-action/slot_06_eradication_ad_protected_users.png)
+- **Evidence:** [`slot_04_eradication_ad_backdoor_deleted.png`](../06-Resources/screenshots/deep-investigation-action/slot_04_eradication_ad_backdoor_deleted.png), [`slot_05_eradication_ad_hank_demoted.png`](../06-Resources/screenshots/deep-investigation-action/slot_05_eradication_ad_hank_demoted.png), [`slot_06_eradication_ad_protected_users.png`](../06-Resources/screenshots/deep-investigation-action/slot_06_eradication_ad_protected_users.png)
 
 ### Step 4: Enterprise Multicast & Broadcast Protocol Hardening
 - **Target:** `PC-DC` (`192.168.56.10`) and `Win10User` (`192.168.56.20`)
 - **Actions:**
   - Globally disabled LLMNR: Set `HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient\EnableMulticast = 0`.
   - Disabled NetBIOS over TCP/IP: Invoked CIM network adapter method `SetTcpipNetbios(TcpipNetbiosOptions = 2)` across all active interfaces.
-- **Evidence:** [`slot_07_eradication_llmnr_netbios_disabled.png`](../assets/screenshots/deep-investigation-action/slot_07_eradication_llmnr_netbios_disabled.png)
+- **Evidence:** [`slot_07_eradication_llmnr_netbios_disabled.png`](../06-Resources/screenshots/deep-investigation-action/slot_07_eradication_llmnr_netbios_disabled.png)
 
 ### Step 5: Network Micro-Segmentation & DMZ Lateral Lockdown
 - **Target:** Gateway Firewall (`192.168.56.1`) and DVWA Host (`192.168.56.30`)
 - **Actions:**
   - Implemented Gateway iptables FORWARD rules rejecting outbound TCP/UDP 88, 135, 137-139, 389, 445, 636, 3268, 3389, 5985 from DVWA to `192.168.56.0/24`.
   - Configured DVWA OUTPUT rules dropping traffic to `192.168.56.10` and `192.168.56.20`, permitting only SOC monitoring ports (1514, 1515, 8000).
-- **Evidence:** [`slot_08_eradication_dmz_firewall_hardened.png`](../assets/screenshots/deep-investigation-action/slot_08_eradication_dmz_firewall_hardened.png)
+- **Evidence:** [`slot_08_eradication_dmz_firewall_hardened.png`](../06-Resources/screenshots/deep-investigation-action/slot_08_eradication_dmz_firewall_hardened.png)
 
 ---
 
@@ -176,7 +176,7 @@ Production service recovery was systematically verified across all four operatin
 2. **Active Directory Domain Services:** Executed `dcdiag /test:Replication /test:Advertising /test:FSMOCheck /test:Services` (all 5 core tests passed); confirmed `repadmin /showrepl` reports 0 replication errors.
 3. **Corporate Workstation:** Confirmed domain logon functional with rotated credentials; confirmed desktop wallpaper restored to corporate default.
 4. **Wazuh Central SIEM Fabric:** Validated all 4 agents (`Suricata-GW` 001, `DVWA-Server` 002, `DomainWin10` 003, `Win10User` 004) in **Active** state with zero critical alerts during the 60-minute post-remediation monitoring window.
-- **Evidence:** [`slot_09_eradication_health_verification.png`](../assets/screenshots/deep-investigation-action/slot_09_eradication_health_verification.png)
+- **Evidence:** [`slot_09_eradication_health_verification.png`](../06-Resources/screenshots/deep-investigation-action/slot_09_eradication_health_verification.png)
 
 ---
 
@@ -192,7 +192,7 @@ The entire 46-alert operational queue in TheHive 5 was audited, disposed, and re
   - **Case 01 (`CAS-001-WEBCOMP`):** 13 alerts | Perimeter breach, SQLi, webshell & sudo privesc | **RESOLVED (True Positive With Impact)**
   - **Case 02 (`CAS-002-LATMOVE`):** 8 alerts | SSH pivot, Responder poisoning, BloodHound & DCSync | **RESOLVED (True Positive With Impact)**
   - **Case 03 (`CAS-003-DOMIMP`):** 22 alerts | Pass-the-Hash, Golden Ticket, AD backdoor & impact | **RESOLVED (True Positive With Impact)**
-- **Evidence:** [`thehive_cases_overview_resolved.png`](../assets/screenshots/thehive-cases/thehive_cases_overview_resolved.png), [`thehive_alert_queue_cleared.png`](../assets/screenshots/thehive-cases/thehive_alert_queue_cleared.png)
+- **Evidence:** [`thehive_cases_overview_resolved.png`](../06-Resources/screenshots/thehive-cases/thehive_cases_overview_resolved.png), [`thehive_alert_queue_cleared.png`](../06-Resources/screenshots/thehive-cases/thehive_alert_queue_cleared.png)
 
 ---
 
