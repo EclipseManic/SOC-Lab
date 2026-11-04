@@ -85,7 +85,7 @@ This register provides the definitive, unredacted catalog of Indicators of Compr
 | `AD.LAB\HANK_SHERMAN` | Active Directory | Domain Admin (SPN) | `Password123` (RC4-HMAC Kerberoast) | Assigned SPN `CIFS/AWSWAPPS1000000.ad.lab` while in Domain Admins. | **DEMOTED & ROTATED** |
 | `AD.LAB\Administrator` | Active Directory | Built-in Admin | `P@ssw0rd_Ent3rpr1s3_Adm1n_9988!!#` (Rotated) | Dumped via DCSync; targeted for Pass-the-Hash SMB logons. | **PROTECTED USERS** |
 | `AD.LAB\backdoor` | Active Directory | Rogue Domain Admin | `P@ssw0rd123!` | Rogue persistence account created via `wmiexec` in Stage 17. | **PERMANENTLY PURGED** |
-| `AD.LAB\krbtgt` | Active Directory | Master KDC Secret | `611a8cdcc21cb3fe3bf3a4c2f4e05f60` (Compromised) | Replicated via DCSync; abused to forge Kerberos Golden Tickets. | **TWICE RESET (KVNO 4)** |
+| `AD.LAB\krbtgt` | Active Directory | Master KDC Secret | `611a8cdcc21cb3fe3bf3a4c2f4e05f60` (Compromised) | Replicated via DCSync; abused to forge Kerberos Golden Tickets. | **TWICE RESET (KVNO 3)** |
 
 ---
 
