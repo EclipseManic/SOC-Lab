@@ -351,6 +351,14 @@ In Wazuh's default ruleset (`0025-suricata_rules.xml`), Rule `86601` (`Suricata:
 </rule>
 ```
 
+#### 🛡️ SOAR Severity Mapping & Tag Architecture (`custom-thehive.py`)
+While Rule `86601` assigns an arbitrary Wazuh Level 8 wrapper to enable forwarding across the integration threshold, downstream SOAR triage requires granular, signature-aware severity:
+1. **Suricata Native Severity Factorization (`severity_from_level`):** Rather than flattening every Suricata alert to Level 8 / Medium (2) in TheHive, `custom-thehive.py` directly parses `data.alert.severity` / `data.signature_severity` from Suricata's EVE-JSON:
+   - **Suricata Severity 1 (Major/High):** Mapped to TheHive **High (3)**, or **Critical (4)** if tagged with known CISA-KEV CVEs.
+   - **Suricata Severity 2:** Mapped to TheHive **Medium (2)**.
+   - **Suricata Severity 3–4 (Info/Low):** Mapped to TheHive **Low (1)**.
+2. **Tag Clarification (`occurrences:N` vs Attack Stages):** In earlier integration versions, collapsed event bursts were tagged with `stages:N` (representing the number of deduplicated event bursts merged into one TheHive ticket). To eliminate terminology confusion with the project's **20 sequential attack simulation stages**, the integration daemon now prefixes merged event counts as **`occurrences:N`** (e.g., `occurrences:4`). Attack simulation stages are referenced exclusively by their documented MITRE techniques and case phases.
+
 ### Authentication & Privilege Overrides
 ```xml
 <!-- sshd authentication success elevated from Level 3 to Level 8 -->
