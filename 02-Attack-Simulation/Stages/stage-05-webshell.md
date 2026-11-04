@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached
 > **Case:** [Case 01](../../04-Investigation/Cases/case-01-web-compromise.md)
 > **Investigation:** [Phase 2 Deep Dive](../../04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-2-the-10-second-mistake-webshell-to-instant-root)
-> **Evidence:** [attack](../../06-Resources/screenshots/attack-simulation/) · [alert](../../06-Resources/screenshots/thehive-alert/)
+> **Evidence:** [attack](../../06-Resources/screenshots/attack-simulation/12.png) · [alert](../../06-Resources/screenshots/thehive-alert/4.png)
 
 ## Objective
 
