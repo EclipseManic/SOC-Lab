@@ -395,7 +395,7 @@ const stageCopy: Stage[] = [
     attacker:
       "Uses Impacket `GetUserSPNs.py` with valid domain credentials to request an RC4-encrypted TGS ticket for user HANK_SHERMAN.",
     defender:
-      "Suricata captures Kerberos TGS-REQ wire frames on port 88 (SID 2019922, ET EXPLOIT MS14-068); Wazuh Rule 5715 captures pivot SSH session.",
+      "Suricata captures Kerberos TGS-REQ wire frames on port 88 (SID 2019922, ET EXPLOIT Possible GoldenPac Priv Esc in-use); Wazuh Rule 100220 captures verbatim command and Rule 5715 captures pivot SSH session.",
     evidence:
       "Extracted TGS ticket hash, Suricata Kerberos wire alert, and TheHive alert wzb-1d2d7fb4b8.",
     telemetry: "Kerberos Wire / Linux auth logs",
@@ -405,7 +405,7 @@ const stageCopy: Stage[] = [
     caseSlug: "case-02-lateral-movement",
     attackPath: "02-Attack-Simulation/Stages/stage-13-kerberoasting.md",
     investigationPath: "04-Investigation/Stages/stage-13-kerberoasting.md",
-    ruleId: "Suricata SID 2019922 (via 86601) + Wazuh 5715",
+    ruleId: "Suricata SID 2019922 (via 86601) + Wazuh 100220 & 5715",
     alertRef: "wzb-1d2d7fb4b8",
   },
   {

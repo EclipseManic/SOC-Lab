@@ -178,7 +178,7 @@
       "endOffsetSeconds": 3060,
       "timestamp": "12:31:18",
       "telemetryEvent": "Kerberoasting TGS request for HANK_SHERMAN SPN",
-      "sourceSensor": "Suricata SID 2019922 (ens37) & Wazuh 5715",
+      "sourceSensor": "Suricata SID 2019922 (ens37 - ET EXPLOIT Possible GoldenPac Priv Esc in-use) & Wazuh Rule 100220 (GetUserSPNs.py)",
       "evidenceReference": "TheHive Alert 11 · Wazuh Telemetry wzb-33"
     },
     {
@@ -190,7 +190,7 @@
       "endOffsetSeconds": 3180,
       "timestamp": "12:33:52",
       "telemetryEvent": "Impacket secretsdump.py DRSUAPI directory replication",
-      "sourceSensor": "Wazuh Rule 5715 / Wazuh Rule 100220 (bloodhound.py)",
+      "sourceSensor": "Wazuh Rule 5715 / Wazuh Rule 100220 (secretsdump.py)",
       "evidenceReference": "TheHive Alert 12 · Wazuh Telemetry wzb-34"
     },
     {
@@ -250,7 +250,7 @@
       "endOffsetSeconds": 4140,
       "timestamp": "12:49:02",
       "telemetryEvent": "Forged Kerberos TGT (Golden Ticket) tested via pivot",
-      "sourceSensor": "Wazuh Rule 5715 / Wazuh Rule 100220 (bloodhound.py)",
+      "sourceSensor": "Wazuh Rule 5715 / Wazuh Rule 100220 (ticketer.py)",
       "evidenceReference": "TheHive Alert 14 · Wazuh Telemetry wzb-38"
     },
     {
