@@ -6,7 +6,7 @@
 > **Lead Incident Responder:** Manichand Gupta  
 > **Operational Status:** **Completed & Formally Validated** (NIST SP 800-61r2 Phase 5: Post-Incident Activity)
 
-Welcome to the **Incident Reporting** section of the SOC Lab repository. This directory houses the executive-level, audit-ready post-mortem documentation generated following the complete triage, tactical containment, deep-dive forensic analysis, and eradication of an enterprise Active Directory breach.
+Welcome to the **Incident Reporting** section of the lab repository. This directory contains the executive-ready post-mortem documentation produced after investigating, containing, and permanently remediating our 74-minute Active Directory breach.
 
 [![Consolidated Incident Response 74-Minute Timeline](../06-Resources/diagrams/Consolidated%20Incident%20Response%2074-Minute%20Timeline.png)](../06-Resources/diagrams/Consolidated%20Incident%20Response%2074-Minute%20Timeline.png)
 *Figure 1: Full chronological incident timeline spanning 74 minutes ($T_0$ to $T_0 + 74\text{m}$), correlating attacker milestones (top) against blue-team detection alerts across Suricata, Auditd, Wazuh, Sysmon, and TheHive (bottom).*

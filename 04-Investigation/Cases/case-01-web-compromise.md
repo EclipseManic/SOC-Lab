@@ -15,7 +15,7 @@
 
 ## Summary
 
-The adversary initiated an external attack campaign targeting the public-facing Damn Vulnerable Web Application (DVWA) hosted at `192.168.56.30` from Kali Linux (`192.168.232.135`). Following automated port scanning and directory fuzzing, the adversary performed credential brute-forcing against `/login.php` and exploited a SQL injection flaw to dump the user credentials table. After cracking the administrative hash offline, the adversary authenticated to DVWA, uploaded an executable PHP web shell (`shell.php`), spawned an interactive named-pipe FIFO Netcat (`/usr/bin/nc.openbsd`) reverse shell connecting back to Kali (`4444/TCP`), and abused a passwordless sudo Python misconfiguration (`sudo /usr/bin/python3` GTFOBins) to obtain local `root` privileges.
+An external attacker at `192.168.232.135` (Kali Linux) targeted our public web server (`192.168.56.30`). After running Nmap port scans and directory fuzzing, they brute-forced the DVWA login page, used SQL injection to dump password hashes from the database, and cracked the admin password offline. Once logged in as admin, they uploaded a simple PHP webshell (`shell.php`) and opened a Netcat reverse shell back to Kali. Inside as web user `www-data`, they ran `sudo -l`, discovered that Python was allowed to run with `sudo` without a password, and escalated to `root` in under 10 seconds.
 
 ---
 

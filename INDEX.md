@@ -1,22 +1,16 @@
-# Master Index
+# Master Index & Traceability Matrix
 
-Single source of truth for the lab. Update this table whenever a stage, alert, rule, investigation note, or case changes.
+The single source of truth for the entire lab. This table connects every attack stage to its MITRE ATT&CK technique, defensive rules, alerts, and investigation deep-dive.
 
-> [!NOTE]
-> **Project Lifecycle & Section Status:**  
-> - **Sections 01–03 (Lab Setup, Attack Simulation, Detection Engineering):** Complete reference architectures, execution playbooks, and detection rulesets.
-> - **Section 04 (Investigation):** Marked as **Completed & Validated** across all 4 operational phases (Initial Triage, Immediate Containment, Forensic Deep-Dive, and Eradication/Hardening/Recovery).
-> - **Section 05 (Incident Report):** Marked as **Completed & Formally Validated** post-incident deliverables (Executive Review, 74-minute timeline, master IoC register, MITRE ATT&CK mapping, response actions log, and strategic lessons learned).
+## Detection Status Legend
 
-## Detection Status Legend & Ground Truth Metrics
-
-| Classification | Meaning & Scope | Stages Caught / Proportion |
+| Classification | Meaning in Plain English | Results |
 |---|---|:---:|
-| **Direct Target Detections** | Dedicated rules inspecting target payloads, command arguments, process trees, auth rate anomalies, or wire telemetry directly on victim hosts or network wire | **14 stages (70.0%)** |
-| **Operational Alert Coverage** | Actionable incident tickets delivered live into TheHive 5 / SIEM fabric across all online attack phases | **16 stages (80.0%)** |
-| **Target Logging Gaps** | Telemetry reached victim hosts or local switch, but target-side diagnostic logging was absent | **2 stages (10.0%)** |
-| **Inherent Offline Gaps** | Offline password hash cracking conducted locally on attacker's GPU (zero victim or network telemetry by definition) | **2 stages (10.0%)** |
-| **Rule Failure** | Zero engine syntax errors, dropped packets, or crashes inside active detection rules | **0 stages (0.0%)** |
+| **Direct Target Detections** | Caught red-handed on the victim machine or wire by custom detection rules | **14 stages (70.0%)** |
+| **Operational Alert Coverage** | Actionable incident tickets delivered live into TheHive across all online attack stages | **16 stages (80.0%)** |
+| **Target Logging Gaps** | Attack reached the target machine, but default Windows diagnostic logging was off | **2 stages (10.0%)** |
+| **Inherent Offline Gaps** | Password cracking ran offline on the attacker's GPU (zero victim packets by definition) | **2 stages (10.0%)** |
+| **Rule Failure** | Zero syntax errors, decoder crashes, or failed rules throughout the run | **0 stages (0.0%)** |
 
 ---
 
