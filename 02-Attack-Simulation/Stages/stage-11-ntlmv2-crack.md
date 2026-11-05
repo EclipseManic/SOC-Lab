@@ -58,7 +58,7 @@ Because NetNTLMv2 challenge-response hashes cannot be used directly in Pass-the-
 ### Alert Screenshots
 
 ![TheHive Alert 21 — Hash Exfiltration SCP Session Alert](../../06-Resources/screenshots/thehive-alert/11.png)
-*Figure 11.3: TheHive Alert #21 (wzb-1c8dc0ab5d / screenshot 11.png wzb-e5877b742a) capturing root SSH logon on DVWA pivot during SCP exfiltration of win10.hash to Kali at 17:39:46 IST.*
+*Figure 11.3: TheHive Alert #21 (wzb-1c8dc0ab5d / screenshot 11.png) capturing root SSH logon on DVWA pivot during SCP exfiltration of win10.hash to Kali at 17:39:46 IST.*
 
 > [!NOTE]
 > **Operational Alert vs. Offline Computation:**  
@@ -70,7 +70,7 @@ Because NetNTLMv2 challenge-response hashes cannot be used directly in Pass-the-
 
 | Source | Rule | Rule ID | TheHive Alert | Severity | Status |
 |---|---|---|---|---|---|
-| Wazuh / Linux SSH | sshd: authentication success (SCP transfer of `win10.hash`) | Rule 5715 (Level 8) | TheHive Alert #21 (`11.png` / `wzb-1c8dc0ab5d`, `wzb-e5877b742a`) | Medium (2) | **Detected (Operational SOAR Alert)** |
+| Wazuh / Linux SSH | sshd: authentication success (SCP transfer of `win10.hash`) | Rule 5715 (Level 8) | TheHive Alert #21 (`11.png` / `wzb-1c8dc0ab5d`) | Medium (2) | **Detected (Operational SOAR Alert)** |
 | None (Offline Hashcat) | N/A (Offline Cracking) | N/A | None | N/A | **Investigatively Attributed (Inherent Offline Gap DG-11)** |
 | **Adversary Lifecycle Attribution** | Upstream: Responder Harvest (Stage 10 / Alert #20) · Downstream: BloodHound Logon (Stage 12 / Alert #22) | Wazuh Rules 100220, 100278, 100615, 92657 | `wzb-28`, `wzb-32`, Alert #20 (`wzb-dbf3197ceb`), Alert #22 (`wzb-1d2d7fb4b8`) | High (3) | **Attributed** |
 
