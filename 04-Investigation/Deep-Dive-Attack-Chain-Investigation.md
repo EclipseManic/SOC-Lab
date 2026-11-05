@@ -306,7 +306,7 @@ This was the most devastating phase of the entire attack. It took the attacker j
 
 2. **DCSync Directory Theft (`18:02:43`):** Why was `HANK_SHERMAN` so critical? Because BadBlood configured `HANK_SHERMAN` as a member of **`Domain Admins`** (which inherently possesses `DS-Replication-Get-Changes` and `DS-Replication-Get-Changes-All` rights).  
 The attacker invoked `secretsdump.py` (Row 9274) pretending to be a replicating Domain Controller. The real DC happily replicated **the password hashes of every domain account**, including:
-* **The Domain Administrator NTLM Hash:** `aad3b435...:cc8147f79ec91200a3ee2c2ebc65f9fb`
+* **The Domain Administrator NTLM Hash:** `aad3b435...:cc8147f790c91200a3e02c2ebc65f9fb`
 * **The Master `krbtgt` Password Hash:** `611a8cdcc21cb3fe3bf3a4c2f4e05f60`
 
 ![DCSync Password Theft](../06-Resources/screenshots/wazuh-deep-investigation/wzb-34-dcsync-auditd-secretsdump-ntds.jpg)
@@ -531,7 +531,7 @@ Here are the exact technical indicators to search for in your environment:
 ### 4.3 Stolen Cryptographic Hashes
 | Account | Material Type | Hash / Key Value |
 |:---|:---|:---|
-| `AD.LAB\Administrator` | NTLM Hash | `aad3b435b514e4eeaad3b435b51404ee:cc8147f79ec91200a3ee2c2ebc65f9fb` |
+| `AD.LAB\Administrator` | NTLM Hash | `aad3b435b51404eeaad3b435b51404ee:cc8147f790c91200a3e02c2ebc65f9fb` |
 | **`AD.LAB\krbtgt`** | **Master NTLM Hash** | **`611a8cdcc21cb3fe3bf3a4c2f4e05f60`** |
 | `AD.LAB\win10` | Plain-Text Password | `Secur3Lab!` (Cracked from NetNTLMv2 hash) |
 | `AD.LAB\HANK_SHERMAN`| Plain-Text Password | `Password123` (Cracked from Kerberos TGS ticket) |

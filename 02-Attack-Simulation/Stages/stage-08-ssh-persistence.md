@@ -101,7 +101,7 @@ hostname
 
 > [!NOTE]
 > **Verbatim Command Telemetry (Rule 100220):**  
-> While SSHD (Rule 5715) alerted to TheHive upon session logon, the custom `bashcmd` telemetry pipeline on DVWA captured the verbatim key injection command under **Wazuh Rule 100220** at `17:29:19 IST` (`Wazuh-Raw-Alerts.csv` Row 9164):  
+> While SSHD (Rule 5715) alerted to TheHive upon session logon, the custom `bashcmd` telemetry pipeline on DVWA captured the verbatim key injection command under **Wazuh Rule 100220** at `17:29:34 IST` (`Wazuh-Raw-Alerts.csv` Row 9164):  
 > `echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIACi7TGj+OejU78IWt/I6/im7sLXOR1jben7h94DmDJ5 kali@kali" >> /root/.ssh/authorized_keys`  
 > In addition, preceding permission setup commands (`chmod 700 /root/.ssh`, `chmod 600 /root/.ssh/authorized_keys`) were recorded in rows 9155–9161.
 
