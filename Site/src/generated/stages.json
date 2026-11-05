@@ -175,7 +175,7 @@
       "ruleAlertId": "Wazuh 5715 (Pivot SSH root logon) + Wazuh 100220 (bloodhound.py)",
       "investigationPath": "04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-4-poisoning-the-well-stealing-windows-passwords-with-responder",
       "caseLabel": "Case 02",
-      "evidenceStatus": "Target Logging Gap (Pivot-Only Coverage; DG-12; Rule 100220)",
+      "evidenceStatus": "Target Logging Gap (DG-12; Rule 100220)",
       "status": "Logging gap",
       "coverageClass": "target-logging-gap",
       "hasDirectDetection": false,

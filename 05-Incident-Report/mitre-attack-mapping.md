@@ -52,7 +52,8 @@ Direct Target Detections:                  14 Stages (70.0%)
 Operational Incident Tickets Delivered:    16 Stages (80.0%)
 Documented Inherent Offline Gaps:           2 Stages (10.0% - DG-04, DG-11)
 Documented Protocol Logging Gaps:           2 Stages (10.0% - DG-09, DG-12)
-Detection Rule Execution Failures:          0 Stages (0.0%)
+Detection Engine Rule Execution Drops:      0 Stages (0.0% - all rules evaluated; 0 syntax/engine drops)
+(Note: DC EIDs 4662/4769 logged at Level 5 but unforwarded under Level >= 8 SOAR gate filter)
 ```
 
 ### Breakdown by ATT&CK Tactic
@@ -61,7 +62,7 @@ Detection Rule Execution Failures:          0 Stages (0.0%)
 3. **Execution (`TA0002`):** 1 Technique (`T1059.004` Unix Shell) -> **100% Detected** via Auditd `execve` tracking and Suricata C2 socket alerts.
 4. **Persistence (`TA0003`):** 3 Techniques (`T1505.003` Web Shell, `T1098.004` SSH Keys, `T1136.002` Domain Account) -> **100% Detected** via Wazuh File Integrity Monitoring, Linux PAM, and Windows Event ID 4720.
 5. **Privilege Escalation (`TA0004`):** 1 Technique (`T1548.003` Sudo Caching) -> **100% Detected** via Wazuh PAM Rule 5402 (`sudo to ROOT`).
-6. **Credential Access (`TA0006`):** 6 Techniques (`T1110.001` Brute Force, `T1110.002` Hash Cracking, `T1557.001` Poisoning, `T1558.003` Kerberoasting, `T1003.006` DCSync, `T1558.001` Golden Ticket) -> **4 Detected / 2 Offline Gaps**.
+6. **Credential Access (`TA0006`):** 6 Techniques (`T1110.001` Brute Force, `T1110.002` Hash Cracking, `T1557.001` Poisoning, `T1558.003` Kerberoasting, `T1003.006` DCSync, `T1558.001` Golden Ticket) -> **2 Direct Detections / 2 Pivot-Only Alerts / 2 Offline Gaps**.
 7. **Discovery (`TA0007`):** 2 Techniques (`T1018` Remote System Discovery, `T1087.002` Domain Groups) -> **2 Target Logging Gaps** (Detected via promiscuous wire capture and pivot SSH session tracking).
 8. **Lateral Movement (`TA0008`):** 1 Technique (`T1550.002` Pass the Hash) -> **100% Detected** via Windows Security Event ID 4624 (Logon Type 3 NTLM) and Wazuh WMI fan-out correlation Rule 100613.
 9. **Collection (`TA0009`):** 1 Technique (`T1005` Data from Local System) -> **100% Detected** via Sysmon EID 1 process tracking and EID 11 file staging.

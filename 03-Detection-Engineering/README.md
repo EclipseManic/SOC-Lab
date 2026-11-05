@@ -214,21 +214,28 @@ Here are the three biggest challenges we tackled:
 ### Challenge 3: The Honest Gap Register (Why 80% Detection is Real Security)
 In junior cybersecurity labs, people often claim "100% detection rate." In real enterprise security, 100% detection is impossible. 
 
-We achieved an **80% detection rate (16 out of 20 stages caught)**. More importantly, we documented exactly why the remaining 4 stages were missed and how to fix them:
+We achieved an **80% operational alert coverage rate (16 of 20 stages caught in SOAR)**, backed by **14 direct target detections (70%)** and **2 pivot-only coverage stages (10%)**. More importantly, we cataloged the **4 documented stage-level gaps (20%)** plus **1 protocol payload inspection limitation on a detected stage**:
 
-1. **Offline GPU Password Cracking (Stages 04 & 11 — Hashcat):**
-   - *Why It Was Missed:* In Stage 04 (MD5) and Stage 11 (NTLMv2), password cracking occurred entirely on the attacker's physical laptop GPU. No network packets crossed the wire, and no processes spawned on victim servers.
-   - *The Reality:* Offline cracking cannot be detected at execution time. The defense must focus on **prevention** (disabling LLMNR via GPO to prevent hash capture) and **post-crack alerting** (detecting when the stolen password is used).
-2. **Intra-Subnet Layer 2 Discovery (Stage 09 — Internal Nmap Sweep):**
-   - *Why It Was Missed by Routers:* When the attacker pivoted to DVWA (`192.168.56.30`) and scanned other Windows hosts on the same subnet (`192.168.56.0/24`), traffic was switched locally at Layer 2 within the virtual switch. Because packets never crossed a Layer 3 router, perimeter firewalls were blind to them.
-   - *How We Caught Telemetry:* Suricata's second interface (`ens37`) was placed in promiscuous mode on the virtual switch, passively picking up probe frames.
-   - *The Production Fix:* In hardware-switched environments, enable Windows Defender Firewall dropped-packet logging and forward those logs to Wazuh.
-3. **Active Directory LDAP Query Volume (Stage 12 — BloodHound AD Recon):**
-   - *Why It Was Missed:* BloodHound ran high-volume LDAP queries against the Domain Controller to map attack paths. Windows Server does not log individual LDAP queries by default, so no dedicated AD alert fired (though the SSH session on the pivot was flagged).
+#### The 4 Documented Stage Detection Gaps (20.0%)
+1. **Stage 04 — Inherent Offline Password Hash Cracking (Hashcat MD5):**
+   - *Why It Was Missed:* Password cracking occurred entirely on the attacker's physical laptop GPU. No network packets crossed the wire, and no processes spawned on victim servers.
+   - *The Defense:* Offline cracking cannot be detected at execution time. Defense must focus upstream on **prevention** (eliminating SQL injection) and downstream on **post-crack alerting** (detecting logins with newly cracked passwords).
+2. **Stage 09 — Intra-Subnet Layer 2 Discovery (Internal Nmap Sweep):**
+   - *Why It Was Missed by Routers:* Traffic was switched locally at Layer 2 within the virtual switch, bypassing Layer 3 routing inspection.
+   - *How Telemetry Was Captured:* Suricata's second interface (`ens37`) sniffed in promiscuous mode on the switch, recording probe frames.
+   - *The Production Fix:* Enable host-based dropped-packet logging on all endpoints and forward drops to Wazuh.
+3. **Stage 11 — Inherent Offline NTLMv2 Hash Cracking (Hashcat NetNTLMv2):**
+   - *Why It Was Missed:* The intercepted NetNTLMv2 challenge-response was cracked locally on the attacker's GPU with zero victim interaction.
+   - *The Defense:* Globally disable LLMNR and NetBIOS over TCP/IP so hashes can never be broadcasted or captured in the first place.
+4. **Stage 12 — Active Directory LDAP Query Volume (BloodHound AD Recon):**
+   - *Why It Was Missed:* BloodHound ran high-volume LDAP queries against the DC. Windows Server disables Event ID 1644 LDAP query logging by default.
+   - *How Telemetry Was Captured:* The pivot SSH session was alerted (Rule 5715) and the command captured via Rule 100220.
    - *The Production Fix:* Set registry key `HKLM\SYSTEM\CurrentControlSet\Services\NTDS\Diagnostics\15 Field Engineering` to `5` to generate Event ID 1644 ("Expensive/Inefficient LDAP Search Queries").
-4. **Encrypted Transport Blindness (Stage 19 — Exfiltration via SCP):**
-   - *Why It Was Missed on the Wire:* The attacker transferred files over encrypted SSH/SCP (`22/TCP`). Network sniffers cannot read encrypted file contents.
-   - *How We Caught It Anyway:* Wazuh's correlation engine detected an authentication anomaly: a rapid burst of 6 administrative SSH logins in under one second (`Rule 5715`), catching the exfiltration through behavior rather than packet inspection.
+
+#### Protocol-Layer Nuance on a Detected Stage (DG-19)
+- **Stage 19 — Encrypted Transport Payload Inspection Limitation (`DG-19`):**
+  - *Status:* Classified under **Direct Target Detections** because Wazuh correlation Rule 5715 directly detected the exfiltration transport activity (a rapid burst of 6 administrative SSH logins in 0.57s).
+  - *The Architectural Limitation:* `DG-19` documents that SSH transport encryption (`22/TCP`) prevented Suricata NIDS from reading plaintext file contents on the wire. This highlights why behavioral host auth correlation is essential to complement network inspection.
 
 > [!NOTE]
 > **Detection Accounting Methodology — Direct Target Detection vs. Correlated Pivot Alerting:**  
