@@ -58,7 +58,7 @@ With full interactive command execution confirmed on `PC-DC`, the adversary esta
 *Figure 15.2: TheHive Alert #25 overview (wzb-b7f91cd3ab) capturing Impacket wmiexec Pass-the-Hash process fan-out on Domain Controller PC-DC.ad.lab under Custom Rule 100613.*
 
 ![TheHive Alert 26 (Detail) — Sysmon Event ID 1 Telemetry Details](../../06-Resources/screenshots/thehive-alert/15.5.png)
-*Figure 15.3: TheHive Alert #26 detail (wzb-eb083a8537 / screenshot 15.5.png wzb-83be61ee53) showing Sysmon Event ID 1 process creation: cmd.exe /Q /c whoami redirected through \\127.0.0.1\ADMIN$\__*.*
+*Figure 15.3: TheHive Alert #26 detail (wzb-eb083a8537 / screenshot 15.5.png) showing Sysmon Event ID 1 process creation: cmd.exe /Q /c whoami redirected through \\127.0.0.1\ADMIN$\__*.*
 
 ![Wazuh Event ID 4624 Detection on Domain Controller](../../06-Resources/screenshots/wazuh-deep-investigation/wzb-35-pth-wazuh-eid4624-detection.jpg)
 *Figure 15.4: Wazuh Rule 92657 / Windows Event ID 4624 Logon Type 3 NTLM detection for Administrator on DomainWin10 (192.168.56.10).*
@@ -69,7 +69,7 @@ With full interactive command execution confirmed on `PC-DC`, the adversary esta
 
 | Source | Rule | Rule ID | TheHive Alert | Severity | Status |
 |---|---|---|---|---|---|
-| Windows Security (`DomainWin10`) | Successful Remote Logon Detected - User:\Administrator - NTLM authentication, possible pass-the-hash attack | Windows Security Event ID 4624 (Logon Type 3 NTLM) / Rule 92657 | 24x in `Wazuh-Raw-Alerts.csv` & Alerts #25, #26 (`wzb-b7f91cd3ab`, `wzb-eb083a8537` / `wzb-83be61ee53`) | High (3) | **Detected (Direct Target-Side & SOAR Delivery)** |
+| Windows Security (`DomainWin10`) | Successful Remote Logon Detected - User:\Administrator - NTLM authentication, possible pass-the-hash attack | Windows Security Event ID 4624 (Logon Type 3 NTLM) / Rule 92657 | 24x in `Wazuh-Raw-Alerts.csv` & Alerts #25, #26 (`wzb-b7f91cd3ab`, `wzb-eb083a8537`) | High (3) | **Detected (Direct Target-Side & SOAR Delivery)** |
 | Windows Sysmon (`DomainWin10`) | Impacket command execution: `cmd.exe /Q /c whoami > \\127.0.0.1\ADMIN$\__*` | Wazuh Custom Rule 100613 (Sysmon EID 1) | TheHive Alerts #25, #26 (`15.png`, `15.5.png`) | High (3) | **Detected (Process Execution Telemetry)** |
 | Wazuh (Host Command Audit) | Bash command by root: `python3 wmiexec.py -hashes :cc814... Administrator@192.168.56.10` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Data Rows 9300, 9303) | High | **Detected (Verbatim PtH Invocation)** |
 

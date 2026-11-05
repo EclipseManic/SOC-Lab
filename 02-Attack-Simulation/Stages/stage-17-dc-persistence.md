@@ -86,12 +86,12 @@ This stage generated a heavy alert volume across Wazuh host monitoring and TheHi
 | Source | Rule / Event Description | Rule ID | TheHive Alert Title | Severity | Status |
 |---|---|---|---|---|---|
 | Wazuh (Host Command Audit) | Bash command by root: `python3 wmiexec.py -k -no-pass ad.lab/Administrator@PC-DC.ad.lab` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9373) | High | **Detected (Kerberos WMI Execution)** |
-| Wazuh / Sysmon (`DomainWin10`) | Impacket wmiexec execution fan-out (`cmd.exe /Q /c net user ...`) | Custom Rule 100613 | TheHive Alert #29 (`wzb-51368d4008` / `slot_07.5_alert29`) — `[FANOUT x3] [DomainWin10] parent PID 4432` | Medium (2) | **Detected** |
+| Wazuh / Sysmon (`DomainWin10`) | Impacket wmiexec execution fan-out (`cmd.exe /Q /c net user ...`) | Custom Rule 100613 | TheHive Alert #29 (`wzb-299a007168` / `slot_07.5_alert29`) — `[FANOUT x3] [DomainWin10] parent PID 4432` | Medium (2) | **Detected** |
 | Wazuh / Windows Security (`DomainWin10`) | User account enabled or created (Event ID 4720, 4722) | Rule 60109 | TheHive Alert #30 (`wzb-26b4d06a63` / `17.png`) — `[3x] [DomainWin10] Logon activity: BACKDOOR @ local` | Medium (2) | **Detected** |
 | Wazuh / Windows Security (`DomainWin10`) | Administrators Group Changed (Event ID 4732) | Rule 60154 | TheHive Alert #31 (`wzb-5f5a18ce46` / `17.1.png`) — `[1x] [DomainWin10] Logon activity: ADMINISTRATORS @ local` | High (3) | **Detected** |
-| Wazuh / Sysmon (`DomainWin10`) | Process fan-out for Domain Admin and password control execution | Custom Rule 100613 | TheHive Alert #32 (`wzb-d8b5c960f2` / `17.2.png`) — `[FANOUT x3] [DomainWin10] parent PID 4432` | Medium (2) | **Detected** |
+| Wazuh / Sysmon (`DomainWin10`) | Process fan-out for Domain Admin and password control execution | Custom Rule 100613 | TheHive Alert #32 (`wzb-aa66cb916a` / `17.2.png`) — `[FANOUT x3] [DomainWin10] parent PID 4432` | Medium (2) | **Detected** |
 | Wazuh / Windows Security (`DomainWin10`) | Domain Admins Group Changed (Event ID 4728) | Rule 60159 | TheHive Alert #33 (`wzb-4125e4ac63` / `17.5.png`) — `[1x] [DomainWin10] Logon activity: DOMAIN ADMINS @ local` | High (3) | **Detected** |
-| Wazuh / Windows Security (`DomainWin10`) | User account attribute modified (/passwordchg:no) (Event ID 4738) | Rule 60110 | TheHive Alert #34 (`wzb-084193beae` / `17.4.png`) — `[1x] [DomainWin10] Logon activity: BACKDOOR @ local` | Medium (2) | **Detected** |
+| Wazuh / Windows Security (`DomainWin10`) | User account attribute modified (/passwordchg:no) (Event ID 4738) | Rule 60110 | TheHive Alert #34 (`wzb-084193beae` / `17.4.png`) — `[2x] [DomainWin10] Logon activity: BACKDOOR @ local` | Medium (2) | **Detected** |
 | Wazuh / Windows Security (`DomainWin10`) | Surviving account notification post-reboot (Event ID 4738 at 18:36:34 IST) | Rule 60110 | TheHive Alert #46 (`wzb-1834f3248e` / `17.6.png`) — `[1x] [DomainWin10] Logon activity: BACKDOOR @ local` | Medium (2) | **Detected (Post-Reboot Validation)** |
 
 > [!IMPORTANT]
