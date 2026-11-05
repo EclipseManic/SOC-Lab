@@ -50,7 +50,7 @@ To evaluate internal data discovery and exfiltration detection rules during [Sta
 # Create sensitive document staging directory
 New-Item -ItemType Directory -Path "C:\Users\win10\Documents\Sensitive" -Force
 Set-Content -Path "C:\Users\win10\Documents\Sensitive\passwords.txt" -Value "Internal Services Password Baseline: [CONFIDENTIAL]"
-Set-Content -Path "C:\Users\win10\Documents\Sensitive\financial_records.xlsx" -Value "Q3 Operating Revenue Analysis"
+Set-Content -Path "C:\Users\win10\Documents\Sensitive\financials.txt" -Value "Q3 Operating Revenue Analysis"
 ```
 
 ---

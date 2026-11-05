@@ -67,7 +67,7 @@ The evidence sets below are published in the public repository. The attack scree
 | **Master Blueprint Document** | [`../06-Resources/docs/attack-chain-full.pdf`](../06-Resources/docs/attack-chain-full.pdf) (redacted) | Redacted copy of the single-source PDF describing the full attack chain and threat model. |
 | **Attacker-Side Screenshots** | [`../06-Resources/screenshots/attack-simulation/`](../06-Resources/screenshots/attack-simulation/) (original) | 62 high-resolution screenshots (`1.png` through `60.png`, plus `58.5.png` and `59.5.png`) showing terminal commands, tool executions, browser actions, and GUI validations. |
 | **SOC & Alert Screenshots** | [`../06-Resources/screenshots/thehive-alert/`](../06-Resources/screenshots/thehive-alert/) | 60 screenshots showing fired alerts, triage views, rule classifications, and event telemetry in TheHive, Wazuh, and Suricata. |
-| **Incident Response Screenshots** | `05-Incident-Report/Response_Action-Screenshot/` | No screenshot files are present in this folder. |
+| **Incident Response Screenshots** | [`../06-Resources/screenshots/initial-triage-action/`](../06-Resources/screenshots/initial-triage-action/) & [`deep-investigation-action/`](../06-Resources/screenshots/deep-investigation-action/) | 26 total tactical containment, eradication, and system recovery validation captures. |
 
 ---
 
@@ -97,7 +97,7 @@ Each stage write-up in the [`Stages/`](Stages/) directory adheres to a rigorous,
 5. **What Happened:** Detailed chronological narrative of the execution, observed outputs, and results.
 6. **Evidence:**
    - **Attack Evidence:** Markdown-embedded screenshots from `../06-Resources/screenshots/attack-simulation/`.
-   - **Alert Evidence:** Markdown-embedded screenshots from `TheHive_Alert-ScreenShot/` (or explicit Detection Gap reference).
+   - **Alert Evidence:** Markdown-embedded screenshots from `../06-Resources/screenshots/thehive-alert/` (or explicit Detection Gap reference).
 7. **Alert Observed Table:** Alert source, rule description, rule ID, TheHive alert ID, and severity.
 8. **MITRE ATT&CK Mapping:** Tactic, Technique, Sub-technique, and ATT&CK ID.
 9. **Detection Opportunities:** Blue-team defensive analysis detailing log sources (Sysmon, Windows Event IDs, Suricata signatures, Linux auth logs) and recommended detection logic.

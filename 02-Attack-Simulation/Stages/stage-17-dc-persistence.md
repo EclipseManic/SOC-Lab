@@ -68,22 +68,22 @@ This action represents complete enterprise persistence, allowing the adversary t
 *Figure 17.5: TheHive alert dashboard displaying multiple correlated alerts for account creation, group membership changes, and WMI execution.*
 
 ![Impacket wmiexec fan-out alert for net user and net group commands](../../06-Resources/screenshots/thehive-alert/17.1.png)
-*Figure 17.4: Process Fan-Out alert (Rule 100613) capturing remote command execution for account creation and group additions.*
+*Figure 17.6: Process Fan-Out alert (Rule 100613) capturing remote command execution for account creation and group additions.*
 
 ![Wazuh alert for user account creation Event ID 4720 and 4722](../../06-Resources/screenshots/thehive-alert/17.2.png)
-*Figure 17.5: TheHive alert detail for Windows Security Auditing events: Event ID 4720 (User Created) and Event ID 4722 (User Enabled).*
+*Figure 17.7: TheHive alert detail for Windows Security Auditing events: Event ID 4720 (User Created) and Event ID 4722 (User Enabled).*
 
 ![Wazuh alert for Administrators local group change Event ID 4732](../../06-Resources/screenshots/thehive-alert/17.3.png)
-*Figure 17.6: High-severity alert for Event ID 4732 (A member was added to a security-enabled local group: Administrators).*
+*Figure 17.8: High-severity alert for Event ID 4732 (A member was added to a security-enabled local group: Administrators).*
 
 ![Process Fan-Out alert for Domain Admins modification and password change flag](../../06-Resources/screenshots/thehive-alert/17.4.png)
-*Figure 17.7: Sysmon / Wazuh process execution alert capturing `net group "Domain Admins"` and `/passwordchg:no`.*
+*Figure 17.9: Sysmon / Wazuh process execution alert capturing `net group "Domain Admins"` and `/passwordchg:no`.*
 
 ![Wazuh alert for Domain Admins global group change Event ID 4728](../../06-Resources/screenshots/thehive-alert/17.5.png)
-*Figure 17.8: High-severity alert for Event ID 4728 (A member was added to a security-enabled global group: Domain Admins).*
+*Figure 17.10: High-severity alert for Event ID 4728 (A member was added to a security-enabled global group: Domain Admins).*
 
 ![Wazuh alert for account attribute modification Event ID 4738](../../06-Resources/screenshots/thehive-alert/17.6.png)
-*Figure 17.9: Alert detail capturing Event ID 4738 recording the modification of the `backdoor` account attributes.*
+*Figure 17.11: Alert detail capturing Event ID 4738 recording the modification of the `backdoor` account attributes.*
 
 ## Alert observed
 
