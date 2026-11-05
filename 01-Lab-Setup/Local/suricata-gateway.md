@@ -151,11 +151,19 @@ sudo suricata-update enable-source aleksibovellan/nmap
 sudo suricata-update
 ```
 
-### Signature Provisioning & Thresholding
+### Signature Provisioning, Ruleset Curation & Tuning Decisions
 
 The production rule baseline pulls from two active rule sources:
 1. **`et/open`** — Emerging Threats Open ruleset.
-2. **`aleksibovellan/nmap`** — Targeted Nmap scanning and OS probe detection rules.
+2. **`aleksibovellan/nmap`** — Targeted Nmap scanning, OS probe, and payload detection rules.
+
+> [!NOTE]
+> **Engineering Rationale on Sensor Curation & Log Channel Separation:**  
+> - **Why `aleksibovellan/nmap` Was Integrated:** Standard ET Open scan rules are tuned for broad internet scans and frequently miss low-rate LAN port scans, stealth TCP flag probes (such as Xmas `-sX`), or specialized Metasploit staging sockets (TCP `4444`). The `aleksibovellan/nmap` ruleset provides dedicated SIDs (`3400001`, `3400002`, `3400005`, `3400020`) that caught both inbound Kali reconnaissance and internal pivot sweeps.
+> - **Custom Rules & Thresholding Rationale:** Local custom rules in `custom.rules` and rate-limiting directives in `threshold.config` prevent rapid scanner bursts from exhausting SIEM buffer queues while ensuring zero blind spots against adversary IPs (`type both` tracking).
+> - **Dual EVE Output Architecture (`eve.json` vs. `eve-alert.json`):** Suricata separates its output into two JSON channels:
+>   - `/var/log/suricata/eve.json`: Full protocol telemetry (DNS requests, HTTP transactions, flow metadata) for deep forensic network analysis.
+>   - `/var/log/suricata/eve-alert.json`: A dedicated, alerts-only stream shipped by the Wazuh Agent (`Rule 86601` / `100600`). This separation prevents Filebeat and Wazuh analysis engines from drowning in millions of raw network flow logs while ensuring high-fidelity intrusion alerts cross the SOAR threshold instantaneously.
 
 Tuning and suppression files deployed:
 - Custom detection rules: [`custom.rules`](../../06-Resources/rules/suricata/custom.rules) $\rightarrow$ `/etc/suricata/rules/custom.rules`

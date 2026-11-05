@@ -212,7 +212,7 @@ flowchart TD
     end
 
     subgraph Phase2["Phase 2: Security Gateway"]
-        P2A["Gateway VM (Dual-NIC: .232.162 / .56.150)"] --> P2B["Configure iptables NAT & Kernel IP Forwarding"]
+        P2A["Gateway VM (Dual-NIC: .232.162 / .56.150)"] --> P2B["Configure iptables FORWARD & Kernel IP Forwarding"]
         P2B --> P2C["Connect WireGuard Client (wg0: 10.8.0.2 -> 10.8.0.1)"]
         P2C --> P2D["Start Suricata NIDS (dual AF-PACKET capture on ens33 & ens37)"]
     end
@@ -234,8 +234,8 @@ flowchart TD
 | Phase | System / Host | Step-by-Step Build Order & Critical Tasks |
 |:---:|---|---|
 | **Phase 1** | **Cloud SOC Core**<br>(VM1 & VM2) | 1. Deploy VM1 (`TheHive`, `10.122.0.4`): Install Cassandra, Elasticsearch, TheHive 5, Nginx Proxy Manager, and WireGuard server (`10.8.0.1`).<br>2. Deploy VM2 (`Wazuh SIEM`, `10.122.1.4`): Install Wazuh Manager, Indexer, and Dashboard.<br>3. Peer the cloud VNets; verify bidirectional ping between `10.122.0.4` and `10.122.1.4`.<br>4. Deploy `/var/ossec/integrations/custom-thehive` and enable `thehive-flush.service`. |
-| **Phase 2** | **Security Gateway**<br>(Suricata) | 1. Provision dual-homed Ubuntu VM: `ens33` (`192.168.232.162`, NAT) and `ens37` (`192.168.56.150`, Host-Only).<br>2. Enable IPv4 forwarding (`net.ipv4.ip_forward = 1`) and configure `iptables` NAT routing.<br>3. Install WireGuard client (`wg0`, `10.8.0.2`); verify encrypted handshake with `10.8.0.1`.<br>4. Configure Suricata 8.0.6 for dual AF-PACKET capture on `ens33` and `ens37`; verify `eve-alert.json`.<br>5. Install Wazuh agent; forward Suricata alerts to Wazuh (`Rule 86601` elevation). |
-| **Phase 3** | **Victim Network**<br>(DVWA, DC, WIN10) | 1. **DVWA (`192.168.56.30`):** Set default gateway to `192.168.56.150`. Install Apache, PHP, MariaDB, and DVWA. Deploy Linux Auditd netlink rule (`-S execve -F uid=33 -k web_process_creation`). Configure passwordless sudo Python misconfiguration (`/etc/sudoers.d/dvwa`). Enroll Wazuh agent.<br>2. **PC-DC (`192.168.56.10`):** Install Windows Server 2022. Promote to Active Directory Domain Controller for `ad.lab`. Configure Kerberos SPN for service account `HANK_SHERMAN`. Deploy modular `sysmonconfig.xml` and Wazuh Windows Agent.<br>3. **WIN10 (`192.168.56.20`):** Install Windows 10 Enterprise. Set DNS to `192.168.56.10` and join `ad.lab`. Create local user `win10`. Install Sysmon and Wazuh Windows Agent. |
+| **Phase 2** | **Security Gateway**<br>(Suricata) | 1. Provision dual-homed Ubuntu VM: `ens33` (`192.168.232.162`, NAT) and `ens37` (`192.168.56.150`, Host-Only).<br>2. Enable IPv4 forwarding (`net.ipv4.ip_forward = 1`) and configure `iptables` FORWARD ACCEPT policy & Zero-NAT Kernel IP Forwarding.<br>3. Install WireGuard client (`wg0`, `10.8.0.2`); verify encrypted handshake with `10.8.0.1`.<br>4. Configure Suricata 8.0.6 for dual AF-PACKET capture on `ens33` and `ens37`; verify `eve-alert.json`.<br>5. Install Wazuh agent; forward Suricata alerts to Wazuh (`Rule 86601` elevation). |
+| **Phase 3** | **Victim Network**<br>(DVWA, DC, WIN10) | 1. **DVWA (`192.168.56.30`):** Set default gateway to `192.168.56.150`. Install Apache, PHP, MariaDB, and DVWA. Deploy Linux Auditd netlink rule (`-S execve -F uid=33 -k web_process_creation`). Configure passwordless sudo Python misconfiguration (`/etc/sudoers.d/dvwa`). Enroll Wazuh agent.<br>2. **PC-DC (`192.168.56.10`):** Install Windows Server 2022. Promote to Active Directory Domain Controller for `ad.lab`. Configure Kerberos SPN for service account `HANK_SHERMAN`. Deploy modular `sysmonconfig.xml` and Wazuh Windows Agent.<br>3. **WIN10 (`192.168.56.20`):** Install Windows 10 Pro N for Workstations. Set DNS to `192.168.56.10` and join `ad.lab`. Create local user `win10`. Install Sysmon and Wazuh Windows Agent. |
 | **Phase 4** | **Adversary Platform**<br>(Kali Linux) | 1. Deploy Kali Linux on `192.168.232.135/24` with default gateway `192.168.232.2`.<br>2. Add static route: `ip route add 192.168.56.0/24 via 192.168.232.162` (persist in `/etc/network/interfaces`).<br>3. Verify ICMP reachability to `192.168.56.30` and `192.168.56.10`.<br>4. Uncompress `/usr/share/wordlists/rockyou.txt` and prepare BloodHound 4.x GUI (`bloodhound-start`). |
 
 ---
@@ -246,14 +246,14 @@ The laboratory requires a multi-threaded physical host (or split cloud hyperviso
 
 | System / Host | VM Role | OS / Platform | vCPU | RAM | Disk | Network Interfaces |
 |---|---|---|:---:|:---:|:---:|---|
-| **VM1 (Cloud Hub)** | TheHive 5 / WireGuard / NPM | Ubuntu 24.04 LTS | 4 vCPU | 16 GB | 64 GB SSD | `eth0` (`10.122.0.4/16`), `wg0` (`10.8.0.1/24`) |
-| **VM2 (Cloud SIEM)** | Wazuh Manager / OpenSearch | Ubuntu 24.04 LTS | 4 vCPU | 16 GB | 64 GB SSD | `eth0` (`10.122.1.4/16`) |
-| **Security Gateway** | Router & Suricata NIDS | Ubuntu 24.04 LTS | 2 vCPU | 4 GB | 32 GB SSD | `ens33` (`.232.162`), `ens37` (`.56.150`), `wg0` (`10.8.0.2`) |
+| **VM1 (Cloud Hub)** | TheHive 5 / WireGuard / NPM | Ubuntu 24.04 LTS | 4 vCPU | 16 GB | 123 GB SSD | `eth0` (`10.122.0.4/16`), `wg0` (`10.8.0.1/24`) |
+| **VM2 (Cloud SIEM)** | Wazuh Manager / OpenSearch | Ubuntu 24.04 LTS | 2 vCPU | 8 GB | 64 GB SSD | `eth0` (`10.122.1.4/16`) |
+| **Security Gateway** | Router & Suricata NIDS | Ubuntu 24.04 LTS | 2 vCPU | 3 GB | 32 GB SSD | `ens33` (`.232.162`), `ens37` (`.56.150`), `wg0` (`10.8.0.2`) |
 | **DVWA Server** | Web Target & Pivot Host | Ubuntu 24.04 LTS | 2 vCPU | 4 GB | 32 GB SSD | `ens33` (`.56.30`), `ens37` (`.232.161`) |
-| **Domain Controller** | AD DS & DNS Server | Windows Server 2022 | 2 vCPU | 6 GB | 60 GB SSD | `Ethernet0` (`192.168.56.10/24`) |
-| **Windows 10** | Domain Workstation | Windows 10 Enterprise | 2 vCPU | 4 GB | 50 GB SSD | `Ethernet0` (`192.168.56.20/24`) |
+| **Domain Controller** | AD DS & DNS Server | Windows Server 2022 | 2 vCPU | 4 GB | 40 GB NVMe | `Ethernet0` (`192.168.56.10/24`) |
+| **Windows 10** | Domain Workstation | Windows 10 Pro N | 2 vCPU | 4 GB | 60 GB NVMe | `Ethernet0` (`192.168.56.20/24`) |
 | **Kali Linux** | Attacker Platform | Kali Linux 2024.x | 4 vCPU | 6 GB | 40 GB SSD | `eth0` (`192.168.232.135/24`) |
-| **TOTALS (Combined)** | **7 Dedicated VMs** | **Hybrid Cloud/Local** | **20 vCPU** | **56 GB RAM** | **342 GB SSD** | **4 Network Segments** |
+| **TOTALS (Combined)** | **7 Dedicated VMs** | **Hybrid Cloud/Local** | **18 vCPU** | **45 GB RAM** | **391 GB SSD/NVMe** | **4 Network Segments** |
 
 > [!TIP]
 > **Resource Optimization for Personal Hardware:**  
