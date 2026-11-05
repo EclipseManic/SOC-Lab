@@ -161,11 +161,11 @@ Total Attack Stages Simulated:           20  (100.0%)
 ├─ Target-Side Logging Gaps:              2  (10.0% - Stages 09, 12: Internal discovery, BloodHound)
 └─ Inherent Offline Computation Gaps:     2  (10.0% - Stages 04, 11: MD5 & NTLMv2 hash cracking)
 ─────────────────────────────────────────────────────────────────────────────
-Detection Rule Execution Failures:        0  (0.0% - All rules evaluated; 0 syntax/engine drops)
+Detection Engine Rule Execution Drops:    0  (0.0% - All rules evaluated; 0 syntax/engine drops)
 
 Operational Telemetry & Forensic Accounting:
 • Operational SOAR Alert Delivery:       16 stages (80.0% - 14 Direct + 2 Pivot-Only alerts in TheHive)
-• Endpoint Ground-Truth Command Capture: 17 stages (85.0% - Verbatim bashcmd via Rule 100220 on pivot)
+• Pivot Host Command Forensics:          50 interactive root commands captured across 11 lateral/AD attack stages (100% of pivot CLI activity via Rule 100220)
 • Total OpenSearch Raw Baseline Events:  9,567 rows (Wazuh-Raw-Alerts.csv)
 • Curated Incident Analysis Set:         808 rows (wazuh_alerts.csv - 11 Exclusion Filters)
 • Live Actionable Incidents in TheHive:  46 alerts (thehive_alerts.json - Level >= 8)
@@ -182,8 +182,8 @@ Operational Telemetry & Forensic Accounting:
 >   - *DCSync (Row 9274):* `python3 /usr/local/bin/secretsdump.py ad.lab/HANK_SHERMAN:'Password123'@192.168.56.10 -outputfile /tmp/dcsync_output`
 >   - *Golden Ticket (Row 9306):* `python3 /usr/local/bin/ticketer.py -nthash 611a8cdcc21cb3fe3bf3a4c2f4e05f60 -domain-sid S-1-5-21-3315718683-193253855-3518612541 -domain ad.lab Administrator`
 > - **Stage 12 Alignment (Target Logging Gap DG-12):** Stage 12 is classified under Target-Side Logging Gaps because Domain Controller `PC-DC` lacked Event ID 1644 LDAP query auditing. However, the BloodHound Python execution was captured on the pivot host via Rule 100220 (Row 9259: `cd /tmp && python3 -m bloodhound -d ad.lab -u win10 -p 'Secur3Lab!' -dc PC-DC.ad.lab -ns 192.168.56.10 -c All --zip`), and its staging session triggered TheHive Alert 10.
-> - **Accounting for Rule Failures vs. Forwarding Gate:** Detection Rule Execution Failures remain **0 (0.0%)** because no detection rule syntax failed or dropped packets unexpectedly. Domain Controller Event IDs 4662 (DCSync) and 4769 (Golden Ticket presentation) were successfully logged in local `Security.evtx` and evaluated by Wazuh at Level 5; they did not escalate to TheHive because the `ossec.conf` integration gate requires `<level>8</level>`. This represents an intentional **SIEM Forwarding Gate / Severity Filter Limit** rather than a rule execution failure.
-> - **Encrypted Transport Limit (`DG-19` — Stage 19):** Exfiltration in Stage 19 was directly detected via auth rate anomaly (Wazuh Rule 5715, Alert #37: 6 rapid SSH sessions in 0.57s). `DG-19` documents the architectural limit that SSH transport encryption prevented Suricata NIDS from reading plaintext document filenames on the wire.
+> - **Accounting for Rule Drops vs. Forwarding Gate:** Detection Engine Rule Execution Drops remain **0 (0.0%)** because no detection rule syntax failed, dropped packets unexpectedly, or crashed the engine. Domain Controller Event IDs 4662 (DCSync) and 4769 (Golden Ticket presentation) were successfully logged in local `Security.evtx` and evaluated by Wazuh at Level 5; they did not escalate to TheHive because the `ossec.conf` integration gate requires `<level>8</level>`. This represents an intentional **SIEM Forwarding Gate / Severity Filter Limit** rather than an engine execution failure.
+> - **Encrypted Transport Limit (`DG-19` — Stage 19):** Exfiltration in Stage 19 was directly detected via auth rate anomaly (Wazuh Rule 5715, Alert #37: 6 rapid SSH sessions in 0.57s). `DG-19` documents the wire protocol inspection boundary where SSH transport encryption prevented Suricata NIDS from reading plaintext document filenames on the wire; it is an architectural inspection limitation on a detected stage, not one of the 4 stage detection gaps.
 
 ### Analytical Detection Framework: Stage-Level vs. Activity-Wise Reality
 
