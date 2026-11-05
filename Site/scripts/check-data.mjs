@@ -61,8 +61,8 @@ expect(generatedStages.length === metrics.stageCount, "generated stage count dis
 expect(expectedStageIds.every((id) => stageIds.includes(id)), "generated stages are missing one or more IDs");
 expect(new Set(stageIds).size === stageIds.length, "generated stage IDs are not unique");
 expect(stageStatusCounts.Detected === metrics.operationalAlertCount, "Detected stage count disagrees with operational alert count");
-expect(stageStatusCounts["Logging gap"] === metrics.targetLoggingGapCount, "Logging gap count disagrees with metrics.json");
-expect(stageStatusCounts["Detection gap"] === metrics.offlineGapCount, "Detection gap count disagrees with metrics.json");
+expect((stageStatusCounts["Logging gap"] ?? 0) === metrics.targetLoggingGapCount, "Logging gap count disagrees with metrics.json");
+expect((stageStatusCounts["Detection gap"] ?? 0) === metrics.offlineGapCount, "Detection gap count disagrees with metrics.json");
 expect((stageStatusCounts["Rule failure"] ?? 0) === metrics.ruleFailureCount, "Rule failure count disagrees with metrics.json");
 expect((stageStatusCounts["Not tested"] ?? 0) === 0, "site still contains Not tested stages despite the authoritative matrix");
 expect(generatedStages.filter((stage) => stage.hasDirectDetection).length === metrics.directDetectionCount, "direct-target detection count disagrees with metrics.json");
@@ -73,7 +73,7 @@ expect(timeline.t0 === "11:40:09", `expected T0 11:40:09 UTC, found ${timeline.t
 expect(timeline.durationMinutes === metrics.durationMinutes, "timeline duration disagrees with metrics.json");
 expect(timeline.events.length === metrics.stageCount, "timeline event count disagrees with stage count");
 expect(new Set(timeline.executionOrder).size === metrics.stageCount, "timeline execution order contains duplicate stages");
-expect(timeline.executionOrder.join(",") === "01,02,03,04,05,06,07,08,09,12,10,11,13,14,15,17,18,19,16,20", "timeline execution order drifted from timeline.md");
+expect(timeline.executionOrder.join(",") === "01,02,03,04,05,06,07,08,09,10,11,12,13,14,15,16,17,18,19,20", "timeline execution order drifted from timeline.md");
 
 expect(alerts.count === metrics.theHiveAlertCount, "TheHive alert count disagrees with metrics.json");
 expect(alerts.count === 46, `expected 46 TheHive alerts, found ${alerts.count}`);

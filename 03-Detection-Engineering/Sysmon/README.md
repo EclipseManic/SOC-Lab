@@ -20,10 +20,10 @@ In this lab, Sysmon is deployed using a tailored, high-signal 90-line baseline (
 
 | Event ID | Sysmon Event Name | Active Filters & Monitored Objects | Telemetry Status in Campaign Dataset |
 |---|---|---|---|
-| **EID 1** | Process Creation | Command-line logging, ParentImage `WmiPrvSE.exe`, `ADMIN$\__`, 13 target binaries (`cmd.exe`, `powershell.exe`, `pwsh.exe`, `whoami.exe`, `net.exe`, `net1.exe`, `nltest.exe`, `dsquery.exe`, `klist.exe`, `reg.exe`, `schtasks.exe`, `certutil.exe`, `rundll32.exe`) | **Active Alerting (73 rows in raw export)** — Traced Impacket `wmiexec` child processes in Stages 15, 17, 18, 20 |
+| **EID 1** | Process Creation | Command-line logging, ParentImage `WmiPrvSE.exe`, `ADMIN$\__`, 13 target binaries (`cmd.exe`, `powershell.exe`, `pwsh.exe`, `whoami.exe`, `net.exe`, `net1.exe`, `nltest.exe`, `dsquery.exe`, `klist.exe`, `reg.exe`, `schtasks.exe`, `certutil.exe`, `rundll32.exe`) | **Active Alerting (182 rows in raw export (167 in filtered analysis set))** — Traced Impacket `wmiexec` child processes in Stages 15, 17, 18, 20 |
 | **EID 3** | Network Connection | Ports 445 (SMB), 135 (RPC), 389/636 (LDAP), 5985/5986 (WinRM), 88 (Kerberos) | **Telemetry Baseline Collected** — Ingested by agent; no independent alert rows generated |
 | **EID 11** | File Creation | Executables, scripts, and images written to `C:\Users\Public\` and `\Temp\` (`.bmp`, `.exe`, `.ps1`, `.vbs`) | **Telemetry Baseline Collected** — Monitored on disk; no independent alert rows generated |
-| **EID 12/13** | Registry Modification | Autostarts (`Run`, `RunOnce`), `Winlogon`, `Services`, `IFEO`, `Shell Folders`, Desktop `Wallpaper` | **Telemetry Baseline Collected** — Registry audited; Sysmon EID 13 captured wallpaper change |
+| **EID 12/13** | Registry Modification | Autostarts (`Run`, `RunOnce`), `Winlogon`, `Services`, `IFEO`, `Shell Folders`, Desktop `Wallpaper` | **Telemetry Baseline Collected** — Registry audited; Sysmon EID 1 (reg.exe process command line) captured wallpaper change |
 | **EID 17/18** | Named Pipe Events | Watches `spoolss`, `atsvc`, `svcctl`, `wmiexec` | **Telemetry Baseline Collected** — Impacket `wmiexec` uses WMI DCOM and SMB file staging rather than named pipes; pipe rule did not fire |
 
 > [!NOTE]

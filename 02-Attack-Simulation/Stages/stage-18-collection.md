@@ -68,10 +68,10 @@ Using native command concatenation, the attacker executed `cmd /c "type C:\Users
 *Figure 18.5: TheHive alert dashboard showing process fan-out alerts generated on both DomainWin10 (DC) and Win10User endpoints.*
 
 ![Wazuh alert on PC-DC detecting net user and whoami collection output redirection](../../06-Resources/screenshots/thehive-alert/18.1.png)
-*Figure 18.4: Wazuh Sysmon alert (Rule 100613) capturing command execution on PC-DC writing `domain_users.txt` and `admin_info.txt`.*
+*Figure 18.6: Wazuh Sysmon alert (Rule 100613) capturing command execution on PC-DC writing `domain_users.txt` and `admin_info.txt`.*
 
 ![Wazuh alert on Win10 detecting type command data aggregation](../../06-Resources/screenshots/thehive-alert/18.2.png)
-*Figure 18.5: Wazuh Sysmon alert (Rule 100613) on Win10 workstation detecting sensitive data aggregation to `sensitive_data.txt`.*
+*Figure 18.7: Wazuh Sysmon alert (Rule 100613) on Win10 workstation detecting sensitive data aggregation to `sensitive_data.txt`.*
 
 ## Alert observed
 

@@ -12,16 +12,16 @@
     "07",
     "08",
     "09",
-    "12",
     "10",
     "11",
+    "12",
     "13",
     "14",
     "15",
+    "16",
     "17",
     "18",
     "19",
-    "16",
     "20"
   ],
   "events": [
@@ -46,7 +46,7 @@
       "endOffsetSeconds": 480,
       "timestamp": "11:48:02",
       "telemetryEvent": "Automated Python credential brute force on /login.php",
-      "sourceSensor": "Wazuh Rule 100213 / Suricata SID 2017515, 2000547",
+      "sourceSensor": "Suricata SID 2017515 + Custom Rule 100600 (TheHive Alert 11) / Apache 401 Logs",
       "evidenceReference": "TheHive Alert 2 · Wazuh Telemetry wzb-09"
     },
     {
@@ -58,7 +58,7 @@
       "endOffsetSeconds": 600,
       "timestamp": "11:49:58",
       "telemetryEvent": "SQL injection UNION SELECT payload extracting users table",
-      "sourceSensor": "Suricata SID 2010963 / Wazuh Rule 31106",
+      "sourceSensor": "Suricata SID 2010963 / Wazuh Rule 31106 (Alert #11 sub-events)",
       "evidenceReference": "TheHive Alert 3 · Wazuh Telemetry wzb-11"
     },
     {
@@ -69,8 +69,8 @@
       "offsetSeconds": 660,
       "endOffsetSeconds": 660,
       "timestamp": null,
-      "telemetryEvent": "Database user hash exfiltrated and cracked; subsequent admin session authenticated",
-      "sourceSensor": "Suricata SID 2010963 / Wazuh Rule 31106 correlation",
+      "telemetryEvent": "Database user hash exfiltrated and cracked on attacker GPU",
+      "sourceSensor": "Offline GPU Hashcat Execution (Zero Victim Telemetry)",
       "evidenceReference": "Wazuh Telemetry wzb-11 · Initial Triage slot_03"
     },
     {
@@ -82,7 +82,7 @@
       "endOffsetSeconds": 720,
       "timestamp": "11:51:58",
       "telemetryEvent": "Executable PHP web shell executed (id command output)",
-      "sourceSensor": "Suricata SID 2019284 / Wazuh 100199 / Auditd",
+      "sourceSensor": "Suricata SIDs 2014726, 2019284 / Wazuh Rule 100600 / Auditd execve",
       "evidenceReference": "TheHive Alert 4 · Wazuh Telemetry wzb-12"
     },
     {
@@ -94,7 +94,7 @@
       "endOffsetSeconds": 840,
       "timestamp": "11:54:03",
       "telemetryEvent": "Named-pipe FIFO Netcat reverse shell connecting on TCP 4444",
-      "sourceSensor": "Suricata SID 3400020 / Wazuh Rule 100199",
+      "sourceSensor": "Suricata SID 3400020 / Auditd nc.openbsd",
       "evidenceReference": "TheHive Alert 5 · Wazuh Telemetry wzb-15"
     },
     {
@@ -135,39 +135,39 @@
     },
     {
       "order": 10,
-      "stageId": "12",
-      "phase": "Discovery",
-      "elapsedLabel": "T0 + 24m (12:04:27)",
+      "stageId": "10",
+      "phase": "Credential Access",
+      "elapsedLabel": "T0 + 24m-27m (12:04:27-12:07:10)",
       "offsetSeconds": 1440,
-      "endOffsetSeconds": 1440,
+      "endOffsetSeconds": 1620,
       "timestamp": "12:04:27",
-      "telemetryEvent": "SharpHound/BloodHound LDAP query sweep targeting PC-DC",
-      "sourceSensor": "Wazuh Rule 5715 / Wazuh Rule 100220 (bloodhound.py)",
-      "evidenceReference": "TheHive Alert 10 · Wazuh Telemetry wzb-31"
+      "telemetryEvent": "Responder launched on DVWA capturing win10 hash & DavSetCookie coerced auth",
+      "sourceSensor": "Win10User Sysmon EID 1 DavSetCookie + DVWA Rule 100220 (bashcmd: Responder.py)",
+      "evidenceReference": "TheHive Alert 9 · Wazuh Telemetry wzb-28"
     },
     {
       "order": 11,
-      "stageId": "10",
+      "stageId": "11",
       "phase": "Credential Access",
-      "elapsedLabel": "T0 + 26m (12:06:26)",
-      "offsetSeconds": 1560,
-      "endOffsetSeconds": 1560,
-      "timestamp": "12:06:26",
-      "telemetryEvent": "Responder launched on DVWA capturing win10 hash",
-      "sourceSensor": "Wazuh Rule 100220 (bashcmd: uid:0 Responder.py & hash copy)",
-      "evidenceReference": "TheHive Alert 9 · Wazuh Telemetry wzb-27"
+      "elapsedLabel": "T0 + 35m (12:15:00)",
+      "offsetSeconds": 2100,
+      "endOffsetSeconds": 2100,
+      "timestamp": "12:15:00",
+      "telemetryEvent": "Harvested NetNTLMv2 hash cracked on attacker GPU",
+      "sourceSensor": "Offline GPU Hashcat Execution (Zero Victim Telemetry)",
+      "evidenceReference": "Wazuh Telemetry wzb-29 · Wazuh Telemetry wzb-32"
     },
     {
       "order": 12,
-      "stageId": "11",
-      "phase": "Credential Access",
-      "elapsedLabel": "T0 + 29m",
-      "offsetSeconds": 1740,
-      "endOffsetSeconds": 1740,
-      "timestamp": null,
-      "telemetryEvent": "Harvested NetNTLMv2 hash verified via authenticated internal domain queries",
-      "sourceSensor": "Windows EID 4624 (Logon Type 3) correlation",
-      "evidenceReference": "Wazuh Telemetry wzb-29 · Wazuh Telemetry wzb-32"
+      "stageId": "12",
+      "phase": "Discovery",
+      "elapsedLabel": "T0 + 50m (12:30:57)",
+      "offsetSeconds": 3000,
+      "endOffsetSeconds": 3000,
+      "timestamp": "12:30:57",
+      "telemetryEvent": "SharpHound/BloodHound AD enumeration targeting PC-DC & Win10",
+      "sourceSensor": "PC-DC & Win10 Custom Rule 100615 + Rule 92657 + Rule 100220 (bloodhound.py)",
+      "evidenceReference": "TheHive Alert 10 · Wazuh Telemetry wzb-31"
     },
     {
       "order": 13,
@@ -178,7 +178,7 @@
       "endOffsetSeconds": 3060,
       "timestamp": "12:31:18",
       "telemetryEvent": "Kerberoasting TGS request for HANK_SHERMAN SPN",
-      "sourceSensor": "Suricata SID 2019922 (ens37 - ET EXPLOIT Possible GoldenPac Priv Esc in-use) & Wazuh Rule 100220 (GetUserSPNs.py)",
+      "sourceSensor": "Suricata SID 2019922 (ens37 - ET EXPLOIT GoldenPac) & Wazuh Rule 100220 (GetUserSPNs.py)",
       "evidenceReference": "TheHive Alert 11 · Wazuh Telemetry wzb-33"
     },
     {
@@ -190,7 +190,7 @@
       "endOffsetSeconds": 3180,
       "timestamp": "12:33:52",
       "telemetryEvent": "Impacket secretsdump.py DRSUAPI directory replication",
-      "sourceSensor": "Wazuh Rule 5715 / Wazuh Rule 100220 (secretsdump.py)",
+      "sourceSensor": "PC-DC Custom Rule 100603 + Rule 92657 + Rule 100220 (secretsdump.py) + Queue Overflow",
       "evidenceReference": "TheHive Alert 12 · Wazuh Telemetry wzb-34"
     },
     {
@@ -202,11 +202,23 @@
       "endOffsetSeconds": 3300,
       "timestamp": "12:34:47",
       "telemetryEvent": "Pass-the-Hash remote logon Type 3 & Impacket WMI fan-out",
-      "sourceSensor": "Windows EID 4624 (24x in CSV) / Wazuh Rule 100613",
+      "sourceSensor": "Windows EID 4624 (Rule 92657) / Wazuh Rule 100613",
       "evidenceReference": "TheHive Alert 13 · Wazuh Telemetry wzb-35"
     },
     {
       "order": 16,
+      "stageId": "16",
+      "phase": "Privilege Escalation",
+      "elapsedLabel": "T0 + 56m (12:36:40)",
+      "offsetSeconds": 3360,
+      "endOffsetSeconds": 3360,
+      "timestamp": "12:36:40",
+      "telemetryEvent": "Forged Kerberos TGT (Golden Ticket) & wmiexec execution",
+      "sourceSensor": "PC-DC Custom Rule 100603 + Rule 100615 + TheHive Alerts #27, #28 (Rule 100613)",
+      "evidenceReference": "TheHive Alert 14 · Wazuh Telemetry wzb-38"
+    },
+    {
+      "order": 17,
       "stageId": "17",
       "phase": "Persistence",
       "elapsedLabel": "T0 + 58m (12:38:21)",
@@ -214,11 +226,11 @@
       "endOffsetSeconds": 3480,
       "timestamp": "12:38:21",
       "telemetryEvent": "Rogue domain user backdoor created and added to DA",
-      "sourceSensor": "Wazuh Rule 100613 (WMI Fan-out: net user, net localgroup)",
+      "sourceSensor": "Wazuh Rule 100613 (WMI Fan-out) / Windows EID 4720 (Rule 60109) & EID 4728 (Rule 60159)",
       "evidenceReference": "TheHive Alert 15 · Wazuh Telemetry wzb-44"
     },
     {
-      "order": 17,
+      "order": 18,
       "stageId": "18",
       "phase": "Collection",
       "elapsedLabel": "T0 + 64m (12:43:58)",
@@ -226,11 +238,11 @@
       "endOffsetSeconds": 3840,
       "timestamp": "12:43:58",
       "telemetryEvent": "Host reconnaissance harvesting commands & staging",
-      "sourceSensor": "Wazuh Rule 100613 (Fan-out: whoami, net user, net group)",
+      "sourceSensor": "Wazuh Rule 100613 (Fan-out) / Sysmon EID 1 (Rules 100271, 100272, 100275)",
       "evidenceReference": "TheHive Alert 16 · Wazuh Telemetry wzb-49"
     },
     {
-      "order": 18,
+      "order": 19,
       "stageId": "19",
       "phase": "Exfiltration",
       "elapsedLabel": "T0 + 67m (12:47:30)",
@@ -238,20 +250,8 @@
       "endOffsetSeconds": 4020,
       "timestamp": "12:47:30",
       "telemetryEvent": "Rapid SCP burst transferring files from pivot to Kali",
-      "sourceSensor": "Wazuh Rule 5715 (Logon burst: 6 sessions / 1s)",
+      "sourceSensor": "Wazuh Rule 5715 (Logon burst: 6 sessions / 0.57s; Alert #37)",
       "evidenceReference": "TheHive Alert 17 · Wazuh Telemetry wzb-53"
-    },
-    {
-      "order": 19,
-      "stageId": "16",
-      "phase": "Privilege Escalation",
-      "elapsedLabel": "T0 + 69m (12:49:02)",
-      "offsetSeconds": 4140,
-      "endOffsetSeconds": 4140,
-      "timestamp": "12:49:02",
-      "telemetryEvent": "Forged Kerberos TGT (Golden Ticket) tested via pivot",
-      "sourceSensor": "Wazuh Rule 5715 / Wazuh Rule 100220 (ticketer.py)",
-      "evidenceReference": "TheHive Alert 14 · Wazuh Telemetry wzb-38"
     },
     {
       "order": 20,
@@ -262,7 +262,7 @@
       "endOffsetSeconds": 4440,
       "timestamp": "12:49:49",
       "telemetryEvent": "Impacket wmiexec registry autostart & SMB execution",
-      "sourceSensor": "Wazuh Rule 100613 / Sysmon EID 1 / Suricata SIDs 2067085-87",
+      "sourceSensor": "Wazuh Rule 100613 / Sysmon EID 1 (Rule 92041) / Suricata SIDs 2067085-87",
       "evidenceReference": "TheHive Alert 18 · Wazuh Telemetry wzb-57"
     }
   ]

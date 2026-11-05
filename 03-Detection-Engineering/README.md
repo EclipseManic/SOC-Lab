@@ -60,7 +60,7 @@ When evaluating detection engineering effectiveness, measuring solely by coarse 
 | **Initial Access** | HTTP POST login brute force (`python-requests`) | DVWA | Wazuh Manager | Rule 100213 (Brute force burst) | [Alert 2](../06-Resources/screenshots/thehive-alert/2.png) · [wzb-09](../06-Resources/screenshots/wazuh-deep-investigation/wzb-09-bruteforce-dvwa-login-endpoint.jpg) | **DETECTED** |
 | **Credential Theft** | SQLi `1' UNION SELECT user, password` | DVWA | Suricata / Wazuh | SID 2010963 / Rule 31106 | [Alert 3](../06-Resources/screenshots/thehive-alert/3.png) · [wzb-11](../06-Resources/screenshots/wazuh-deep-investigation/wzb-11-sqli-suricata-select-user.jpg) | **DETECTED** |
 | **Credential Abuse** | Admin authentication with cracked password | DVWA | Apache / Wazuh | POST `/login.php` (200 OK) | [Alert 3](../06-Resources/screenshots/thehive-alert/3.png) · [wzb-11](../06-Resources/screenshots/wazuh-deep-investigation/wzb-11-sqli-suricata-select-user.jpg) | **DETECTED** |
-| **Persistence** | Upload of `shell.php` via web form | DVWA | Apache / Wazuh | Rule 100199 (Webshell upload) | [Alert 4](../06-Resources/screenshots/thehive-alert/4.png) · [wzb-12](../06-Resources/screenshots/wazuh-deep-investigation/wzb-12-webshell-dvwa-post-upload.jpg) | **DETECTED** |
+| **Persistence** | Upload of `shell.php` via web form | DVWA | Apache / Wazuh | Suricata SIDs 2014726 & 2019284 via Wazuh Rule 100600 (Webshell upload) and Auditd execve (Rule 100199) | [Alert 4](../06-Resources/screenshots/thehive-alert/4.png) · [wzb-12](../06-Resources/screenshots/wazuh-deep-investigation/wzb-12-webshell-dvwa-post-upload.jpg) | **DETECTED** |
 | **Execution** | Invocation of `shell.php?cmd=id` | DVWA | Suricata / Auditd | SID 2019284 / `execve` `/usr/bin/id` | [Alert 4.1](../06-Resources/screenshots/thehive-alert/4.1.png) · [wzb-13](../06-Resources/screenshots/wazuh-deep-investigation/wzb-13-webshell-auditd-id-command.jpg) | **DETECTED** |
 | **Execution** | Named pipe FIFO Netcat reverse shell on TCP 4444 | DVWA | Suricata Gateway | SID 3400020 (Outbound TCP 4444) | [Alert 5](../06-Resources/screenshots/thehive-alert/5.png) · [wzb-15](../06-Resources/screenshots/wazuh-deep-investigation/wzb-15-revshell-auditd-stty-sane.jpg) | **DETECTED** |
 | **Privilege Escalation** | `sudo /usr/bin/python3` (GTFOBins) | DVWA | Linux PAM / Auditd | Wazuh 5402 / `web_process_creation` | [Alert 6](../06-Resources/screenshots/thehive-alert/6.png) · [wzb-17](../06-Resources/screenshots/wazuh-deep-investigation/wzb-17-privesc-pam-sudo-python-root.jpg) | **DETECTED** |
@@ -202,7 +202,7 @@ Here are the three biggest challenges we tackled:
   We replaced Shuffle with a custom, high-speed Python automation pipeline:
 
 [![Wazuh-TheHive Neon Alert Pipeline](../06-Resources/diagrams/Wazuh-TheHive%20Neon%20Alert%20Pipeline.png)](../06-Resources/diagrams/Wazuh-TheHive%20Neon%20Alert%20Pipeline.png)
-*Figure 3: Two-tier asynchronous alert correlation pipeline from Wazuh Manager Level ≥ 8 trigger into TheHive 5 case management.*
+*Figure 4: Two-tier asynchronous alert correlation pipeline from Wazuh Manager Level ≥ 8 trigger into TheHive 5 case management.*
 
   - **Tier 1 (Instant Local Buffer — Zero HTTP):** When an alert ($\ge 8$) fires, Wazuh executes `/var/ossec/integrations/custom-thehive`. Instead of making network calls, this lightweight script writes the alert JSON into a local SQLite database running in Write-Ahead Logging (WAL) mode. This executes in under **0.2 milliseconds** locally. The Wazuh engine never freezes or drops an alert.
   - **Tier 2 (Smart Asynchronous Daemon):** A background systemd daemon (`thehive-flush.service`) wakes up every 5 seconds. It reads pending records from SQLite, applies regex tool fingerprinting (identifying Nmap, Nikto, Hydra, sqlmap), groups related bursts into a single case, and pushes clean, organized incident batches to TheHive 5 over private VNet peering.
@@ -214,7 +214,7 @@ Here are the three biggest challenges we tackled:
 ### Challenge 3: The Honest Gap Register (Why 80% Detection is Real Security)
 In junior cybersecurity labs, people often claim "100% detection rate." In real enterprise security, 100% detection is impossible. 
 
-We achieved an **80% operational alert coverage rate (16 of 20 stages caught in SOAR)**, backed by **14 direct target detections (70%)** and **2 pivot-only coverage stages (10%)**. More importantly, we cataloged the **4 documented stage-level gaps (20%)** plus **1 protocol payload inspection limitation on a detected stage**:
+We achieved a **90% direct target detection rate (18 of 20 stages caught directly on endpoints or network wire)** and a **90% operational alert coverage rate (18 of 20 stages delivering actionable alerts)**, backed by empirical sensor telemetry across all online stages. More importantly, we cataloged the **4 documented stage-level gaps (20%)** plus **1 protocol payload inspection limitation on a detected stage**:
 
 #### The 4 Documented Stage Detection Gaps (20.0%)
 1. **Stage 04 — Inherent Offline Password Hash Cracking (Hashcat MD5):**

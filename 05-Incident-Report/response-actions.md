@@ -131,7 +131,7 @@ All containment and eradication procedures were executed through centralized ent
 ### Step 1: Adversary Anti-Forensics Audit & Network Service Restoration
 - **Target:** DVWA Server (`192.168.56.30`)
 - **Actions:**
-  - Audited root command history (`history | grep "rm"`) and Auditd execution logs, uncovering the adversary's track-covering deletion of all 9 staging files in `/tmp/` (`/tmp/win10.hash`, `/tmp/hank.hash`, `/tmp/dcsync_output.txt`, `/tmp/admin.ccache`, `/tmp/domain_users.txt`, `/tmp/admin_info.txt`, `/tmp/sensitive_data.txt`, `/tmp/hacked.bmp`, `/tmp/f`).
+  - Audited root command history (`history | grep "rm"`) and Auditd execution logs, uncovering the adversary's track-covering deletion of all 9 staging files in `/tmp/` (`/tmp/win10.hash`, `/tmp/hank.hash`, `/tmp/dcsync_output.ntds`, `/tmp/Administrator.ccache`, `/tmp/domain_users.txt`, `/tmp/admin_info.txt`, `/tmp/sensitive_data.txt`, `/tmp/hacked.bmp`, `/tmp/f`).
   - Verified clean `/tmp/` state with `ls -la /tmp/` and confirmed zero unlinked open file descriptors remain via `lsof +L1 /tmp`.
   - Recursive removal of rogue Responder installation: `rm -rf /opt/Responder /opt/impacket`.
   - Operational restoration of local DNS stub resolver: `systemctl unmask systemd-resolved && systemctl enable --now systemd-resolved`.

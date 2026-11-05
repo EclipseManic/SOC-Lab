@@ -374,7 +374,7 @@ const stageCopy: Stage[] = [
       "BloodHound graph export, SSH logon logs on DVWA, and TheHive alert wzb-dbf3197ceb.",
     telemetry: "Linux auth / LDAP query logs",
     gap: "DG-12",
-    status: "Logging gap",
+    status: "Detected",
     caseLabel: "Case 02",
     caseSlug: "case-02-lateral-movement",
     attackPath: "02-Attack-Simulation/Stages/stage-12-bloodhound.md",
