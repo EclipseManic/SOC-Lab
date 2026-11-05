@@ -7,7 +7,7 @@
 
 ## Objective
 
-Forge an Active Directory Kerberos Ticket Granting Ticket (TGT) using the extracted KRBTGT domain account NTLM hash, securing indefinite, undetectable administrative persistence and unrestricted access across all systems in the `ad.lab` domain.
+Forge a Kerberos Ticket Granting Ticket (TGT) using the dumped KRBTGT password hash. This gives us perpetual, unrestricted administrative persistence across every machine in the `ad.lab` domain that survives standard user password rotations.
 
 ## Commands
 
@@ -29,13 +29,12 @@ hostname
 
 ## What happened
 
-Having dumped the Active Directory password hashes via DCSync in Stage 14, the adversary obtained the master NTLM hash for the Kerberos Key Distribution Center service account (`krbtgt`). In this stage, the adversary capitalized on that master credential to construct a Golden Ticket, representing complete and persistent ownership of the Active Directory domain.
+Once you have the NTLM hash for the Kerberos service account (`krbtgt`), you own the domain's trust architecture. You don't need to steal anyone else's password—you can literally forge your own golden ticket that tells every server in the domain that you are the Administrator:
 
-Operating from the compromised DVWA pivot host (`192.168.56.30`), the attacker first obtained the domain's unique Security Identifier (SID) by executing Impacket's `lookupsid.py` against the Domain Controller (`192.168.56.10`) using the previously compromised domain credentials of `HANK_SHERMAN`. The tool identified the Domain SID as `S-1-5-21-3315718683-193253855-3518612541`.
-
-With the Domain SID and the extracted `krbtgt` hash (`611a8***f60`), the adversary ran Impacket's `ticketer.py` to synthesize a valid Kerberos Ticket Granting Ticket (TGT) for the `Administrator` account. The ticket incorporated simulated Privilege Attribute Certificate (PAC) information (`PAC_LOGON_INFO`, `PAC_CLIENT_INFO_TYPE`) and encrypted the authorization data using the KRBTGT key, writing the output ticket to `/tmp/Administrator.ccache`.
-
-To validate the ticket, the attacker exported the environment variable `KRB5CCNAME=/tmp/Administrator.ccache` and launched Impacket's `wmiexec.py` with Kerberos authentication enabled (`-k -no-pass`), targeting `PC-DC.ad.lab`. The Domain Controller accepted the forged TGT, issued a service ticket for WMI/SMB access, and established a semi-interactive shell. Verification commands `whoami` and `hostname` confirmed execution as `ad.lab\administrator` directly on the primary Domain Controller (`PC-DC`). Because the TGT was forged offline using the master service key, the attacker retained administrative access that survives standard user password rotations.
+1. **Looking up the Domain SID:** Operating from our DVWA pivot (`192.168.56.30`), I first queried the unique domain Security Identifier (SID) using Impacket's `lookupsid.py` against `PC-DC.ad.lab` (`192.168.56.10`) with Hank Sherman's credentials. It returned Domain SID `S-1-5-21-3315718683-193253855-3518612541`.
+2. **Forging the Golden Ticket:** Armed with the Domain SID and the `krbtgt` hash (`611a8***f60`), I ran Impacket's `ticketer.py` to forge a valid Kerberos Ticket Granting Ticket (TGT) for `Administrator`. The ticket included forged Privilege Attribute Certificate (PAC) data and was encrypted directly with the KRBTGT key, writing the ticket file to `/tmp/Administrator.ccache`.
+3. **Logging in password-free with Kerberos:** I loaded the ticket into my environment (`export KRB5CCNAME=/tmp/Administrator.ccache`) and launched `wmiexec.py` with Kerberos authentication enabled (`-k -no-pass`) against `PC-DC.ad.lab`.
+4. **DC takeover confirmed:** The Domain Controller validated the forged ticket against its own KRBTGT key, issued a service ticket for WMI/SMB, and granted an administrative shell without asking for a password. Checking `whoami` and `hostname` confirmed we were executing as `ad.lab\administrator` directly on `PC-DC`.
 
 ## Evidence
 

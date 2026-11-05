@@ -9,7 +9,7 @@
 
 ## Objective
 
-Recover the plaintext Active Directory credentials for the domain user account `win10` from the NetNTLMv2 challenge-response hashes captured during Stage 10 (LLMNR/NBT-NS spoofing via Responder on the Linux pivot host). These recovered domain credentials will serve as the initial authenticated foothold for Active Directory enumeration and lateral movement across the `ad.lab` domain.
+Crack the plaintext Active Directory password for user `win10` from the NetNTLMv2 hash stolen by Responder in Stage 10. Having the real password unlocks authenticated LDAP queries and BloodHound mapping in Stage 12.
 
 ---
 
@@ -31,17 +31,13 @@ hashcat -m 5600 /tmp/win10.hash /usr/share/wordlists/rockyou.txt --force
 
 ## What happened
 
-During Stage 10, Responder was executed on the compromised DVWA pivot host (`192.168.56.30`), capturing NetNTLMv2 challenge-response hashes generated when the domain workstation `WIN10` performed name resolution queries across the internal subnet.
-
-In Stage 11, the operator exfiltrated the captured hash file (`/tmp/win10.hash`) from the pivot host back to the primary Kali Linux attack machine (`192.168.232.135`) over SSH/SCP.
-
-With the hash file staged locally on Kali, `hashcat` was launched in NetNTLMv2 cracking mode (`-m 5600`) against the `rockyou.txt` dictionary file utilizing GPU acceleration (`--force`). Within seconds, Hashcat successfully matched the hash against the candidate wordlist, revealing the plaintext password:
-
-- **Target Account:** `ad.lab\win10`
-- **Hash Type:** NetNTLMv2 (Hashcat mode 5600)
-- **Recovered Plaintext Password:** `Secur***ab!` (redacted)
-
-Because NetNTLMv2 challenge-response hashes cannot be used directly in Pass-the-Hash attacks, recovering the underlying plaintext password was a prerequisite for authenticated Active Directory LDAP querying, Kerberos ticket requests, and administrative privilege escalation.
+1. **Grabbing the hash file:** In Stage 10, Responder captured the NetNTLMv2 hash when the Windows 10 client tried to resolve a nonexistent share. I copied that hash file (`/tmp/win10.hash`) from the DVWA pivot back to our Kali machine over SCP.
+2. **Cracking with Hashcat:** On Kali, I launched `hashcat` in NetNTLMv2 mode (`-m 5600`) against `rockyou.txt` using `--force`.
+3. **Password recovered:** Within seconds, Hashcat matched the hash against our candidate wordlist, revealing the plaintext password:
+   - **Target Account:** `ad.lab\win10`
+   - **Hash Type:** NetNTLMv2 (Hashcat mode 5600)
+   - **Recovered Plaintext Password:** `Secur***ab!` (redacted)
+4. **Why we needed the plaintext:** Unlike raw NTLM hashes, NetNTLMv2 challenge-response hashes cannot be used directly in Pass-the-Hash attacks. You have to recover the actual plaintext password to authenticate against Active Directory, request Kerberos tickets, and query LDAP.
 
 ---
 
@@ -112,5 +108,5 @@ While the offline cracking process itself cannot be detected on victim endpoints
 ## Notes
 
 - NetNTLMv2 challenge-response hashes incorporate client and server nonces, preventing Pass-the-Hash attacks. Cracking or relaying (if SMB signing is disabled) are the only viable attack paths.
-- The use of the leetspeak password `Secur***ab!` allowed immediate dictionary cracking with standard wordlists without requiring complex mask or rule sets.
+- The use of the dictionary word `Secur***ab!` allowed immediate cracking with standard wordlists.
 - This stage directly enabled Stage 12, where the cracked credential `win10` : `Secur***ab!` was used to authenticate to the Domain Controller and execute BloodHound enumeration.

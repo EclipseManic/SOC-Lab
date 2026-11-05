@@ -9,7 +9,7 @@
 
 ## Objective
 
-Enumerate Active Directory structure, user accounts, security groups, trusts, and access control lists (ACLs) using BloodHound from the compromised DVWA pivot host. Analyze the extracted graph relationships in BloodHound Community Edition to identify high-privilege attack paths, specifically targeting Kerberoastable user accounts with Domain Admin privileges.
+Map out the entire Active Directory domain topology using BloodHound from our DVWA pivot, then analyze the graph in BloodHound Community Edition to find the quickest path to Domain Admin—specifically looking for Kerberoastable admin accounts.
 
 ---
 
@@ -36,23 +36,17 @@ MATCH (u:User)-[:MemberOf*1..]->(g:Group) WHERE u.hasspn=true AND g.name =~ "(?i
 
 ## What happened
 
-With the valid domain credentials recovered in Stage 11 (`win10` : `Secur***ab!`), the adversary leveraged the compromised Linux host (`192.168.56.30`) as an internal pivot to perform comprehensive Active Directory enumeration.
+Armed with valid domain credentials from Stage 11 (`win10` : `Secur***ab!`), I used the DVWA pivot (`192.168.56.30`) to map the entire Active Directory domain:
 
-1. **Active Directory Collection:**  
-   The operator executed `bloodhound.py` against Domain Controller `PC-DC.ad.lab` (`192.168.56.10`). Using standard LDAP and SAMR RPC queries with domain user privileges, the collector successfully enumerated 1 domain, 1 Active Directory forest, and 101 computer objects, archiving the resulting JSON dataset into a 13 MB compressed archive (`20260926063108_bloodhound.zip`).
-
-2. **Data Exfiltration & Service Initialization:**  
-   The compressed BloodHound archive was exfiltrated from `/tmp` on the pivot host to the Kali attack machine via SCP. The operator initiated the Neo4j database and BloodHound Community Edition web service, accessing the graphical user interface on `http://127.0.0.1:8080`.
-
-3. **Graph Ingestion:**  
-   After authenticating to BloodHound CE, the operator navigated to "Quick Upload" and uploaded `20260926063108_bloodhound.zip`. The graph database ingested all node types (Users, Groups, Computers, Domains, GPOs, and OUs) and their relationship edges.
-
-4. **Attack Path Analysis & Discovery:**  
-   - Executing Cypher query `MATCH (u:User) WHERE u.hasspn=true RETURN u` revealed **51 Kerberoastable user accounts** configured with Active Directory Service Principal Names (SPNs).
-   - Executing targeted Cypher query `MATCH (u:User)-[:MemberOf*1..]->(g:Group) WHERE u.hasspn=true AND g.name =~ "(?i)domain admins.*" RETURN u` isolated a critical escalation path: **`HANK_SHERMAN@AD.LAB`**.
-   - Inspection of object details confirmed `HANK_SHERMAN` (SID `S-1-5-21-3315718683-193253855-3518612541-2923`) resides in Tier Zero, has `Admin Count: TRUE`, is an active member of the `Domain Admins` group, and possesses an active SPN.
-
-This finding identified a direct, high-impact compromise route: requesting and cracking the Kerberos TGS ticket for `HANK_SHERMAN` would immediately elevate attacker control to full Domain Administrator privileges.
+1. **Running the collector from DVWA:** From `/tmp` on DVWA, I launched `bloodhound-python` targeting `PC-DC.ad.lab` (`192.168.56.10`). Using standard unprivileged LDAP and SAMR queries, the collector pulled down the entire domain directory—101 computers, groups, and users—and bundled the JSON into a 13 MB zip file (`20260926063108_bloodhound.zip`).
+2. **Transferring and starting BloodHound:** I copied the zip file back to Kali over SCP, started Neo4j and BloodHound Community Edition (`bloodhound-start &`), and logged into `http://127.0.0.1:8080`.
+3. **Importing the graph:** I dragged the zip file into BloodHound's Quick Upload, and the database mapped out all user relationships, group memberships, and computer sessions.
+4. **Finding the golden path to Domain Admin:**
+   - Cypher Query 1 (`MATCH (u:User) WHERE u.hasspn=true RETURN u`) revealed **51 Kerberoastable user accounts** configured with Service Principal Names (SPNs).
+   - Cypher Query 2 (`MATCH (u:User)-[:MemberOf*1..]->(g:Group) WHERE u.hasspn=true AND g.name =~ "(?i)domain admins.*" RETURN u`) pinpointed the jackpot: **`HANK_SHERMAN@AD.LAB`**.
+   - Hank Sherman had `Admin Count: TRUE`, was a direct member of `Domain Admins`, and had an active SPN.
+   
+This handed us a direct shortcut to Domain Admin: by requesting Hank's service ticket from the Domain Controller and cracking it offline, we would own the entire Active Directory domain in Stage 13.
 
 ---
 

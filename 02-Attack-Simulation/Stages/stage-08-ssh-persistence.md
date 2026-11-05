@@ -7,7 +7,7 @@
 
 ## Objective
 
-Establish persistent, encrypted remote root access to the compromised Linux host (`dvwa` at `192.168.56.30`) by injecting an attacker-controlled Ed25519 SSH public key into `/root/.ssh/authorized_keys`. This guarantees resilient, long-term administrative access that operates independently of web services, survives host reboots, and removes dependence on fragile reverse shells.
+Lock in persistent root access on DVWA (`192.168.56.30`) by adding our own Ed25519 SSH public key into `/root/.ssh/authorized_keys`. This gives us a direct, encrypted administrative door that survives reboots and doesn't rely on fragile reverse shells.
 
 > [!NOTE]
 > **Case Transition:** Stage 08 marks the official kickoff of **Case 02 (Lateral Movement and Credential Access)**. The attacker transitions from initial perimeter compromise to internal network persistence and reconnaissance.
@@ -59,11 +59,11 @@ hostname
 
 ## What happened
 
-1. **Strategic Pivot to Case 02:** Following successful root privilege escalation in Stage 07, the attacker shifted objectives toward internal network pivoting and domain lateral movement. To establish an unmonitored (by web application logs) and robust access channel, the attacker deployed an SSH public key backdoor.
-2. **Keypair Generation:** On Kali Linux (`192.168.232.135`), the attacker executed `ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N ""` to produce an elliptic-curve keypair. The public key was extracted using `cat ~/.ssh/id_ed25519.pub`.
-3. **Authorized Keys Modification:** Using the existing interactive root shell from Stage 07, the attacker appended the public key string into `/root/.ssh/authorized_keys`. The attacker enforced proper POSIX permissions (`chmod 700 /root/.ssh` and `chmod 600 /root/.ssh/authorized_keys`) to satisfy `sshd`'s `StrictModes` security checks, which would otherwise reject authentication if group/world permissions are overly permissive.
-4. **Direct Backdoor Verification:** The attacker opened a new terminal on Kali and initiated a direct SSH connection: `ssh -i ~/.ssh/id_ed25519 root@192.168.56.30`. The OpenSSH daemon accepted the key without prompting for a password, granting direct, interactive root shell access (`root@dvwa:~#`).
-5. **Operational Readiness:** With stable SSH access established, the adversary no longer requires the reverse shell or web shell to remain active, providing an encrypted management tunnel to stage attack tools and pivot into the internal Active Directory network.
+1. **Moving into Case 02 (Lateral Movement):** Now that I had root on DVWA, I needed a clean, permanent way back in. Reverse shells drop whenever a process dies, and web traffic creates unnecessary web logs. Direct SSH with a public key is silent, encrypted, and rock-solid.
+2. **Generating the keypair:** On Kali (`192.168.232.135`), I generated a fresh Ed25519 key with no passphrase: `ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N ""`.
+3. **Injecting the public key:** From the existing root shell on DVWA, I appended the public key directly into `/root/.ssh/authorized_keys` and locked down permissions with `chmod 700 /root/.ssh` and `chmod 600 /root/.ssh/authorized_keys` so OpenSSH wouldn't reject the key.
+4. **Testing our new front door:** Back on Kali, I tested the connection: `ssh -i ~/.ssh/id_ed25519 root@192.168.56.30`. OpenSSH accepted the key instantly without asking for a password, dropping me straight into a clean `root@dvwa:~#` shell.
+5. **Ready to pivot:** With persistent SSH access in place, I no longer needed the reverse shell or webshell. DVWA was now our permanent staging ground for attacking Active Directory.
 
 ## Evidence
 
@@ -114,12 +114,12 @@ hostname
 
 ## Detection opportunities
 
-- **File Integrity Monitoring (FIM):** Configure real-time file monitoring (Wazuh `syscheck` or auditd) on all user SSH directories, specifically watching `/root/.ssh/authorized_keys`, `/home/*/.ssh/authorized_keys`, and `/etc/ssh/sshd_config` for write or attribute change events.
-- **SSH Daemon Hardening:** Disallow direct root authentication over SSH by configuring `PermitRootLogin no` in `/etc/ssh/sshd_config`. Administrators should authenticate with non-root accounts and escalate via audited `sudo`.
-- **Anomalous Authentication Alerts:** Alert on SSH logins using newly observed public key fingerprints or logins originating from non-administrative IP addresses or external subnets.
-- **Command-Line Telemetry:** Monitor command lines via auditd / Sysmon for Linux matching patterns that modify SSH authorized keys (e.g., `*echo*>>*authorized_keys*`, `*ssh-copy-id*`).
+- **File Integrity Monitoring (FIM):** Turn on real-time FIM (Wazuh `syscheck` or Auditd) on `/root/.ssh/authorized_keys`. Any write or append to authorized_keys files should immediately ring alarm bells.
+- **SSH Daemon Hardening:** Block direct root logins (`PermitRootLogin no` in `/etc/ssh/sshd_config`). System administrators should log in as their own user and elevate with `sudo`.
+- **Anomalous SSH Logins:** Watch for root SSH logins originating from external, unexpected, or non-management IP addresses.
+- **Command Telemetry:** Auditd and Wazuh caught the exact `echo "ssh-ed25519..." >> /root/.ssh/authorized_keys` command line at `17:29:34 IST` under Rule 100220.
 
 ## Notes
 
-- **Case Grouping:** As part of Case 02, this stage secures the pivot point needed to execute network reconnaissance and Active Directory attacks without risking session termination from web server restarts or crashes.
-- **Key Redaction:** Cryptographic public key contents are redacted per project documentation guidelines (`ssh-ed25519 AAAAC3***kali@kali`).
+- **Why this matters for Case 02:** This stage locks down our pivot machine so we can transfer tools, scan the internal network, and attack Active Directory without risking getting disconnected.
+- **Key Redaction:** SSH public key contents are redacted per project documentation guidelines (`ssh-ed25519 AAAAC3***kali@kali`).

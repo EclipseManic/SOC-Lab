@@ -7,7 +7,7 @@
 
 ## Objective
 
-Identify, aggregate, and stage high-value intelligence—including full domain user accounts, administrative security privileges, corporate financial records, and stored credentials—from the Domain Controller and Windows 10 workstation into centralized temporary staging files for subsequent exfiltration.
+Gather and stage sensitive corporate data—including all domain user accounts, administrative privileges, confidential financial records, and stored passwords—from both the Domain Controller and Windows 10 workstation into temporary files, ready for exfiltration.
 
 ## Commands
 
@@ -38,13 +38,12 @@ exit
 
 ## What happened
 
-With administrative control established across both the identity core (Domain Controller) and client endpoints, the adversary shifted focus to data acquisition and intelligence harvesting. The objective was twofold: capture Active Directory enterprise directory structures and extract confidential user data from local endpoints.
+With administrative control established across both the Domain Controller and endpoint workstations, the next step was harvesting the goods:
 
-First, within the active WMI session on the Domain Controller (`PC-DC`), the attacker issued `cmd /c "net user /domain > C:\Windows\Temp\domain_users.txt"`, dumping the complete roster of Active Directory user accounts into a temporary staging file. Immediately following this, the adversary executed `cmd /c "whoami /all > C:\Windows\Temp\admin_info.txt"`, capturing the full security context of the compromised administrator account, including security identifiers, token privileges (such as `SeDebugPrivilege`, `SeImpersonatePrivilege`), and domain group memberships. Using Impacket's integrated `lget` command over the active SMB transport, the attacker pulled both files directly from `C:\Windows\Temp\` into the `/tmp` directory on the DVWA pivot machine (`192.168.56.30`).
-
-Next, the attacker targeted the Windows 10 enterprise workstation (`192.168.56.20`). Utilizing the `Administrator` NTLM hash (`aad3b***ee:cc814***9fb`) harvested previously, the adversary connected via Pass-the-Hash using `wmiexec.py`. Once inside the workstation's administrative shell, the attacker identified a high-value directory containing proprietary corporate information: `C:\Users\win10\Documents\Sensitive\`. 
-
-Using native command concatenation, the attacker executed `cmd /c "type C:\Users\win10\Documents\Sensitive\* > C:\Windows\Temp\sensitive_data.txt"`. This command merged the contents of both `financials.txt` (corporate financial records) and `passwords.txt` (stored credentials) into a single staging artifact. Using `lget`, the attacker downloaded `sensitive_data.txt` to the DVWA pivot host, centralizing all harvested intelligence in preparation for egress.
+1. **Harvesting domain intelligence from the DC:** In the active WMI session on `PC-DC`, I dumped the full directory list of domain users: `net user /domain > C:\Windows\Temp\domain_users.txt`. Then I dumped the complete security token and group privilege report: `whoami /all > C:\Windows\Temp\admin_info.txt`. Using Impacket's built-in `lget` command over SMB, I downloaded both files directly from the DC into `/tmp/` on our DVWA pivot (`192.168.56.30`).
+2. **Harvesting confidential files from Windows 10:** Next, I used Pass-the-Hash with the `Administrator` NTLM hash to connect to the Windows 10 workstation (`192.168.56.20`) via `wmiexec.py`. Browsing the filesystem revealed a high-value folder: `C:\Users\win10\Documents\Sensitive\`.
+3. **Consolidating the workstation files:** I merged the sensitive documents (`financials.txt` and `passwords.txt`) into a single staging file: `cmd /c "type C:\Users\win10\Documents\Sensitive\* > C:\Windows\Temp\sensitive_data.txt"`.
+4. **Downloading to the pivot:** Using `lget`, I pulled `sensitive_data.txt` off the workstation into `/tmp/` on DVWA. All stolen data was now consolidated on our pivot machine, staged and ready to be exfiltrated out of the network.
 
 ## Evidence
 

@@ -7,7 +7,7 @@
 
 ## Objective
 
-Exploit a public-facing SQL injection flaw in the DVWA web application to verify arbitrary database query execution, bypass application logic, and extract sensitive database contents including user accounts and password hashes.
+Test DVWA's SQL injection flaw to see if we can manipulate database queries and dump user account records and password hashes straight out of the database.
 
 ## Commands
 
@@ -35,14 +35,14 @@ curl -s -b "PHPSESSID=session_token; security=low" \
 
 ## What happened
 
-1. **Authentication and Navigation**: Utilizing the credentials acquired in Stage 02 (`admin:password`), the attacker established an authenticated web session and navigated to the SQL Injection module located at `http://192.168.56.30/vulnerabilities/sqli/`.
-2. **Boolean-Based Query Manipulation**: In the `User ID` query field, the attacker injected a classic boolean tautology: `1' OR '1'='1`. Because user input was concatenated directly into the backend SQL statement without sanitization or parameterized queries (`SELECT first_name, last_name FROM users WHERE user_id = '$id'`), the `'1'='1'` clause evaluated to true for every database record. The application rendered all registered users:
+1. **Getting into the app:** Armed with the credentials from Stage 02 (`admin:password`), I logged in and headed straight to the SQL Injection section (`/vulnerabilities/sqli/`).
+2. **Testing the waters (Boolean injection):** In the User ID box, I typed the classic test: `1' OR '1'='1`. Because the backend PHP code just glued user input straight into the SQL query without parameterization (`SELECT first_name, last_name FROM users WHERE user_id = '$id'`), the `'1'='1'` condition was true for every single row. The app obligingly dumped every user on the system:
    - `admin admin`
    - `Gordon Brown`
    - `Hack Me`
    - `Pablo Picasso`
    - `Bob Smith`
-3. **UNION-Based Schema & Credential Exfiltration**: Having confirmed the injection vector and determined the query returned two string fields, the attacker crafted a UNION query to extract account names and corresponding authentication hashes: `1' UNION SELECT user, password FROM users-- -`. The double dash and trailing hyphen commented out the remainder of the developer's original query. The application reflected all stored accounts alongside their unsalted MD5 password hashes:
+3. **Dumping the password hashes (UNION injection):** Now that I knew the query returned two text fields, I chained a UNION query to pull usernames and password hashes: `1' UNION SELECT user, password FROM users-- -`. The `-- -` commented out the rest of the developer's original query. The page printed every user account alongside their unsalted MD5 password hash:
    - `admin`: `5f4dc***cf99` (redacted MD5 hash)
    - `gordonb`: `e99a1***e03` (redacted MD5 hash)
    - `1337`: `8d353***16b` (redacted MD5 hash)
@@ -79,13 +79,12 @@ curl -s -b "PHPSESSID=session_token; security=low" \
 
 ## Detection opportunities
 
-- **Suricata NIDS Signatures**: Network IDS signatures targeting SQL keywords in HTTP request parameters (`SELECT`, `UNION`, `FROM`, `OR '1'='1'`, `--`). Suricata signature `ET WEB_SERVER SELECT USER SQL Injection Attempt in URI` fired on the exact payload.
-- **WAF Inspection (ModSecurity CRS)**: ModSecurity Core Rule Set (CRS 942xxx rules) designed to detect SQL injection constructs, tautologies, and database comment delimiters.
-- **Web Access Log Decoders**: Wazuh rules alerting on URL-encoded SQL metacharacters (`%27`, `%23`, `--`, `UNION%20SELECT`) occurring within GET/POST parameters.
-- **Application & Database Telemetry**: Enabling MySQL general query logging and database activity monitoring (DAM) to detect unexpected queries against administrative tables executed through web service accounts.
+- **Network Signatures on HTTP Queries:** Suricata catches classic SQL patterns like `UNION SELECT`, `OR '1'='1'`, and comment delimiters (`--`) right on the wire. Signature `ET WEB_SERVER SELECT USER SQL Injection Attempt in URI` flagged this request immediately.
+- **Web Application Firewall (WAF):** Tools like ModSecurity (OWASP Core Rule Set) block SQL metacharacters and tautology patterns before they ever hit backend PHP code.
+- **Log Inspection in SIEM:** Wazuh rules can watch for URL-encoded SQL syntax (`%27`, `%23`, `UNION%20SELECT`) in GET and POST parameters.
+- **Parameterized Queries (The Real Fix):** Prepared statements in PHP PDO completely neutralize SQL injection by treating user input strictly as data, never executable code.
 
 ## Notes
 
-- The target application lacked parameterized statements, allowing direct query restructuring.
-- The exfiltrated MD5 password hashes were un-salted, creating an immediate opportunity for offline dictionary cracking in Stage 04.
-- Suricata network signatures successfully detected the UNION query pattern and generated an alert forwarded to Wazuh and TheHive.
+- Because the database was using raw, unsalted MD5 hashes, every extracted hash was an easy target for offline cracking in Stage 04.
+- Suricata caught the `UNION SELECT` query on the wire and immediately passed the alert through Wazuh into TheHive.

@@ -7,7 +7,7 @@
 
 ## Objective
 
-Demonstrate complete domain-wide operational impact through internal defacement, simulated ransomware data encryption, extortion note deployment, and forced service interruption across both the primary Domain Controller (`PC-DC`) and the Windows 10 enterprise workstation (`Win10`).
+Demonstrate complete domain takeover and business disruption by defacing desktop wallpapers, dropping simulated ransomware notes and encrypted mockup files, and triggering forced system reboots across both the Domain Controller and Windows 10 workstation.
 
 > [!NOTE]
 > **Defacement Image Format:**  
@@ -72,25 +72,22 @@ exit
 
 ## What happened
 
-In the culminating stage of the attack campaign, the adversary transitioned from espionage and data theft to active, visible impact. The goal was to prove comprehensive control over both server infrastructure and client endpoints by simulating a coordinated ransomware and extortion campaign.
+Having stolen credentials, mapped the domain, and exfiltrated sensitive files, the final phase was demonstrating real-world operational impact—simulating what a destructive ransomware or wiper actor would do:
 
-The operation commenced by staging a high-resolution defacement image (`hacked.bmp`, 4.6 MB) from the Kali attacker workstation to `/tmp/hacked.bmp` on the DVWA pivot server over SCP.
+1. **Staging the defacement asset:** I copied our custom bitmap image (`hacked.bmp`) from Kali to `/tmp/hacked.bmp` on the DVWA pivot.
+2. **Executing impact on the Domain Controller (`PC-DC`):**
+   - Connecting via `wmiexec.py` using our forged Golden Ticket, I uploaded `hacked.bmp` to `C:\Windows\Temp\` and copied it to `C:\Users\Public\hacked.bmp`.
+   - I updated the Windows registry (`HKCU\Control Panel\Desktop`) to enforce `hacked.bmp` as the system wallpaper.
+   - I dropped an extortion ransom note onto the Administrator desktop: `README_HACKED.txt`.
+   - I simulated ransomware file locking by writing mock encrypted files (`documents.enc` and `passwords.enc`) to the desktop.
+   - I triggered an immediate forced reboot: `shutdown /r /t 0`.
+3. **Executing impact on the Windows 10 Workstation (`Win10`):**
+   - Connecting via `wmiexec.py` using Pass-the-Hash with the `Administrator` hash, I uploaded `hacked.bmp` and copied it to `C:\Users\Public\hacked.bmp`.
+   - I updated the workstation's registry to set the wallpaper.
+   - I placed `README_HACKED.txt`, `documents.enc`, and `passwords.enc` directly onto the user's desktop (`C:\Users\win10\Desktop\`).
+   - I forced an immediate reboot (`shutdown /r /t 0`), locking out the user and displaying the defaced desktop upon startup.
 
-### Impact on the Domain Controller (`PC-DC.ad.lab`)
-
-Connecting to the Domain Controller using the forged Golden Ticket from Stage 16, the adversary uploaded `hacked.bmp` to `C:\Windows\Temp\` and copied it into `C:\Users\Public\hacked.bmp`. Using `reg.exe add`, the attacker modified the current user desktop configuration within `HKCU\Control Panel\Desktop`, setting `Wallpaper` to the uploaded image and configuring `WallpaperStyle` to `2` (stretched).
-
-To simulate extortion, the attacker generated a ransom note at `C:\Users\Administrator\Desktop\README_HACKED.txt` with the text:
-```text
-YOU HAVE BEEN HACKED. Contact: eclipse@manic | eclipsemanic.me
-```
-To simulate ransomware encryption of local documents and credentials, the attacker wrote encrypted mock data (`ENCRYPTED_DATA_XOR_KEY_7f3a9b`) into `documents.enc` and `passwords.enc` directly on the desktop. The attacker then executed `cmd /c "shutdown /r /t 0"`, abruptly terminating domain services and forcing the Domain Controller to reboot. Upon rebooting, the Windows Server 2022 desktop displayed the custom defacement wallpaper ("EclipseManic — YOU GOT HACKED") alongside the ransom note and encrypted files.
-
-### Impact on the Windows 10 Workstation (`Win10.ad.lab`)
-
-Simultaneously, the attacker accessed the Windows 10 client workstation (`192.168.56.20`) via Pass-the-Hash with the compromised `Administrator` NTLM hash. Mirroring the DC attack chain, the adversary uploaded `hacked.bmp`, copied it to `C:\Users\Public\hacked.bmp`, modified the desktop wallpaper registry keys, deposited `README_HACKED.txt` along with `documents.enc` and `passwords.enc` on `C:\Users\win10\Desktop`, and issued `shutdown /r /t 0`.
-
-When the Windows 10 machine rebooted, the user session was presented with the identical defacement wallpaper, the ransom notification, and encrypted mock files. Opening the files in Notepad confirmed the extortion payload and mock encryption signatures.
+Both machines were completely compromised, defaced, and temporarily knocked offline, concluding the 20-stage attack simulation.
 
 ## Evidence
 

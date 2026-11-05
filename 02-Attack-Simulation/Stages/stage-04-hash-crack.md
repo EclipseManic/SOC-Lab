@@ -7,7 +7,7 @@
 
 ## Objective
 
-Recover cleartext passwords from the cryptographic hashes exfiltrated during Stage 03 by performing an offline dictionary cracking attack using Hashcat on the attacker system.
+Recover plaintext passwords from the database hashes dumped in Stage 03 by running an offline dictionary attack with Hashcat on the Kali machine.
 
 ## Commands
 
@@ -24,16 +24,13 @@ hashcat -m 0 -a 0 /tmp/dvwa_hashes.txt /usr/share/wordlists/rockyou.txt
 
 ## What happened
 
-1. **Hash Compilation & File Creation**: The unsalted MD5 password hashes extracted from the DVWA database via the Stage 03 SQL injection attack were formatted into a hash list and written to `/tmp/dvwa_hashes.txt` on the Kali Linux system.
-2. **Offline Cracking Attack Invocation**: The attacker ran `hashcat (v7.1.2)` configured with:
-   - `-m 0`: Hash type specifying standard raw MD5 (`[Hash.Mode: 0 (MD5)]`).
-   - `-a 0`: Attack mode specifying a straight dictionary/wordlist attack.
-   - Wordlist: `/usr/share/wordlists/rockyou.txt` containing 14,344,385 pre-compiled common candidate passwords.
-3. **Cryptanalytic Recovery**: Hashcat loaded 4 unique target hashes into memory. Utilizing GPU/CPU accelerated dictionary search against the rockyou wordlist, the tool cracked 100% of the hashes within less than one second runtime:
-   - `5f4dc***cf99`: `password` (associated with accounts `admin` and `smithy`)
-   - `e99a1***e03`: `abc123` (associated with account `gordonb`)
-   - `0d107***e9b7`: `letmein` (associated with account `pablo`)
-   - `8d353***16b`: `charley` (associated with account `1337`)
+1. **Staging the hashes:** I took the unsalted MD5 hashes dumped from the database in Stage 03 and saved them into `/tmp/dvwa_hashes.txt` on Kali.
+2. **Launching Hashcat:** I fired up `hashcat` in standard MD5 mode (`-m 0`) with a wordlist attack (`-a 0`) pointing at `rockyou.txt` (which has over 14 million passwords).
+3. **Cracking the passwords in under a second:** Because the passwords were weak and the database used unsalted MD5, Hashcat cracked every single hash in less than a second:
+   - `5f4dc***cf99`: `password` (used by `admin` and `smithy`)
+   - `e99a1***e03`: `abc123` (used by `gordonb`)
+   - `0d107***e9b7`: `letmein` (used by `pablo`)
+   - `8d353***16b`: `charley` (used by `1337`)
 
 ## Evidence
 
@@ -65,16 +62,12 @@ hashcat -m 0 -a 0 /tmp/dvwa_hashes.txt /usr/share/wordlists/rockyou.txt
 
 ## Detection opportunities
 
-- **Detection Gap Analysis (DG-04)**: Because offline password cracking does not generate network or host-based events on the target infrastructure, direct detection of the cracking process is impossible from SOC telemetry.
-- **Upstream Detection (Prevent Ingestion)**: Focus telemetry and detection rules on the initial compromise vector that exposed the hashes in the first place—specifically detecting SQL injection (Stage 03), database dump commands, unauthorized access to `/etc/shadow`, or NTDS.dit extraction.
-- **Downstream Anomaly Detection**:
-  - Alert on successful logins to administrative portals, SSH daemons, or VPN concentrators using accounts whose passwords were weak or known to be cracked.
-  - Correlate external IP addresses authenticating with accounts that previously suffered database exposure.
-- **Cryptographic & Architectural Controls**:
-  - Enforce modern salted, computationally intensive hashing algorithms (e.g., Argon2id, bcrypt, or PBKDF2 with high iteration counts) instead of raw legacy MD5 or SHA-1.
-  - Implement Mandatory Multi-Factor Authentication (MFA), rendering cracked passwords insufficient for unauthorized access.
+- **Why Offline Cracking Leaves No Logs (DG-04):** Offline cracking happens entirely on the attacker's own computer. Zero packets touch the victim network, and zero commands run on the victim server. There is literally nothing for a SIEM or NIDS to see here.
+- **Catch the Theft Upstream:** The only way to stop offline cracking is to catch the attack that stole the hashes in the first place—detecting SQL injection (Stage 03), database dumps, or unauthorized access to password stores.
+- **Detect Downstream Logins:** Watch for logins where external or unusual IP addresses suddenly start using credentials that match recently breached or weak accounts.
+- **Use Modern Password Hashing:** Never use MD5 or SHA-1 for passwords. Modern slow hashes like Argon2id or bcrypt make dictionary attacks computationally unfeasible, and enforcing Multi-Factor Authentication (MFA) ensures a cracked password alone isn't enough to get in.
 
 ## Notes
 
-- All four extracted hashes were identified and cracked almost instantaneously due to the use of unsalted MD5 hashing and trivial passwords.
-- This activity confirms **Detection Gap DG-04** in [Detection Gap Register](../../03-Detection-Engineering/README.md#detection-gap-register).
+- All four hashes were cracked almost instantly because the application used raw, unsalted MD5 and simple dictionary words.
+- This represents an expected detection gap (**DG-04** in our [Detection Gap Register](../../03-Detection-Engineering/README.md#detection-gap-register)).

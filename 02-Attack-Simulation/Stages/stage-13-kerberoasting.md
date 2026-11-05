@@ -9,7 +9,7 @@
 
 ## Objective
 
-Exploit the Kerberos Ticket Granting Service (TGS) protocol mechanism to extract Kerberos service tickets for accounts associated with Service Principal Names (SPNs), focusing specifically on the high-privilege account `HANK_SHERMAN` discovered during BloodHound analysis. Transfer the encrypted ticket hash to the attack machine and crack the ciphertext offline using Hashcat to obtain plaintext Domain Administrator credentials.
+Extract Kerberos service tickets for accounts with Service Principal Names (SPNs), focusing on Domain Admin Hank Sherman who we spotted in BloodHound. Then take the encrypted ticket offline to Kali and crack it with Hashcat to recover plaintext Domain Admin credentials.
 
 ---
 
@@ -34,28 +34,20 @@ hashcat -m 13100 /tmp/hank.hash /usr/share/wordlists/rockyou.txt --force
 
 ## What happened
 
-Guided by the BloodHound graph analysis in Stage 12 identifying `HANK_SHERMAN@AD.LAB` as a Domain Admin with an assigned SPN, the attacker executed Impacket's `GetUserSPNs.py` from the Linux pivot host (`192.168.56.30`).
+In Stage 12, BloodHound handed us the key to the castle: Hank Sherman was a Domain Admin who also had a Service Principal Name (SPN) set on his account.
 
-1. **Ticket Request:**  
-   Authenticating with the compromised domain account `win10` (`Secur***ab!`), the script submitted a valid Kerberos Ticket-Granting Service request (`TGS-REQ`) to the Key Distribution Center (KDC) running on Domain Controller `PC-DC.ad.lab` (`192.168.56.10:88`). The request targeted the service principal registered to `HANK_SHERMAN`.
+Here is why that was fatal: In Active Directory, any authenticated user can ask the Domain Controller for a Kerberos ticket to talk to any registered service. The DC encrypts that ticket using the password hash of the account tied to the service. If that account has a weak password, you can pull the ticket, take it offline, and crack it with Hashcat without sending another packet to the DC.
 
-2. **Ticket Delivery:**  
-   Because the domain user had a valid Ticket Granting Ticket (TGT), the KDC issued a `TGS-REP` containing the service ticket encrypted with `HANK_SHERMAN`'s password hash using RC4-HMAC (encryption type 23). The script parsed the response and exported the Kerberos hash:
-   ```text
-   $krb5tgs$23$*HANK_SHERMAN$AD.LAB$ad.lab/HANK_SHERMAN*$3b28f***016d1
-   ```
-
-3. **Exfiltration & Offline Cracking:**  
-   The resulting hash file (`/tmp/hank.hash`, 106 KB) was exfiltrated to the Kali Linux workstation via SCP. The operator launched `hashcat` in Kerberos 5 TGS-REP etype 23 cracking mode (`-m 13100`) against the `rockyou.txt` dictionary using `--force`.
-
-4. **Credential Recovery:**  
-   Within seconds, Hashcat successfully cracked the ticket encryption, revealing the plaintext password:
+1. **Requesting the ticket:** From the DVWA pivot (`192.168.56.30`), I ran Impacket's `GetUserSPNs.py` using our compromised `win10` account (`Secur***ab!`). The script sent a Kerberos service ticket request (`TGS-REQ`) to Domain Controller `PC-DC.ad.lab` (`192.168.56.10:88`) asking for Hank Sherman's service ticket.
+2. **Receiving the encrypted hash:** Because `win10` was a valid domain user, the DC handed over the service ticket encrypted with Hank's password hash using RC4-HMAC (`$krb5tgs$23$*HANK_SHERMAN...`). The script saved the hash to `/tmp/hank.hash`.
+3. **Exfiltrating and cracking:** I copied `hank.hash` back to Kali over SCP and fired up Hashcat in mode 13100 (Kerberos 5 TGS-REP etype 23) against `rockyou.txt`.
+4. **Instant Domain Admin password:** In less than a second, Hashcat cracked the password:
    - **Target Account:** `ad.lab\HANK_SHERMAN`
    - **Domain Privilege Level:** `Domain Admins` (Tier Zero)
    - **Hash Type:** Kerberos 5 TGS-REP etype 23 (`$krb5tgs$23$`)
    - **Recovered Plaintext Password:** `Passw***123` (redacted)
 
-With the plaintext password of an active Domain Administrator in hand, the attacker attained full administrative control over the Active Directory domain, unlocking DCSync capabilities in Stage 14.
+With the plaintext password of an active Domain Administrator in hand, we had keys to the entire Active Directory kingdom, unlocking DCSync in Stage 14.
 
 ---
 

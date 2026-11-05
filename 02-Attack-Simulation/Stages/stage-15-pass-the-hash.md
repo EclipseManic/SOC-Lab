@@ -9,7 +9,7 @@
 
 ## Objective
 
-Leverage the extracted built-in Domain Administrator NTLM hash (`cc814***9fb`) obtained during the Stage 14 DCSync attack to authenticate directly to the Domain Controller (`PC-DC.ad.lab`, `192.168.56.10`) via Pass-the-Hash (PtH). Execute remote commands via Windows Management Instrumentation (WMI) using Impacket's `wmiexec.py` to obtain an interactive administrative command shell on the Domain Controller without requiring the plaintext password.
+Use the built-in Domain Administrator NTLM hash (`cc814***9fb`) dumped during DCSync to log straight into the Domain Controller (`PC-DC.ad.lab`, `192.168.56.10`) using Pass-the-Hash (PtH). Through Impacket's `wmiexec.py`, we'll spawn an interactive command shell on the DC without ever needing the plaintext password.
 
 ---
 
@@ -28,20 +28,15 @@ C:\> hostname
 
 ## What happened
 
-This stage represents the definitive operational transition from **Case 02 (Lateral Movement)** into **Case 03 (Domain Compromise)**.
+This stage marks our official transition from **Case 02 (Lateral Movement)** into **Case 03 (Domain Compromise)**:
 
-1. **Pass-the-Hash Authentication:**  
-   Equipped with the NTLM hash for `ad.lab\Administrator` (`cc814***9fb`) recovered via DCSync, the adversary executed Impacket's `wmiexec.py` from the Linux pivot host (`192.168.56.30`). By exploiting the fundamental design of Microsoft's NTLM challenge-response protocol—in which the password hash itself serves as the cryptographic secret key—the attacker authenticated to Domain Controller `PC-DC.ad.lab` (`192.168.56.10`) without needing to crack or supply the plaintext password.
+1. **Authenticating with Pass-the-Hash:** Armed with the NTLM hash for `ad.lab\Administrator` (`cc814***9fb`) recovered via DCSync, I ran Impacket's `wmiexec.py` from the DVWA pivot (`192.168.56.30`). In Windows NTLM authentication, the password hash itself *is* the secret key. If you have the hash, you don't need to know or crack the plaintext password—you just hand the hash to the server and authenticate directly.
+2. **Executing commands over WMI:** `wmiexec.py` connected over SMB and established an authenticated RPC session to Windows Management Instrumentation (WMI) on `PC-DC`. Whenever a command is typed, the tool uses WMI to spawn `cmd.exe /Q /c <command>`, writes the output to a temporary file on the administrative share (`ADMIN$`), reads the output back over SMB, and cleans up the temporary file.
+3. **Verifying Domain Controller takeover:** The shell popped immediately. I ran quick confirmation checks:
+   - `whoami` returned **`ad\administrator`** (we were running as the highest domain authority).
+   - `hostname` returned **`PC-DC`** (we were executing code directly on the primary Active Directory Domain Controller).
 
-2. **DCOM / WMI Remote Execution:**  
-   `wmiexec.py` negotiated the SMBv3.0 dialect and established an authenticated RPC session to the WMI service (`Win32_Process`) on `PC-DC`. For each command issued, the tool invokes the WMI `Create` method to spawn `cmd.exe /Q /c <command>`, redirecting command output to a temporary file on the administrative share (`\\127.0.0.1\ADMIN$\__<timestamp>`), reading the output over SMB, and deleting the temporary file.
-
-3. **Shell Verification & Domain Controller Control:**  
-   The operator established a semi-interactive command shell and executed initial verification commands:
-   - `whoami` returned **`ad\administrator`** (confirming execution under the highest domain authority).
-   - `hostname` returned **`PC-DC`** (confirming direct code execution on the primary Active Directory Domain Controller).
-
-With full interactive command execution confirmed on `PC-DC`, the adversary established administrative control of the core infrastructure, setting the stage for domain-wide persistence (Golden Ticket generation in Stage 16) and sensitive data collection.
+With full interactive command execution confirmed on the DC, we had complete administrative control of the core infrastructure, setting up Golden Ticket persistence in Stage 16.
 
 ---
 

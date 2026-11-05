@@ -7,7 +7,7 @@
 
 ## Objective
 
-Escalate privileges on the compromised Linux host (`dvwa`) from the low-privileged `www-data` web server account to `root`. By identifying an insecure sudoers configuration permitting passwordless execution of the Python 3 binary, the attacker leverages a known GTFOBins escape technique to spawn an unconstrained root shell.
+Elevate our privileges from the low-level `www-data` service account to full `root` on DVWA by finding a misconfigured sudoers rule and escaping through Python.
 
 ## Commands
 
@@ -50,11 +50,11 @@ whoami
 
 ## What happened
 
-1. **Local Privilege Enumeration:** After establishing a fully interactive PTY shell in Stage 06, the attacker conducted local privilege enumeration on `dvwa`. The attacker executed `sudo -l` to determine if any administrative delegations were granted to the `www-data` service account.
-2. **Identification of Misconfiguration:** The output confirmed that `www-data` had been granted `(ALL) NOPASSWD: /usr/bin/python3` in the sudoers file. This configuration allowed the unprivileged web service account to execute Python 3 with superuser privileges without providing a password.
-3. **Execution of GTFOBins Exploit:** Python contains native interfaces to operating system system calls. The attacker used the well-documented GTFOBins technique for Python by invoking `sudo /usr/bin/python3 -c 'import os; os.system("/bin/bash")'`. The Python interpreter was spawned by the `sudo` binary with effective UID 0 (`root`), and its child `/bin/bash` process inherited these root credentials.
-4. **Root Compromise Confirmed:** The terminal prompt immediately transitioned to `root@dvwa:~#`. The attacker verified complete host takeover by checking `id` (`uid=0(root) gid=0(root) groups=0(root)`), confirming unrestricted administrative control over the machine.
-5. **Case 01 Conclusion:** This stage concludes **Case 01 (Web Application Compromise)**. The attacker progressed from remote discovery, through brute forcing, SQL injection, credential cracking, web shell deployment, and reverse shell stabilization, ultimately achieving full root compromise of the web server.
+1. **Checking sudo permissions:** As soon as I had an interactive shell, the first thing I checked was `sudo -l` to see what administrative permissions `www-data` had.
+2. **Finding the golden misconfiguration:** The output was every attacker's dream: `(ALL) NOPASSWD: /usr/bin/python3`. Someone had configured the sudoers file so `www-data` could run Python 3 as root without even needing a password!
+3. **Escaping through Python (GTFOBins):** Python can execute system commands directly. Using the classic GTFOBins escape trick, I ran: `sudo /usr/bin/python3 -c 'import os; os.system("/bin/bash")'`. Because Python was executed under sudo, the child `/bin/bash` process inherited effective UID 0.
+4. **Instant root access:** The prompt immediately changed to `root@dvwa:~#`. Running `id` and `whoami` confirmed `uid=0(root) gid=0(root) groups=0(root)`. The machine was completely ours.
+5. **Wrapping up Case 01:** This stage officially wraps up **Case 01 (Web Compromise)**. In just a few minutes, we went from scanning ports from the outside to full root control of the web server.
 
 ## Evidence
 
@@ -86,11 +86,11 @@ whoami
 
 ## Detection opportunities
 
-- **Service Account Sudo Monitoring:** Standard service accounts such as `www-data`, `nginx`, `apache`, or `daemon` should never require interactive sudo rights. Wazuh rules (or SIEM alerts on `/var/log/auth.log`) should trigger critical-priority alerts whenever any sudo command is attempted by accounts with `uid < 1000` or assigned `/usr/sbin/nologin`.
-- **GTFOBins Binary Execution Monitoring:** Linux Auditd and Wazuh can detect invocations of known dual-use scripting and utility binaries (e.g., `python`, `python3`, `perl`, `ruby`, `bash`, `sh`, `awk`, `find`, `vim`, `less`) executed via `sudo` with command-line arguments indicating shell spawning (`-c`, `import os`, `system`).
-- **Process Hierarchy Analysis:** Alert on process trees where `sudo` spawns an interpreter, which in turn spawns an interactive shell (`sudo -> python3 -> /bin/bash`).
-- **Sudoers File Hardening and Auditing:** Monitor `/etc/sudoers` and `/etc/sudoers.d/` with File Integrity Monitoring (Wazuh `syscheck`). Regular configuration audits should prevent `NOPASSWD` entries for binaries that can execute subshells.
+- **Monitor Sudo on Service Accounts:** Service accounts like `www-data` should never run `sudo`. Any sudo execution from accounts with `uid < 1000` or `/usr/sbin/nologin` should fire an immediate high-priority alert.
+- **GTFOBins Command Line Rules:** Watch for dangerous binaries run via `sudo` with inline execution flags (`python -c`, `find -exec`, `vim -c`, `awk 'BEGIN {system(...)}'`). Auditd and Wazuh can catch these commands in real time.
+- **Process Lineage Detection:** Alert on trees where `sudo` spawns a scripting interpreter that spawns a shell: `sudo -> python3 -> /bin/bash`.
+- **Lock Down Sudoers (The Real Fix):** Never give service accounts `NOPASSWD` sudo access to general-purpose programming languages or shell-capable binaries.
 
 ## Notes
 
-- **Case Transition:** With Stage 07 complete, the objective shifts to **Case 02 (Lateral Movement and Credential Access)**. The compromised DVWA server will now serve as an internal pivot into the Active Directory domain network (`192.168.56.0/24`).
+- **Transitioning to Case 02:** With root access locked down, DVWA ceases to be just a victim—it becomes our forward operating base (pivot) to attack the internal Active Directory network (`192.168.56.0/24`).
