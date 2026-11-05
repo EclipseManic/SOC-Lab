@@ -83,7 +83,7 @@ expect(alerts.alerts.every((alert) => alert.newDate - alert.date === alert.timeT
 
 expect(network.internalAddress === "192.168.56.150", "authoritative gateway address is not 192.168.56.150");
 expect(network.authoritativeSource === "01-Lab-Setup/README.md", "unexpected gateway authority source");
-expect(network.mismatches.some((mismatch) => mismatch.includes("192.168.56.1")), "gateway mismatch was not recorded");
+expect(network.mismatches.length === 0, "unexpected gateway mismatch found in reports");
 
 expect(dataSource.includes("export const operationalAlertCount = metrics.operationalAlertCount"), "data.ts does not derive operational alerts from generated metrics");
 expect(dataSource.includes("export const directDetectionCount = metrics.directDetectionCount"), "data.ts does not derive direct detections from generated metrics");
