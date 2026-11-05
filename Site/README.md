@@ -2,7 +2,7 @@
 
 The site at <https://soc-lab.eclipsemanic.me/> is a narrative front door to the repository. It is a six-act story: the lab, the build, the attack, the signal, the case, and the record.
 
-The site now covers all six acts: the lab, the build, the attack, the signal, the case, and the record. The truth layer is generated from the repository: 20 stages over 74 minutes, 18 direct-target detections (90.0%), 18 operational alerts (90.0%), 46 TheHive alerts, and 2 named gaps (offline 04/11). The incident report metadata is `Final / Resolved`; the three investigation case files are closed, verified, and linked to TheHive cases.
+The site now covers all six acts: the lab, the build, the attack, the signal, the case, and the record. The truth layer is generated from the repository: 20 stages over 74 minutes, 14 direct-target detections (70.0%), 16 operational alerts (80.0%), 46 TheHive alerts, and 4 named gaps (2 logging gaps 09/12, 2 offline gaps 04/11). The incident report metadata is `Final / Resolved`; the three investigation case files are closed, verified, and linked to TheHive cases.
 
 The Markdown, logs, cases, and report files are authoritative. This app is a reading layer over them.
 
@@ -51,8 +51,8 @@ npm run preview
 ## Content rules
 
 - Keep the evidence vocabulary from `INDEX.md`: `Detected`, `Logging gap`, `Detection gap`, `Rule failure`, and `Not tested`.
-- Do not flatten the metrics: 18 direct-target detections (90.0%) and 18 operational alerts (90.0%) are distinct metrics backed by empirical telemetry.
-- The two offline stages are 04 and 11 (inherent offline GPU password hash cracking with zero victim telemetry); zero target logging gaps remain (0.0%).
+- Do not flatten the metrics: 14 direct-target detections (70.0%), 16 operational alerts (80.0%), 2 target-side logging gaps (10.0%), and 2 inherent offline gaps (10.0%) are distinct metrics backed by empirical telemetry.
+- The two offline stages are 04 and 11 (inherent offline GPU password hash cracking with zero victim telemetry); two target logging gaps are 09 and 12 (pre-attack diagnostic logging unconfigured).
 - Keep `verifiedCount` and the hero metrics derived from `src/generated/metrics.json`; do not hardcode a detection count.
 - Treat a missing artifact as a documented gap, not as proof.
 - Attack and alert screenshots are published as captured from the isolated lab.
