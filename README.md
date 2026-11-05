@@ -1,8 +1,8 @@
 # Hybrid-Cloud SOC & Threat Engineering Lab
-### 7-Node Hybrid Network, 74-Minute Attack Campaign, Multi-Sensor Telemetry & DFIR Case Investigation
+### 7-Node Hybrid Network, 74-Minute Attack Campaign, Multi-Sensor Telemetry & SOC Incident Investigation
 
 **Author:** Manichand Gupta ([@EclipseManic](https://github.com/EclipseManic))  
-**Core Competencies:** Hybrid Infrastructure · Adversary Emulation (Red Team) · Multi-Sensor Detection Engineering · Digital Forensics & Incident Response (DFIR)  
+**Core Competencies:** Hybrid Infrastructure · Adversary Emulation (Red Team) · Multi-Sensor Detection Engineering · SOC Alert Triage & Incident Response  
 **Live Interactive Report & Dashboard:** <https://soc-lab.eclipsemanic.me/>
 
 ---
@@ -100,13 +100,13 @@ To preserve professional integrity, this laboratory transparently catalogs engin
 
 ---
 
-## 📑 Post-Incident Forensic Deliverables
+## 📑 Post-Incident Reports & Security Deliverables
 
 Key post-mortem engineering assets produced from this investigation:
 - **Master MITRE ATT&CK Mapping:** [`05-Incident-Report/mitre-attack-mapping.md`](05-Incident-Report/mitre-attack-mapping.md) — Comprehensive technique mapping across Enterprise ATT&CK matrix.
 - **Comprehensive IoC Register:** [`05-Incident-Report/iocs.md`](05-Incident-Report/iocs.md) — Atomic network, host, and behavioral indicators of compromise.
 - **Strategic Lessons Learned & Hardening Roadmap:** [`05-Incident-Report/lessons-learned.md`](05-Incident-Report/lessons-learned.md) — Architectural analysis of detection gaps and enterprise defense recommendations.
-- **Chronological 74-Minute Forensic Timeline:** [`05-Incident-Report/timeline.md`](05-Incident-Report/timeline.md) — Microsecond-level correlation of all 20 adversary stages against SIEM alert timestamps.
+- **Chronological 74-Minute Attack & Alert Timeline:** [`05-Incident-Report/timeline.md`](05-Incident-Report/timeline.md) — Microsecond-level correlation of all 20 adversary stages against SIEM alert timestamps.
 - **Master Traceability Matrix:** [`INDEX.md`](INDEX.md) — Single source of truth linking every attack stage, alert ID, rule definition, and investigation case.
 
 ---

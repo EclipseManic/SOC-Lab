@@ -15,7 +15,7 @@ Welcome to the **Incident Reporting** section of the SOC Lab repository. This di
 
 ## 📑 Post-Incident Deliverable Suite
 
-This post-incident review is organized into **six authoritative deliverables** aligned with enterprise DFIR reporting standards and regulatory post-mortem requirements:
+This post-incident review is organized into **six authoritative deliverables** aligned with enterprise incident response standards and regulatory post-mortem requirements:
 
 | Deliverable | Operational Purpose | Primary Target Audience | Document Link |
 |:---|:---|:---|:---|
@@ -34,7 +34,7 @@ The deliverables in this directory represent the **formal analytical synthesis**
 
 ```mermaid
 flowchart TD
-    subgraph S04["04-Investigation/ (Operational DFIR Investigation)"]
+    subgraph S04["04-Investigation/ (Operational Incident Investigation)"]
         T1["<b>Initial Triage</b><br>Initial-Triage-and-Investigation.md<br><i>46 TheHive Alerts Prioritized</i>"]
         T2["<b>Immediate Containment</b><br>Immediate-Containment-Execution.md<br><i>7 Tactical Lockout Actions</i>"]
         T3["<b>Deep-Dive Forensic Analysis</b><br>Deep-Dive-Attack-Chain-Investigation.md<br><i>7 Attack Phases & 7 Root Causes</i>"]
