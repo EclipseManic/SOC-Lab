@@ -163,8 +163,8 @@ sudo systemctl enable --now thehive
 - **API Key Generated:** Exported to `/var/ossec/integrations/custom-thehive` on Wazuh VM as `THEHIVE_API_KEY`
 - **Case Hierarchy:**
   - `Case 01 — Web Compromise`: Stages 01 – 07 (Recon, SQLi, web shell, root privesc)
-  - `Case 02 — Lateral Movement`: Stages 08 – 14 (SSH persistence, pivot, Responder, BloodHound, Kerberoasting)
-  - `Case 03 — Domain Compromise`: Stages 15 – 20 (DCSync, pass-the-hash, Golden Ticket, persistence, exfil, impact)
+  - `Case 02 — Lateral Movement`: Stages 08 – 14 (SSH persistence, pivot, Responder, BloodHound, Kerberoasting, DCSync)
+  - `Case 03 — Domain Compromise`: Stages 15 – 20 (Pass-the-hash, Golden Ticket, persistence, collection, exfil, impact)
 
 ---
 

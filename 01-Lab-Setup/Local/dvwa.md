@@ -165,37 +165,65 @@ A tailored 58-line audit ruleset ([`audit.rules`](../../06-Resources/rules/audit
 # 1. Install auditd and plugins
 sudo apt-get install -y auditd audispd-plugins
 
-# 2. Deploy project audit ruleset
+# 2. Deploy canonical project audit ruleset (06-Resources/rules/auditd/audit.rules)
 sudo bash -c 'cat <<EOF > /etc/audit/rules.d/audit.rules
-## Buffer Size & Failure Flags
+# =========================================================================
+# audit.rules — Linux auditd ruleset deployed on DVWA Pivot Host
+# Deployed on: DVWA Pivot Host (Ubuntu 24.04, 192.168.56.30)
+# Path: /etc/audit/rules.d/audit.rules
+# Loaded via: augenrules --load
+# =========================================================================
+
+# Remove any existing rules (effective on initial load before locking)
 -D
+
+# Buffer Size
 -b 8192
+
+# Failure mode: 1 = printk, 2 = panic
 -f 1
 
-## Web Service Child Process Execution Tracking (uid=33 www-data)
+# Rate limit
+-r 500
+
+# --- 1. WEB SERVICE PROCESS MONITORING (ACTIVE IN LAB TELEMETRY) ---
+# Empirically verified in Wazuh-Raw-Alerts.csv (20 events fired with key="web_process_creation")
+# Captures all execve invocations spawned by www-data (uid=33) in /var/www/html/dvwa/hackable/uploads/
 -a always,exit -F arch=b64 -S execve -F uid=33 -k web_process_creation
 -a always,exit -F arch=b32 -S execve -F uid=33 -k web_process_creation
 
-## Untrusted Staging Execution Tracking (/tmp and /opt)
--a always,exit -F arch=b64 -S execve -F dir=/tmp -k staging_exec
--a always,exit -F arch=b32 -S execve -F dir=/tmp -k staging_exec
--a always,exit -F arch=b64 -S execve -F dir=/opt -k staging_exec
--a always,exit -F arch=b32 -S execve -F dir=/opt -k staging_exec
+# --- 2. GENERAL PROCESS EXECUTION MONITORING ---
+-a always,exit -F arch=b64 -S execve -k process_execution
+-a always,exit -F arch=b32 -S execve -k process_execution
+-a always,exit -F arch=b64 -S execveat -k process_execution
+-a always,exit -F arch=b32 -S execveat -k process_execution
 
-## SUID Modification & Privilege Escalation
--a always,exit -F arch=b64 -S chmod,fchmod,fchmodat -F a2&04000 -k suid_modification
--a always,exit -F arch=b32 -S chmod,fchmod,fchmodat -F a2&04000 -k suid_modification
+# --- 3. PRIVILEGE ESCALATION & SUID/SGID MONITORING ---
 -a always,exit -F arch=b64 -S setuid,setgid,setreuid,setregid -k priv_escalation
 -a always,exit -F arch=b32 -S setuid,setgid,setreuid,setregid -k priv_escalation
+-a always,exit -F arch=b64 -S chmod,fchmod,fchmodat -F a2&04000 -k setuid_creation
+-a always,exit -F arch=b32 -S chmod,fchmod,fchmodat -F a2&04000 -k setuid_creation
 
-## System Identity & Persistence Watches
--w /etc/passwd -p wa -k identity_modification
--w /etc/shadow -p wa -k identity_modification
--w /etc/sudoers -p wa -k identity_modification
--w /etc/sudoers.d/ -p wa -k identity_modification
--w /root/.ssh -p wa -k ssh_key_modification
+# --- 4. PERSISTENCE & CRITICAL FILE ACCESS ---
+-w /root/.ssh -p wa -k ssh_root_persistence
+-w /home -p wa -k ssh_user_persistence
+-w /etc/passwd -p wa -k identity
+-w /etc/shadow -p wa -k identity
+-w /etc/group -p wa -k identity
+-w /etc/gshadow -p wa -k identity
+-w /etc/passwd -p r -k cat_sensitive_file
+-w /etc/shadow -p r -k cat_sensitive_file
+-w /etc/sudoers -p wa -k sudoers_modification
+-w /etc/sudoers.d/ -p wa -k sudoers_modification
 
-## Make Configuration Immutable Until Next Reboot
+# --- 5. STAGING DIRECTORY EXECUTION AUDITING ---
+-a always,exit -F arch=b64 -S execve -F dir=/tmp -k suspicious_exec_dir
+-a always,exit -F arch=b32 -S execve -F dir=/tmp -k suspicious_exec_dir
+-a always,exit -F arch=b64 -S execve -F dir=/opt -k suspicious_exec_dir
+-a always,exit -F arch=b32 -S execve -F dir=/opt -k suspicious_exec_dir
+
+# --- 6. LOCK RULES AGAINST RUNTIME TAMPERING ---
+# -e 2 locks configuration until system reboot
 -e 2
 EOF'
 
@@ -203,6 +231,10 @@ EOF'
 sudo augenrules --load
 sudo auditctl -s
 ```
+
+> [!NOTE]
+> **Engineering Rationale on Audit Keys & Wazuh Rule Mapping:**  
+> In the live simulation dataset ([`Wazuh-Raw-Alerts.csv`](../../06-Resources/alerts/Wazuh-Raw-Alerts.csv)), exactly 20 events match `audit.key`, and all 20 fired on `-k web_process_creation` (capturing Stage 05 web shell `id` and Stage 06 reverse shell preparation). The remaining keys (`identity`, `cat_sensitive_file`, `ssh_root_persistence`, `suspicious_exec_dir`, `process_execution`) provide defense-in-depth protection and directly bind to Wazuh Custom Rules `100180`, `100199`, `100217`, and `100218` in `local_rules.xml`.
 
 ---
 

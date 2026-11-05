@@ -69,7 +69,7 @@ ip route show
 
 ```
 Victim Host (192.168.56.x)
-  → Default Gateway: 192.168.56.150 (Suricata eth1)
+  → Default Gateway: 192.168.56.150 (Suricata ens37)
     → WireGuard Tunnel Interface: wg0 (10.8.0.2)
       → Encrypted UDP 51820 Tunnel → TheHive VM (10.8.0.1 / 10.122.0.4)
         → Private Cloud VNet Peering (Low Latency Transit)
@@ -310,7 +310,7 @@ Custom decoders parse unstructured log streams into indexed fields, while custom
 Deployed directly from [`03-Detection-Engineering/Wazuh/local_decoder.xml`](../../06-Resources/rules/wazuh/local_decoder.xml) to handle Suricata JSON payloads, Auditd fields, and Windows command-line extraction:
 
 ```bash
-sudo cp /path/to/SOC-Lab/03-Detection-Engineering/Wazuh/local_decoder.xml /var/ossec/etc/decoders/local_decoder.xml
+sudo cp /path/to/SOC-Lab/06-Resources/rules/wazuh/local_decoder.xml /var/ossec/etc/decoders/local_decoder.xml
 sudo chown root:wazuh /var/ossec/etc/decoders/local_decoder.xml
 sudo chmod 660 /var/ossec/etc/decoders/local_decoder.xml
 ```
@@ -319,7 +319,7 @@ sudo chmod 660 /var/ossec/etc/decoders/local_decoder.xml
 Deployed directly from [`03-Detection-Engineering/Wazuh/local_rules.xml`](../../06-Resources/rules/wazuh/local_rules.xml) (over 1,300 lines of custom rules covering MITRE ATT&CK techniques, LOLBins, web shells, Kerberoasting, DCSync, pass-the-hash, and 87 noise suppression rules):
 
 ```bash
-sudo cp /path/to/SOC-Lab/03-Detection-Engineering/Wazuh/local_rules.xml /var/ossec/etc/rules/local_rules.xml
+sudo cp /path/to/SOC-Lab/06-Resources/rules/wazuh/local_rules.xml /var/ossec/etc/rules/local_rules.xml
 sudo chown root:wazuh /var/ossec/etc/rules/local_rules.xml
 sudo chmod 660 /var/ossec/etc/rules/local_rules.xml
 ```
@@ -361,20 +361,14 @@ When an alert with `level >= 8` fires, Wazuh executes `/var/ossec/integrations/c
 
 ```bash
 # 1. Install the wrapper script from repository resources
-sudo cp /path/to/SOC-Lab/../../06-Resources/scripts/custom-thehive /var/ossec/integrations/custom-thehive
+sudo cp /path/to/SOC-Lab/06-Resources/scripts/custom-thehive /var/ossec/integrations/custom-thehive
 sudo chmod 750 /var/ossec/integrations/custom-thehive
 sudo chown root:wazuh /var/ossec/integrations/custom-thehive
 
-# 2. Initialize the SQLite correlation database
-sudo sqlite3 /var/ossec/logs/correlation_state.db "
-CREATE TABLE IF NOT EXISTS queue (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    alert_json TEXT,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-    status TEXT DEFAULT 'pending'
-);
-PRAGMA journal_mode=WAL;
-"
+# 2. Prepare SQLite WAL correlation database directory & permissions
+# Note: The 12-table correlation schema (pending_groups, standalone_outbox, group_stages, etc.)
+# is automatically initialized by custom-thehive.py upon first execution.
+sudo touch /var/ossec/logs/correlation_state.db
 sudo chown root:wazuh /var/ossec/logs/correlation_state.db*
 sudo chmod 660 /var/ossec/logs/correlation_state.db*
 ```
@@ -384,23 +378,39 @@ The daemon script [`custom-thehive.py`](../../06-Resources/scripts/custom-thehiv
 
 ```bash
 # 1. Copy the correlation engine script and fingerprint catalog
-sudo cp /path/to/SOC-Lab/../../06-Resources/scripts/custom-thehive.py /var/ossec/integrations/custom-thehive.py
-sudo cp /path/to/SOC-Lab/../../06-Resources/scripts/tool_fingerprints.json /var/ossec/integrations/tool_fingerprints.json
+sudo cp /path/to/SOC-Lab/06-Resources/scripts/custom-thehive.py /var/ossec/integrations/custom-thehive.py
+sudo cp /path/to/SOC-Lab/06-Resources/scripts/tool_fingerprints.json /var/ossec/integrations/tool_fingerprints.json
 sudo chmod 750 /var/ossec/integrations/custom-thehive.py
 sudo chown root:wazuh /var/ossec/integrations/custom-thehive.py /var/ossec/integrations/tool_fingerprints.json
 
 # 2. Deploy the systemd service unit
 sudo tee /etc/systemd/system/thehive-flush.service << 'EOF'
 [Unit]
-Description=TheHive Alert Flush Daemon
+Description=thecustomhive - Wazuh to TheHive Batched Alert Flush Daemon
 After=network.target wazuh-manager.service
+Wants=network-online.target
 
 [Service]
 Type=simple
 User=root
-ExecStart=/usr/bin/python3 /var/ossec/integrations/custom-thehive.py --flush-daemon
+WorkingDirectory=/var/ossec/integrations
+ExecStart=/var/ossec/framework/python/bin/python3 /var/ossec/integrations/custom-thehive.py --flush-daemon
 Restart=always
-RestartSec=5s
+RestartSec=10
+
+# Environment Configuration
+Environment="THEHIVE_URL=http://10.122.0.4:9000/api/v1"
+Environment="THEHIVE_API_TOKEN=<REDACTED_API_TOKEN>"
+Environment="THEHIVE_CORRELATION_DB=/var/ossec/logs/correlation_state.db"
+Environment="THEHIVE_FLUSH_INTERVAL=5.0"
+Environment="THEHIVE_FLUSH_BATCH=50"
+Environment="THEHIVE_VERIFY_SSL=0"
+
+# Process hardening
+ProtectSystem=full
+NoNewPrivileges=true
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
@@ -421,8 +431,8 @@ Four agents forward telemetry to this Wazuh Manager over `1514/TCP`:
 |:---:|------------|--------------|------------|------------------|---------------------|
 | `001` | **Suricata** | Suricata Gateway | `192.168.56.150` | Ubuntu 24.04 LTS | Suricata `eve.json` NIDS alerts |
 | `002` | **DVWA** | DVWA Web Server | `192.168.56.30` | Ubuntu 24.04 LTS | Apache access/error logs, Linux Auditd, PAM |
-| `003` | **Win10User** | Windows 10 Workstation | `192.168.56.20` | Windows 10 Pro N (22H2) | Sysmon (EID 1, 3, 7, 11), Security EID 4688, PowerShell EID 4104 |
-| `004` | **DomainWin10** | Domain Controller (PC-DC) | `192.168.56.10` | Windows Server 2022 | Active Directory DS Access, Kerberos EID 4769/4768, Sysmon, Directory Changes |
+| `003` | **Win10User** | Windows 10 Workstation | `192.168.56.20` | Windows 10 Pro N (22H2) | Sysmon (EID 1, 3, 11, 12/13, 17/18), Security EID 4688, PowerShell EID 4104 |
+| `004` | **DomainWin10** | Domain Controller (PC-DC) | `192.168.56.10` | Windows Server 2022 | Security EID 4624, 4672, 4720, 4728, 4732, 4738, Sysmon EID 1, 3, PowerShell EID 4104 |
 
 ### Enrolling Agents via `wazuh-authd`
 
@@ -486,7 +496,7 @@ sudo systemctl status thehive-flush.service --no-pager
 ls -lh /var/ossec/etc/lists/*.cdb
 
 # 4. Check SQLite WAL queue depth and pending status
-sudo sqlite3 /var/ossec/logs/correlation_state.db "SELECT status, count(*) FROM queue GROUP BY status;"
+sudo sqlite3 /var/ossec/logs/correlation_state.db "SELECT count(*) AS pending_outbox FROM standalone_outbox;"
 
 # 5. Check real-time integration daemon activity
 sudo journalctl -u thehive-flush.service -n 50 --no-pager

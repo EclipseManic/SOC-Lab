@@ -5,7 +5,7 @@
 | **OS** | Kali Linux (Rolling Release) |
 | **Role** | Primary adversary attack platform |
 | **Address** | `192.168.232.135/24` (VMware VMnet8 — NAT) |
-| **Resources** | 6 vCPU · 6 GB RAM |
+| **Resources** | 4 vCPU · 6 GB RAM · 40 GB SSD |
 | **Default Gateway** | `192.168.232.2` (VMware NAT Gateway) |
 | **Static Route** | `192.168.56.0/24` via `192.168.232.162` (Suricata Gateway) |
 | **SSH Management** | Dedicated administrative key (`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5...<REDACTED_MANAGEMENT_KEY>... soc-analyst@management`) |
@@ -162,5 +162,5 @@ wc -l /usr/share/wordlists/rockyou.txt
 
 - [Suricata Gateway](suricata-gateway.md) — Perimeter router & IDS sensor bridging Kali to victims
 - [DVWA Web Target & Pivot](dvwa.md) — Initial access web target and internal pivot host
-- [Lab Setup & Architecture](../README.md) — Complete 8-machine network topology and routing
+- [Lab Setup & Architecture](../README.md) — Complete 7-system network topology and routing
 - [Attack Simulation Directory](../../02-Attack-Simulation/README.md) — 20-stage attack campaign

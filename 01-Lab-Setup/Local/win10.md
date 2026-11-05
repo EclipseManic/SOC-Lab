@@ -9,7 +9,7 @@
 | **Default gateway** | `192.168.56.150` (Suricata Gateway) |
 | **Primary DNS** | `192.168.56.10` (`PC-DC.ad.lab`) |
 | **Domain** | `ad.lab` |
-| **Domain User Account** | `ad\victim` (Standard Domain User) |
+| **Domain User Account** | `AD\win10` (Primary compromised user) · `AD\victim` (Synthetic baseline user) |
 | **Local Account** | `win10` / `Secur3Lab!` |
 | **Resources** | 2 vCPU · 4 GB RAM · 60 GB NVMe |
 | **Wazuh agent** | `Win10User` (Agent ID: `003`) |
@@ -113,7 +113,7 @@ Get-Service Sysmon64
 |:---:|---|---|
 | **EID 1** | **Process Creation** | Explicitly audits 13 command interpreters and LOLBins (`cmd.exe`, `powershell.exe`, `pwsh.exe`, `whoami.exe`, `net.exe`, `net1.exe`, `nltest.exe`, `dsquery.exe`, `klist.exe`, `reg.exe`, `schtasks.exe`, `certutil.exe`, `rundll32.exe`). Tracks parent process `WmiPrvSE.exe` spawning child processes, and command lines matching `\ADMIN$\__`. Captures Impacket `wmiexec` fan-out in Stage 15, 17, 18, and 20. |
 | **EID 3** | **Network Connection** | Audits inbound and outbound connections on critical lateral movement ports: `445/TCP` (SMB), `135/TCP` (RPC), `389/TCP` & `636/TCP` (LDAP/S), `5985/TCP` & `5986/TCP` (WinRM), and `88/TCP` (Kerberos). |
-| **EID 11** | **File Creation** | Monitors script, executable, and image file creation (`.exe`, `.ps1`, `.bat`, `.vbs`, `.bmp`) in high-risk staging directories (`C:\Users\Public\` and `C:\Windows\Temp\`). Tracks wallpaper staging during Stage 20 Impact. |
+| **EID 11** | **File Creation** | Monitors script, executable, and image file creation (`.bmp`, `.exe`, `.ps1`, `.vbs`) in high-risk staging directories (`C:\Users\Public\` and `C:\Windows\Temp\`). Tracks wallpaper staging during Stage 20 Impact. |
 | **EID 12 / 13** | **Registry Modification** | Audits persistence keys (`CurrentVersion\Run`, `RunOnce`, `Winlogon`, `Services`, `IFEO`) and wallpaper defacement keys (`Control Panel\Desktop\Wallpaper`). |
 | **EID 17 / 18** | **Named Pipes** | Audits connection to high-value administrative RPC pipes (`spoolss`, `atsvc`, `svcctl`). |
 
@@ -121,7 +121,9 @@ Get-Service Sysmon64
 > **Impacket `wmiexec` Telemetry Reality:** Impacket's `wmiexec.py` executes commands remotely by invoking the WMI `Win32_Process.Create` method over DCOM/RPC (`135/TCP` + ephemeral ports). The WMI service host (`WmiPrvSE.exe`) executes `cmd.exe /Q /c <command> &> \\127.0.0.1\ADMIN$\__<timestamp> 2>&1` and transfers output back over SMB (`445/TCP`). Impacket does **not** create a named pipe. Detection is reliably achieved through Sysmon Event ID 1 (parent `WmiPrvSE.exe` spawning `cmd.exe` with `\ADMIN$\__` redirection), mapped to Wazuh Rule `100613`.
 
 > [!TIP]
-> High-volume events such as Image Load (EID 7), CreateRemoteThread (EID 8), and raw DNS queries (EID 22) are deliberately excluded in `sysmonconfig.xml` to prevent log volume bloat and preserve hypervisor performance.
+> **Engineering Rationale on Sysmon Event Exclusions (EID 7, 8, 10, 22):**  
+> - **Performance Overhead vs. Forensic Signal:** High-volume event categories like Image Load (EID 7), CreateRemoteThread (EID 8), and raw DNS queries (EID 22) were intentionally omitted in `sysmonconfig.xml` to avoid CPU thrashing and disk saturation on a 4 GB RAM VM while concentrating detection fidelity on process creation, network sockets, file staging, and registry tampering.
+> - **Sysmon Event ID 10 (`ProcessAccess` targeting `lsass.exe`) Trade-Off:** EID 10 intercepts process handle access and is the standard sensor mechanism for detecting local LSASS memory dumping (e.g. Mimikatz or Procdump). However, monitoring `lsass.exe` on constrained VMs generates severe context-switching overhead from legitimate OS security services. In this lab, adversary credential theft operated via network authentication coercion (Stage 10 Responder) and DRSUAPI replication (Stage 14 DCSync) rather than local LSASS memory injection, so EID 10 was omitted from the baseline and is documented as a post-campaign hardening enhancement.
 
 ---
 
