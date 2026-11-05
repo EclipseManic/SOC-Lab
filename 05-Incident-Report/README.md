@@ -69,10 +69,11 @@ flowchart TD
 All post-mortem analysis across these reports is grounded in the authoritative telemetry captures of our hybrid enterprise environment:
 
 - **Total Adversary Attack Stages:** **20 Stages** (Execution span: 74 minutes).
-- **Direct Target-Side Detections:** **14 Stages (70.0%)** (Target host/wire inspected payloads, commands, or process trees).
-- **Operational TheHive Alert Coverage:** **16 Stages (80.0%)** (Live actionable tickets delivered to SOC analysts).
-- **Documented Telemetry Limits:** **4 Stages (20.0%)** (2 Inherent Offline Cracking [DG-04, DG-11]; 2 Target Logging Limits [DG-09, DG-12]).
-- **Detection Rule Failures:** **0 Stages (0.0%)** (Zero false negatives where expected telemetry reached an agent).
+- **Direct Target-Side & Wire Detections:** **18 Stages (90.0%)** (Target host/wire inspected payloads, commands, network sweeps, privilege assignments, or process trees).
+- **Operational TheHive Alert Delivery:** **18 Stages (90.0%)** (Live actionable tickets delivered to SOC analysts across 46 security alerts).
+- **Inherent Offline Computation Gaps:** **2 Stages (10.0%)** (2 Inherent Offline Cracking stages [DG-04, DG-11]).
+- **Target-Side Logging Gaps:** **0 Stages (0.0%)** (All online stages detected on target/wire sensors).
+- **Detection Engine Rule Drops:** **0 Stages (0.0%)** (Zero false negatives or rule execution drops).
 - **Total OpenSearch Raw Baseline Events:** **9,567 raw alerts** ([`Wazuh-Raw-Alerts.csv`](../06-Resources/alerts/Wazuh-Raw-Alerts.csv)).
 - **Curated Investigation Alert Dataset:** **808 forensic alerts** ([`wazuh_alerts.csv`](../06-Resources/alerts/wazuh_alerts.csv)).
 - **Actionable TheHive 5 Incident Tickets:** **46 ingested alerts** ([`thehive_alerts.json`](../06-Resources/alerts/thehive_alerts.json)).
