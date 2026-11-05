@@ -151,13 +151,13 @@ auditpol /set /subcategory:"Process Creation" /success:enable /failure:disable
 |:---:|---|---|---|
 | **4624** | Logon (LogonType 3) | Network logon from unauthorized Linux DMZ IP (`192.168.56.30`); caught by Custom Rule `100615` & Rule `92657` | **Stage 12** (BloodHound, Rows 9254, 9265), **Stage 15** (PTH), **Stage 16** (Golden Ticket, Row 9308) |
 | **4672** | Sensitive Privilege | Special privileges assigned to new logon (`SeDebugPrivilege`); caught by Custom Rule `100603` | **Stage 14** (`HANK_SHERMAN`, Rows 9268–9269, 9283), **Stage 16** (`Administrator`, Row 9307) |
-| **4720 / 4722** | User Management | New domain user account created and enabled (`AD\backdoor`); caught by Wazuh Rule `60109` | **Stage 17** (DC Persistence: Alert #30 `wzb-0ca68f0814`) |
-| **4728** | Group Management | User added to privileged global security group (`Domain Admins`); caught by Wazuh Rule `60159` | **Stage 17** (PrivEsc: Alert #33 `wzb-9be8be6108`) |
-| **4732** | Local Group Mgmt | User added to local security group; caught by Wazuh Rule `60154` | **Stage 17** (Alert #34 `wzb-c2dc69c9b7`) |
+| **4720 / 4722** | User Management | New domain user account created and enabled (`AD\backdoor`); caught by Wazuh Rule `60109` | **Stage 17** (DC Persistence: Alert #30 `wzb-26b4d06a63`) |
+| **4728** | Group Management | User added to privileged global security group (`Domain Admins`); caught by Wazuh Rule `60159` | **Stage 17** (PrivEsc: Alert #33 `wzb-4125e4ac63`) |
+| **4732** | Local Group Mgmt | User added to local security group; caught by Wazuh Rule `60154` | **Stage 17** (Alert #31 `wzb-5f5a18ce46`, Alert #34 `wzb-084193beae`) |
 | **4738** | User Modification | Domain user account modified; caught by Wazuh Rule `60110` | **Stage 17** (Alert #46 `wzb-1834f3248e` at 18:36:34 IST) |
 | **Sysmon EID 1** | Process Creation | Impacket `wmiexec` command execution (`cmd.exe /Q /c`); caught by Custom Rule `100613` | **Stages 15, 16, 17, 18, 20** (Alerts #25–#28, #35, #38–#42) |
 | **Sysmon EID 1** | Process Creation | Desktop wallpaper defacement (`reg.exe add`); caught by Rule `92041` | **Stage 20** (Impact: Alerts #40, #41, #44, #45) |
-| **System 1074** | System Shutdown | Forced operating system reboot (`shutdown.exe /r /t 0`) | **Stage 20** (Alert #42 `wzb-d8d5df2f7c`) |
+| **System 1074** | System Shutdown | Forced operating system reboot (`shutdown.exe /r /t 0`) | **Stage 20** (Alert #39 `wzb-71ef983ad8`, Alert #42 `wzb-1f43c1540f`) |
 
 ---
 

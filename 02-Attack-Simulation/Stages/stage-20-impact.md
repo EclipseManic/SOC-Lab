@@ -163,7 +163,7 @@ Stage 20 generated a massive, high-fidelity alert burst spanning network intrusi
 | Wazuh / Sysmon | Value added to registry key has Base64-like pattern (WallpaperStyle on Win10) | 92041 | `[FANOUT x1] [Win10User] parent PID 3880` | Medium (2) | Detected |
 
 > [!IMPORTANT]
-> **Heavy Alerting Observed:** Every component of the impact stage triggered actionable telemetry. Sysmon process tracking caught the Impacket shell pipelines (Rule 100613); Sysmon registry event tracking caught the wallpaper alterations (Rule 92041); and Suricata captured the SMB NTLM handshake (Rule 86601) as the attacker moved laterally from DVWA to the Windows 10 workstation.
+> **Heavy Alerting Observed:** Every component of the impact stage triggered actionable telemetry. Sysmon process tracking caught the Impacket shell pipelines (Rule 100613); Sysmon process creation tracking caught the wallpaper alterations (EID 1 reg.exe add, Rule 92041); and Suricata captured the SMB NTLM handshake (Rule 86601) as the attacker moved laterally from DVWA to the Windows 10 workstation.
 
 ## MITRE ATT&CK
 

