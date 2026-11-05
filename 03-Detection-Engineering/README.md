@@ -42,20 +42,19 @@ Before examining rules and code, here are the authentic results from our 20-stag
 
 ---
 
-### 🎯 Analytical Detection Framework: Stage-Level vs. Command-Wise Coverage
+### 🎯 Why Looking at "Stages" Alone Doesn't Tell the Whole Story
 
-When evaluating detection engineering effectiveness, measuring solely by coarse "attack stages" can create a distorted picture of security posture:
+If you only count stages on a spreadsheet, you might think offline password cracking was a defensive blind spot. But in a real SOC, you look at the **entire lifecycle of the stolen credential**:
 
-1. **The "Offline Cracking" Paradox (Stages 04 & 11):**
-   * Password cracking with Hashcat/John ran offline on the adversary's private GPU hardware. Naturally, no victim enterprise agent can run on an external attacker machine.
-   * **However, the entire operational lifecycle of the credential was detected by enterprise sensors**:
-     - **Initial Hash Extraction:** The SQL injection dumping the database was detected by Suricata and Wazuh (Stage 03 / Alert #11), while the Responder LLMNR harvesting was detected by Wazuh bashcmd (`Rule 100220`), Win10 endpoint telemetry (`Rule 100278` `DavSetCookie`), and SSH session correlation (`Rule 5715` / Alert #20).
-     - **Exfiltration / Transfer:** The rapid SCP/SSH file transfer was detected by Wazuh Rule 5715.
-     - **Unauthorized Authentication:** The subsequent logon using the cracked password was detected on the target web application (POST `/login.php`) and Active Directory domain (Windows Security Event ID 4624 Logon Type 3).
-   * From a practical SOC perspective, the adversary was never invisible; their actions were intercepted at the ingress and execution boundaries.
+1. **The Attacker Cracks Hashes on Their Own Hardware (Stages 04 & 11):**
+   You can't install an agent on an attacker's laptop. When they crack passwords offline using Hashcat on their GPU, our lab servers don't see a single packet or CPU cycle. But we still caught them at every step around it:
+   - **We caught the initial theft:** Suricata caught the SQL injection dumping the database in Stage 03 (Alert #11), while Linux Auditd and Wazuh caught Responder poisoning in Stage 10 (Alert #20).
+   - **We caught the file transfer:** Wazuh Rule 5715 flagged the rapid SCP/SSH session used to pull the hash file to Kali.
+   - **We caught the unauthorized login:** The moment they used the cracked password, our sensors lit up—hitting `/login.php` on the web server, and triggering Windows Event ID 4624 (Logon Type 3) on the domain.
+   From a practical SOC perspective, the attacker was never invisible; we intercepted them the moment they touched our systems.
 
-2. **Command- and Activity-Wise Detection Matrix (100% of Observable Procedures Caught):**
-   Evaluating detection command-by-command and procedure-by-procedure demonstrates that every single observable adversary action that touched the network wire or endpoint operating systems was intercepted:
+2. **Every Command That Touched Our Systems Was Caught (100% of Observable Actions):**
+   When you look at actual commands typed and actions executed—port scans, webshell uploads, running `id`, typing `sudo -l`, dropping SSH keys, running Responder, Kerberoasting, Pass-the-Hash, creating backdoors, and altering the registry—our sensors intercepted every single one:
 
 | Phase | Observable Procedure / Command Executed | Target Host | Defensive Sensor | Detection Rule / Signature | Visual Proof Link | Status |
 |:---|:---|:---|:---|:---|:---|:---:|

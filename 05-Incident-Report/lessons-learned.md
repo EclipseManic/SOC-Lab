@@ -20,13 +20,13 @@ This document details the strategic takeaways, defensive successes, architectura
 
 ---
 
-# 1. Operational Post-Mortem Executive Overview
+# 1. Executive Summary: What We Learned
 
-The primary objective of campaign `INC-2026-1018-ALPHA` was to test whether a modern, resource-constrained Security Operations Center could detect, track, contain, and eradicate a sophisticated kill chain progressing from an external web application breach to total Active Directory forest compromise.
+The main goal of this 74-minute exercise was simple: **Can a modern, small-team SOC detect, track, and stop a determined attacker moving from a web vulnerability all the way to an Active Directory domain takeover?**
 
-Our key post-mortem conclusion is that **prevention without zero-trust micro-segmentation is guaranteed to fail, but multi-sensor detection fabric paired with rapid live-response tooling can successfully detect and sever an adversary before unrecoverable harm occurs**. 
+The biggest takeaway from this simulation: **Perimeter defenses will eventually be breached, but layered detection—paired with fast, decisive live-response commands—can reliably catch and sever an attacker before permanent damage is done.**
 
-While the adversary achieved Tier Zero Active Directory dominance in under 55 minutes, defensive sensors captured empirical telemetry across **18 of 20 stages (90.0%)**, with zero detection engine rule execution failures.
+Even though the attacker moved fast and reached Domain Admin in under 55 minutes, our defensive sensors captured actionable telemetry across **18 out of 20 stages (90.0%)**, with zero rule engine crashes or dropped logs.
 
 ---
 
@@ -60,9 +60,9 @@ While Stages 04 (MD5 password cracking) and 11 (NTLMv2 password cracking) genera
 
 ---
 
-# 3. Telemetry Ingestion Latency, Buffer Flushing & Multi-Sensor Arrival Mechanics
+# 3. Why Timestamps Vary by a Few Seconds in Real SOC Environments
 
-A critical finding from our investigation is that **in commercial SOC environments, raw event timestamps naturally exhibit slight offsets (1–3 seconds, or minutes for interactive shells)**. Understanding these architectural mechanics is vital for tier-1/tier-2 analysts to avoid mistaking ingestion skew for forensic errors:
+One of the most practical takeaways from this investigation is that **in a real security operations center, raw event timestamps across different tools will often differ by a few seconds (or even a few minutes for interactive shell sessions)**. Understanding why this happens is crucial so analysts don't mistake normal pipeline mechanics for errors:
 
 ```mermaid
 flowchart TD
