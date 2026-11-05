@@ -59,9 +59,10 @@ To validate the ticket, the attacker exported the environment variable `KRB5CCNA
 
 | Source | Rule / Event Description | Rule ID | TheHive Alert Title | Severity | Status |
 |---|---|---|---|---|---|
+| Domain Controller (`DomainWin10`) | Windows Security Event ID 4624 (LogonType 3 Kerberos) & Sysmon EID 1 (`wmiexec.py -k`) | Custom Rules 100615, 100603, 100613 | TheHive Alerts #27 & #28 (`wzb-ccff195e0c`, `wzb-c200f52606`) | High (3) | **Detected (Direct Target-Side & SOAR Delivery)** |
 | Wazuh (Host Command Audit) | Bash command by root: `python3 /usr/local/bin/ticketer.py -nthash ...` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9306) | High | **Detected (Verbatim Command Capture)** |
 | Wazuh (Host Command Audit) | Bash command by root: `export KRB5CCNAME=/tmp/Administrator.ccache` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9307) | Medium | Detected (Kerberos Cache Activation) |
-| Wazuh (Pivot Host) | sshd: authentication success (Pivot Session Alert) | Rule 5715 (Level 8) | `[2x] [DVWA] Logon activity: ROOT @ 192.168.232.135` (`14.png`) | Medium | Pivot-Only Coverage |
+| Wazuh (Pivot Host) | sshd: authentication success (Pivot Session Alert) | Rule 5715 (Level 8) | `[2x] [DVWA] Logon activity: ROOT @ 192.168.232.135` (`14.png`) | Medium | Detected (Pivot Session Attribution) |
 | Active Directory / Kerberos | Kerberos TGS request without matching AS-REQ / RC4 encryption | Event ID 4769 | Local DC Security Log (`Security.evtx`) | Medium | Detected (Local DC Telemetry) |
 
 > [!NOTE]

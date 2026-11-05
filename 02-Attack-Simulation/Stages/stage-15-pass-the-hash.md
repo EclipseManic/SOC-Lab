@@ -63,9 +63,10 @@ With full interactive command execution confirmed on `PC-DC`, the adversary esta
 
 | Source | Rule | Rule ID | TheHive Alert | Severity | Status |
 |---|---|---|---|---|---|
-| Wazuh (Windows Agent) | Successful Remote Logon Detected - User:\Administrator - NTLM authentication, possible pass-the-hash attack | Windows Security Event ID 4624 (Logon Type 3 NTLM) | 24x in `Wazuh-Raw-Alerts.csv` (EID 4624) & `wzb-b7f91cd3ab` | High (3) | DETECTED |
-| Suricata / Wazuh | ET EXPLOIT Possible MS14-068 GoldenPac Priv Esc in-use | Rule 86601 / SID 2019922 | `[1x] [Suricata] Suricata: Alert - ET EXPLOIT Possible GoldenPac Priv Esc in-use` | Medium (2) | DETECTED |
-| Wazuh (Host Command Audit) | Bash command by root: `python3 wmiexec.py -hashes :cc814... Administrator@192.168.56.10` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9304) | High | DETECTED (Verbatim PtH Invocations) |
+| Windows Security (`DomainWin10`) | Successful Remote Logon Detected - User:\Administrator - NTLM authentication, possible pass-the-hash attack | Windows Security Event ID 4624 (Logon Type 3 NTLM) / Rule 92657 | 24x in `Wazuh-Raw-Alerts.csv` & Alerts #25, #26 (`wzb-b7f91cd3ab`, `wzb-83be61ee53`) | High (3) | **Detected (Direct Target-Side & SOAR Delivery)** |
+| Windows Sysmon (`DomainWin10`) | Impacket command execution: `cmd.exe /Q /c whoami > \\127.0.0.1\ADMIN$\__*` | Wazuh Custom Rule 100613 (Sysmon EID 1) | TheHive Alerts #25, #26 | High (3) | **Detected (Process Execution Telemetry)** |
+| Suricata / Wazuh | ET EXPLOIT Possible MS14-068 GoldenPac Priv Esc in-use (promiscuous capture on ens37) | Rule 86601 / SID 2019922 | `[1x] [Suricata] Suricata: Alert - ET EXPLOIT Possible GoldenPac Priv Esc in-use` | Medium (2) | Detected (Network Wire Heuristic) |
+| Wazuh (Host Command Audit) | Bash command by root: `python3 wmiexec.py -hashes :cc814... Administrator@192.168.56.10` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9304) | High | Detected (Verbatim PtH Invocation) |
 
 ### Detection Analysis
 

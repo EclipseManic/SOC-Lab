@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached
 > **Case:** [Case 01](../../04-Investigation/Cases/case-01-web-compromise.md)
 > **Investigation:** [Phase 1 Deep Dive](../../04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-1-rattling-the-doorknobs-reconnaissance--web-exploitation)
-> **Evidence:** [attack](../../06-Resources/screenshots/attack-simulation/10.png) · [alert (none)](../../03-Detection-Engineering/README.md#challenge-3-the-honest-gap-register-why-80-detection-is-real-security)
+> **Evidence:** [attack](../../06-Resources/screenshots/attack-simulation/10.png) · [alert (none)](../../03-Detection-Engineering/README.md#detection-gap-register)
 
 ## Objective
 
@@ -55,6 +55,7 @@ hashcat -m 0 -a 0 /tmp/dvwa_hashes.txt /usr/share/wordlists/rockyou.txt
 | Source | Rule | Rule ID | TheHive alert | Severity |
 |---|---|---|---|---|
 | *None (Offline Activity)* | *N/A* | *N/A* | *No alert generated (DG-04)* | *N/A* |
+| **Adversary Lifecycle Attribution** | Upstream: SQLi (Stage 03 / Alert #11) · Downstream: Web Login (Stage 05 / Rule 100200) | SIDs 2010963, Wazuh 100600 / 100200 | `wzb-6a22425401` | High (3) |
 
 ## MITRE ATT&CK
 
@@ -76,4 +77,4 @@ hashcat -m 0 -a 0 /tmp/dvwa_hashes.txt /usr/share/wordlists/rockyou.txt
 ## Notes
 
 - All four extracted hashes were identified and cracked almost instantaneously due to the use of unsalted MD5 hashing and trivial passwords.
-- This activity confirms **Detection Gap DG-04** in [Detection Gap Register](../../03-Detection-Engineering/README.md#challenge-3-the-honest-gap-register-why-80-detection-is-real-security).
+- This activity confirms **Detection Gap DG-04** in [Detection Gap Register](../../03-Detection-Engineering/README.md#detection-gap-register).

@@ -131,7 +131,7 @@ echo "192.168.56.10 PC-DC.ad.lab ad.lab" >> /etc/hosts
 
 > [!NOTE]
 > **Host-Side vs. Wire Detection:**  
-> While the internal virtual switches did not log the sweep (creating an internal target logging gap DG-09), Suricata caught the internal wire frames on interface `ens37` (Alert 8), and Wazuh Rule 100220 captured the exact command-line execution (`nmap -sV -O 192.168.56.0/24 --open`) on the DVWA pivot at `17:31:19 IST` (Row 9184), followed by the perimeter subnet scan at `17:32:27 IST` (Row 9215).
+> Suricata directly captured the internal reconnaissance wire frames on interface `ens37` (Alert 8: SIDs 3400001, 3400002, 3400020 via `wzb-3152e3ed59`, `wzb-f87fab3eda`, `wzb-de91bad685`), and Wazuh Rule 100220 captured the exact command-line execution (`nmap -sV -O 192.168.56.0/24 --open`) on the DVWA pivot at `17:31:19 IST` (Row 9184), followed by the perimeter subnet scan at `17:32:27 IST` (Row 9215).
 
 ## MITRE ATT&CK
 

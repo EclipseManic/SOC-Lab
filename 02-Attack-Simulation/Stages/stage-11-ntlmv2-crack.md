@@ -3,7 +3,7 @@
 > **Status:** Complete — evidence attached  
 > **Case:** [Case 02](../../04-Investigation/Cases/case-02-lateral-movement.md)  
 > **Investigation:** [Phase 4 Deep Dive](../../04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-4-poisoning-the-well-stealing-windows-passwords-with-responder)  
-> **Evidence:** [attack](../../06-Resources/screenshots/attack-simulation/31.png) · [alert (none)](../../03-Detection-Engineering/README.md#challenge-3-the-honest-gap-register-why-80-detection-is-real-security)
+> **Evidence:** [attack](../../06-Resources/screenshots/attack-simulation/31.png) · [alert (none)](../../03-Detection-Engineering/README.md#detection-gap-register)
 
 ---
 
@@ -65,11 +65,12 @@ Because NetNTLMv2 challenge-response hashes cannot be used directly in Pass-the-
 
 | Source | Rule | Rule ID | TheHive Alert | Severity | Status |
 |---|---|---|---|---|---|
-| None (Offline) | N/A (Offline Cracking) | N/A | None | N/A | NOT DETECTED (Detection Gap DG-11) |
+| None (Offline) | N/A (Offline Cracking) | N/A | None | N/A | Investigatively Attributed (Inherent Offline Gap DG-11) |
+| **Adversary Lifecycle Attribution** | Upstream: Responder Harvest (Stage 10 / Alert #20) · Downstream: BloodHound Logon (Stage 12 / Alert #22) | Wazuh Rules 100220, 100278, 100615, 92657 | `wzb-72bc2bc36e`, `wzb-1e9fb54d94` | High (3) |
 
 ### Detection Gap Details
 
-- **Gap Identifier:** [DG-11](../../03-Detection-Engineering/README.md#challenge-3-the-honest-gap-register-why-80-detection-is-real-security)
+- **Gap Identifier:** [DG-11](../../03-Detection-Engineering/README.md#detection-gap-register)
 - **Root Cause:** Offline cryptographic attacks generate zero host, endpoint, or network telemetry on the victim infrastructure. Once a challenge-response hash is captured over the wire or extracted from memory, cracking is conducted entirely out-of-band on adversary-owned hardware.
 - **Defensive Significance:** Detection cannot rely on spotting the cracking process itself. SOC teams must focus detection efforts upstream on hash extraction/poisoning (Stage 10) or downstream on the initial logon using the cracked credential (Stage 12).
 
