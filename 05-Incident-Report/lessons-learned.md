@@ -26,7 +26,7 @@ The primary objective of campaign `INC-2026-1018-ALPHA` was to test whether a mo
 
 Our key post-mortem conclusion is that **prevention without zero-trust micro-segmentation is guaranteed to fail, but multi-sensor detection fabric paired with rapid live-response tooling can successfully detect and sever an adversary before unrecoverable harm occurs**. 
 
-While the adversary achieved Tier Zero Active Directory dominance in under 55 minutes, defensive sensors captured empirical telemetry across **16 of 20 stages (80.0%)**, with zero detection engine rule execution failures.
+While the adversary achieved Tier Zero Active Directory dominance in under 55 minutes, defensive sensors captured empirical telemetry across **18 of 20 stages (90.0%)**, with zero detection engine rule execution failures.
 
 ---
 
@@ -96,17 +96,16 @@ flowchart TD
 
 # 4. Documented Detection Limits & Architectural Blind Spots
 
-Our audit identified **four primary stage detection boundaries** plus **one protocol payload inspection limit** that require specialized defensive counter-strategies:
+Our audit identified **two inherent offline computation gaps** plus **one wire protocol payload inspection boundary** that require specialized defensive counter-strategies:
 
-- **Primary Stage Telemetry Boundaries (4 Stages / 20.0%):** Encompasses two **Inherent Offline Computation Gaps** (`DG-04`, `DG-11`) where zero victim telemetry exists by definition, and two **Target Logging Limits** (`DG-09`, `DG-12`) where packets or queries reached victim infrastructure but local diagnostic logging was absent.
-- **Protocol Payload Inspection Limit (`DG-19` — Stage 19):** Stage 19 is tracked as **Detected** because the exfiltration *transport activity* triggered a direct rate anomaly alert in Wazuh (Rule 5715, Alert #37: 6 rapid SSH sessions in 0.57s). However, `DG-19` documents the architectural limit that SSH transport encryption prevented Suricata NIDS from inspecting the plaintext document filenames on the wire.
+- **Inherent Offline Computation Gaps (2 Stages / 10.0% — `DG-04`, `DG-11`):** Computations occurring entirely on external adversary hardware (Kali GPU/CPU) producing zero victim telemetry by definition. These are verified and attributed via upstream theft detection and downstream authentication alerts.
+- **Protocol Payload Inspection Boundary (`DG-19` — Stage 19):** Stage 19 is tracked as **Detected** because the exfiltration *transport activity* triggered a direct rate anomaly alert in Wazuh (Rule 5715, Alert #37: 6 rapid SSH sessions in 0.57s). However, `DG-19` documents the architectural limit that SSH transport encryption prevented Suricata NIDS from inspecting plaintext document filenames on the wire.
+- **Online Target & Wire Coverage (18 Stages / 90.0%):** Every online attack procedure was intercepted by target host and wire sensors. Stage 09 was directly detected by Suricata promiscuous capture on `ens37` (Alert #08) and Wazuh Rule 100220; Stage 12 was directly detected on target endpoints by Custom Rule 100615 & Rule 92657 (TheHive Alert #22 `wzb-1e9fb54d94`) and Rule 100220.
 
 | Gap Code | Stage # | Detection Boundary | Root Cause Analysis | Defensive Counter-Strategy & Mitigation |
 |:---:|:---:|:---|:---|:---|
 | **DG-04** | Stage 04 | Inherent Offline Password Hash Cracking | Hashcat executed locally on the attacker's GPU using dumped MD5 hashes. Produces zero network or host telemetry on victim systems. | Focus detection upstream (preventing SQL injection dumps) and downstream (alerting on immediate administrative logins using newly cracked passwords). |
 | **DG-11** | Stage 11 | Inherent Offline NTLMv2 Hash Cracking | Hashcat cracked the intercepted `win10` challenge-response hash locally. Zero victim telemetry generated during the cracking phase. | Eliminate the capture vector entirely: globally disable LLMNR and NetBIOS over TCP/IP so hashes can never be broadcasted or captured. |
-| **DG-09** | Stage 09 | Intra-Subnet Layer 2 Network Discovery | Virtual machines connected to the same virtual switch communicated directly at Layer 2, bypassing the router's Layer 3 IP stack. | Deploy AF-PACKET promiscuous sniffing on switch interfaces (Suricata `ens37`) and enforce host-based firewall dropped packet logging. |
-| **DG-12** | Stage 12 | Active Directory Mass LDAP Enumeration | SharpHound submitted thousands of LDAP search queries to `PC-DC`, but Active Directory did not log high-severity alerts. | Active Directory disables Event ID 1644 LDAP search logging by default. Mitigation requires setting registry key `15 Field Engineering` to `5`. |
 | **DG-19** | Stage 19 | Encrypted Transport Payload Inspection (Nuanced) | SCP over SSH encrypted the exfiltration payload on the wire, hiding document filenames from Suricata inspection. Method detected via host auth rate anomaly (Wazuh 5715). | Correlate host-level authentication rate anomalies: Wazuh Rule 5715 flagged 6 administrative SSH sessions initiated in under 570 milliseconds. |
 
 ---
