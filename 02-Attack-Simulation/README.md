@@ -42,7 +42,7 @@ The 20 attack simulation stages are grouped into three distinct investigative ca
 | **05** | [Web Shell Upload](Stages/stage-05-webshell.md) | Case 01 | PHP web shell upload & RCE | `T1505.003` | `12.png`–`14.png` | **Detected** | Linux Auditd Rule `100199` (`wzb-61ed72e937`) & Suricata SIDs `2014726`, `2019284` |
 | **06** | [Reverse Shell](Stages/stage-06-reverse-shell.md) | Case 01 | Netcat listener + FIFO reverse shell | `T1059.004` | `15.png`–`17.png` | **Detected** | Suricata SID `3400020` & Auditd `nc.openbsd` Rule `100199` (`wzb-ccae331b77`) |
 | **07** | [Privilege Escalation](Stages/stage-07-privesc.md) | Case 01 | Sudo Python GTFOBins root escape | `T1548.003` | `17.png` | **Detected** | Linux PAM Rule `5402` (12x sudo alerts) & Rule `100220` (`sudo -l`) |
-| **08** | [SSH Persistence](Stages/stage-08-ssh-persistence.md) | Case 02 | Ed25519 `authorized_keys` backdoor | `T1098.004` | `18.png`–`20.png` | **Detected** | Wazuh FIM Rule `550`, SSH Rule `5715`, and Rule `100220` (`wzb-1208f0ea54`) |
+| **08** | [SSH Persistence](Stages/stage-08-ssh-persistence.md) | Case 02 | Ed25519 `authorized_keys` backdoor | `T1098.004` | `18.png`–`20.png` | **Detected** | Wazuh SSH Rule `5715` and Rule `100220` (`wzb-1208f0ea54`) |
 | **09** | [Internal Discovery](Stages/stage-09-internal-discovery.md) | Case 02 | Dual NIC enum, Nmap pivot scans | `T1018` | `21.png`–`27.png` | **Detected** | Suricata NIDS `ens37` (SIDs `3400001`, `3400002`, `3400020`) & Rule `100220` |
 | **10** | [Responder Poisoning](Stages/stage-10-responder.md) | Case 02 | LLMNR/mDNS poisoning on `ens33` | `T1557.001` | `28.png`–`30.png` | **Detected** | Wazuh Rule `100220` (`Responder.py`) + Win10User EID 4688 `DavSetCookie` (Rule `100278`) |
 | **11** | [NTLMv2 Cracking](Stages/stage-11-ntlmv2-crack.md) | Case 02 | Hashcat mode 5600 (NetNTLMv2) | `T1110.002` | `31.png`, `32.png` | **Investigatively Attributed** | Inherent Offline Gap (`DG-11`) — Lifecycle Bracketed (10 $\rightarrow$ 12) |
@@ -67,7 +67,7 @@ The evidence sets below are published in the public repository. The attack scree
 | **Master Blueprint Document** | [`../06-Resources/docs/attack-chain-full.pdf`](../06-Resources/docs/attack-chain-full.pdf) (redacted) | Redacted copy of the single-source PDF describing the full attack chain and threat model. |
 | **Attacker-Side Screenshots** | [`../06-Resources/screenshots/attack-simulation/`](../06-Resources/screenshots/attack-simulation/) (original) | 62 high-resolution screenshots (`1.png` through `60.png`, plus `58.5.png` and `59.5.png`) showing terminal commands, tool executions, browser actions, and GUI validations. |
 | **SOC & Alert Screenshots** | [`../06-Resources/screenshots/thehive-alert/`](../06-Resources/screenshots/thehive-alert/) | 60 screenshots showing fired alerts, triage views, rule classifications, and event telemetry in TheHive, Wazuh, and Suricata. |
-| **Incident Response Screenshots** | [`../06-Resources/screenshots/initial-triage-action/`](../06-Resources/screenshots/initial-triage-action/) & [`deep-investigation-action/`](../06-Resources/screenshots/deep-investigation-action/) | 26 total tactical containment, eradication, and system recovery validation captures. |
+| **Incident Response Screenshots** | [`../06-Resources/screenshots/initial-triage-action/`](../06-Resources/screenshots/initial-triage-action/) & [`../06-Resources/screenshots/deep-investigation-action/`](../06-Resources/screenshots/deep-investigation-action/) | 26 total tactical containment, eradication, and system recovery validation captures. |
 
 ---
 
