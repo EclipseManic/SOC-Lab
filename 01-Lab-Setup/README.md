@@ -113,7 +113,7 @@ The environment is cleanly divided into four zones:
 - **Subnet:** `192.168.56.0/24` (VMware VMnet2 Host-Only; completely isolated from the internet). Default gateway is `192.168.56.150`.
 - **Target Hosts:**
   - **Windows Server 2022 (Domain Controller — `192.168.56.10`):** Active Directory Domain Services (`ad.lab`), DNS, Kerberos KDC, Sysmon endpoint logging, Wazuh Agent (`DomainWin10`), Velociraptor client.
-  - **Windows 10 Workstation (`192.168.56.20`):** Domain-joined endpoint (`ad\victim`), Sysmon telemetry, Wazuh Agent (`Win10User`), Velociraptor client.
+  - **Windows 10 Workstation (`192.168.56.20`):** Domain-joined endpoint (`AD\win10 primary user · AD\victim baseline`), Sysmon telemetry, Wazuh Agent (`Win10User`), Velociraptor client.
   - **DVWA Web Server (`192.168.56.30` / `192.168.232.161`):** Dual-homed Ubuntu Linux host acting as both the perimeter web target (Apache/MySQL) and internal adversary pivot. Connects to VMnet2 (`ens33: 192.168.56.30/24`) and VMnet8 (`ens37: 192.168.232.161/24`). Monitored with Linux Auditd syscall tracking (`audit.rules`), custom Bash command execution auditing (`bashcmd`), Wazuh Agent (`DVWA`), and Velociraptor client.
 
 ### Cloud SOC Infrastructure (VM1 & VM2)

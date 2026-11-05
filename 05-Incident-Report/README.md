@@ -69,11 +69,12 @@ flowchart TD
 All post-mortem analysis across these reports is grounded in the authoritative telemetry captures of our hybrid enterprise environment:
 
 - **Total Adversary Attack Stages:** **20 Stages** (Execution span: 74 minutes).
-- **Direct Target-Side & Wire Detections:** **18 Stages (90.0%)** (Target host/wire inspected payloads, commands, network sweeps, privilege assignments, or process trees).
-- **Operational TheHive Alert Delivery:** **18 Stages (90.0%)** (Live actionable tickets delivered to SOC analysts across 46 security alerts).
-- **Inherent Offline Computation Gaps:** **2 Stages (10.0%)** (2 Inherent Offline Cracking stages [DG-04, DG-11]).
-- **Target-Side Logging Gaps:** **0 Stages (0.0%)** (All online stages detected on target/wire sensors).
-- **Detection Engine Rule Drops:** **0 Stages (0.0%)** (Zero false negatives or rule execution drops).
+- **Direct Target-Side & Wire Detections:** **14 Stages (70.0%)** (Stages 01, 02, 03, 05, 06, 07, 08, 10, 13, 15, 17, 18, 19, 20).
+- **Operational Pivot-Only Alerts:** **2 Stages (10.0%)** (Stages 14 & 16 — technique executed on pivot; target DC logged logon/privilege activity but lacked technique diagnostics).
+- **Target-Side Logging Gaps:** **2 Stages (10.0%)** (Stages 09 & 12 — host firewall drop logging `DG-09` and EID 1644 LDAP query logging `DG-12` unconfigured in baseline).
+- **Inherent Offline Computation Gaps:** **2 Stages (10.0%)** (Stages 04 & 11 — offline GPU cracking; bracketed via credential lifecycle correlation).
+- **Operational SOAR Alert Delivery:** **16 Stages (80.0%)** (Live actionable tickets delivered to SOC analysts across 46 security alerts in TheHive).
+- **Detection Engine Rule Drops / Parse Failures:** **0 Stages (0.0%)**.
 - **Total OpenSearch Raw Baseline Events:** **9,567 raw alerts** ([`Wazuh-Raw-Alerts.csv`](../06-Resources/alerts/Wazuh-Raw-Alerts.csv)).
 - **Curated Investigation Alert Dataset:** **808 forensic alerts** ([`wazuh_alerts.csv`](../06-Resources/alerts/wazuh_alerts.csv)).
 - **Actionable TheHive 5 Incident Tickets:** **46 ingested alerts** ([`thehive_alerts.json`](../06-Resources/alerts/thehive_alerts.json)).

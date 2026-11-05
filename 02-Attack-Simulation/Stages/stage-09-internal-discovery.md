@@ -132,12 +132,12 @@ echo "192.168.56.10 PC-DC.ad.lab ad.lab" >> /etc/hosts
 
 | Source | Rule / Signature | Rule ID | TheHive Alert | Severity | Status |
 |---|---|---|---|---|---|
-| Suricata / Wazuh | Network Port Scanning / Internal Reconnaissance Sweep | Suricata SIDs 3400001, 3400002, 3400020 / Wazuh 86601 | TheHive Alerts #17–#19 (`9.png`–`9.3.png` / `wzb-3152e3ed59`, `wzb-f87fab3eda`, `wzb-de91bad685`) | Medium | **Detected** |
-| Wazuh (Host Command Audit) | Bash command by root: `nmap -sV -O 192.168.56.0/24 --open` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9184) | Medium | **Detected (Forensic Command Capture)** |
+| Suricata / Wazuh | Network Port Scanning / Internal Reconnaissance Sweep | Suricata SIDs 3400001, 3400002, 3400020 / Wazuh 86601 | TheHive Alerts #17–#19 (`9.png`–`9.3.png` / `wzb-3152e3ed59`, `wzb-f87fab3eda`, `wzb-de91bad685`) | Medium | **Target Logging Gap (DG-09)** |
+| Wazuh (Host Command Audit) | Bash command by root: `nmap -sV -O 192.168.56.0/24 --open` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9184) | Medium | **Detected (Pivot Command Capture)** |
 
 > [!NOTE]
-> **Host-Side vs. Wire Detection:**  
-> Suricata directly captured the internal reconnaissance wire frames on interface `ens37` (Alerts #17–#19: SIDs 3400001, 3400002, 3400020 via `wzb-3152e3ed59`, `wzb-f87fab3eda`, `wzb-de91bad685`), and Wazuh Rule 100220 captured the exact command-line execution (`nmap -sV -O 192.168.56.0/24 --open`) on the DVWA pivot at `17:31:19 IST` (Row 9184), followed by the perimeter subnet scan at `17:32:27 IST` (Row 9215).
+> **Detection Partition Reality (Target Logging Gap DG-09):**  
+> While Suricata NIDS directly captured internal reconnaissance wire frames on interface `ens37` (TheHive Alerts #17–#19: SIDs 3400001, 3400002, 3400020) and Wazuh Rule 100220 captured command-line execution on the DVWA pivot at `17:31:19 IST` (Row 9184), the target Windows endpoints (`192.168.56.10` and `192.168.56.20`) produced zero host-level telemetry because Windows Filtering Platform dropped packet logging was unconfigured in the default baseline (`DG-09`). Remediated in post-campaign hardening by enabling WFP drop auditing and forwarding dropped packets to Wazuh.
 
 ## MITRE ATT&CK
 

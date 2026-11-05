@@ -111,7 +111,7 @@ Get-Service Sysmon64
 
 | Event ID | Event Name | Filtering Strategy & Detection Purpose |
 |:---:|---|---|
-| **EID 1** | **Process Creation** | Explicitly audits 13 command interpreters and LOLBins (`cmd.exe`, `powershell.exe`, `pwsh.exe`, `whoami.exe`, `net.exe`, `net1.exe`, `nltest.exe`, `dsquery.exe`, `klist.exe`, `reg.exe`, `schtasks.exe`, `certutil.exe`, `rundll32.exe`). Tracks parent process `WmiPrvSE.exe` spawning child processes, and command lines matching `\ADMIN$\__`. Captures Impacket `wmiexec` fan-out in Stage 15, 17, 18, and 20. |
+| **EID 1** | **Process Creation** | Explicitly audits 13 command interpreters and LOLBins (`cmd.exe`, `powershell.exe`, `pwsh.exe`, `whoami.exe`, `net.exe`, `net1.exe`, `nltest.exe`, `dsquery.exe`, `klist.exe`, `reg.exe`, `schtasks.exe`, `certutil.exe`, `rundll32.exe`). Tracks parent process `WmiPrvSE.exe` spawning child processes, and command lines matching `\ADMIN$\__`. Captures Impacket `wmiexec` fan-out targeting Win10 in Stages 18 and 20 (and across both Windows hosts in Stages 15, 16, 17, 18, and 20). |
 | **EID 3** | **Network Connection** | Audits inbound and outbound connections on critical lateral movement ports: `445/TCP` (SMB), `135/TCP` (RPC), `389/TCP` & `636/TCP` (LDAP/S), `5985/TCP` & `5986/TCP` (WinRM), and `88/TCP` (Kerberos). |
 | **EID 11** | **File Creation** | Monitors script, executable, and image file creation (`.bmp`, `.exe`, `.ps1`, `.vbs`) in high-risk staging directories (`C:\Users\Public\` and `C:\Windows\Temp\`). Tracks wallpaper staging during Stage 20 Impact. |
 | **EID 12 / 13** | **Registry Modification** | Audits persistence keys (`CurrentVersion\Run`, `RunOnce`, `Winlogon`, `Services`, `IFEO`) and wallpaper defacement keys (`Control Panel\Desktop\Wallpaper`). |

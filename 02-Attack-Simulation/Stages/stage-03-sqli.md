@@ -62,7 +62,7 @@ curl -s -b "PHPSESSID=session_token; security=low" \
 ### Alert Screenshots
 
 ![TheHive Alert Detail - Suricata ET WEB_SERVER SELECT USER SQL Injection Attempt](../../06-Resources/screenshots/thehive-alert/5.png)
-*Figure 3.3: TheHive Alert 17 — Suricata rule 100600 (SID 2010963) capturing ET WEB_SERVER SELECT USER SQL Injection Attempt in URI from 192.168.232.135.*
+*Figure 3.3: TheHive Alert #11 (Sub-event 17) — Suricata rule 100600 (SID 2010963) capturing ET WEB_SERVER SELECT USER SQL Injection Attempt in URI from 192.168.232.135.*
 
 ## Alert observed
 

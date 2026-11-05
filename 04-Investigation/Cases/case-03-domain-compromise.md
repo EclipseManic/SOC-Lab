@@ -24,7 +24,7 @@ Armed with the dumped domain NTLM hashes from DCSync, the adversary executed Pas
 | Stage | Attack | Investigation | Detection Status |
 |---|---|---|---|
 | 15 | [Pass-the-Hash](../../02-Attack-Simulation/Stages/stage-15-pass-the-hash.md) | [Phase 5 Deep Dive](../Deep-Dive-Attack-Chain-Investigation.md#phase-5-becoming-god-in-active-directory-kerberoasting-dcsync--the-golden-ticket) | **Detected** (Windows EID 4624 Logon Type 3 NTLM / Wazuh Rule 100613) |
-| 16 | [Golden Ticket](../../02-Attack-Simulation/Stages/stage-16-golden-ticket.md) | [Phase 5 Deep Dive](../Deep-Dive-Attack-Chain-Investigation.md#phase-5-becoming-god-in-active-directory-kerberoasting-dcsync--the-golden-ticket) | **Detected** (PC-DC Custom Rule 100603, Rule 100615 & TheHive Alerts #27, #28) |
+| 16 | [Golden Ticket](../../02-Attack-Simulation/Stages/stage-16-golden-ticket.md) | [Phase 5 Deep Dive](../Deep-Dive-Attack-Chain-Investigation.md#phase-5-becoming-god-in-active-directory-kerberoasting-dcsync--the-golden-ticket) | **Pivot-Only Coverage (DG-16)** (Linux Pivot Wazuh Rule 100220 & Alerts #27, #28 on `wmiexec -k` via Sysmon EID 1 / Custom Rule 100613; DC EID 4769 unconfigured) |
 | 17 | [DC persistence](../../02-Attack-Simulation/Stages/stage-17-dc-persistence.md) | [Phase 6 Deep Dive](../Deep-Dive-Attack-Chain-Investigation.md#phase-6-backdoors--smuggling-domain-persistence--rapid-exfiltration) | **Detected** (Wazuh Rule 100613 fan-out: net user /add, net localgroup) |
 | 18 | [Collection](../../02-Attack-Simulation/Stages/stage-18-collection.md) | [Phase 6 Deep Dive](../Deep-Dive-Attack-Chain-Investigation.md#phase-6-backdoors--smuggling-domain-persistence--rapid-exfiltration) | **Detected** (Wazuh Rule 100613 fan-out & Sysmon EID 1 staging) |
 | 19 | [Exfiltration](../../02-Attack-Simulation/Stages/stage-19-exfiltration.md) | [Phase 6 Deep Dive](../Deep-Dive-Attack-Chain-Investigation.md#phase-6-backdoors--smuggling-domain-persistence--rapid-exfiltration) | **Detected** (Wazuh Rule 5715 rapid SSH burst: 6 sessions/0.57s; Alert #37) |
@@ -93,9 +93,13 @@ Armed with the dumped domain NTLM hashes from DCSync, the adversary executed Pas
 | Metric | Value |
 |---|---|
 | **Stages Executed** | 6 |
-| **Verified Detections with Alerts** | 6 (100%) |
+| **Verified Direct Target Detections** | 5 (83.3% — Stages 15, 17, 18, 19, 20) |
+| **Operational Pivot-Only Alerts** | 1 (16.7% — Stage 16 Golden Ticket) |
+| **Target Logging Gaps** | 0 (0.0%) |
+| **Inherent Offline Gaps** | 0 (0.0%) |
+| **Operational SOAR Alert Delivery** | 6 (100% — 22 alerts delivered to TheHive across all 6 stages) |
 | **Mean Time to Detect (MTTD)** | < 10 seconds across all remote execution and account changes |
-| **Rule Failures** | 0 |
+| **Rule Failures / Engine Drops** | 0 (0.0%) |
 
 ---
 

@@ -43,14 +43,14 @@ The 20 attack simulation stages are grouped into three distinct investigative ca
 | **06** | [Reverse Shell](Stages/stage-06-reverse-shell.md) | Case 01 | Netcat listener + FIFO reverse shell | `T1059.004` | `15.png`–`17.png` | **Detected** | Suricata SID `3400020` & Auditd `nc.openbsd` Rule `100199` (`wzb-ccae331b77`) |
 | **07** | [Privilege Escalation](Stages/stage-07-privesc.md) | Case 01 | Sudo Python GTFOBins root escape | `T1548.003` | `17.png` | **Detected** | Linux PAM Rule `5402` (12x sudo alerts) & Rule `100220` (`sudo -l`) |
 | **08** | [SSH Persistence](Stages/stage-08-ssh-persistence.md) | Case 02 | Ed25519 `authorized_keys` backdoor | `T1098.004` | `18.png`–`20.png` | **Detected** | Wazuh SSH Rule `5715` and Rule `100220` (`wzb-1208f0ea54`) |
-| **09** | [Internal Discovery](Stages/stage-09-internal-discovery.md) | Case 02 | Dual NIC enum, Nmap pivot scans | `T1018` | `21.png`–`27.png` | **Detected** | Suricata NIDS `ens37` (SIDs `3400001`, `3400002`, `3400020`) & Rule `100220` |
+| **09** | [Internal Discovery](Stages/stage-09-internal-discovery.md) | Case 02 | Dual NIC enum, Nmap pivot scans | `T1018` | `21.png`–`27.png` | **Target Logging Gap (DG-09)** | Suricata NIDS `ens37` (Alerts #17–#19) & Wazuh Rule `100220` on pivot; target Windows host firewall drops unlogged |
 | **10** | [Responder Poisoning](Stages/stage-10-responder.md) | Case 02 | LLMNR/mDNS poisoning on `ens33` | `T1557.001` | `28.png`–`30.png` | **Detected** | Wazuh Rule `100220` (`Responder.py`) + Win10User EID 4688 `DavSetCookie` (Rule `100278`) |
 | **11** | [NTLMv2 Cracking](Stages/stage-11-ntlmv2-crack.md) | Case 02 | Hashcat mode 5600 (NetNTLMv2) | `T1110.002` | `31.png`, `32.png` | **Investigatively Attributed** | Inherent Offline Gap (`DG-11`) — Lifecycle Bracketed (10 $\rightarrow$ 12) |
-| **12** | [BloodHound Enumeration](Stages/stage-12-bloodhound.md) | Case 02 | `bloodhound.py` + Neo4j / CE Cypher | `T1087.002` | `33.png`–`40.png` | **Detected** | PC-DC & Win10 Custom Rule `100615` & `92657` (`wzb-32`) + Rule `100220` + Alert #22 (`wzb-1d2d7fb4b8`) |
+| **12** | [BloodHound Enumeration](Stages/stage-12-bloodhound.md) | Case 02 | `bloodhound.py` + Neo4j / CE Cypher | `T1087.002` | `33.png`–`40.png` | **Target Logging Gap (DG-12)** | Linux Pivot Wazuh Rule `100220` + Alert #22 (`wzb-1d2d7fb4b8`); DC EID 1644 LDAP query logging unconfigured |
 | **13** | [Kerberoasting](Stages/stage-13-kerberoasting.md) | Case 02 | `GetUserSPNs.py` + Hashcat 13100 | `T1558.003` | `41.png`–`44.png` | **Detected** | Suricata `ens37` (SID `2019922` / `wzb-c1e2642eb2`) & Wazuh Rule `100220` |
-| **14** | [DCSync](Stages/stage-14-dcsync.md) | Case 02 | `secretsdump.py` DRSUAPI replication | `T1003.006` | `45.png`–`47.png` | **Detected** | DomainWin10 Custom Rule `100603` (EID 4672) & `92657` (`wzb-34`) + Rule `100220` + Alert #24 (`wzb-4174e3672e`) |
+| **14** | [DCSync](Stages/stage-14-dcsync.md) | Case 02 | `secretsdump.py` DRSUAPI replication | `T1003.006` | `45.png`–`47.png` | **Pivot-Only Coverage (DG-14)** | Linux Pivot Wazuh Rule `100220` (`secretsdump.py`) + Alert #24 (`wzb-4174e3672e`); DC EID 4662 replication SACL unconfigured |
 | **15** | [Pass-the-Hash](Stages/stage-15-pass-the-hash.md) | Case 03 | `wmiexec.py` with Administrator hash | `T1550.002` | `48.png` | **Detected** | Windows EID `4624` (Rule `92657`) & Sysmon Custom Rule `100613` (`wzb-b7f91cd3ab`) |
-| **16** | [Golden Ticket](Stages/stage-16-golden-ticket.md) | Case 03 | `lookupsid.py`, `ticketer.py`, `wmiexec` | `T1558.001` | `49.png`–`51.png` | **Detected** | DomainWin10 Custom Rules `100615`, `100603`, `100613` + Rule `100220` (`wzb-ccff195e0c`) |
+| **16** | [Golden Ticket](Stages/stage-16-golden-ticket.md) | Case 03 | `lookupsid.py`, `ticketer.py`, `wmiexec` | `T1558.001` | `49.png`–`51.png` | **Pivot-Only Coverage (DG-16)** | Linux Pivot Wazuh Rule `100220` (`ticketer.py`) + Alerts #27, #28 on `wmiexec -k` (Sysmon EID 1 / Custom Rule `100613`); DC EID 4769 unconfigured |
 | **17** | [DC Persistence](Stages/stage-17-dc-persistence.md) | Case 03 | Rogue `backdoor` Domain Admin user | `T1136.002` | `52.png`, `53.png` | **Detected** | Wazuh Custom Rule `100613`, Windows EID `4720` (60109), EID `4732` (60154), EID `4728` (60159), EID `4738` (60110) (7 Alerts) |
 | **18** | [Collection](Stages/stage-18-collection.md) | Case 03 | WMI automated staging & file harvesting | `T1005` | `54.png`, `55.png` | **Detected** | Sysmon EID 1 (Custom Rule `100613`, Rules `100271`, `100272`, `100275`, Alerts #35, #36) |
 | **19** | [Exfiltration](Stages/stage-19-exfiltration.md) | Case 03 | SCP egress from pivot to Kali | `T1041` | `56.png` | **Detected** | Wazuh SSH Rule `5715` (Logon burst: 6 sessions / 0.57s; Alert #37 `wzb-34f34a857c`) |
@@ -74,11 +74,12 @@ The evidence sets below are published in the public repository. The attack scree
 ## Detection Engineering & Gap Analysis
 
 - **Detection Coverage:**
-  - **Direct Target-Side & Wire Detections:** 18 stages (90.0% — Stages 01, 02, 03, 05, 06, 07, 08, 09, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20)
-  - **Operational SOAR Alert Delivery (TheHive Alerts Generated):** 18 stages (90.0%) across 46 security alerts
-  - **Inherent Offline Computation Gaps (Zero Telemetry):** 2 stages (10.0% — Stages 04 & 11)
-  - **Target Logging Gaps:** 0 stages (0.0%)
-  - **Rule Failures / Drops:** 0 stages (0.0%)
+  - **Direct Target-Side & Wire Detections:** 14 stages (70.0% — Stages 01, 02, 03, 05, 06, 07, 08, 10, 13, 15, 17, 18, 19, 20)
+  - **Operational Pivot-Only Alerts:** 2 stages (10.0% — Stages 14 & 16)
+  - **Target-Side Logging Gaps:** 2 stages (10.0% — Stages 09 & 12)
+  - **Inherent Offline Computation Gaps:** 2 stages (10.0% — Stages 04 & 11)
+  - **Operational SOAR Alert Delivery (TheHive Alerts Generated):** 16 stages (80.0%) across 46 security alerts
+  - **Rule Failures / Engine Drops:** 0 stages (0.0%)
   - **Total Stages:** 20 (100%)
 - **Offline Detection Gaps:** 
   - **Stage 04 (Hash Cracking):** Recovering plaintext credentials from extracted MD5 database hashes occurs entirely offline on the attacker's workstation (Kali). No network traffic or host-level telemetry is emitted on victim systems.

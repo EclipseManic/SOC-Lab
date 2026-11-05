@@ -58,7 +58,7 @@
       "endOffsetSeconds": 600,
       "timestamp": "11:49:58",
       "telemetryEvent": "SQL injection UNION SELECT payload extracting users table",
-      "sourceSensor": "Suricata SID 2010963 / Custom Rule 100600 (TheHive Alert 17)",
+      "sourceSensor": "Suricata SID 2010963 / Custom Rule 100600 (TheHive Alert #11, sub-event 17)",
       "evidenceReference": "TheHive Alert #11 (sub-event 17) · Wazuh Telemetry wzb-11"
     },
     {
@@ -142,7 +142,7 @@
       "endOffsetSeconds": 1620,
       "timestamp": "12:04:27",
       "telemetryEvent": "Responder launched on DVWA capturing win10 hash & DavSetCookie coerced auth",
-      "sourceSensor": "Win10User Sysmon EID 1 DavSetCookie (Rule 100278) + DVWA Rule 100220 (bashcmd: Responder.py)",
+      "sourceSensor": "Security EID 4688 / Sysmon EID 1 DavSetCookie (Rules 100278 & 61603) + DVWA Rule 100220 (bashcmd: Responder.py)",
       "evidenceReference": "TheHive Alert #20 · Wazuh Telemetry wzb-28"
     },
     {

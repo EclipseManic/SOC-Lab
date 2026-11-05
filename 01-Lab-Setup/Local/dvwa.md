@@ -385,7 +385,7 @@ curl -I http://localhost/dvwa/login.php
 
 # 2. Verify auditd status and loaded rules
 sudo auditctl -s
-sudo auditctl -l | grep -E "web_process_creation|suid_modification"
+sudo auditctl -l | grep -E "web_process_creation|setuid_creation"
 
 # 3. Test bashcmd logging pipeline
 logger -p local0.notice -t bashcmd "uid:0 user:root pwd:/root cmd:id"

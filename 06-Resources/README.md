@@ -67,7 +67,7 @@ This directory contains the 15 master architectural, topological, pipeline, and 
 | `Neon Cybersecurity Lab Network Diagram.png` | Network Topology | Dual-subnet configuration showing DMZ (`192.168.232.0/24`) and Internal AD (`192.168.56.0/24`) |
 | `Neon Cybersecurity Network Architecture Diagram.png` | Infrastructure | High-level topology illustrating firewall boundaries, monitoring interfaces, and cloud SIEM |
 | `Neon Suricata Network Defense Diagram.png` | Network Security | Suricata NIDS placement on dual-homed gateway inspecting WAN and LAN traffic |
-| `On-Prem to Cloud Telemetry Flow.png` | Cloud Telemetry | Secure TLS log forwarding from on-premise local VMs to Google Cloud SIEM/SOAR |
+| `On-Prem to Cloud Telemetry Flow.png` | Cloud Telemetry | Secure TLS log forwarding from on-premise local VMs to Microsoft Azure cloud SIEM/SOAR |
 | `SOC Analyst Investigation Lifecycle.png` | SOC Operations | Standard operating procedure for triage, case promotion, evidence collection, and closure |
 | `SOC Telemetry Dual-Pathway Architecture.png` | Data Architecture | Dual-path log ingestion: Host-based (Wazuh/Sysmon/Auditd) and Network-based (Suricata) |
 | `SOC_Lab_Architecture.png` | Master Architecture | Complete enterprise laboratory overview featuring all 7 systems (5 local + 2 cloud) and their roles |

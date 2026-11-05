@@ -80,22 +80,14 @@ The extraction of the `Administrator` NTLM hash (`cc814***9fb`) immediately enab
 
 | Source | Rule / Event Description | Rule ID | TheHive Alert Title | Severity | Status |
 |---|---|---|---|---|---|
-| Domain Controller (`DomainWin10`) | Windows Security Event ID 4672: `SeDebugPrivilege` assigned to human account `HANK_SHERMAN` during DRSUAPI replication | Wazuh Custom Rule 100603 (elevated) & Rule 92657 (EID 4624) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Data Rows 9267–9272, `wzb-34`) & Queue Overflow | High (3) | **Detected (Direct Target-Side SIEM Capture)** |
-| Wazuh (Host Command Audit) | Bash command by root: `python3 /usr/local/bin/secretsdump.py ...` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9274, `wzb-34`) | High | **Detected (Verbatim Command Capture)** |
-| Wazuh (Host Command Audit) | Bash command by root: `cat /tmp/dcsync_output.ntds` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9276) | Medium | **Detected (Loot Inspection Capture)** |
-| Wazuh (Pivot Host) | sshd: authentication success (Interactive Pivot Session) | Rule 5715 (Level 8) | TheHive Alert #24 (`14.png` / `wzb-4174e3672e`) | Medium | **Detected (Operational SOAR Alert)** |
-| Active Directory (Domain Controller) | Directory Service Replication Access (DS-Replication-Get-Changes) | Event ID 4662 | Local DC Security Log (`Security.evtx`) | High | **Detected (Local DC Telemetry)** |
+| Linux Pivot Host (`DVWA`) | Bash command by root: `python3 /usr/local/bin/secretsdump.py ...` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9274, `wzb-34`) | High | **Detected (Pivot Command Capture)** |
+| Linux Pivot Host (`DVWA`) | sshd: authentication success (Interactive Pivot Session & Exfiltration) | Rule 5715 (Level 8) | TheHive Alert #24 (`14.png` / `wzb-4174e3672e`) | Medium | **Detected (Operational SOAR Alert)** |
+| Domain Controller (`DomainWin10`) | Windows Security Event ID 4672: `SeDebugPrivilege` assigned to human account `HANK_SHERMAN` paired with EID 4624 | Wazuh Custom Rule 100603 & Rule 92657 | Wazuh Raw CSV (Data Rows 9268–9269, 9283; paired with EID 4624 at Data Rows 9267, 9270–9272) | High (3) | **Detected (Generic Logon & Privilege Telemetry)** |
+| Active Directory (Domain Controller) | Directory Service Replication Access (DS-Replication-Get-Changes-All) | Event ID 4662 | Unconfigured in DC Baseline (`DG-14`) | High | **Target Logging Gap (DG-14 / Remediated)** |
 
 > [!NOTE]
-> **Telemetry Attribution & Pipeline Execution (Rule 100220):**  
-> Impacket `secretsdump.py` was launched interactively on the DVWA pivot at `18:02:40 IST` (`Wazuh-Raw-Alerts.csv` Row 9274): `python3 /usr/local/bin/secretsdump.py ad.lab/HANK_SHERMAN:'Password123'@192.168.56.10 -outputfile /tmp/dcsync_output`, followed by credential file inspection (`cat /tmp/dcsync_output.ntds`, Row 9276) and Domain SID extraction (`lookupsid.py`, Row 9286). As a Level 5 rule, Rule 100220 recorded the commands locally on DVWA and indexed into OpenSearch without SIEM-to-SOAR escalation. Meanwhile, the pivot SSH session used to run it was elevated to Level 8 (Rule 5715) and triggered TheHive Alert #24 (`wzb-4174e3672e`), while on the target Domain Controller (`DomainWin10`), Windows Security Event ID 4672 (`SeDebugPrivilege` assigned to `HANK_SHERMAN`) was captured by Wazuh Custom Rule 100603 alongside Event ID 4624 network logons, indexed in SIEM under `wzb-34` (Rows 9267–9272), with directory replication rights recorded locally in Event ID 4662:
-  - **Account Name:** `HANK_SHERMAN`
-  - **Object Server:** `DS`
-  - **Access Mask:** `0x100` (Control Access)
-  - **Properties / Access Request:** Included replication GUIDs:
-    - `1131f6aa-9c07-11d1-f79f-00c04fc2dcd2` (DS-Replication-Get-Changes)
-    - `1131f6ad-9c07-11d1-f79f-00c04fc2dcd2` (DS-Replication-Get-Changes-All)
-  - **Client IP / Source:** `192.168.56.30` (A Linux host not recognized as a Domain Controller computer object).
+> **Detection Partition Reality (Pivot-Only Coverage DG-14):**  
+> Impacket `secretsdump.py` was launched interactively on the DVWA pivot at `18:02:40 IST` (`Wazuh-Raw-Alerts.csv` Row 9274): `python3 /usr/local/bin/secretsdump.py ad.lab/HANK_SHERMAN:'Password123'@192.168.56.10 -outputfile /tmp/dcsync_output`, followed by credential file inspection (`cat /tmp/dcsync_output.ntds`, Row 9276) and Domain SID extraction (`lookupsid.py`, Row 9286). As a Level 5 rule, Rule 100220 recorded the commands locally on DVWA and indexed into OpenSearch without SIEM-to-SOAR escalation. Meanwhile, the pivot SSH session used to run it was elevated to Level 8 (Rule 5715) and triggered TheHive Alert #24 (`wzb-4174e3672e`). On the Domain Controller (`DomainWin10`), generic network logon (EID 4624) and administrative privilege assignment (EID 4672 via Custom Rule 100603) were indexed in SIEM (Data Rows 9267–9272, 9283). However, the specific DRSUAPI replication access event (Event ID 4662) was not generated in the SIEM because directory replication SACLs on the domain root object were unconfigured in default Active Directory baselines (`DG-14`). Remediated post-incident via Directory Service Access SACLs and Advanced Audit Policies.
 
 ---
 

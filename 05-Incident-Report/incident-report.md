@@ -110,7 +110,7 @@ At 18:08:21 IST, the attacker established persistent backdoor access on `PC-DC` 
 In the final phase, the adversary executed simultaneous remote impact commands against `PC-DC` and `Win10User` via `wmiexec`:
 - Pushing malicious wallpaper `hacked.bmp` to `C:\Users\Public\hacked.bmp` and modifying `HKCU\Control Panel\Desktop\Wallpaper` and `WallpaperStyle` (Wazuh Rule 92041, Alerts #39, #40).
 - Dropping simulated ransomware ransom notes (`README_HACKED.txt`) and encrypted dummy files (`passwords.enc`, `documents.enc`) on user desktops.
-- Executing immediate forced reboots (`shutdown /r /t 0`) at 18:21:40 IST on `PC-DC` and 18:22:15 IST on `Win10User` to lock in defacement and disrupt logging.
+- Executing immediate forced reboots (`shutdown /r /t 0`) at 18:20:56 IST on `PC-DC` and 18:24:15–18:24:18 IST on `Win10User` to lock in defacement and disrupt logging.
 - At 18:36:34 IST, following system reboot, post-exploitation activity triggered Wazuh Rule 60110 (Windows Event ID 4738: User Account Management modification on `PC-DC`, Alert #46).
 
 ---
@@ -156,14 +156,15 @@ The SOC detection fabric demonstrated high resilience across host and network te
 
 ```text
 Total Attack Stages Simulated:           20  (100.0%)
-├─ Direct Target & Wire Detections:      18  (90.0% - Stages 01,02,03,05,06,07,08,09,10,12,13,14,15,16,17,18,19,20)
-├─ Inherent Offline Computation Gaps:     2  (10.0% - Stages 04, 11: MD5 & NTLMv2 hash cracking on GPU)
-└─ Target-Side Logging Gaps:              0  (0.0% - All online stages detected on target/wire sensors)
+├─ Direct Target & Wire Detections:      14  (70.0% - Stages 01,02,03,05,06,07,08,10,13,15,17,18,19,20)
+├─ Operational Pivot-Only Alerts:         2  (10.0% - Stages 14, 16: Pivot session & commands caught; DC technique unlogged)
+├─ Target-Side Logging Gaps:              2  (10.0% - Stages 09, 12: Host firewall drops & EID 1644 LDAP unconfigured)
+└─ Inherent Offline Computation Gaps:     2  (10.0% - Stages 04, 11: MD5 & NTLMv2 hash cracking on GPU)
 ─────────────────────────────────────────────────────────────────────────────
 Detection Engine Rule Execution Drops:    0  (0.0% - All rules evaluated; 0 syntax/engine drops)
 
 Operational Telemetry & Forensic Accounting:
-• Operational SOAR Alert Delivery:       18 stages (90.0% - Actionable alerts in TheHive / SIEM fabric)
+• Operational SOAR Alert Delivery:       16 stages (80.0% - Actionable alerts in TheHive / SIEM fabric)
 • Pivot Host Command Forensics:          50 interactive root commands captured across 11 lateral/AD attack stages (100% of pivot CLI activity via Rule 100220)
 • Total OpenSearch Raw Baseline Events:  9,567 rows (Wazuh-Raw-Alerts.csv)
 • Curated Incident Analysis Set:         808 rows (wazuh_alerts.csv - 11 Exclusion Filters)
@@ -175,12 +176,13 @@ Operational Telemetry & Forensic Accounting:
 
 > [!NOTE]
 > ### 🛡️ Multi-Tier Telemetry Accounting & Ground-Truth Command Forensics
-> - **Clean Mathematical Partition (20 Stages = 100%):** The 20 stages divide cleanly into **18 Direct Target & Wire Detections (90.0%)** and **2 Inherent Offline Computation Gaps (10.0% — Stages 04 & 11)**, with **0 Target-Side Logging Gaps (0.0%)** and **0 Rule Execution Drops (0.0%)**.
-> - **Operational SOAR Alert Delivery (18/20 — 90.0%):** The SOC received real-time incident alerts in TheHive for 18 stages across 46 prioritized incident alerts.
-> - **Direct Target-Side Detections on AD Escalation (Stages 12, 14, 16):**
->   - *Stage 12 (BloodHound):* Directly detected on target endpoints (`DomainWin10` and `Win10User`) via Custom Rule `100615` & Rule `92657` (SIEM indexed `wzb-32`, TheHive Alert #22 `wzb-1d2d7fb4b8`), alongside verbatim bashcmd capture via Rule `100220` (Row 9259: `cd /tmp && python3 -m bloodhound ...`).
->   - *Stage 14 (DCSync):* Directly detected on Domain Controller (`DomainWin10`) via Custom Rule `100603` (Event ID 4672 `SeDebugPrivilege` assignment to `HANK_SHERMAN`) and network logon Rule `92657` (SIEM indexed `wzb-34`, TheHive Alert #24 `wzb-4174e3672e`), alongside queue overflow (Rows 9271–9272) and verbatim command capture via Rule `100220` (Row 9274: `python3 /usr/local/bin/secretsdump.py ...`).
->   - *Stage 16 (Golden Ticket):* Directly detected on Domain Controller (`DomainWin10`) via Custom Rules `100615`, `100603`, and `100613` (TheHive Alerts #27 & #28 `wzb-ccff195e0c`, `wzb-c200f52606`), alongside verbatim command capture via Rule `100220` (Row 9306: `python3 /usr/local/bin/ticketer.py ...`).
+> - **Empirical Four-Tier Partition (20 Stages = 100%):** The 20 stages divide cleanly into **14 Direct Target & Wire Detections (70.0%)**, **2 Operational Pivot-Only Alerts (10.0% — Stages 14 & 16)**, **2 Target-Side Logging Gaps (10.0% — Stages 09 & 12)**, and **2 Inherent Offline Computation Gaps (10.0% — Stages 04 & 11)**, with **0 Detection Engine Drops (0.0%)**.
+> - **Operational SOAR Alert Delivery (16/20 — 80.0%):** The SOC received real-time incident alerts in TheHive for 16 stages across 46 prioritized incident alerts.
+> - **Defensive Nuance on AD Escalation & Discovery (Stages 09, 12, 14, 16):**
+>   - *Stage 09 (Internal Discovery):* Caught on wire by Suricata (`ens37` SIDs 3400001, 3400002, 3400020, Alerts #17–#19) and on pivot via Rule `100220` (Row 9184), but target Windows endpoints dropped packets without logging because host firewall drop auditing was disabled (`DG-09`).
+>   - *Stage 12 (BloodHound):* Caught on pivot via Rule `100220` (Row 9259) and SSH staging Alert #22 (`wzb-1d2d7fb4b8`). The DC recorded generic network logon (Rule `100615`), but LDAP query diagnostics (Event ID 1644) were unconfigured in default Windows Server baselines (`DG-12`).
+>   - *Stage 14 (DCSync):* Caught on pivot via Rule `100220` (Row 9274) and exfiltration staging Alert #24 (`wzb-4174e3672e`). The DC recorded logon (EID 4624) and administrative privilege assignment (EID 4672 via Custom Rule `100603` at Rows 9268–9269, 9283), but technique-specific replication SACLs (Event ID 4662) were unconfigured on the domain root object (`DG-14`).
+>   - *Stage 16 (Golden Ticket):* Caught on pivot via Rule `100220` (Row 9306) and remote execution fan-out on `PC-DC` via Sysmon EID 1 / Custom Rule `100613` (Alerts #27 & #28). However, the DC recorded standard Kerberos logons (EID 4624) because Kerberos Service Ticket Operations (Event ID 4769) were unconfigured (`DG-16`).
 > - **Accounting for Rule Drops vs. Forwarding Gate:** Detection Engine Rule Execution Drops remain **0 (0.0%)** because no detection rule syntax failed, dropped packets unexpectedly, or crashed the engine.
 > - **Encrypted Transport Limit (`DG-19` — Stage 19):** Exfiltration in Stage 19 was directly detected via auth rate anomaly (Wazuh Rule 5715, Alert #37: 6 rapid SSH sessions in 0.57s). `DG-19` documents the wire protocol inspection boundary where SSH transport encryption prevented Suricata NIDS from reading plaintext document filenames on the wire; it represents an architectural inspection limitation on a detected stage, not an unalerted detection gap.
 

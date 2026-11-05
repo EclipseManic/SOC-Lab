@@ -307,7 +307,7 @@ ls -la /var/ossec/etc/lists/wazuh-internal-bins*
 Custom decoders parse unstructured log streams into indexed fields, while custom rules detect attacker techniques across the 20 attack simulation stages.
 
 ### 1. Deploying Custom Decoders (`/var/ossec/etc/decoders/local_decoder.xml`)
-Deployed directly from [`03-Detection-Engineering/Wazuh/local_decoder.xml`](../../06-Resources/rules/wazuh/local_decoder.xml) to handle Suricata JSON payloads, Auditd fields, and Windows command-line extraction:
+Deployed directly from [`06-Resources/rules/wazuh/local_decoder.xml`](../../06-Resources/rules/wazuh/local_decoder.xml) to handle Suricata JSON payloads, Auditd fields, and Windows command-line extraction:
 
 ```bash
 sudo cp /path/to/SOC-Lab/06-Resources/rules/wazuh/local_decoder.xml /var/ossec/etc/decoders/local_decoder.xml
@@ -316,7 +316,7 @@ sudo chmod 660 /var/ossec/etc/decoders/local_decoder.xml
 ```
 
 ### 2. Deploying Custom Detection Rules (`/var/ossec/etc/rules/local_rules.xml`)
-Deployed directly from [`03-Detection-Engineering/Wazuh/local_rules.xml`](../../06-Resources/rules/wazuh/local_rules.xml) (over 1,300 lines of custom rules covering MITRE ATT&CK techniques, LOLBins, web shells, Kerberoasting, DCSync, pass-the-hash, and 87 noise suppression rules):
+Deployed directly from [`06-Resources/rules/wazuh/local_rules.xml`](../../06-Resources/rules/wazuh/local_rules.xml) (over 1,300 lines of custom rules covering MITRE ATT&CK techniques, LOLBins, web shells, Kerberoasting, DCSync, pass-the-hash, and 87 noise suppression rules):
 
 ```bash
 sudo cp /path/to/SOC-Lab/06-Resources/rules/wazuh/local_rules.xml /var/ossec/etc/rules/local_rules.xml
@@ -429,8 +429,8 @@ Four agents forward telemetry to this Wazuh Manager over `1514/TCP`:
 
 | Agent ID | Agent Name | Host Machine | IP Address | Operating System | Primary Log Sources |
 |:---:|------------|--------------|------------|------------------|---------------------|
-| `001` | **Suricata** | Suricata Gateway | `192.168.56.150` | Ubuntu 24.04 LTS | Suricata `eve.json` NIDS alerts |
-| `002` | **DVWA** | DVWA Web Server | `192.168.56.30` | Ubuntu 24.04 LTS | Apache access/error logs, Linux Auditd, PAM |
+| `001` | **Suricata** | Suricata Gateway | `192.168.56.150` | Ubuntu 24.04 LTS | Suricata eve-alert.json NIDS alerts, auth.log |
+| `002` | **DVWA** | DVWA Web Server | `192.168.56.30` | Ubuntu 24.04 LTS | Apache access/error logs, Linux Auditd, bashcmd.log, PAM / SSHD (auth.log) |
 | `003` | **Win10User** | Windows 10 Workstation | `192.168.56.20` | Windows 10 Pro N (22H2) | Sysmon (EID 1, 3, 11, 12/13, 17/18), Security EID 4688, PowerShell EID 4104 |
 | `004` | **DomainWin10** | Domain Controller (PC-DC) | `192.168.56.10` | Windows Server 2022 | Security EID 4624, 4672, 4720, 4728, 4732, 4738, Sysmon EID 1, 3, PowerShell EID 4104 |
 

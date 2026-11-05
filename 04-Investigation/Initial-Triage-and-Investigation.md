@@ -73,7 +73,7 @@ Because an active compromise demands immediate containment before an analyst spe
 
 - **Section 2:** The complete **Master Triage Table** classifying all 46 alerts with real analyst priorities (P1–P4) and verified verdicts.
 - **Section 3:** The **Immediate Containment Actions** executed right now to sever attacker access before evidence tampering occurs.
-- **Section 4:** An **Analyst Critique of our Alert Creation Pipeline** highlighting the 8 engineering flaws in Wazuh, Suricata, and TheHive that produced this triage confusion.
+- **Section 4:** An **Analyst Critique of our Alert Creation Pipeline** highlighting the 9 engineering flaws in Wazuh, Suricata, and TheHive that produced this triage confusion.
 - **Section 5:** The exhaustive, evidence-backed **Deep-Dive Chronological Evidence Walkthrough** across all 6 time windows (`17:10 IST` to `18:36 IST`) with raw alert logs and screenshots for full forensic attribution.
 
 ![TheHive Alerts queue sorted by Severity](../06-Resources/screenshots/initial-triage/slot_01_thehive_severity_queue.png)
