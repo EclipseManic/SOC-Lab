@@ -1,110 +1,146 @@
-# SOC Lab — 20-Stage Attack Simulation & Detection Engineering
+# Hybrid-Cloud SOC & Threat Engineering Lab
+### End-to-End Infrastructure Design, 20-Stage Attack Simulation, Custom Detection Engineering & Full DFIR Case Investigation
 
-I built a small company network in a hybrid cloud lab, executed an end-to-end 20-stage attack campaign—spanning external reconnaissance, web application exploitation, Linux host privilege escalation, network credential theft, and Active Directory domain compromise—and recorded which steps my security tools caught.
+I designed and deployed a hybrid-cloud corporate security operations center (SOC) and enterprise network across **7 dedicated virtual machines**, executed a realistic **20-stage adversary attack campaign** against it (spanning perimeter reconnaissance, web application exploitation, Linux privilege escalation, network credential theft, and Active Directory domain takeover), authored custom multi-sensor detection rules, triaged **46 incoming incident alerts in TheHive 5**, and executed live containment and permanent root-cause eradication.
 
 [![SOC Lab Complete Architecture](06-Resources/diagrams/SOC_Lab_Architecture.png)](06-Resources/diagrams/SOC_Lab_Architecture.png)
 
-**Live interactive report:** <https://soc-lab.eclipsemanic.me/>
+**Live Interactive Report & Dashboard:** <https://soc-lab.eclipsemanic.me/>
 
 ---
 
-## How It Works
+## 🏛️ The Four Operational Pillars
 
-[![Conceptual Network Architecture](06-Resources/diagrams/Neon%20Cybersecurity%20Network%20Architecture%20Diagram.png)](06-Resources/diagrams/Neon%20Cybersecurity%20Network%20Architecture%20Diagram.png)
+This project documents the complete lifecycle of enterprise security operations across four interdependent disciplines:
 
-The attacker starts outside the network on an isolated subnet. Every perimeter probe crosses a Linux router running a **Suricata** network intrusion detection system (NIDS). Inside the victim network, endpoints run **Wazuh** agents, **Sysmon**, and **Auditd**. All telemetry is forwarded over an encrypted WireGuard VPN to a cloud-hosted SOC stack running **Wazuh SIEM** and **TheHive 5** case management.
+```
+[ 1. Infrastructure ] ──► [ 2. Attack Simulation ] ──► [ 3. Detection Engineering ] ──► [ 4. Incident Response ]
+  • Hybrid Cloud (Azure)    • 20 MITRE ATT&CK Stages     • Custom Wazuh XML Rules         • 46 TheHive Alerts
+  • 4 Network Segments      • Realistic Red-Team TTPs    • Suricata NIDS Signatures       • 3 Operational Cases
+  • WireGuard S2S Tunnel    • Linux Host Compromise      • Sysmon & Auditd Baselines      • Active Containment
+  • Active Directory Domain • Full AD Forest Takeover    • SQLite WAL SOAR Daemon         • Eradication & Post-Mortem
+```
 
-> [!TIP]
-> Looking for detailed network addressing, routing tables, and interface diagrams? See [01-Lab-Setup/README.md](01-Lab-Setup/README.md).
+### 1. Hybrid Infrastructure Engineering
+- **Cloud Management Stack (Microsoft Azure):** Two Ubuntu cloud instances in a peered private cloud network (`10.122.0.0/16`) with zero direct public IP exposure:
+  - `Cloud VM1` (`10.122.0.4`): TheHive 5 case management, Apache Cassandra, Elasticsearch, Velociraptor DFIR server, and WireGuard VPN hub (`10.8.0.1/24`).
+  - `Cloud VM2` (`10.122.1.4`): Wazuh SIEM Manager, Indexer, OpenSearch Dashboard, and custom SOAR integration daemon.
+- **On-Premise Victim & Attack Network (VMware Workstation Pro):**
+  - `Security Gateway` (`192.168.232.160` / `192.168.56.1`): Dual-homed Linux router running Suricata NIDS sniffing ingress perimeter traffic (`ens33`) and internal LAN traffic (`ens37`).
+  - `Web Application Server` (`192.168.232.161` / `192.168.56.30`): Ubuntu Linux hosting DVWA on Apache 2.4.
+  - `Domain Controller` (`192.168.56.10`): Windows Server 2022 Active Directory (`PC-DC.ad.lab`).
+  - `Corporate Workstation` (`192.168.56.20`): Windows 10 Enterprise (`Win10.ad.lab`).
+  - `Attacker Machine` (`192.168.232.135`): Kali Linux placed on an isolated external subnet.
+- **Zero-NAT Site-to-Cloud WireGuard Tunnel:** An encrypted VPN tunnel connects the physical security gateway (`10.8.0.2`) directly to the Azure cloud hub (`10.8.0.1`). Kernel NAT is disabled for victim traffic, preserving authentic source IP addresses (`.10`, `.20`, `.30`) across all SIEM alerts.
 
-### Repository Directory Index
+### 2. Adversary Attack Simulation (20 Stages)
+- **Act 1: Web Compromise to Root (Stages 01–07):** Perimeter port scanning (Nmap), web fuzzing (Nikto), login brute-force, SQL injection credential dump, PHP web shell deployment, Netcat reverse shell stabilization, and instant root privilege escalation via passwordless sudo Python misconfiguration (`sudo /usr/bin/python3` GTFOBins).
+- **Act 2: Pivot & Credential Theft (Stages 08–14):** Injected root SSH backdoor persistence, internal subnet discovery sweep, LLMNR/NBT-NS broadcast poisoning (Responder) capturing domain user `win10` NetNTLMv2 hash, BloodHound AD mapping, Kerberoasting service account `HANK_SHERMAN`, and DCSync directory replication via DRSUAPI.
+- **Act 3: Domain Dominance & Disruption (Stages 15–20):** Pass-the-Hash remote WMI access (`wmiexec.py`), Kerberos Golden Ticket forgery (`ticketer.py`), persistent backdoor account creation (`AD\backdoor`) elevated to `Domain Admins`, automated data staging, rapid SCP exfiltration, desktop wallpaper defacement, ransomware note deployment, and forced dual-endpoint reboots.
 
-| Section | Primary Document | Description |
-|---|---|---|
-| **01 — Lab Setup** | [`01-Lab-Setup/README.md`](01-Lab-Setup/README.md) | Complete hybrid cloud architecture, network segmentation, WireGuard VPN configuration, and reproducible host build profiles for all 7 systems (5 local + 2 cloud). |
-| **02 — Attack Simulation** | [`02-Attack-Simulation/README.md`](02-Attack-Simulation/README.md) | The 20-stage red-team playbook with exact terminal commands, execution tradecraft, and 62 attacker-side terminal proof screenshots. |
-| **03 — Detection Engineering** | [`03-Detection-Engineering/README.md`](03-Detection-Engineering/README.md) | Custom Wazuh detection rules (`local_rules.xml`), Suricata NIDS signatures, Sysmon/Auditd telemetry baselines, and the `thecustomhive` SQLite WAL SOAR daemon. |
-| **04 — Investigation** | [`04-Investigation/README.md`](04-Investigation/README.md) | **Completed & Formally Validated:** SOC analyst triage notes for all 46 TheHive alerts, immediate tactical containment, 7-phase deep-dive attack chain, and permanent eradication playbook. |
-| **05 — Incident Report** | [`05-Incident-Report/README.md`](05-Incident-Report/README.md) | **Completed & Formally Validated:** Formal executive incident report, full chronological attack timeline, complete IOC tables, and remediation engineering backlog. |
-| **06 — Assets & Resources** | [`06-Resources/README.md`](06-Resources/README.md) | Centralized asset repository: evidentiary screenshots, telemetry datasets (9,567 raw baseline alerts, 808 analyst-curated records, 46 TheHive incident cases), detection rules, configs, diagrams, and automation scripts. |
-| **Master Index** | [`INDEX.md`](INDEX.md) | Master traceability matrix mapping every stage to MITRE ATT&CK techniques, detection rules, alert IDs, and raw evidence files. |
+### 3. Detection Engineering & Telemetry Pipeline
+- **Multi-Sensor Mesh:** Interlocking telemetry layers combining Suricata wire inspection, Linux Auditd syscall tracking (`execve`), Windows Sysmon process execution trees (`WmiPrvSE.exe` $\to$ `cmd.exe`), and Active Directory Security logs.
+- **Custom Detection Engine:** 148 rule definitions and 87 false-positive noise suppressions in `local_rules.xml`.
+- **Custom SOAR Ingestion Gateway (`custom-thehive.py`):** An asynchronous Python daemon utilizing a local SQLite Write-Ahead Log (WAL) buffer and a 5-second sliding flush window to cluster raw alert floods into 46 actionable incident tickets, preventing alert fatigue from 9,567 baseline events.
 
----
-
-## The Attack Story in Three Acts
-
-### 1. Break into the Web Server & Escalate to Root (Web Exploitation & Linux Host Compromise)
-The attacker scans the perimeter, discovers a vulnerable web application (DVWA), and exploits an SQL injection vulnerability to dump database credentials. After cracking an administrative password, the attacker uploads a PHP web shell through an unrestricted file upload form, catches an interactive reverse shell, elevates privileges to root using a passwordless sudo Python misconfiguration (`sudo /usr/bin/python3` GTFOBins), and establishes persistent SSH access.
-
-### 2. Pivot & Capture Network Credentials (Internal Recon, LLMNR Poisoning & AD Mapping)
-Now inside the company network, the attacker turns the compromised web server into an internal pivot. Operating from this pivot, the attacker runs Responder to poison link-local multicast name resolution (LLMNR/NBT-NS), intercepting a domain user's password hash from a Windows 10 workstation. After cracking the hash offline, the attacker launches BloodHound to map Active Directory trust relationships and identify domain attack paths.
-
-### 3. Take Over Active Directory & Impact Endpoints (Domain Takeover, Persistence & Defacement)
-Using the mapped path, the attacker requests a Kerberos service ticket for a privileged service account (Kerberoasting) and cracks it to gain Domain Admin credentials. With domain admin rights, the attacker performs a DCSync attack against the Domain Controller to extract all Active Directory password hashes, forges an unrestricted Golden Ticket for indefinite persistence, creates a rogue domain administrator account, and pushes an unauthorized wallpaper defacement across the domain to demonstrate complete control.
-
-### The Defensive Counterpart: How Detection Engineering Intercepted the Chain
-While the adversary advanced through these three acts, the defensive stack operated as an interlocking, multi-layered mesh:
-- **At the Perimeter & Wire:** Dual-homed **Suricata NIDS** (sniffing ingress `ens33` and internal `ens37`) caught inbound Nmap OS fingerprint probes, automated Python brute-force authentication floods, SQL injection payloads, and intra-subnet Kerberos ticket requests.
-- **In the Linux Kernel:** **Linux Auditd** intercepted system calls (`execve`) executed by the web server user (`uid=33`), exposing the PHP web shell commands and reverse shell spawn regardless of transport encryption.
-- **On the Windows Endpoints:** **Microsoft Sysmon & Windows Security Logs** caught Pass-the-Hash NTLM Type 3 logons (EID 4624), rogue account additions to `Domain Admins`, and Impacket's `wmiexec` process tree fan-out (`WmiPrvSE.exe` $\to$ `cmd.exe /Q /c`).
-- **In the Cloud SIEM & SOAR Pipeline:** **Wazuh SIEM** evaluated all feeds against 148 rule definitions and 87 noise suppressions. Alerts meeting the $\ge \text{Level 8}$ threshold triggered `custom-thehive`, an asynchronous two-tier SOAR engine using local SQLite WAL queues and a 5-second flush daemon to cluster alert floods into **46 high-fidelity incident cases in TheHive 5**—delivering a **90% direct target detection rate (18 of 20 stages caught directly on endpoints or network wire)** and **90% operational alert coverage (18 of 20 stages producing actionable alerts)**, with zero detection engine rule execution failures.
-
----
-
-## 20-Stage Attack & Detection Summary
-
-| # | What the Attacker Did | Caught? | Details & Evidence |
-|:---:|---|:---:|---|
-| **01** | Perimeter TCP SYN port scan and OS fingerprinting probe | **Yes** (Network IDS) | [Stage 01 — Recon](02-Attack-Simulation/Stages/stage-01-recon.md) · [Phase 1 Deep Dive](04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-1-rattling-the-doorknobs-reconnaissance--web-exploitation) |
-| **02** | Automated password guessing / brute-force attack on web application | **Yes** (Network IDS & Web log) | [Stage 02 — Brute Force](02-Attack-Simulation/Stages/stage-02-bruteforce.md) · [Phase 1 Deep Dive](04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-1-rattling-the-doorknobs-reconnaissance--web-exploitation) |
-| **03** | SQL injection exploiting database to extract user accounts and password hashes | **Yes** (Network & Web log) | [Stage 03 — SQLi](02-Attack-Simulation/Stages/stage-03-sqli.md) · [Phase 1 Deep Dive](04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-1-rattling-the-doorknobs-reconnaissance--web-exploitation) |
-| **04** | Offline GPU password cracking of extracted MD5 database hashes | **Attributed** (Offline on GPU; lifecycle bracketed) | [Stage 04 — Hash Cracking](02-Attack-Simulation/Stages/stage-04-hash-crack.md) · [Phase 1 Deep Dive](04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-1-rattling-the-doorknobs-reconnaissance--web-exploitation) |
-| **05** | Uploading a PHP web shell through an unrestricted file upload form | **Yes** (IDS & Auditd execve) | [Stage 05 — Web Shell](02-Attack-Simulation/Stages/stage-05-webshell.md) · [Phase 2 Deep Dive](04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-2-the-10-second-mistake-webshell-to-instant-root) |
-| **06** | Interactive reverse shell connection back to the attacker | **Yes** (IDS & Host shell spawn) | [Stage 06 — Reverse Shell](02-Attack-Simulation/Stages/stage-06-reverse-shell.md) · [Phase 2 Deep Dive](04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-2-the-10-second-mistake-webshell-to-instant-root) |
-| **07** | Local privilege escalation via passwordless sudo Python misconfiguration (sudo /usr/bin/python3 GTFOBins) to gain root | **Yes** (Host PAM & Auditd) | [Stage 07 — PrivEsc](02-Attack-Simulation/Stages/stage-07-privesc.md) · [Phase 2 Deep Dive](04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-2-the-10-second-mistake-webshell-to-instant-root) |
-| **08** | Injecting attacker SSH key into root authorized_keys for persistent access | **Yes** (Host command audit & SSH logon alert) | [Stage 08 — Persistence](02-Attack-Simulation/Stages/stage-08-ssh-persistence.md) · [Phase 3 Deep Dive](04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-3-making-themselves-at-home-ssh-persistence--finding-windows) |
-| **09** | Internal network sweep from the compromised pivot host to discover targets | **Yes** (Caught on wire & pivot host) | [Stage 09 — Discovery](02-Attack-Simulation/Stages/stage-09-internal-discovery.md) · [Phase 3 Deep Dive](04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-3-making-themselves-at-home-ssh-persistence--finding-windows) |
-| **10** | LLMNR/NBT-NS broadcast poisoning (Responder) to capture workstation credentials | **Yes** (Win10 DavSetCookie & pivot host) | [Stage 10 — Responder](02-Attack-Simulation/Stages/stage-10-responder.md) · [Phase 4 Deep Dive](04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-4-poisoning-the-well-stealing-windows-passwords-with-responder) |
-| **11** | Offline GPU password cracking of intercepted workstation NetNTLMv2 hash | **Attributed** (Offline on GPU; lifecycle bracketed) | [Stage 11 — NTLM Crack](02-Attack-Simulation/Stages/stage-11-ntlmv2-crack.md) · [Phase 4 Deep Dive](04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-4-poisoning-the-well-stealing-windows-passwords-with-responder) |
-| **12** | BloodHound / SharpHound Active Directory enumeration mapping domain trust paths | **Yes** (DC & Win10 Custom Rule 100615) | [Stage 12 — BloodHound](02-Attack-Simulation/Stages/stage-12-bloodhound.md) · [Phase 4 Deep Dive](04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-4-poisoning-the-well-stealing-windows-passwords-with-responder) |
-| **13** | Kerberoasting request for a Domain Admin service account ticket | **Yes** (Wire Kerberos TGS-REQ alert) | [Stage 13 — Kerberoasting](02-Attack-Simulation/Stages/stage-13-kerberoasting.md) · [Phase 5 Deep Dive](04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-5-becoming-god-in-active-directory-kerberoasting-dcsync--the-golden-ticket) |
-| **14** | DCSync attack dumping all domain password hashes via DRSUAPI replication | **Yes** (DC Custom Rule 100603 & Rule 92657) | [Stage 14 — DCSync](02-Attack-Simulation/Stages/stage-14-dcsync.md) · [Phase 5 Deep Dive](04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-5-becoming-god-in-active-directory-kerberoasting-dcsync--the-golden-ticket) |
-| **15** | Pass-the-Hash remote command execution to Domain Controller over SMB/WMI | **Yes** (NTLM Type 3 & WMI fan-out) | [Stage 15 — Pass-the-Hash](02-Attack-Simulation/Stages/stage-15-pass-the-hash.md) · [Phase 5 Deep Dive](04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-5-becoming-god-in-active-directory-kerberoasting-dcsync--the-golden-ticket) |
-| **16** | Forging an unrestricted Kerberos Golden Ticket for indefinite domain persistence | **Yes** (DC Custom Rule 100603, 100615 & Alerts #27, #28) | [Stage 16 — Golden Ticket](02-Attack-Simulation/Stages/stage-16-golden-ticket.md) · [Phase 5 Deep Dive](04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-5-becoming-god-in-active-directory-kerberoasting-dcsync--the-golden-ticket) |
-| **17** | Creating a backdoor domain user account and adding it to Domain Admins | **Yes** (WMI fan-out & AD event) | [Stage 17 — DC Persistence](02-Attack-Simulation/Stages/stage-17-dc-persistence.md) · [Phase 6 Deep Dive](04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-6-backdoors--smuggling-domain-persistence--rapid-exfiltration) |
-| **18** | Automated collection of confidential domain files and system information | **Yes** (Sysmon process fan-out) | [Stage 18 — Collection](02-Attack-Simulation/Stages/stage-18-collection.md) · [Phase 6 Deep Dive](04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-6-backdoors--smuggling-domain-persistence--rapid-exfiltration) |
-| **19** | Exfiltrating stolen data archive to the attacker over encrypted SCP | **Yes** (Rapid SSH session burst) | [Stage 19 — Exfiltration](02-Attack-Simulation/Stages/stage-19-exfiltration.md) · [Phase 6 Deep Dive](04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-6-backdoors--smuggling-domain-persistence--rapid-exfiltration) |
-| **20** | Pushing remote desktop wallpaper defacement across domain endpoints via WMI | **Yes** (WMI fan-out & Sysmon EID 1 reg.exe) | [Stage 20 — Impact](02-Attack-Simulation/Stages/stage-20-impact.md) · [Phase 7 Deep Dive](04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-7-the-final-punch-simulated-ransomware-defacement--forced-reboots) |
+### 4. SOC Alert Triage, Investigation & Incident Response
+- **Alert Queue Triage:** Systematic evaluation of 46 alerts in TheHive 5. Identified that the single "Critical" alert (Shellshock) was an unexploitable scanner probe, while real P1 threats were buried as "Medium" alerts (reverse shells, unauthorized root SSH, DCSync).
+- **Case Management:** Grouped all 46 alerts into three operational incident cases:
+  - `CAS-001-WEBCOMP` (Stages 01–07): External Web Application Compromise & Linux Root Takeover
+  - `CAS-002-LATMOVE` (Stages 08–14): Internal Pivoting, LLMNR Poisoning & Active Directory Recon
+  - `CAS-003-DOMIMP` (Stages 15–20): Domain Controller Compromise, Backdoors & Ransomware Impact
+- **Tactical Containment Execution:** Dropped attacker IP at perimeter firewall, killed reverse shell listeners, quarantined web shells (`chmod 000`), disabled rogue AD account `AD\backdoor` to preserve SID integrity, and completed an Active Directory `krbtgt` double password reset to increment KVNO to 3 and purge Golden Tickets.
+- **Root-Cause Eradication:** Revoked sudoers `NOPASSWD` directives, disabled root SSH logins, deployed `.htaccess` execution blocks, disabled LLMNR/NetBIOS across the domain via GPO, enrolled Domain Admins in `Protected Users`, demoted compromised service accounts, and restored registry wallpapers.
 
 ---
 
-## Result at a Glance
+## 🗂️ TheHive Incident Cases Summary
 
-| Metric | Result | Engineering Ground Truth |
-|---|:---:|---|
-| **Attack stages run** | **20** | Full kill chain: external reconnaissance, web exploitation, Linux privilege escalation, network credential theft, Active Directory takeover, and domain defacement |
-| **Direct Target Detections** | **18 (90%)** | **Direct target & wire triggers:** Dedicated rules inspecting target payloads, command arguments, process trees, auth rate anomalies, and wire telemetry directly on victim hosts or network sensors |
-| **Operational Alert Coverage** | **18 (90%)** | **Actionable incident cases:** 18 of 20 stages delivered live, verified alerts to TheHive 5 / central SIEM fabric across all online phases |
-| **Inherent Offline Gaps** | **2 (10%)** | **Offline GPU cracking:** Stages 04 (MD5) and 11 (NTLMv2) ran locally on attacker's GPU (zero victim or network telemetry by definition) |
-| **Target Logging Gaps** | **0 (0%)** | **Zero unmonitored online stages:** Network NIDS (ens37) and custom endpoint rules (100615, 92657) directly detected internal discovery and AD recon |
-| **Rule Execution Failures** | **0 (0%)** | **Zero pipeline crashes:** All configured rules parsed and fired; zero syntax errors, dropped packets, or engine failures |
+| Case ID | Incident Name | Covered Stages | Real Priority | Tactical Actions Taken | Resolution Status |
+|:---:|---|:---:|:---:|---|:---:|
+| **`CAS-001-WEBCOMP`** | External Web Compromise to Root | Stages 01–07 | **P1 (Critical)** | Terminated reverse shell on 4444; quarantined `shell.php`; removed sudoers NOPASSWD Python directive; enforced `PermitRootLogin no`; rotated DB credentials. | **Resolved / Closed** |
+| **`CAS-002-LATMOVE`** | Lateral Movement & AD Escalation | Stages 08–14 | **P1 (Critical)** | Purged injected SSH public keys; disabled LLMNR and NetBIOS via GPO; demoted `HANK_SHERMAN` and stripped SPN; cryptographically shredded staged hash files (`shred -u -z -n 3`). | **Resolved / Closed** |
+| **`CAS-003-DOMIMP`** | Domain Controller Compromise & Impact | Stages 15–20 | **P1 (Critical)** | Blocked adversary IP on Gateway; disabled and removed rogue account `AD\backdoor`; completed double `krbtgt` password reset (KVNO 3); repaired desktop wallpaper registry; isolated DMZ egress. | **Resolved / Closed** |
 
 ---
 
-## How to Read This Repo
+## 🔍 20-Stage Attack & Telemetry Summary
 
-- **5 minutes:** Read this page, review the result numbers, and scan the 20-stage attack table above.
-- **30 minutes:** Read five standout stage simulations and detection engineering baselines comparing attack tradecraft against the telemetry rulesets:
-  - [Stage 03 — SQL Injection](02-Attack-Simulation/Stages/stage-03-sqli.md) (Web application exploitation: UNION SELECT database dump & [Suricata SID 2010963](03-Detection-Engineering/Suricata/README.md#3-empirically-verified-signatures-fired-in-campaign))
-  - [Stage 07 — Privilege Escalation](02-Attack-Simulation/Stages/stage-07-privesc.md) (Linux host compromise: passwordless sudo Python misconfiguration & [Auditd execve tracking](03-Detection-Engineering/Auditd/README.md))
-  - [Stage 10 — Responder Poisoning](02-Attack-Simulation/Stages/stage-10-responder.md) (Network MitM: Link-local broadcast poisoning & [Wazuh bashcmd logging](03-Detection-Engineering/Wazuh/README.md))
-  - [Stage 13 — Kerberoasting](02-Attack-Simulation/Stages/stage-13-kerberoasting.md) (Active Directory exploitation: Kerberos TGS-REQ wire frames & [Suricata SID 2019922](03-Detection-Engineering/Suricata/README.md#3-empirically-verified-signatures-fired-in-campaign))
-  - [Stage 15 — Pass-the-Hash](02-Attack-Simulation/Stages/stage-15-pass-the-hash.md) (Lateral movement: NTLM Logon Type 3 & [Wazuh WMI Rule 100613](03-Detection-Engineering/Wazuh/README.md))
+| # | What the Attacker Did | Caught? | Detection Sensor & Rule | TheHive Case | Primary Evidence |
+|:---:|---|:---:|---|:---:|---|
+| **01** | Perimeter TCP SYN port scan & Nikto fuzzing | **Yes** | Suricata SIDs 3400001, 3400002 / Wazuh 100410 | Case 01 | [Alerts #01–#03](06-Resources/screenshots/thehive-alert/1.png) · [wzb-04](06-Resources/screenshots/wazuh-deep-investigation/wzb-04-recon-suricata-nmap-syn-scan.jpg) |
+| **02** | Automated Python HTTP login brute-force | **Yes** | Suricata SID 2017515 + Custom Wazuh Rule 100600 | Case 01 | [Alert #11](06-Resources/screenshots/thehive-alert/4.png) · [wzb-09](06-Resources/screenshots/wazuh-deep-investigation/wzb-09-bruteforce-dvwa-login-endpoint.jpg) |
+| **03** | SQL injection extracting credentials table | **Yes** | Suricata SID 2010963 + Custom Wazuh Rule 100600 | Case 01 | [Alert #11 (sub-17)](06-Resources/screenshots/thehive-alert/5.png) · [wzb-11](06-Resources/screenshots/wazuh-deep-investigation/wzb-11-sqli-suricata-select-user.jpg) |
+| **04** | Offline GPU password cracking (MD5 hashes) | **Attributed** | *Offline Gap (DG-04)*: Triangulated via Stage 03 dump & Stage 05 login | Case 01 | [Lifecycle Bracketed](04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-1-rattling-the-doorknobs-reconnaissance--web-exploitation) · [DG-04](03-Detection-Engineering/README.md#detection-gap-register) |
+| **05** | PHP web shell upload and `id` execution | **Yes** | Auditd Rule 100199 (`/usr/bin/id`) + Suricata SID 2019284 | Case 01 | [Alerts #12 & #13](06-Resources/screenshots/thehive-alert/6.png) · [wzb-12](06-Resources/screenshots/wazuh-deep-investigation/wzb-12-webshell-dvwa-post-upload.jpg) |
+| **06** | Interactive Netcat FIFO reverse shell on 4444 | **Yes** | Suricata SID 3400020 + Auditd `nc.openbsd` Rule 100199 | Case 01 | [Alerts #14 & #15](06-Resources/screenshots/thehive-alert/7.png) · [wzb-15](06-Resources/screenshots/wazuh-deep-investigation/wzb-15-revshell-auditd-stty-sane.jpg) |
+| **07** | Passwordless sudo Python privesc to root | **Yes** | Linux PAM Rule 5402 (12x sudo alerts) + Rule 100220 | Case 01 | [PAM Telemetry](06-Resources/screenshots/wazuh-deep-investigation/wzb-17-privesc-pam-sudo-python-root.jpg) · [wzb-18](06-Resources/screenshots/wazuh-deep-investigation/wzb-18-privesc-auditd-sudo-l.jpg) |
+| **08** | Root SSH key injection & interactive login | **Yes** | Wazuh SSH Rule 5715 + Rule 100220 (`authorized_keys`) | Case 02 | [Alert #16](06-Resources/screenshots/thehive-alert/8.png) · [wzb-19](06-Resources/screenshots/wazuh-deep-investigation/wzb-19-ssh-persist-auditd-authorized-keys.jpg) |
+| **09** | Internal subnet discovery sweep from pivot | **Yes** | Suricata promiscuous sniffing (`ens37` SIDs 3400001/2) | Case 02 | [Alerts #17–#19](06-Resources/screenshots/thehive-alert/9.png) · [wzb-22](06-Resources/screenshots/wazuh-deep-investigation/wzb-22-discovery-suricata-internal-nmap.jpg) |
+| **10** | Responder LLMNR poisoning & hash capture | **Yes** | Win10 EID 4688 `DavSetCookie` (Rule 100278) + SSH Staging | Case 02 | [Alert #20](06-Resources/screenshots/thehive-alert/10.png) · [wzb-28](06-Resources/screenshots/wazuh-deep-investigation/wzb-28-responder-win10-rundll32-davsetcookie.jpg) |
+| **11** | Offline GPU cracking of NetNTLMv2 hash | **Attributed** | *Offline Gap (DG-11)*: Triangulated via Stage 10 capture & Stage 12 login | Case 02 | [Alert #21 (SCP)](06-Resources/screenshots/thehive-alert/11.png) · [DG-11](03-Detection-Engineering/README.md#detection-gap-register) |
+| **12** | BloodHound Active Directory enumeration | **Yes** | Domain Controller EID 4624 (Custom Rule 100615 & 92657) | Case 02 | [Alert #22](06-Resources/screenshots/thehive-alert/12.png) · [wzb-32](06-Resources/screenshots/wazuh-deep-investigation/wzb-32-bloodhound-dc-eid4624-win10-ldap.jpg) |
+| **13** | Kerberoasting request for `HANK_SHERMAN` | **Yes** | Suricata SID 2019922 (TGS-REQ wire frame) + Rule 100220 | Case 02 | [Alert #23](06-Resources/screenshots/thehive-alert/13.png) · [wzb-33](06-Resources/screenshots/wazuh-deep-investigation/wzb-33-kerberoast-auditd-getuserspns.jpg) |
+| **14** | DCSync NTDS password hash extraction | **Yes** | Domain Controller EID 4672 `SeDebugPrivilege` (Rule 100603) | Case 02 | [Alert #24](06-Resources/screenshots/thehive-alert/14.png) · [wzb-34](06-Resources/screenshots/wazuh-deep-investigation/wzb-34-dcsync-auditd-secretsdump-ntds.jpg) |
+| **15** | Pass-the-Hash remote WMI execution (`.10`) | **Yes** | Windows EID 4624 Logon Type 3 NTLM + Sysmon Rule 100613 | Case 03 | [Alerts #25 & #26](06-Resources/screenshots/thehive-alert/15.png) · [wzb-35](06-Resources/screenshots/wazuh-deep-investigation/wzb-35-pth-wazuh-eid4624-detection.jpg) |
+| **16** | Forged Kerberos Golden Ticket via `ticketer` | **Yes** | Domain Controller EID 4624 + Sysmon EID 1 (`wmiexec -k`) | Case 03 | [Alerts #27 & #28](06-Resources/screenshots/thehive-alert/16.png) · [wzb-38](06-Resources/screenshots/wazuh-deep-investigation/wzb-38-goldenticket-auditd-ticketer-forgery.jpg) |
+| **17** | Backdoor domain account added to Domain Admins | **Yes** | Windows Security EID 4720 (Rule 60109) & EID 4728 (Rule 60159) | Case 03 | [Alerts #29–#34](06-Resources/screenshots/thehive-alert/17.png) · [wzb-44](06-Resources/screenshots/wazuh-deep-investigation/wzb-44-persist-dc-eid4720-backdoor-created.jpg) |
+| **18** | Automated sensitive data staging on DC & Win10 | **Yes** | Sysmon EID 1 process fan-out (Rules 100271, 100272, 100275) | Case 03 | [Alerts #35 & #36](06-Resources/screenshots/thehive-alert/18.png) · [wzb-49](06-Resources/screenshots/wazuh-deep-investigation/wzb-49-staging-sysmon-dc-domain-users-txt.jpg) |
+| **19** | Rapid SCP exfiltration burst to Kali | **Yes** | Wazuh Rule 5715 Auth Rate Anomaly (6 sessions / 570 ms) | Case 03 | [Alert #37](06-Resources/screenshots/thehive-alert/19.png) · [wzb-53](06-Resources/screenshots/wazuh-deep-investigation/wzb-53-exfil-wazuh-sshd-rapid-sessions-burst.jpg) |
+| **20** | Desktop defacement, ransom notes & reboots | **Yes** | Sysmon EID 1 (`reg.exe add`, Rule 92041) + System EID 1074 | Case 03 | [Alerts #38–#45](06-Resources/screenshots/thehive-alert/21.png) · [wzb-57](06-Resources/screenshots/wazuh-deep-investigation/wzb-57-impact-sysmon-dc-ransom-note-and-payload.jpg) |
 
 ---
 
-## Disclaimer & License
+## 📊 Scorecard & Ground-Truth Telemetry Accounting
 
-> **Authorized Educational Research Only:** All attack simulations and defensive telemetry in this project were executed against dedicated, isolated virtual machines in a private lab environment owned by the author. No production systems or unauthorized networks were targeted. See [DISCLAIMER.md](DISCLAIMER.md).
+| Telemetry Classification | Count | % | Ground-Truth Technical Verification |
+|---|:---:|:---:|---|
+| **Direct Target & Wire Detections** | **18** | **90.0%** | Dedicated host/network rules inspecting payload, process lineage, or network wire traffic on victim systems. |
+| **Operational SOAR Alert Delivery** | **18** | **90.0%** | Delivered 46 prioritized incident tickets to TheHive 5 via Level $\ge 8$ threshold. |
+| **Inherent Offline Computation Gaps** | **2** | **10.0%** | Stages 04 & 11 executed on external adversary GPU hardware; fully attributed via credential lifecycle analysis. |
+| **Target-Side Logging Gaps** | **0** | **0.0%** | Zero unmonitored online stages; all network and endpoint actions produced telemetry. |
+| **Rule Execution Failures** | **0** | **0.0%** | Zero engine crashes, syntax errors, or dropped packets across Wazuh, Suricata, and Sysmon. |
 
-This project is licensed under the [MIT License](LICENSE).
+### Documented Defensive Limits & Engineering Backlog
+To preserve professional rigor, this laboratory openly documents engineering boundaries and production limitations:
+1. **Inherent Offline Gaps (`DG-04`, `DG-11`):** Offline dictionary attacks generate zero telemetry on victim infrastructure. SOC defenses must focus upstream on credential theft prevention and downstream on anomalous initial logons.
+2. **Encrypted Transport Payload Boundary (`DG-19`):** SSH transport encryption prevented Suricata NIDS from inspecting plaintext filenames during SCP transfers; detection relied on host-level authentication rate anomaly correlation (Wazuh Rule 5715).
+3. **Pre-Attack Active Directory Baseline Gaps:** Windows EID 4662 (DCSync replication rights SACL) and EID 1644 (Active Directory LDAP field engineering diagnostics) were unconfigured in default Windows baselines and were implemented during Phase 4 hardening.
+
+---
+
+## 📖 Recommended Role-Based Reading Paths
+
+Depending on your engineering focus, navigate the repository through these curated paths:
+
+- **For SOC Analysts & Incident Responders (30 mins):**
+  1. [`04-Investigation/Initial-Triage-and-Investigation.md`](04-Investigation/Initial-Triage-and-Investigation.md) — How 46 incoming alerts were triaged, and why Critical Shellshock was deprioritized over Medium reverse shells.
+  2. [`04-Investigation/Immediate-Containment-Execution.md`](04-Investigation/Immediate-Containment-Execution.md) — Active host lockout commands with photographic before-and-after verification.
+  3. [`04-Investigation/Deep-Dive-Attack-Chain-Investigation.md`](04-Investigation/Deep-Dive-Attack-Chain-Investigation.md) — 7-phase chronological narrative supported by 68 SIEM alert cards.
+  4. [`05-Incident-Report/incident-report.md`](05-Incident-Report/incident-report.md) — Formal executive post-mortem incident report.
+
+- **For Detection Engineers & Threat Hunters (25 mins):**
+  1. [`03-Detection-Engineering/README.md`](03-Detection-Engineering/README.md) — Architecture, MITRE mapping, and empirical detection matrices.
+  2. [`06-Resources/rules/wazuh/local_rules.xml`](06-Resources/rules/wazuh/local_rules.xml) — Custom Wazuh XML rules and noise suppressions.
+  3. [`03-Detection-Engineering/Wazuh/README.md`](03-Detection-Engineering/Wazuh/README.md) — Deep technical rationale for Level 5 host command auditing (`bashcmd`).
+
+- **For Cloud & Infrastructure Security Engineers (20 mins):**
+  1. [`01-Lab-Setup/README.md`](01-Lab-Setup/README.md) — 7-node hybrid cloud architecture, network zones, and build profiles.
+  2. [`01-Lab-Setup/Local/suricata-gateway.md`](01-Lab-Setup/Local/suricata-gateway.md) — Dual-interface NIDS configuration and Zero-NAT WireGuard tunnel design.
+  3. [`01-Lab-Setup/Cloud/thehive.md`](01-Lab-Setup/Cloud/thehive.md) — Azure cloud ingress, Cassandra/Elasticsearch cluster, and reverse proxy setup.
+
+- **For Red Teamers & Offensive Researchers (25 mins):**
+  1. [`02-Attack-Simulation/README.md`](02-Attack-Simulation/README.md) — 20-stage adversary playbook overview.
+  2. Standout attack stages: [Stage 03 SQLi](02-Attack-Simulation/Stages/stage-03-sqli.md), [Stage 10 Responder](02-Attack-Simulation/Stages/stage-10-responder.md), [Stage 14 DCSync](02-Attack-Simulation/Stages/stage-14-dcsync.md), [Stage 16 Golden Ticket](02-Attack-Simulation/Stages/stage-16-golden-ticket.md).
+
+---
+
+## 📜 Repository Navigation
+
+- **01 — Laboratory Setup & Infrastructure**: [`01-Lab-Setup/`](01-Lab-Setup/)
+- **02 — Adversary Attack Simulation**: [`02-Attack-Simulation/`](02-Attack-Simulation/)
+- **03 — Detection Engineering**: [`03-Detection-Engineering/`](03-Detection-Engineering/)
+- **04 — Incident Investigation & Triage**: [`04-Investigation/`](04-Investigation/)
+- **05 — Post-Mortem Incident Report**: [`05-Incident-Report/`](05-Incident-Report/)
+- **06 — Assets, Rules & Telemetry**: [`06-Resources/`](06-Resources/)
+- **Master Traceability Matrix**: [`INDEX.md`](INDEX.md)
