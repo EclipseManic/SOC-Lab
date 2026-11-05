@@ -108,7 +108,7 @@ All actions documented in this playbook were executed strictly through authorize
 
 - Provides native AD object modification, Group Policy registry enforcement, and CimSession hardware adapter reconfigurations.
 
-3. **TheHive 5.2 SOAR Incident Management Console:**
+3. **TheHive 5.7.5 SOAR Incident Management Console:**
 
 - Centralized review and disposition of all 46 imported telemetry alerts.
 
@@ -746,7 +746,7 @@ dcdiag /test:Replication /test:Advertising /test:FSMOCheck /test:Services | Sele
 # 9. Step 7: TheHive 46-Alert Queue Disposition & 3-Case Resolution Management
 
 > 🎯 **Objective:** Review the entire 46-alert operational queue in TheHive, dismiss 3 confirmed false positives with documented rationale, correlate 43 confirmed breach alerts into 3 operational cases, complete all investigative tasks, and officially close each case with formal resolution verdicts.  
-> 💻 **Console:** TheHive 5.2 SOAR Platform (`http://10.122.0.4:9000`)  
+> 💻 **Console:** TheHive 5.7.5 SOAR Platform (`http://10.122.0.4:9000`)  
 > 🏷️ **Master Incident Tag:** `INC-2026-1018-ALPHA`
 
 ### Comprehensive 46-Alert Queue Disposition Rationale

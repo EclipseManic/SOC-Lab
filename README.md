@@ -1,97 +1,84 @@
 # Hybrid-Cloud SOC & Threat Engineering Lab
-### End-to-End Infrastructure Design, 20-Stage Attack Simulation, Custom Detection Engineering & Full DFIR Case Investigation
+### 7-Node Hybrid Network, 74-Minute Attack Campaign, Multi-Sensor Telemetry & DFIR Case Investigation
 
-I designed and deployed a hybrid-cloud corporate security operations center (SOC) and enterprise network across **7 dedicated virtual machines**, executed a realistic **20-stage adversary attack campaign** against it (spanning perimeter reconnaissance, web application exploitation, Linux privilege escalation, network credential theft, and Active Directory domain takeover), authored custom multi-sensor detection rules, triaged **46 incoming incident alerts in TheHive 5**, and executed live containment and permanent root-cause eradication.
+**Author:** Manichand Gupta ([@EclipseManic](https://github.com/EclipseManic))  
+**Core Competencies:** Hybrid Infrastructure · Adversary Emulation (Red Team) · Multi-Sensor Detection Engineering · Digital Forensics & Incident Response (DFIR)  
+**Live Interactive Report & Dashboard:** <https://soc-lab.eclipsemanic.me/>
+
+---
+
+I built an isolated hybrid-cloud security operations lab across **7 dedicated virtual machines**, executed an end-to-end **74-minute, 20-stage adversarial attack campaign** against it (spanning perimeter reconnaissance, web exploitation, Linux privilege escalation, network credential theft, and Active Directory domain takeover), authored custom multi-sensor detection rules, triaged **46 incoming incident alerts in TheHive 5.7.5**, and executed active containment and post-incident hardening.
 
 [![SOC Lab Complete Architecture](06-Resources/diagrams/SOC_Lab_Architecture.png)](06-Resources/diagrams/SOC_Lab_Architecture.png)
+*Figure 1: Hybrid-cloud topology connecting on-premise victim and attack subnets to Azure cloud SIEM and SOAR fabric over an encrypted Zero-NAT WireGuard tunnel.*
 
-**Live Interactive Report & Dashboard:** <https://soc-lab.eclipsemanic.me/>
+---
+
+## 🛠️ Technology Stack & Defensive Arsenal
+
+| Discipline | Technologies, Platforms & Frameworks |
+|---|---|
+| **Infrastructure & Cloud** | Microsoft Azure (Peered VNet `10.122.0.0/16`), VMware Workstation Pro, Ubuntu 24.04/22.04 LTS, Windows Server 2022 AD DS, Windows 10 Enterprise, WireGuard Site-to-Cloud VPN (`10.8.0.0/24`) |
+| **SIEM & NIDS Telemetry** | Wazuh SIEM 4.14.8 (Manager, Indexer, OpenSearch Dashboard), Suricata 8.0.6 NIDS (Dual-interface promiscuous AF-PACKET capture on WAN `ens33` & LAN `ens37`) |
+| **Host Telemetry & Auditing** | Microsoft Sysmon 15.20 (Process & Registry Logging), Linux Auditd (`execve` netlink monitoring), Custom Wazuh `bashcmd` Interactive Host Command Auditing (Rule `100220`) |
+| **Incident Management & SOAR** | TheHive 5.7.5-1 (Case Management), Apache Cassandra 4.x, Elasticsearch 8.x, Custom Asynchronous Python SOAR Gateway (`custom-thehive.py`) with SQLite WAL buffer |
+| **Adversary Emulation & TTPs** | MITRE ATT&CK Framework, Impacket (`wmiexec.py`, `secretsdump.py`, `GetUserSPNs.py`, `ticketer.py`), BloodHound (`bloodhound-python`), Responder, Hashcat, Hydra, Nmap, Nikto |
 
 ---
 
 ## 🏛️ The Four Operational Pillars
 
-This project documents the complete lifecycle of enterprise security operations across four interdependent disciplines:
+This project documents the complete lifecycle of defensive and offensive security operations:
 
 ```
 [ 1. Infrastructure ] ──► [ 2. Attack Simulation ] ──► [ 3. Detection Engineering ] ──► [ 4. Incident Response ]
   • Hybrid Cloud (Azure)    • 20 MITRE ATT&CK Stages     • Custom Wazuh XML Rules         • 46 TheHive Alerts
-  • 4 Network Segments      • Realistic Red-Team TTPs    • Suricata NIDS Signatures       • 3 Operational Cases
+  • 4 Network Segments      • 74-Minute Attack Campaign  • Suricata NIDS Signatures       • 3 Operational Cases
   • WireGuard S2S Tunnel    • Linux Host Compromise      • Sysmon & Auditd Baselines      • Active Containment
   • Active Directory Domain • Full AD Forest Takeover    • SQLite WAL SOAR Daemon         • Eradication & Post-Mortem
 ```
 
-### 1. Hybrid Infrastructure Engineering
-- **Cloud Management Stack (Microsoft Azure):** Two Ubuntu cloud instances in a peered private cloud network (`10.122.0.0/16`) with exactly **one open inbound port: UDP 51820 (WireGuard VPN)** on VM1, with zero management ports (SSH/HTTP/Elasticsearch) exposed to the public internet:
-  - `Cloud VM1` (`10.122.0.4`): TheHive 5 case management, Apache Cassandra, Elasticsearch, Velociraptor DFIR server, and WireGuard VPN hub (`10.8.0.1/24`).
-  - `Cloud VM2` (`10.122.1.4`): Wazuh SIEM Manager, Indexer, OpenSearch Dashboard, and custom SOAR integration daemon.
-- **On-Premise Victim & Attack Network (VMware Workstation Pro):**
-  - `Security Gateway` (`192.168.232.160` / `192.168.56.1`): Dual-homed Linux router running Suricata NIDS sniffing ingress perimeter traffic (`ens33`) and internal LAN traffic (`ens37`).
-  - `Web Application Server` (`192.168.232.161` / `192.168.56.30`): Ubuntu Linux hosting DVWA on Apache 2.4.
-  - `Domain Controller` (`192.168.56.10`): Windows Server 2022 Active Directory (`PC-DC.ad.lab`).
-  - `Corporate Workstation` (`192.168.56.20`): Windows 10 Enterprise (`Win10.ad.lab`).
-  - `Attacker Machine` (`192.168.232.135`): Kali Linux placed on an isolated external subnet.
-- **Zero-NAT Site-to-Cloud WireGuard Tunnel:** An encrypted VPN tunnel connects the physical security gateway (`10.8.0.2`) directly to the Azure cloud hub (`10.8.0.1`). Kernel NAT is disabled for victim traffic, preserving authentic source IP addresses (`.10`, `.20`, `.30`) across all SIEM alerts.
+1. **Hybrid Infrastructure Engineering:** Deployed 7 VMs across Microsoft Azure and VMware Workstation Pro. Configured an encrypted Site-to-Cloud WireGuard tunnel with kernel IP forwarding and Zero-NAT routing, preserving authentic victim source IP addresses across all SIEM alerts. Ingress perimeter has exactly one open inbound port: UDP 51820 (WireGuard VPN) on VM1, with zero management ports exposed to the public internet.  
+   *(Full host specifications, routing rules, and configurations: [`01-Lab-Setup/README.md`](01-Lab-Setup/README.md))*
 
-### 2. Adversary Attack Simulation (20 Stages)
-- **Act 1: Web Compromise to Root (Stages 01–07):** Perimeter port scanning (Nmap), web fuzzing (Nikto), login brute-force, SQL injection credential dump, PHP web shell deployment, Netcat reverse shell stabilization, and instant root privilege escalation via passwordless sudo Python misconfiguration (`sudo /usr/bin/python3` GTFOBins).
-- **Act 2: Pivot & Credential Theft (Stages 08–14):** Injected root SSH backdoor persistence, internal subnet discovery sweep, LLMNR/NBT-NS broadcast poisoning (Responder) capturing domain user `win10` NetNTLMv2 hash, BloodHound AD mapping, Kerberoasting service account `HANK_SHERMAN`, and DCSync directory replication via DRSUAPI.
-- **Act 3: Domain Dominance & Disruption (Stages 15–20):** Pass-the-Hash remote WMI access (`wmiexec.py`), Kerberos Golden Ticket forgery (`ticketer.py`), persistent backdoor account creation (`AD\backdoor`) elevated to `Domain Admins`, automated data staging, rapid SCP exfiltration, desktop wallpaper defacement, ransomware note deployment, and forced dual-endpoint reboots.
+2. **Adversary Attack Simulation (20 Stages / 74 Minutes):** Executed a continuous 3-act attack chain against the victim domain:
+   - *Act 1: Web Compromise to Root (Stages 01–07):* Reconnaissance, login brute-forcing, SQL injection credential extraction, web shell upload, Netcat reverse shell, and passwordless sudo Python GTFOBins privilege escalation.
+   - *Act 2: Pivot & Credential Access (Stages 08–14):* Root SSH key persistence, internal subnet discovery sweep, Responder LLMNR poisoning (`win10` hash capture), BloodHound AD enumeration, Kerberoasting (`HANK_SHERMAN`), and DCSync replication.
+   - *Act 3: Domain Dominance & Disruption (Stages 15–20):* Pass-the-Hash remote WMI access (`wmiexec.py`), Kerberos Golden Ticket forgery (`ticketer.py`), backdoor Domain Admin persistence (`AD\backdoor`), automated data harvesting, rapid SCP exfiltration, wallpaper defacement, ransomware deployment, and forced reboots.  
+   *(Execution commands, payloads, and red-team playbooks: [`02-Attack-Simulation/README.md`](02-Attack-Simulation/README.md))*
 
-### 3. Detection Engineering & Telemetry Pipeline
-- **Multi-Sensor Mesh:** Interlocking telemetry layers combining Suricata wire inspection, Linux Auditd syscall tracking (`execve`), Windows Sysmon process execution trees (`WmiPrvSE.exe` $\to$ `cmd.exe`), and Active Directory Security logs.
-- **Custom Detection Engine:** 148 rule definitions and 87 false-positive noise suppressions in `local_rules.xml`.
-- **Custom SOAR Ingestion Gateway (`custom-thehive.py`):** An asynchronous Python daemon utilizing a local SQLite Write-Ahead Log (WAL) buffer and a 5-second sliding flush window to cluster raw alert floods into 46 actionable incident tickets, preventing alert fatigue from 9,567 baseline events.
+3. **Multi-Sensor Detection Engineering:** Authored and tuned 148 detection rules and 87 false-positive noise suppressions across Suricata wire inspection, Linux Auditd syscall hooks, Windows Sysmon process trees, and Active Directory security event logs. Implemented a two-tier SQLite WAL SOAR gateway (`custom-thehive.py`) with a 5-second sliding flush window to cluster 9,567 raw telemetry logs into 46 actionable incident cards without alert fatigue.  
+   *(Ruleset files, decoders, and SOAR pipeline architecture: [`03-Detection-Engineering/README.md`](03-Detection-Engineering/README.md))*
 
-### 4. SOC Alert Triage, Investigation & Incident Response
-- **Alert Queue Triage:** Systematic evaluation of 46 alerts in TheHive 5. Identified that the single "Critical" alert (Shellshock) was an unexploitable scanner probe, while real P1 threats were buried as "Medium" alerts (reverse shells, unauthorized root SSH, DCSync).
-- **Case Management:** Grouped all 46 alerts into three operational incident cases:
-  - `CAS-001-WEBCOMP` (Stages 01–07): External Web Application Compromise & Linux Root Takeover
-  - `CAS-002-LATMOVE` (Stages 08–14): Internal Pivoting, LLMNR Poisoning & Active Directory Recon
-  - `CAS-003-DOMIMP` (Stages 15–20): Domain Controller Compromise, Backdoors & Ransomware Impact
-- **Tactical Containment Execution:** Dropped attacker IP at perimeter firewall, killed reverse shell listeners, quarantined web shells (`chmod 000`), disabled rogue AD account `AD\backdoor` to preserve SID integrity, and completed an Active Directory `krbtgt` double password reset to increment KVNO to 3 (verified in screenshot `slot_06_eradication_ad_protected_users.png`) and purge Golden Tickets.
-- **Root-Cause Eradication:** Revoked sudoers `NOPASSWD` directives, disabled root SSH logins, deployed `.htaccess` execution blocks, disabled LLMNR/NetBIOS across the domain via GPO, enrolled Domain Admins in `Protected Users`, demoted compromised service accounts, and restored registry wallpapers.
+4. **SOC Alert Triage, Investigation & Response:** Investigated all 46 incoming alerts in TheHive 5.7.5 across 3 formal cases. Executed tactical containment (quarantining web shells, severing reverse shells, locking rogue accounts, and executing an Active Directory double `krbtgt` password reset to **KVNO 3**). Produced executive post-mortem reports, technical IoC registers, and hardening backlog roadmaps.  
+   *(Investigation walkthroughs, containment proof, and case exports: [`04-Investigation/README.md`](04-Investigation/README.md))*
+
+[![74-Minute Attack & Investigation Timeline](06-Resources/diagrams/Consolidated%20Incident%20Response%2074-Minute%20Timeline.png)](06-Resources/diagrams/Consolidated%20Incident%20Response%2074-Minute%20Timeline.png)
+*Figure 2: Chronological 74-minute attack campaign and incident investigation timeline mapping telemetry spikes from initial probe to final case resolution.*
 
 ---
 
-## 🗂️ TheHive Incident Cases Summary
+## 🗂️ TheHive 5.7.5 Incident Cases & Operational Triage
 
-| Case ID | Incident Name | Covered Stages | Real Priority | Tactical Actions Taken | Resolution Status |
+Incoming alerts were triaged and grouped into three operational incident cases in TheHive:
+
+[![TheHive Severity Queue](06-Resources/screenshots/initial-triage/slot_01_thehive_severity_queue.png)](06-Resources/screenshots/initial-triage/slot_01_thehive_severity_queue.png)
+*Figure 3: Live TheHive 5.7.5 alert queue sorted by severity. Operational triage insight: automated web fuzzing triggered noisy "Critical" alerts (Shellshock probes), while active reverse shells and DCSync replication arrived as "Medium" alerts requiring analyst escalation.*
+
+[![TheHive Resolved Cases Overview](06-Resources/screenshots/thehive-cases/thehive_cases_overview_resolved.png)](06-Resources/screenshots/thehive-cases/thehive_cases_overview_resolved.png)
+*Figure 4: All three formal incident cases closed and resolved following active host containment and enterprise eradication.*
+
+| Case ID | Incident Scope | Stages | Real Priority | Tactical Containment Actions | Resolution Status |
 |:---:|---|:---:|:---:|---|:---:|
-| **`CAS-001-WEBCOMP`** | External Web Compromise to Root | Stages 01–07 | **P1 (Critical)** | Terminated reverse shell on 4444; quarantined `shell.php`; removed sudoers NOPASSWD Python directive; enforced `PermitRootLogin no`; rotated DB credentials. | **Resolved / Closed** |
-| **`CAS-002-LATMOVE`** | Lateral Movement & AD Escalation | Stages 08–14 | **P1 (Critical)** | Purged injected SSH public keys; disabled LLMNR and NetBIOS via GPO; demoted `HANK_SHERMAN` and stripped SPN; cryptographically shredded staged hash files (`shred -u -z -n 3`). | **Resolved / Closed** |
-| **`CAS-003-DOMIMP`** | Domain Controller Compromise & Impact | Stages 15–20 | **P1 (Critical)** | Blocked adversary IP on Gateway; disabled and removed rogue account `AD\backdoor`; completed double `krbtgt` password reset (KVNO 3); repaired desktop wallpaper registry; isolated DMZ egress. | **Resolved / Closed** |
-
----
-
-## 🔍 20-Stage Attack & Telemetry Summary
-
-| # | What the Attacker Executed | Caught? | Detection Sensor & Rule | TheHive Case | Primary Evidence |
-|:---:|---|:---:|---|:---:|---|
-| **01** | Perimeter TCP SYN port scan & Nikto fuzzing | **Yes (Direct)** | Suricata SIDs 3400001, 3400002 / Wazuh 100410 | Case 01 | [Alerts #01–#10](06-Resources/screenshots/thehive-alert/1.png) · [wzb-04](06-Resources/screenshots/wazuh-deep-investigation/wzb-04-recon-suricata-nmap-syn-scan.jpg) |
-| **02** | Automated Python HTTP login brute-force | **Yes (Direct)** | Suricata SID 2017515 / Wazuh Rule 100213 & Rule 100200 | Case 01 | [Alert #11](06-Resources/screenshots/thehive-alert/4.png) · [wzb-09](06-Resources/screenshots/wazuh-deep-investigation/wzb-09-bruteforce-dvwa-login-endpoint.jpg) |
-| **03** | SQL injection extracting credentials table | **Yes (Direct)** | Suricata SID 2010963 (`SELECT USER`) / Wazuh Rule 31106 | Case 01 | [Alert #11 (sub-17)](06-Resources/screenshots/thehive-alert/5.png) · [wzb-11](06-Resources/screenshots/wazuh-deep-investigation/wzb-11-sqli-suricata-select-user.jpg) |
-| **04** | Offline GPU password cracking (MD5 hashes) | **Attributed (Offline)** | *Offline Gap (DG-04)*: Triangulated via Stage 03 dump & Stage 05 login | Case 01 | [Lifecycle Bracketed](04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-1-rattling-the-doorknobs-reconnaissance--web-exploitation) · [DG-04](03-Detection-Engineering/README.md#detection-gap-register) |
-| **05** | PHP web shell upload and `id` execution | **Yes (Direct)** | Auditd Rule 100199 (`/usr/bin/id`) + Suricata SIDs 2014726, 2019284 | Case 01 | [Alerts #12 & #13](06-Resources/screenshots/thehive-alert/6.png) · [wzb-12](06-Resources/screenshots/wazuh-deep-investigation/wzb-12-webshell-dvwa-post-upload.jpg) |
-| **06** | Interactive Netcat FIFO reverse shell on 4444 | **Yes (Direct)** | Suricata SID 3400020 + Auditd `nc.openbsd` Rule 100199 | Case 01 | [Alerts #14 & #15](06-Resources/screenshots/thehive-alert/7.png) · [wzb-15](06-Resources/screenshots/wazuh-deep-investigation/wzb-15-revshell-auditd-stty-sane.jpg) |
-| **07** | Passwordless sudo Python privesc to root | **Yes (Direct)** | Linux PAM Rule 5402 (12x sudo alerts) + Rule 100220 | Case 01 | [PAM Telemetry](06-Resources/screenshots/wazuh-deep-investigation/wzb-17-privesc-pam-sudo-python-root.jpg) · [wzb-18](06-Resources/screenshots/wazuh-deep-investigation/wzb-18-privesc-auditd-sudo-l.jpg) |
-| **08** | Root SSH key injection & interactive login | **Yes (Direct)** | Wazuh SSH Rule 5715 (Level 8) + Rule 100220 (`authorized_keys`) | Case 02 | [Alert #16](06-Resources/screenshots/thehive-alert/8.png) · [wzb-19](06-Resources/screenshots/wazuh-deep-investigation/wzb-19-ssh-persist-auditd-authorized-keys.jpg) |
-| **09** | Internal subnet discovery sweep from pivot | **Logging Gap** | Suricata NIDS (`ens37` SIDs 3400001/2/20) + Wazuh Rule 100220 | Case 02 | [Alerts #17–#19](06-Resources/screenshots/thehive-alert/9.png) · [wzb-22](06-Resources/screenshots/wazuh-deep-investigation/wzb-22-discovery-suricata-internal-nmap.jpg) · Target Gap (DG-09) |
-| **10** | Responder LLMNR poisoning & hash capture | **Yes (Direct)** | Win10 EID 4688 `DavSetCookie` (Rule 100278) + Wazuh Rule 100220 | Case 02 | [Alert #20](06-Resources/screenshots/thehive-alert/10.png) · [wzb-28](06-Resources/screenshots/wazuh-deep-investigation/wzb-28-responder-win10-rundll32-davsetcookie.jpg) |
-| **11** | Offline GPU cracking of NetNTLMv2 hash | **Attributed (Offline)** | *Offline Gap (DG-11)*: Triangulated via Stage 10 capture & Stage 12 login | Case 02 | [Alert #21 (SCP)](06-Resources/screenshots/thehive-alert/11.png) · [DG-11](03-Detection-Engineering/README.md#detection-gap-register) |
-| **12** | BloodHound Active Directory enumeration | **Logging Gap** | Linux Pivot Wazuh Rule 100220 (`bloodhound-python`) + Alert #22 | Case 02 | [Alert #22](06-Resources/screenshots/thehive-alert/12.png) · [wzb-32](06-Resources/screenshots/wazuh-deep-investigation/wzb-32-bloodhound-dc-eid4624-win10-ldap.jpg) · Target Gap (DG-12) |
-| **13** | Kerberoasting request for `HANK_SHERMAN` | **Yes (Direct)** | Suricata SID 2019922 (TGS-REQ wire frame) + Rule 100220 | Case 02 | [Alert #23](06-Resources/screenshots/thehive-alert/13.png) · [wzb-33](06-Resources/screenshots/wazuh-deep-investigation/wzb-33-kerberoast-auditd-getuserspns.jpg) |
-| **14** | DCSync NTDS password hash extraction | **Pivot-Only** | Linux Pivot Wazuh Rule 100220 (`secretsdump.py`) + Alert #24 | Case 02 | [Alert #24](06-Resources/screenshots/thehive-alert/14.png) · [wzb-34](06-Resources/screenshots/wazuh-deep-investigation/wzb-34-dcsync-auditd-secretsdump-ntds.jpg) · DC Gap (DG-14) |
-| **15** | Pass-the-Hash remote WMI execution (`.10`) | **Yes (Direct)** | Windows EID 4624 Logon Type 3 NTLM + Sysmon Rule 100613 | Case 03 | [Alerts #25 & #26](06-Resources/screenshots/thehive-alert/15.png) · [wzb-35](06-Resources/screenshots/wazuh-deep-investigation/wzb-35-pth-wazuh-eid4624-detection.jpg) |
-| **16** | Forged Kerberos Golden Ticket via `ticketer` | **Pivot-Only** | Linux Pivot Wazuh Rule 100220 (`ticketer.py`) + Alerts #27 & #28 (`wmiexec -k`) | Case 03 | [Alerts #27 & #28](06-Resources/screenshots/thehive-alert/16.png) · [wzb-38](06-Resources/screenshots/wazuh-deep-investigation/wzb-38-goldenticket-auditd-ticketer-forgery.jpg) · DC Gap (DG-16) |
-| **17** | Backdoor domain account added to Domain Admins | **Yes (Direct)** | Windows Security EID 4720 (Rule 60109) & EID 4728 (Rule 60159) | Case 03 | [Alerts #29–#34](06-Resources/screenshots/thehive-alert/17.png) · [wzb-44](06-Resources/screenshots/wazuh-deep-investigation/wzb-44-persist-dc-eid4720-backdoor-created.jpg) |
-| **18** | Automated sensitive data staging on DC & Win10 | **Yes (Direct)** | Sysmon EID 1 process fan-out (Rules 100271, 100272, 100275) | Case 03 | [Alerts #35 & #36](06-Resources/screenshots/thehive-alert/18.png) · [wzb-49](06-Resources/screenshots/wazuh-deep-investigation/wzb-49-staging-sysmon-dc-domain-users-txt.jpg) |
-| **19** | Rapid SCP exfiltration burst to Kali | **Yes (Direct)** | Wazuh Rule 5715 Auth Rate Anomaly (6 sessions / 570 ms) | Case 03 | [Alert #37](06-Resources/screenshots/thehive-alert/19.png) · [wzb-53](06-Resources/screenshots/wazuh-deep-investigation/wzb-53-exfil-wazuh-sshd-rapid-sessions-burst.jpg) |
-| **20** | Desktop defacement, ransom notes & reboots | **Yes (Direct)** | Sysmon EID 1 (`reg.exe add`, Rule 92041) + System EID 1074 | Case 03 | [Alerts #38–#45](06-Resources/screenshots/thehive-alert/21.png) · [wzb-57](06-Resources/screenshots/wazuh-deep-investigation/wzb-57-impact-sysmon-dc-ransom-note-and-payload.jpg) |
+| **`CAS-001-WEBCOMP`** | Web Compromise to Root | 01–07 | **P1 (Critical)** | Terminated reverse shell on TCP 4444; quarantined `shell.php` (`chmod 000`); revoked sudoers NOPASSWD directive; enforced `PermitRootLogin no`. | **Resolved / Closed** |
+| **`CAS-002-LATMOVE`** | Lateral Movement & AD Access | 08–14 | **P1 (Critical)** | Purged injected SSH keys; disabled LLMNR and NetBIOS via GPO; demoted `HANK_SHERMAN` and stripped SPN; cryptographically shredded staged hash dumps (`shred -u -z -n 3`). | **Resolved / Closed** |
+| **`CAS-003-DOMIMP`** | Domain Takeover & Impact | 15–20 | **P1 (Critical)** | Blocked adversary IP on perimeter; disabled rogue account `AD\backdoor`; completed double `krbtgt` password reset (**KVNO 3**); repaired desktop wallpaper registry. | **Resolved / Closed** |
 
 ---
 
 ## 📊 Scorecard & Ground-Truth Telemetry Accounting
+
+Empirical results from the 20-stage attack simulation across all monitored sensors:
 
 | Telemetry Classification | Count | % | Ground-Truth Technical Verification |
 |---|:---:|:---:|---|
@@ -99,21 +86,49 @@ This project documents the complete lifecycle of enterprise security operations 
 | **Operational Pivot-Only Alerts** | **2** | **10.0%** | Attacking session/pivot caught (`bashcmd` / SSH burst / Kali IP), but target DC missed technique logging (Stages 14, 16). |
 | **Target-Side Logging Gaps** | **2** | **10.0%** | Host-level event logging unconfigured in pre-attack baseline (Stage 09 L2 drops, Stage 12 EID 1644 LDAP). |
 | **Inherent Offline Computation Gaps** | **2** | **10.0%** | Stages 04 & 11 executed on external adversary GPU hardware; fully attributed via credential lifecycle analysis. |
-| **Operational SOAR Case Delivery** | **16** | **80.0%** | Delivered 46 prioritized incident tickets to TheHive 5 via Level $\ge 8$ threshold across 16 attack stages. |
-| **Rule Execution Failures** | **0** | **0.0%** | All configured Wazuh XML rules, decoders, and Suricata signatures compiled and executed without syntax or engine failures. |
+| **Operational SOAR Case Delivery** | **16** | **80.0%** | Delivered 46 prioritized incident tickets to TheHive 5.7.5 via Level $\ge 8$ threshold across 16 attack stages. |
+| **SIEM / Pipeline Engine Parser Errors** | **0** | **0.0%** | Zero syntax errors, decoder crashes, or pipeline rule execution failures across Wazuh and Suricata. |
+
+> **Master Traceability Matrix:** For the complete, row-by-row mapping of all 20 adversary stages against ATT&CK technique IDs, SIEM alert IDs, active rule numbers, and visual proof links, see [`INDEX.md`](INDEX.md).
 
 ### Documented Defensive Limits & Engineering Backlog
-To preserve professional rigor, this laboratory openly documents engineering boundaries and production limitations:
-1. **Inherent Offline Gaps (`DG-04`, `DG-11`):** Offline dictionary attacks generate zero telemetry on victim infrastructure. SOC defenses must focus upstream on credential theft prevention and downstream on anomalous initial logons.
-2. **Target-Side Diagnostic Logging Gaps (`DG-09`, `DG-12`):** Intra-subnet Layer 2 sweeps lacked host firewall drop logging (`DG-09`), and Active Directory LDAP reconnaissance lacked Event ID 1644 query diagnostics in the pre-attack baseline (`DG-12`). Both were remediated in Phase 04 hardening.
-3. **Operational Pivot-Only Coverage (`DG-14`, `DG-16`):** DCSync directory replication rights SACLs (EID 4662) and Kerberos Golden Ticket forgery diagnostics (EID 4769) were unconfigured in the default DC baseline. Detection relied on pivot host command auditing (`bashcmd`) and session anomalies, leading directly to the Phase 04 hardening roadmap.
+To preserve professional integrity, this laboratory transparently catalogs engineering boundaries and production limitations:
+1. **Inherent Offline Gaps (`DG-04`, `DG-11`):** Offline dictionary attacks generate zero network packets or host processes on victim infrastructure. Defense relies upstream on credential theft prevention and downstream on anomalous initial authentication alerts.
+2. **Target-Side Diagnostic Logging Gaps (`DG-09`, `DG-12`):** Intra-subnet Layer 2 sweeps lacked host firewall drop logging (`DG-09`), and Active Directory LDAP reconnaissance lacked Event ID 1644 query diagnostics in the pre-attack baseline (`DG-12`). Both are documented as **formal post-incident recommendations** in [`05-Incident-Report/lessons-learned.md`](05-Incident-Report/lessons-learned.md) (e.g. EID 1644 assigned as a P1 backlog item with a 14-day SLA).
+3. **Operational Pivot-Only Telemetry (`DG-14`, `DG-16`):** Telemetry was logged locally in `Security.evtx` on the Domain Controller (EID 4662 for DCSync replication; EID 4769 for Kerberos service tickets) but was not forwarded or alerted to the SIEM/SOAR. Detection relied on pivot host command auditing (`bashcmd`) and session anomalies, leading directly to the SIEM rule expansion recommendations in `lessons-learned.md`.
 4. **Encrypted Transport Payload Boundary (`DG-19`):** SSH transport encryption prevented Suricata NIDS from inspecting plaintext filenames during SCP transfers; detection relied on host-level authentication rate anomaly correlation (Wazuh Rule 5715).
+
+---
+
+## 📑 Post-Incident Forensic Deliverables
+
+Key post-mortem engineering assets produced from this investigation:
+- **Master MITRE ATT&CK Mapping:** [`05-Incident-Report/mitre-attack-mapping.md`](05-Incident-Report/mitre-attack-mapping.md) — Comprehensive technique mapping across Enterprise ATT&CK matrix.
+- **Comprehensive IoC Register:** [`05-Incident-Report/iocs.md`](05-Incident-Report/iocs.md) — Atomic network, host, and behavioral indicators of compromise.
+- **Strategic Lessons Learned & Hardening Roadmap:** [`05-Incident-Report/lessons-learned.md`](05-Incident-Report/lessons-learned.md) — Architectural analysis of detection gaps and enterprise defense recommendations.
+- **Chronological 74-Minute Forensic Timeline:** [`05-Incident-Report/timeline.md`](05-Incident-Report/timeline.md) — Microsecond-level correlation of all 20 adversary stages against SIEM alert timestamps.
+- **Master Traceability Matrix:** [`INDEX.md`](INDEX.md) — Single source of truth linking every attack stage, alert ID, rule definition, and investigation case.
+
+---
+
+## 🔬 Technical Reproducibility
+
+Every component of this laboratory can be reproduced in any virtualized or bare-metal environment:
+- Configuration templates for Wazuh Manager, Agent, Suricata NIDS, Sysmon, and Auditd are located in [`06-Resources/configs/`](06-Resources/configs/).
+- Custom Wazuh rules and Suricata signatures are version-controlled in [`06-Resources/rules/`](06-Resources/rules/).
+- Automated integration scripts—including the SQLite WAL SOAR daemon—are provided in [`06-Resources/scripts/`](06-Resources/scripts/).
+
+---
+
+## 🔒 Lab-Only Credentials & Redaction Boundary
+
+All sensitive secrets, cloud tenant IDs, and private keys are redacted in accordance with [`SECURITY.md`](SECURITY.md). Passwords, NTLM challenge responses, Kerberos tickets, and user hashes documented across write-ups (e.g. `P@ssw0rd123!`, `HANK_SHERMAN` hashes) are **ephemeral, lab-only fixtures** generated exclusively within this private, isolated testbed.
 
 ---
 
 ## 📖 Recommended Role-Based Reading Paths
 
-Depending on your engineering focus, navigate the repository through these curated paths:
+Navigate the repository through these curated paths:
 
 - **For SOC Analysts & Incident Responders (30 mins):**
   1. [`04-Investigation/Initial-Triage-and-Investigation.md`](04-Investigation/Initial-Triage-and-Investigation.md) — How 46 incoming alerts were triaged, and why Critical Shellshock was deprioritized over Medium reverse shells.
@@ -137,12 +152,9 @@ Depending on your engineering focus, navigate the repository through these curat
 
 ---
 
-## 📜 Repository Navigation
+## ⚖️ Disclaimer & License
 
-- **01 — Laboratory Setup & Infrastructure**: [`01-Lab-Setup/`](01-Lab-Setup/)
-- **02 — Adversary Attack Simulation**: [`02-Attack-Simulation/`](02-Attack-Simulation/)
-- **03 — Detection Engineering**: [`03-Detection-Engineering/`](03-Detection-Engineering/)
-- **04 — Incident Investigation & Triage**: [`04-Investigation/`](04-Investigation/)
-- **05 — Post-Mortem Incident Report**: [`05-Incident-Report/`](05-Incident-Report/)
-- **06 — Assets, Rules & Telemetry**: [`06-Resources/`](06-Resources/)
-- **Master Traceability Matrix**: [`INDEX.md`](INDEX.md)
+> **Authorized Educational Research Only:** All attack simulations and defensive telemetry in this project were executed against dedicated, isolated virtual machines in a private lab environment owned and controlled by the author. No production systems or unauthorized networks were targeted. See [DISCLAIMER.md](DISCLAIMER.md) and [SECURITY.md](SECURITY.md).
+
+This project is licensed under the [MIT License](LICENSE).  
+Copyright © 2026 Manichand Gupta.
