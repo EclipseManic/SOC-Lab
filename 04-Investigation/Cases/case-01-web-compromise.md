@@ -37,7 +37,7 @@ The adversary initiated an external attack campaign targeting the public-facing 
 
 | Source | What it contributed |
 |---|---|
-| **Suricata** | Dual-interface NIDS flagged Nmap port sweeps (SIDs 3400001, 3400002, 2101807), automated Python HTTP brute-force bursts (User-Agent: `python-requests`, SID 2017515 + Custom Wazuh Rule 100600 & Rule 100200), and SQL injection / sensitive parameter access (Wazuh Rule 31153 watchlist). |
+| **Suricata** | Dual-interface NIDS flagged Nmap port sweeps (SIDs 3400001, 3400002, 2018489), automated Python HTTP brute-force bursts (User-Agent: `python-requests`, SID 2017515 + Custom Wazuh Rule 100600 & Rule 100200), and SQL injection / sensitive parameter access (Wazuh Rule 31153 watchlist). |
 | **Wazuh** | Apache access log analysis flagged HTTP 4xx scanning floods (Rule 100410) and 401 Unauthorized bursts (Rule 100213). Linux Auditd integration alerted on web shell command execution (Rule 100199), reverse shell execution (Rule 100199), and passwordless sudo privilege escalation (Rule 5402). In addition, Wazuh's custom host command logging pipeline (`bashcmd` / Rule 100220 Level 5) captured post-exploitation interactive commands on the web server verbatim (`stty sane`, `export TERM=xterm`, and `sudo -l` across rows 9139–9148 in `Wazuh-Raw-Alerts.csv`). |
 | **TheHive** | Aggregated multiple correlated alerts into unified triage incidents (`tool_campaign`, `process_chain`). |
 | **Velociraptor** | Host forensic artifact triage: extracted process tree (`apache2` -> `sh` -> `python3`), verified web shell on disk, and identified sudoers NOPASSWD misconfiguration. |
