@@ -448,7 +448,18 @@ Add-ADGroupMember -Identity "Protected Users" -Members "Administrator", "HANK_SH
 
 # ==============================================================================
 
-# 4. WORKSTATION REMEDIATION: Purge Ransomware Notes & Restore Wallpaper (Win10User)
+# 4. POST-INCIDENT TELEMETRY HARDENING: Enable LDAP Field Engineering Logging (Event ID 1644)
+
+# ==============================================================================
+
+# Configure NTDS Field Engineering diagnostic logging to capture BloodHound LDAP recon queries (closes diagnostic gap identified in Stage 12)
+Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\NTDS\Diagnostics" -Name "15 Field Engineering" -Value 5 -Type DWord
+Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\NTDS\Parameters" -Name "Expensive Search Results Threshold" -Value 1 -Type DWord
+Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\NTDS\Parameters" -Name "Inefficient Search Results Threshold" -Value 1 -Type DWord
+
+# ==============================================================================
+
+# 5. WORKSTATION REMEDIATION: Purge Ransomware Notes & Restore Wallpaper (Win10User)
 
 # ==============================================================================
 
@@ -488,7 +499,7 @@ public static extern bool SystemParametersInfo(int action, int param, string pat
 
 # ==============================================================================
 
-# 5. DEFENSIVE VERIFICATION: Confirm Protected Users, krbtgt status & Clean Desktop
+# 6. DEFENSIVE VERIFICATION: Confirm Protected Users, krbtgt status & Clean Desktop
 
 # ==============================================================================
 
