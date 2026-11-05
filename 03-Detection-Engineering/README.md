@@ -14,7 +14,7 @@ To understand how detection works in this lab, imagine securing a corporate offi
 |---|---|---|
 | **1. Suricata NIDS** (Network Wire) | High-speed AF-PACKET promiscuous sniffing on gateway interfaces | **The Perimeter Cameras:** Watches all traffic entering the building and crossing between hallways. |
 | **2. Linux Auditd & Host Shell Auditing** (Kernel & Shell) | Hooks Linux netlink (`execve`) & shell `PROMPT_COMMAND` (`bashcmd`) | **The Server Room Motion Sensor:** Hooks the Linux kernel and shell to record every command typed or executed. |
-| **3. Windows Sysmon** (Endpoint Context) | Deep process creation (EID 1), network (EID 3), registry (EID 13) | **The Desktop Watchdog:** Records process trees, command lines, and registry tampering on Windows. |
+| **3. Windows Sysmon** (Endpoint Context) | Deep process creation (EID 1), network (EID 3), and registry tracking (EID 1 reg.exe) | **The Desktop Watchdog:** Records process trees, command lines, and registry tampering on Windows. |
 | **4. Wazuh SIEM** (Analysis Brain) | Real-time decoders, local_rules.xml, and CDB memory lookups | **The Central Control Room:** Ingests all sensor feeds, applies rules, silences noise, and sounds alarms. |
 | **5. TheHive 5 + SOAR** (Incident Desk) | Two-tier SQLite WAL queue and async clustering daemon | **The Incident Desk:** Groups related alerts into clean investigation cases for human SOC analysts. |
 
@@ -29,11 +29,14 @@ Before examining rules and code, here are the authentic results from our 20-stag
 | Metric | Result | What It Means in Plain English |
 |---|:---:|---|
 | **Attack Stages Tested** | **20** | Full kill chain from external port scanning to Active Directory takeover and ransomware |
-| **Stages Caught (Detection Rate)** | **16 (80%)** | Real-time, high-priority alerts raised in TheHive 5 with full forensic evidence |
-| **Documented Blind Spots** | **4 (20%)** | **2 Offline:** Password cracking ran locally on the attacker's GPU (zero victim packets).<br>**2 Logging Gaps:** Internal switch discovery and BloodHound LDAP scans lacked target-side rule alerts. |
+| **Direct Target & Wire Detections** | **18 (90.0%)** | Direct payload, process execution, authentication, or network signature alert on victim host or wire |
+| **Operational SOAR Alert Delivery** | **18 (90.0%)** | Real-time, high-priority incident tickets delivered live to TheHive 5 via Level ≥ 8 gate |
+| **Inherent Offline Computation Gaps** | **2 (10.0%)** | Password cracking ran offline on attacker GPU (zero victim packets); bracketed by upstream theft and downstream authentication |
+| **Target-Side Logging Gaps** | **0 (0.0%)** | Zero online stages missed; sub-technique blind spots (LDAP query filters, L2 host drops) documented in gap register |
+| **Detection Engine Rule Drops** | **0 (0.0%)** | All active defensive rules and pipeline decoders executed without silent failures |
 | **Total Raw Telemetry Ingested** | **9,567 records** | Complete raw alert baseline indexed in Wazuh across all 4 agents (`Wazuh-Raw-Alerts.csv`) |
 | **Analyst Curated Records** | **808 records** | Focused forensic dataset created by applying 11 OpenSearch exclusion filters in Wazuh Dashboard (`wazuh_alerts.csv`) |
-| **Live TheHive Incidents** | **46 cases** | Actionable, correlated incident tickets delivered live to TheHive 5 via Level ≥ 8 gate (`thehive_alerts.json`) |
+| **Live TheHive Incidents** | **46 alerts** | Actionable, correlated incident tickets delivered live to TheHive 5 across 3 formal cases |
 | **Custom Noise Suppressions** | **87 rules** | Server-side false-positive rules silencing background OS chatter, guest tools, and machine loops |
 
 ---
@@ -45,7 +48,7 @@ When evaluating detection engineering effectiveness, measuring solely by coarse 
 1. **The "Offline Cracking" Paradox (Stages 04 & 11):**
    * Password cracking with Hashcat/John ran offline on the adversary's private GPU hardware. Naturally, no victim enterprise agent can run on an external attacker machine.
    * **However, the entire operational lifecycle of the credential was detected by enterprise sensors**:
-     - **Initial Hash Extraction:** The SQL injection dumping the database was detected by Suricata and Wazuh (Stage 03 / Alert #11), while the Responder LLMNR harvesting was detected by Linux Auditd and Wazuh (Stage 10 / Alert #09).
+     - **Initial Hash Extraction:** The SQL injection dumping the database was detected by Suricata and Wazuh (Stage 03 / Alert #11), while the Responder LLMNR harvesting was detected by Wazuh bashcmd (`Rule 100220`), Win10 endpoint telemetry (`Rule 100278` `DavSetCookie`), and SSH session correlation (`Rule 5715` / Alert #20).
      - **Exfiltration / Transfer:** The rapid SCP/SSH file transfer was detected by Wazuh Rule 5715.
      - **Unauthorized Authentication:** The subsequent logon using the cracked password was detected on the target web application (POST `/login.php`) and Active Directory domain (Windows Security Event ID 4624 Logon Type 3).
    * From a practical SOC perspective, the adversary was never invisible; their actions were intercepted at the ingress and execution boundaries.
@@ -56,29 +59,29 @@ When evaluating detection engineering effectiveness, measuring solely by coarse 
 | Phase | Observable Procedure / Command Executed | Target Host | Defensive Sensor | Detection Rule / Signature | Visual Proof Link | Status |
 |:---|:---|:---|:---|:---|:---|:---:|
 | **Reconnaissance** | External TCP SYN sweep (`nmap -sS -p-`) | Perimeter | Suricata Gateway | SID 3400001, 3400002 | [Alert 1](../06-Resources/screenshots/thehive-alert/1.png) · [wzb-04](../06-Resources/screenshots/wazuh-deep-investigation/wzb-04-recon-suricata-nmap-syn-scan.jpg) | **DETECTED** |
-| **Reconnaissance** | Web vulnerability scanning (`nikto -h`) | DVWA | Suricata / Apache | SID 2018489 / Wazuh 100410 | [Alert 1.1](../06-Resources/screenshots/thehive-alert/1.1.png) · [wzb-06](../06-Resources/screenshots/wazuh-deep-investigation/wzb-06-recon-nikto-shellshock-probes.jpg) | **DETECTED** |
-| **Initial Access** | HTTP POST login brute force (`python-requests`) | DVWA | Wazuh Manager | Rule 100213 (Brute force burst) | [Alert 2](../06-Resources/screenshots/thehive-alert/2.png) · [wzb-09](../06-Resources/screenshots/wazuh-deep-investigation/wzb-09-bruteforce-dvwa-login-endpoint.jpg) | **DETECTED** |
-| **Credential Theft** | SQLi `1' UNION SELECT user, password` | DVWA | Suricata / Wazuh | SID 2010963 / Rule 31106 | [Alert 3](../06-Resources/screenshots/thehive-alert/3.png) · [wzb-11](../06-Resources/screenshots/wazuh-deep-investigation/wzb-11-sqli-suricata-select-user.jpg) | **DETECTED** |
-| **Credential Abuse** | Admin authentication with cracked password | DVWA | Apache / Wazuh | POST `/login.php` (200 OK) | [Alert 3](../06-Resources/screenshots/thehive-alert/3.png) · [wzb-11](../06-Resources/screenshots/wazuh-deep-investigation/wzb-11-sqli-suricata-select-user.jpg) | **DETECTED** |
-| **Persistence** | Upload of `shell.php` via web form | DVWA | Apache / Wazuh | Suricata SIDs 2014726 & 2019284 via Wazuh Rule 100600 (Webshell upload) and Auditd execve (Rule 100199) | [Alert 4](../06-Resources/screenshots/thehive-alert/4.png) · [wzb-12](../06-Resources/screenshots/wazuh-deep-investigation/wzb-12-webshell-dvwa-post-upload.jpg) | **DETECTED** |
-| **Execution** | Invocation of `shell.php?cmd=id` | DVWA | Suricata / Auditd | SID 2019284 / `execve` `/usr/bin/id` | [Alert 4.1](../06-Resources/screenshots/thehive-alert/4.1.png) · [wzb-13](../06-Resources/screenshots/wazuh-deep-investigation/wzb-13-webshell-auditd-id-command.jpg) | **DETECTED** |
-| **Execution** | Named pipe FIFO Netcat reverse shell on TCP 4444 | DVWA | Suricata Gateway | SID 3400020 (Outbound TCP 4444) | [Alert 5](../06-Resources/screenshots/thehive-alert/5.png) · [wzb-15](../06-Resources/screenshots/wazuh-deep-investigation/wzb-15-revshell-auditd-stty-sane.jpg) | **DETECTED** |
-| **Privilege Escalation** | `sudo /usr/bin/python3` (GTFOBins) | DVWA | Linux PAM / Auditd | Wazuh 5402 / `web_process_creation` | [Alert 6](../06-Resources/screenshots/thehive-alert/6.png) · [wzb-17](../06-Resources/screenshots/wazuh-deep-investigation/wzb-17-privesc-pam-sudo-python-root.jpg) | **DETECTED** |
+| **Reconnaissance** | Web vulnerability scanning (`nikto -h`) | DVWA | Suricata / Apache | Wazuh Rules 100410, 31151, 31153, 31154, 31168 / Suricata Shellshock (SID 2019232) & LFI SIDs | [Alert 1.1](../06-Resources/screenshots/thehive-alert/1.1.png) · [wzb-06](../06-Resources/screenshots/wazuh-deep-investigation/wzb-06-recon-nikto-shellshock-probes.jpg) | **DETECTED** |
+| **Initial Access** | HTTP POST login brute force (`python-requests`) | DVWA | Suricata / Apache | Suricata SID 2017515 + Custom Wazuh Rule 100600 (`wzb-6a22425401`, Alert #11) & Rule 100200 | [Alert 2](../06-Resources/screenshots/thehive-alert/2.png) · [wzb-09](../06-Resources/screenshots/wazuh-deep-investigation/wzb-09-bruteforce-dvwa-login-endpoint.jpg) | **DETECTED** |
+| **Credential Theft** | SQLi `1' UNION SELECT user, password` | DVWA | Suricata / Wazuh | Suricata SID 2010963 + Custom Wazuh Rule 100600 (`wzb-6a22425401`, Data Row 9109 / File Line 9110) | [Alert 3](../06-Resources/screenshots/thehive-alert/3.png) · [wzb-11](../06-Resources/screenshots/wazuh-deep-investigation/wzb-11-sqli-suricata-select-user.jpg) | **DETECTED** |
+| **Credential Abuse** | Admin authentication with cracked password | DVWA | Apache / Wazuh | Wazuh Rule 100200 (POST `/login.php` 302/200 OK) | [Alert 3](../06-Resources/screenshots/thehive-alert/3.png) · [wzb-11](../06-Resources/screenshots/wazuh-deep-investigation/wzb-11-sqli-suricata-select-user.jpg) | **DETECTED** |
+| **Persistence** | Upload of `shell.php` via web form | DVWA | Suricata / Apache | Suricata SIDs 2014726 & 2019284 via Wazuh Rule 100600 (`wzb-6a22425401`, sub-events 18–21) / Rule 100200 | [Alert 4](../06-Resources/screenshots/thehive-alert/4.png) · [wzb-12](../06-Resources/screenshots/wazuh-deep-investigation/wzb-12-webshell-dvwa-post-upload.jpg) | **DETECTED** |
+| **Execution** | Invocation of `shell.php?cmd=id` | DVWA | Suricata / Auditd | Auditd Rule 100199 (`wzb-61ed72e937`, Alert #12), Suricata SID 2019284 via Rule 86601 (`wzb-e9a1797ac4`, Alert #13), and Wazuh Rule 31109 (Data Row 9121) | [Alert 4.1](../06-Resources/screenshots/thehive-alert/4.1.png) · [wzb-13](../06-Resources/screenshots/wazuh-deep-investigation/wzb-13-webshell-auditd-id-command.jpg) | **DETECTED** |
+| **Execution** | Named pipe FIFO Netcat reverse shell on TCP 4444 | DVWA | Suricata Gateway | SID 3400020 (Outbound TCP 4444) / Auditd `nc.openbsd` | [Alert 5](../06-Resources/screenshots/thehive-alert/5.png) · [wzb-15](../06-Resources/screenshots/wazuh-deep-investigation/wzb-15-revshell-auditd-stty-sane.jpg) | **DETECTED** |
+| **Privilege Escalation** | `sudo /usr/bin/python3` (GTFOBins) | DVWA | Linux PAM / Host Shell | Wazuh Rule 5402 (PAM sudo root, 12x) & Rule 100220 (`sudo -l`, Data Row 9147) | [Alert 6](../06-Resources/screenshots/thehive-alert/6.png) · [wzb-17](../06-Resources/screenshots/wazuh-deep-investigation/wzb-17-privesc-pam-sudo-python-root.jpg) | **DETECTED** |
 | **Persistence** | Attacker SSH key written to `authorized_keys` | DVWA | Wazuh FIM & bashcmd | Wazuh Rule 550 & Rule 100220 (`echo "ssh-ed25519..."`) | [Alert 7](../06-Resources/screenshots/thehive-alert/7.png) · [wzb-19](../06-Resources/screenshots/wazuh-deep-investigation/wzb-19-ssh-persist-auditd-authorized-keys.jpg) | **DETECTED** |
 | **Persistence** | Interactive root SSH session from Kali | DVWA | SSHD / Wazuh | Wazuh Rule 5715 | [Alert 7.1](../06-Resources/screenshots/thehive-alert/7.1.png) · [wzb-20](../06-Resources/screenshots/wazuh-deep-investigation/wzb-20-ssh-persist-key-inject-sshd-login.jpg) | **DETECTED** |
 | **Discovery** | Internal subnet multi-port sweep (`192.168.56.0/24`) | DVWA → LAN | Suricata (`ens37`) & Wazuh | SIDs 3400001, 3400002, 3400020 / Wazuh Rule 100220 (`nmap -sV -O ...`) | [Alert 8](../06-Resources/screenshots/thehive-alert/8.png) · [wzb-22](../06-Resources/screenshots/wazuh-deep-investigation/wzb-22-discovery-suricata-internal-nmap.jpg) | **DETECTED** |
-| **Credential Theft** | Responder LLMNR/NBT-NS daemon launched | DVWA | Linux Auditd & Wazuh bashcmd | `execve` `Responder.py` / Wazuh Rule 100220 (uid:0) | [Alert 9](../06-Resources/screenshots/thehive-alert/9.png) · [wzb-27](../06-Resources/screenshots/wazuh-deep-investigation/wzb-27-responder-auditd-daemon-start.jpg) | **DETECTED** |
-| **Discovery** | BloodHound LDAP queries targeting DC | DVWA → DC | Windows Security & Wazuh | EID 4624 (Logon Type 3) / Wazuh Rule 100220 (`bloodhound.py`) | [Alert 10](../06-Resources/screenshots/thehive-alert/10.png) · [wzb-31](../06-Resources/screenshots/wazuh-deep-investigation/wzb-31-bloodhound-auditd-python-ingest.jpg) | **DETECTED** |
-| **Credential Theft** | Kerberoasting TGS request for `HANK_SHERMAN` | DVWA → DC | Suricata / Wazuh bashcmd | SID 2019922 / Wazuh Rule 100220 (`GetUserSPNs.py`) & Rule 5715 | [Alert 11](../06-Resources/screenshots/thehive-alert/11.png) · [wzb-33](../06-Resources/screenshots/wazuh-deep-investigation/wzb-33-kerberoast-auditd-getuserspns.jpg) | **DETECTED** |
-| **Credential Access** | DCSync NTDS database replication | DVWA → DC | Windows Security / Wazuh | Windows EID 4662 / Wazuh Rule 100220 (`secretsdump.py`) & Rule 5715 | [Alert 12](../06-Resources/screenshots/thehive-alert/12.png) · [wzb-33](../06-Resources/screenshots/wazuh-deep-investigation/wzb-33-kerberoast-auditd-getuserspns.jpg) | **DETECTED** |
-| **Lateral Movement** | Pass-the-Hash WMI execution (`wmiexec.py`) | DC / Win10 | Sysmon / Event Log / Wazuh | Sysmon EID 1 / Windows EID 4624 / Wazuh Rule 100220 & 100613 | [Alert 13](../06-Resources/screenshots/thehive-alert/13.png) · [wzb-35](../06-Resources/screenshots/wazuh-deep-investigation/wzb-35-pth-wazuh-eid4624-detection.jpg) | **DETECTED** |
-| **Credential Access** | Golden Ticket forgery & caching (`ticketer.py`) | DVWA | Wazuh bashcmd & SSHD | Wazuh Rule 100220 (`ticketer.py -nthash...`) & Rule 5715 | [Alert 14](../06-Resources/screenshots/thehive-alert/14.png) · [wzb-38](../06-Resources/screenshots/wazuh-deep-investigation/wzb-38-goldenticket-auditd-ticketer-forgery.jpg) | **DETECTED** |
-| **Persistence** | `net user backdoor P@ssw0rd123! /add` | Domain Controller | Sysmon / Event Log | Sysmon EID 1 / Windows EID 4720 | [Alert 15](../06-Resources/screenshots/thehive-alert/15.png) · [wzb-44](../06-Resources/screenshots/wazuh-deep-investigation/wzb-44-persist-dc-eid4720-backdoor-created.jpg) | **DETECTED** |
-| **Privilege Escalation** | `net group "Domain Admins" backdoor /add` | Domain Controller | Windows Security | EID 4728 (Member added to group) | [Alert 15.5](../06-Resources/screenshots/thehive-alert/15.5.png) · [wzb-46](../06-Resources/screenshots/wazuh-deep-investigation/wzb-46-persist-wazuh-dc-domain-admins-add.jpg) | **DETECTED** |
-| **Exfiltration** | Rapid SCP file transfer burst | DVWA → Kali | SSHD / Wazuh | Wazuh Rule 5715 (Logon burst) | [Alert 17](../06-Resources/screenshots/thehive-alert/17.png) · [wzb-53](../06-Resources/screenshots/wazuh-deep-investigation/wzb-53-exfil-wazuh-sshd-rapid-sessions-burst.jpg) | **DETECTED** |
-| **Impact** | Registry wallpaper defacement (`hacked.bmp`) | Win10 / DC | Windows Sysmon / Wazuh | Sysmon EID 13 (Registry set) / Wazuh Rule 100220 (`wmiexec.py`) | [Alert 18](../06-Resources/screenshots/thehive-alert/18.png) · [wzb-55](../06-Resources/screenshots/wazuh-deep-investigation/wzb-55-impact-wazuh-dc-wallpaper-registry-add.jpg) | **DETECTED** |
-| **Impact** | Extortion note & dummy file drops (`.enc`) | Win10 / DC | Windows Sysmon | Sysmon EID 11 (File create) | [Alert 18.1](../06-Resources/screenshots/thehive-alert/18.1.png) · [wzb-57](../06-Resources/screenshots/wazuh-deep-investigation/wzb-57-impact-sysmon-dc-ransom-note-and-payload.jpg) | **DETECTED** |
-| **Impact** | Forced system reboot (`shutdown /r /t 0`) | Win10 / DC | Windows System / Sysmon | System EID 1074 / Sysmon EID 1 | [Alert 18.2](../06-Resources/screenshots/thehive-alert/18.2.png) · [wzb-59](../06-Resources/screenshots/wazuh-deep-investigation/wzb-59-impact-wazuh-dc-forced-reboot.jpg) | **DETECTED** |
+| **Credential Theft** | Responder LLMNR/NBT-NS daemon launched | DVWA & Win10 | Wazuh bashcmd & Win10 Sysmon | Wazuh Rule 100220 (`Responder.py`, Data Row 9232 / Line 9233) + Win10User EID 4688 `DavSetCookie` (`Rule 100278`, `wzb-28`) | [Alert 9](../06-Resources/screenshots/thehive-alert/9.png) · [wzb-27](../06-Resources/screenshots/wazuh-deep-investigation/wzb-27-responder-auditd-daemon-start.jpg) | **DETECTED** |
+| **Discovery** | BloodHound LDAP queries targeting DC | DVWA → DC | PC-DC & Win10 / bashcmd | DomainWin10 & Win10User Custom Rule 100615 (LogonType 3 Kerberos from 192.168.56.30) & Rule 92657 + Rule 100220 (`bloodhound.py`) (TheHive Alert #22 `wzb-1e9fb54d94`) | [Alert 10](../06-Resources/screenshots/thehive-alert/10.png) · [wzb-31](../06-Resources/screenshots/wazuh-deep-investigation/wzb-31-bloodhound-auditd-python-ingest.jpg) | **DETECTED** |
+| **Credential Theft** | Kerberoasting TGS request for `HANK_SHERMAN` | DVWA → DC | Suricata (`ens37`) & bashcmd | Suricata SID 2019922 (TheHive Alert #23 `wzb-c1e2642eb2`) & Wazuh Rule 100220 (`GetUserSPNs.py`) | [Alert 11](../06-Resources/screenshots/thehive-alert/11.png) · [wzb-33](../06-Resources/screenshots/wazuh-deep-investigation/wzb-33-kerberoast-auditd-getuserspns.jpg) | **DETECTED** |
+| **Credential Access** | DCSync NTDS database replication | DVWA → DC | Domain Controller & bashcmd | DomainWin10 Custom Rule 100603 (EID 4672 `SeDebugPrivilege`) & Rule 92657 (EID 4624) + Rule 100220 (`secretsdump.py`) + Queue Overflow (Data Rows 9271–9272) (Alert #24 `wzb-7b08f4cbcf`) | [Alert 12](../06-Resources/screenshots/thehive-alert/12.png) · [wzb-34](../06-Resources/screenshots/wazuh-deep-investigation/wzb-34-dcsync-auditd-secretsdump-ntds.jpg) | **DETECTED** |
+| **Lateral Movement** | Pass-the-Hash WMI execution (`wmiexec.py`) | DC / Win10 | Sysmon / Event Log / Wazuh | Windows EID 4624 (Rule 92657) & Wazuh Custom Rule 100613 (`wmiexec.py`) | [Alert 13](../06-Resources/screenshots/thehive-alert/13.png) · [wzb-35](../06-Resources/screenshots/wazuh-deep-investigation/wzb-35-pth-wazuh-eid4624-detection.jpg) | **DETECTED** |
+| **Credential Access** | Golden Ticket forgery & caching (`ticketer.py`) | DVWA & PC-DC | Domain Controller & bashcmd | DomainWin10 Custom Rules 100615, 100603, and 100613 (Alerts #27 `wzb-ccff195e0c` & #28 `wzb-c200f52606`) + Rule 100220 (`ticketer.py`) | [Alert 14](../06-Resources/screenshots/thehive-alert/14.png) · [wzb-38](../06-Resources/screenshots/wazuh-deep-investigation/wzb-38-goldenticket-auditd-ticketer-forgery.jpg) | **DETECTED** |
+| **Persistence** | `net user backdoor P@ssw0rd123! /add` | Domain Controller | Sysmon / Event Log | Sysmon EID 1 (Rule 100613) / Windows EID 4720 (Rule 60109) | [Alert 15](../06-Resources/screenshots/thehive-alert/15.png) · [wzb-44](../06-Resources/screenshots/wazuh-deep-investigation/wzb-44-persist-dc-eid4720-backdoor-created.jpg) | **DETECTED** |
+| **Privilege Escalation** | `net group "Domain Admins" backdoor /add` | Domain Controller | Windows Security | Windows EID 4728 (Rule 60159) / Custom Rule 100613 | [Alert 15.5](../06-Resources/screenshots/thehive-alert/15.5.png) · [wzb-46](../06-Resources/screenshots/wazuh-deep-investigation/wzb-46-persist-wazuh-dc-domain-admins-add.jpg) | **DETECTED** |
+| **Exfiltration** | Rapid SCP file transfer burst | DVWA → Kali | SSHD / Wazuh | Wazuh Rule 5715 (Logon burst: 6 sessions / 0.57s; Alert #37) | [Alert 17](../06-Resources/screenshots/thehive-alert/17.png) · [wzb-53](../06-Resources/screenshots/wazuh-deep-investigation/wzb-53-exfil-wazuh-sshd-rapid-sessions-burst.jpg) | **DETECTED** |
+| **Impact** | Registry wallpaper defacement (`hacked.bmp`) | Win10 / DC | Windows Sysmon / Wazuh | Sysmon EID 1 (Rule 92041: `reg.exe` registry modification) / Wazuh Custom Rule 100613 | [Alert 18](../06-Resources/screenshots/thehive-alert/18.png) · [wzb-55](../06-Resources/screenshots/wazuh-deep-investigation/wzb-55-impact-wazuh-dc-wallpaper-registry-add.jpg) | **DETECTED** |
+| **Impact** | Extortion note & dummy file drops (`.enc`) | Win10 / DC | Windows Sysmon & PowerShell | Sysmon EID 1 & PowerShell EID 4104 (Wazuh Rules 100613, 100271, 100272, 100275) | [Alert 18.1](../06-Resources/screenshots/thehive-alert/18.1.png) · [wzb-57](../06-Resources/screenshots/wazuh-deep-investigation/wzb-57-impact-sysmon-dc-ransom-note-and-payload.jpg) | **DETECTED** |
+| **Impact** | Forced system reboot (`shutdown /r /t 0`) | Win10 / DC | Windows System / Sysmon | System EID 1074 / Sysmon EID 1 (Rule 100613) | [Alert 18.2](../06-Resources/screenshots/thehive-alert/18.2.png) · [wzb-59](../06-Resources/screenshots/wazuh-deep-investigation/wzb-59-impact-wazuh-dc-forced-reboot.jpg) | **DETECTED** |
 
 ---
 
@@ -107,7 +110,7 @@ No single security tool can see everything. In this lab, four complementary dete
 
 ### Layer 3: Windows Endpoints — Sysmon & Security Event Logs
 - **Where It Lives:** On the Active Directory Domain Controller (`PC-DC`, `192.168.56.10`) and Windows 10 workstation (`WIN10`, `192.168.56.20`).
-- **What It Does:** Standard Windows Security logs record who logged in (Event ID 4624) and when privileges were assigned (Event ID 4672). Microsoft Sysmon adds deep endpoint forensics: full process command lines (EID 1), network sockets (EID 3), and registry modifications (EID 13).
+- **What It Does:** Standard Windows Security logs record who logged in (Event ID 4624) and when privileges were assigned (Event ID 4672). Microsoft Sysmon adds deep endpoint forensics: full process command lines (EID 1), network sockets (EID 3), and registry modifications via process execution (EID 1 reg.exe add).
 - **What It Catches:** Lateral movement via Impacket `wmiexec` (spawning `WmiPrvSE.exe` $\to$ `cmd.exe /Q /c`), command-line reconnaissance (`whoami`, `net user /domain`), and unauthorized desktop wallpaper changes during defacement.
 - **Its Blind Spot:** It only monitors Windows systems.
 - **Detailed Docs:** [`Sysmon/README.md`](Sysmon/README.md) · Active baseline: [`06-Resources/rules/sysmon/sysmonconfig.xml`](../06-Resources/rules/sysmon/sysmonconfig.xml)
@@ -144,7 +147,7 @@ Fires SID 2019284 into eve.json          Fires key="web_process_creation"       
                                    WireGuard tunnel to Cloud SIEM (10.122.1.4:1514)
                                                 ▼
                                    [ Step 4: Rules Engine & Decoding ]
-                                   Wazuh decodes Auditd log using "bashcmd" decoder
+                                   Wazuh decodes Auditd log using native "auditd" decoder (parent rule 80700)
                                    Matches custom Rule 100199: "Auditd: blacklisted/suspicious command executed - /usr/bin/id"
                                    Assigns severity: LEVEL 10 (High Priority)
                                                 ▼
@@ -211,42 +214,43 @@ Here are the three biggest challenges we tackled:
 ---
 
 <a id="4-detection-gap-register--blind-spot-analysis"></a><a id="detection-gap-register"></a>
-### Challenge 3: The Honest Gap Register (Why 80% Detection is Real Security)
-In junior cybersecurity labs, people often claim "100% detection rate." In real enterprise security, 100% detection is impossible. 
+### Challenge 3: The Honest Gap Register (Why 90% Direct Detection is Real Security)
+In junior cybersecurity labs, people often claim "100% detection rate." In real enterprise security, 100% detection is impossible because adversaries perform offline computations on their own hardware.
 
-We achieved a **90% direct target detection rate (18 of 20 stages caught directly on endpoints or network wire)** and a **90% operational alert coverage rate (18 of 20 stages delivering actionable alerts)**, backed by empirical sensor telemetry across all online stages. More importantly, we cataloged the **4 documented stage-level gaps (20%)** plus **1 protocol payload inspection limitation on a detected stage**:
+We achieved an empirical **90.0% direct target detection rate (18 of 20 stages caught directly on endpoints or network wire)** and a **90.0% operational alert coverage rate (18 of 20 stages delivering actionable alerts to TheHive)**, backed by verifiable sensor telemetry across all online stages. More importantly, we rigorously cataloged the **2 inherent offline computation gaps (10.0%)** along with **architectural sub-technique nuances**:
 
-#### The 4 Documented Stage Detection Gaps (20.0%)
+#### The 2 Inherent Offline Computation Gaps (10.0%)
 1. **Stage 04 — Inherent Offline Password Hash Cracking (Hashcat MD5):**
-   - *Why It Was Missed:* Password cracking occurred entirely on the attacker's physical laptop GPU. No network packets crossed the wire, and no processes spawned on victim servers.
-   - *The Defense:* Offline cracking cannot be detected at execution time. Defense must focus upstream on **prevention** (eliminating SQL injection) and downstream on **post-crack alerting** (detecting logins with newly cracked passwords).
-2. **Stage 09 — Intra-Subnet Layer 2 Discovery (Internal Nmap Sweep):**
-   - *Why It Was Missed by Routers:* Traffic was switched locally at Layer 2 within the virtual switch, bypassing Layer 3 routing inspection.
-   - *How Telemetry Was Captured:* Suricata's second interface (`ens37`) sniffed in promiscuous mode on the switch, recording probe frames.
-   - *The Production Fix:* Enable host-based dropped-packet logging on all endpoints and forward drops to Wazuh.
-3. **Stage 11 — Inherent Offline NTLMv2 Hash Cracking (Hashcat NetNTLMv2):**
-   - *Why It Was Missed:* The intercepted NetNTLMv2 challenge-response was cracked locally on the attacker's GPU with zero victim interaction.
-   - *The Defense:* Globally disable LLMNR and NetBIOS over TCP/IP so hashes can never be broadcasted or captured in the first place.
-4. **Stage 12 — Active Directory LDAP Query Volume (BloodHound AD Recon):**
-   - *Why It Was Missed:* BloodHound ran high-volume LDAP queries against the DC. Windows Server disables Event ID 1644 LDAP query logging by default.
-   - *How Telemetry Was Captured:* The pivot SSH session was alerted (Rule 5715) and the command captured via Rule 100220.
-   - *The Production Fix:* Set registry key `HKLM\SYSTEM\CurrentControlSet\Services\NTDS\Diagnostics\15 Field Engineering` to `5` to generate Event ID 1644 ("Expensive/Inefficient LDAP Search Queries").
+   - *Why It Is an Inherent Gap:* Password hash cracking occurred entirely on the attacker's physical laptop GPU. No network packets crossed the enterprise wire, and zero processes spawned on victim servers.
+   - *Investigative Attribution:* Bracketed upstream by Stage 03 SQL injection detection (Suricata SID `2010963` / Custom Rule `100600`) and downstream by Stage 05 web authentication (Rule `100200` POST `/login.php`).
+   - *The Defense:* Offline cracking cannot be intercepted at execution time. Enterprise defense must focus on cryptographic storage (Argon2id/bcrypt) and upstream web input validation.
+2. **Stage 11 — Inherent Offline NTLMv2 Hash Cracking (Hashcat NetNTLMv2):**
+   - *Why It Is an Inherent Gap:* The NetNTLMv2 challenge-response harvested in Stage 10 was cracked locally on the attacker's GPU with zero target interaction.
+   - *Investigative Attribution:* Bracketed upstream by Stage 10 NetNTLMv2 capture (Wazuh Rule `100220` + Win10 `DavSetCookie` Rule `100278`) and downstream by Stage 12 authenticated domain reconnaissance (Custom Rule `100615` `user=win10`).
+   - *The Defense:* Globally disable LLMNR (`EnableMulticast = 0`) and NetBIOS over TCP/IP so hashes can never be broadcasted or captured in the first place.
 
-#### Protocol-Layer Nuance on a Detected Stage (DG-19)
-- **Stage 19 — Encrypted Transport Payload Inspection Limitation (`DG-19`):**
-  - *Status:* Classified under **Direct Target Detections** because Wazuh correlation Rule 5715 directly detected the exfiltration transport activity (a rapid burst of 6 administrative SSH logins in 0.57s).
-  - *The Architectural Limitation:* `DG-19` documents that SSH transport encryption (`22/TCP`) prevented Suricata NIDS from reading plaintext file contents on the wire. This highlights why behavioral host auth correlation is essential to complement network inspection.
+#### Architectural Sub-Technique Nuances on Detected Stages
+1. **Stage 09 — Intra-Subnet Layer 2 Wire Detection vs. Host Drop Logging (DG-09):**
+   - *Direct Detection Status:* **Direct Detection** on the wire. Suricata's internal interface (`ens37`) promiscuously inspected the Layer 2 virtual switch, generating TheHive Alerts #17, #18, and #19 (SIDs `3400001`, `3400002`, `3400020`), while DVWA logged the command execution via Rule `100220`.
+   - *The Architectural Limitation:* Unrouted intra-subnet packets did not traverse Layer 3 firewall gateways. Hardening recommendation: enable host-based firewall dropped-packet logging on Windows endpoints and forward drops to Wazuh.
+2. **Stage 12 — Target Authentication Detection vs. LDAP Filter Visibility (DG-12):**
+   - *Direct Detection Status:* **Direct Detection** on target endpoints. PC-DC and Win10User directly detected the unauthorized Kerberos network logon from the non-domain Linux DMZ host `192.168.56.30` via **Custom Rule `100615`** (`level="5"`, Data Rows 9254, 9255, captured in screenshot `wzb-32`) and Rule `92657` (Row 9265).
+   - *The Sub-Technique Visibility Gap:* Windows Server disables Event ID 1644 LDAP query logging by default. Production fix: set registry key `HKLM\SYSTEM\CurrentControlSet\Services\NTDS\Diagnostics\15 Field Engineering` to `5` to generate Event ID 1644 ("Expensive/Inefficient LDAP Search Queries").
+3. **Stage 14 — Privilege Assignment & Replication Flood vs. Directory Access Auditing (DG-14):**
+   - *Direct Detection Status:* **Direct Detection** on the Domain Controller. PC-DC directly detected `HANK_SHERMAN` assigning sensitive administrative privileges via **Custom Rule `100603`** (Data Rows 9268, 9269, 9283) and NTLM remote logon via Rule `92657` (Rows 9267, 9270, 9282). The volume of DRSUAPI replication calls spiked so violently that it triggered Wazuh buffer overflow alerts (Data Rows 9271–9272: `Agent event queue is full`).
+   - *The Sub-Technique Auditing Nuance:* Directory Service Access (EID 4662 for `DS-Replication-Get-Changes-All`) was not enabled in audit policy. Production fix: enable Advanced Audit Policy for Directory Service Access on Domain Controllers.
+4. **Stage 16 — Target Kerberos Logon & WMI Command Execution vs. Service Ticket Auditing (DG-16):**
+   - *Direct Detection Status:* **Direct Detection** on PC-DC. Detected across multiple rules: **Custom Rule `100615`** (Rows 9308, 9339, 9358; `wzb-41`) caught Kerberos logon from non-domain IP `192.168.56.30`, **Custom Rule `100603`** (Row 9307) caught privilege assignment, and **Custom Rule `100613`** directly generated TheHive Alerts #27 (`wzb-ccff195e0c`) and #28 (`wzb-c200f52606`) on `wmiexec.py` command execution.
+   - *The Sub-Technique Auditing Nuance:* Kerberos Service Ticket Operations (EID 4769 RC4-HMAC ticket requests) were not ingested. Production fix: configure Kerberos Service Ticket Operations auditing to capture `Ticket Encryption Type: 0x17` requests.
+5. **Stage 19 — Encrypted Transport Payload Inspection Limitation (DG-19):**
+   - *Direct Detection Status:* **Direct Detection** via Wazuh correlation Rule `5715` catching the rapid burst of 6 administrative SSH logins in 0.57s (Alert #37).
+   - *The Architectural Limitation:* SSH transport encryption (`22/TCP`) prevented Suricata NIDS from reading plaintext file contents on the wire.
 
 > [!NOTE]
-> **Detection Accounting Methodology — Direct Target Detection vs. Correlated Pivot Alerting:**  
-> A critical distinction in detection engineering is differentiating between **direct target-side rule triggers** and **correlated operational session alerts**:
-> - **Direct Target-Side Detections (14 of 20 stages, 70%):** A specific rule directly caught the adversary's payload, binary, or behavior on the target system (e.g., Stage 05 Web Shell `execve` via Auditd, Stage 15 Pass-the-Hash Type 3 NTLM via EID 4624, Stage 17 Backdoor User via Rule 100613, or Stage 19 SCP bulk exfiltration via rapid 6-login/second burst anomaly).
-> - **Operational Pivot Alerts (TheHive Incident Tickets):** When the adversary pivoted through DVWA to attack Active Directory, every operational phase triggered root SSH session alerts (`Rule 5715`) in TheHive. However, on the Windows Domain Controller target:
->   - *Stage 12 (BloodHound)* is classified as a **Logging Gap (DG-12)** because Windows Server did not log LDAP search queries on the DC without custom registry key `15 Field Engineering = 5`.
->   - *Stage 14 (DCSync)* was logged on the DC as Event ID 4662 (`DS-Replication-Get-Changes-All`), and the operational session alerted in TheHive.
->   - *Stage 16 (Golden Ticket)* was logged on the DC as Event ID 4769 with legacy RC4-HMAC encryption, and the operational session alerted in TheHive.
-> - **Inherent Offline Computation Gaps (2 of 20 stages, 10%):** Stages 04 & 11 occurred locally on the attacker's GPU with zero target interaction.
-> - **Summary Verdict:** The blue team received **actionable SOC alerts in TheHive for 16 of 20 stages (80%)**, with **14 stages possessing dedicated target-side signatures** and **4 cataloged telemetry/offline gaps**.
+> **Three-Tier Detection Engineering Taxonomy:**  
+> 1. **Tier 1 — Direct Target-Side & Wire Detections (18 of 20 stages, 90.0%):** A specific rule directly intercepted the adversary's payload, binary invocation, authentication, privilege assignment, or network probe on the target host or wire (Stages 01, 02, 03, 05, 06, 07, 08, 09, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20).
+> 2. **Tier 2 — Investigatively Attributed via Bracketed Lifecycle Correlation (2 of 20 stages, 10.0%):** Stages 04 & 11 occurred entirely offline on the attacker's GPU hardware, producing zero victim telemetry. They are verified and attributed via upstream theft detection and downstream authentication alerts.
+> 3. **Tier 3 — Correlated Session & Command Forensics:** Supporting forensic evidence from Wazuh Rule `100220` (verbatim command capture on DVWA pivot) and Rule `5715` (SSH pivot logons) validates operational timing across all lateral stages.
 
 ---
 
@@ -258,33 +262,33 @@ Here is the complete traceability matrix mapping all 20 adversary stages across 
 | Stage | Technique | What the Attacker Did | Sensor That Caught It | Active Rule / SID | TheHive Verdict |
 |:---:|---|---|---|---|:---:|
 | **01** | Reconnaissance (`T1595.001`) | Nmap OS detection & port sweeps from Kali | Suricata NIDS | SID `3400002` / Wazuh `86601` | **Detected** (`wzb-3a8045a03c`) |
-| **02** | Web Brute Force (`T1110.001`) | Automated Python credential brute force on `/login.php` | Apache Web Access | Wazuh `31153`, `100410` | **Detected** (`wzb-81becfcc8d`) |
-| **03** | SQL Injection (`T1190`) | UNION SELECT payload extracting users table | Suricata NIDS | SID `2010963` / Wazuh `31106` | **Detected** (CSV Row 9108) |
-| **04** | Hash Cracking (`T1110.002`) | Hashcat MD5 password cracking on Kali | *Offline (Kali GPU)* | *None (Zero victim packets)* | **Detection Gap** (Inherent) |
-| **05** | Web Shell (`T1505.003`) | Uploaded PHP backdoor and executed `id` | Linux Auditd & NIDS | SID `2019284` / Auditd `execve` | **Detected** (`wzb-e9a1797ac4`) |
-| **06** | Reverse Shell (`T1059.004`) | Interactive reverse shell to Kali port 4444 | Suricata & Auditd | SID `3400020` / Wazuh `100199` | **Detected** (`wzb-ccae331b77`) |
-| **07** | Privilege Escalation (`T1548.003`)| Sudo Python GTFOBins root escape | Linux PAM / Auditd | Wazuh `5402` (PAM sudo root) | **Detected** (12x PAM alerts) |
+| **02** | Web Brute Force (`T1110.001`) | Automated Python credential brute force on `/login.php` | Suricata & Apache | SID `2017515` + Custom Rule `100600` / Rule `100200` | **Detected** (`wzb-6a22425401`, Alert #11) |
+| **03** | SQL Injection (`T1190`) | UNION SELECT payload extracting users table | Suricata & Wazuh | SID `2010963` + Custom Rule `100600` (Data Row 9109 / File Line 9110) | **Detected** (`wzb-6a22425401`, Alert #11) |
+| **04** | Hash Cracking (`T1110.002`) | Hashcat MD5 password cracking on Kali | *Offline (Kali GPU)* | *Bracketed Lifecycle: stolen in Stage 03, authenticated in Stage 05* | **Investigatively Attributed (Offline Gap)** |
+| **05** | Web Shell (`T1505.003`) | Uploaded PHP backdoor and executed `id` | Linux Auditd & NIDS | SIDs `2014726`, `2019284` / Custom Rule `100600` / Auditd `100199` & `31109` | **Detected** (`wzb-61ed72e937`, `wzb-e9a1797ac4`) |
+| **06** | Reverse Shell (`T1059.004`) | Interactive reverse shell to Kali port 4444 | Suricata & Auditd | SID `3400020` / Auditd `nc.openbsd` / Rule `100199` | **Detected** (`wzb-ccae331b77`) |
+| **07** | Privilege Escalation (`T1548.003`)| Sudo Python GTFOBins root escape | Linux PAM / Host Shell | Wazuh `5402` (PAM sudo root, 12x) & Rule `100220` (`sudo -l`) | **Detected** (12x PAM alerts) |
 
 ### Case 02: Pivot, Credential Access & Active Directory Escalation (Stages 08–14)
 | Stage | Technique | What the Attacker Did | Sensor That Caught It | Active Rule / SID | TheHive Verdict |
 |:---:|---|---|---|---|:---:|
-| **08** | SSH Persistence (`T1098.004`) | Injected rogue Ed25519 key to `authorized_keys`| Wazuh FIM / Auth | Wazuh `550` (Syscheck) / `5715` | **Detected** (`wzb-1208f0ea54`) |
-| **09** | Internal Discovery (`T1018`) | Nmap scan of internal AD subnet from pivot | Suricata NIDS (`ens37`)| SID `3400001`, `3400002` | **Logging Gap** (`wzb-3152e3ed59`) |
-| **10** | Responder Poisoning (`T1557.001`)| LLMNR spoofing on DVWA capturing hashes | Linux Pivot Host | Wazuh `bashcmd` (uid:0 Responder) | **Detected** (CSV Row 9231) |
-| **11** | NTLMv2 Cracking (`T1110.002`)| Hashcat NetNTLMv2 password cracking on Kali| *Offline (Kali GPU)* | *None (Zero victim packets)* | **Detection Gap** (Inherent) |
-| **12** | BloodHound Recon (`T1087.002`) | SharpHound automated LDAP domain scan | Pivot Host Auth | Wazuh `5715` (Elevated Level 8) | **Logging Gap** (`wzb-dbf3197ceb`) |
-| **13** | Kerberoasting (`T1558.003`) | Requested TGS ticket for `HANK_SHERMAN` | Suricata & Pivot Auth | SID `2019922` / Wazuh `5715` | **Detected** (`wzb-1d2d7fb4b8`) |
-| **14** | DCSync (`T1003.006`) | Impacket DRSUAPI replication extracting hashes | Pivot Host Auth | Wazuh `5715` (Elevated Level 8) | **Detected** (`wzb-4174e3672e`) |
+| **08** | SSH Persistence (`T1098.004`) | Injected rogue Ed25519 key to `authorized_keys`| Wazuh FIM / Auth / bashcmd | Wazuh `550` (Syscheck) / `5715` / `100220` | **Detected** (`wzb-1208f0ea54`) |
+| **09** | Internal Discovery (`T1018`) | Nmap scan of internal AD subnet from pivot | Suricata NIDS (`ens37`) & bashcmd | SIDs `3400001`, `3400002`, `3400020` / Wazuh Rule `100220` | **Detected** (`wzb-3152e3ed59`, `wzb-f87fab3eda`, `wzb-de91bad685`) |
+| **10** | Responder Poisoning (`T1557.001`)| LLMNR spoofing on DVWA capturing hashes & WebDAV coercion | Linux Pivot Host & Win10 Endpoint | Wazuh `100220` (`bashcmd`: Responder.py, Data Row 9232) + Win10 `100278` (`DavSetCookie`, `wzb-28`) | **Detected** (`wzb-72bc2bc36e`, Alert #20) |
+| **11** | NTLMv2 Cracking (`T1110.002`)| Hashcat NetNTLMv2 password cracking on Kali| *Offline (Kali GPU)* | *Bracketed Lifecycle: harvested in Stage 10, authenticated in Stage 12* | **Investigatively Attributed (Offline Gap)** |
+| **12** | BloodHound Recon (`T1087.002`) | `bloodhound-python` automated LDAP domain scan | PC-DC & Win10 Endpoint / bashcmd | Custom Rule `100615` (LogonType 3 from `.56.30`) & `92657` + Rule `100220` | **Detected** (`wzb-1e9fb54d94`, Alert #22) |
+| **13** | Kerberoasting (`T1558.003`) | Requested TGS ticket for `HANK_SHERMAN` | Suricata (`ens37`) & bashcmd | SID `2019922` (Alert #23) & Wazuh Rule `100220` (`GetUserSPNs.py`) | **Detected** (`wzb-c1e2642eb2`) |
+| **14** | DCSync (`T1003.006`) | Impacket DRSUAPI replication extracting hashes | PC-DC Endpoint & bashcmd | Custom Rule `100603` (EID 4672 SeDebugPrivilege) & `92657` + `100220` + Queue Overflow | **Detected** (`wzb-7b08f4cbcf`, Alert #24) |
 
 ### Case 03: Domain Takeover, Lateral Movement & Impact (Stages 15–20)
 | Stage | Technique | What the Attacker Did | Sensor That Caught It | Active Rule / SID | TheHive Verdict |
 |:---:|---|---|---|---|:---:|
-| **15** | Pass-the-Hash (`T1550.002`) | Remote WMI login using Administrator NTLM hash | Windows Security / WMI | EID `4624` (24x in CSV) / `100613`| **Detected** (`wzb-b7f91cd3ab`) |
-| **16** | Golden Ticket (`T1558.001`) | Forged Kerberos TGT using extracted `krbtgt` | Pivot Host Auth | Wazuh `5715` (Elevated Level 8) | **Detected** (`wzb-8d45b2d236`) |
-| **17** | DC Persistence (`T1136.002`) | Created rogue `backdoor` Domain Admin account | Sysmon & Windows Sec | Wazuh `100613`, `60109`, `4728` | **Detected** (7 Alerts in TheHive) |
-| **18** | Data Collection (`T1005`) | Harvested business documents across C:\ | Sysmon Process Trees | Wazuh `100613` (`whoami`, `net user`)| **Detected** (`wzb-aa66cb916a`) |
-| **19** | Exfiltration (`T1041`) | Bulk SCP exfiltration from pivot to Kali | Linux Pivot Auth | Wazuh `5715` (Burst: 6 logons / 1s)| **Detected** (`wzb-34f34a857c`) |
-| **20** | Impact (`T1491.001`) | Pushed `hacked.bmp` wallpaper and rebooted DC | Sysmon & Suricata | Wazuh `100613` / SIDs `2067085`–`87` | **Detected** (10 Alerts in TheHive) |
+| **15** | Pass-the-Hash (`T1550.002`) | Remote WMI login using Administrator NTLM hash | Windows Security / Sysmon / Wazuh | Windows EID `4624` (Rule `92657`) / Custom Rule `100613` (`wmiexec.py`) | **Detected** (`wzb-b7f91cd3ab`, `wzb-83be61ee53`, Alerts #25, #26) |
+| **16** | Golden Ticket (`T1558.001`) | Forged Kerberos TGT using extracted `krbtgt` & wmiexec | PC-DC Endpoint & bashcmd | Custom Rules `100615`, `100603`, `100613` (`wmiexec -k`) + Rule `100220` (`ticketer.py`) | **Detected** (`wzb-ccff195e0c`, `wzb-c200f52606`, Alerts #27, #28) |
+| **17** | DC Persistence (`T1136.002`) | Created rogue `backdoor` Domain Admin account | Sysmon & Windows Security | Wazuh Custom Rule `100613` (WMI Fan-out), Windows EID `4720` (Rule `60109`), EID `4728` (Rule `60159`) | **Detected** (7 Alerts in TheHive: #29–#34, #46) |
+| **18** | Data Collection (`T1005`) | Harvested business documents across C:\ and AD users | Sysmon Process Trees & Security | Custom Rule `100613` / Sysmon EID 1 (Rules `100271`, `100272`, `100275`) | **Detected** (`wzb-26b4d06a63`, `wzb-aa66cb916a`, Alerts #35, #36) |
+| **19** | Exfiltration (`T1041`) | Bulk SCP exfiltration from pivot to Kali | Linux Pivot Auth | Wazuh Rule `5715` (Logon burst: 6 sessions / 0.57s; Alert #37) | **Detected** (`wzb-34f34a857c`, Alert #37) |
+| **20** | Impact (`T1491.001`) | Pushed `hacked.bmp` wallpaper and rebooted DC | Sysmon Process Trees & Windows System | Custom Rule `100613` / Sysmon EID 1 (Rule `92041`: `reg.exe`) / System EID 1074 | **Detected** (8 Alerts in TheHive: #38–#45) |
 
 ---
 
@@ -294,7 +298,7 @@ Here is the complete traceability matrix mapping all 20 adversary stages across 
 A critical architectural distinction in this SOC lab is understanding **how the numbers 9,567, 808, and 46 actually relate to each other**. They are **not** a single linear waterfall; rather, they represent **two distinct operational pathways** originating from the same baseline telemetry stream:
 
 [![SOC Telemetry Dual-Pathway Architecture](../06-Resources/diagrams/SOC%20Telemetry%20Dual-Pathway%20Architecture.png)](../06-Resources/diagrams/SOC%20Telemetry%20Dual-Pathway%20Architecture.png)
-*Figure 4: The dual-pathway telemetry architecture showing the central 9,567 raw alert stream splitting into real-time Level >= 8 SOAR case creation (46 TheHive cases) and post-simulation analyst dashboard triage (808 curated forensic records via 11 exclusion filters) ([view full asset](../06-Resources/diagrams/SOC%20Telemetry%20Dual-Pathway%20Architecture.png)).*
+*Figure 5: The dual-pathway telemetry architecture showing the central 9,567 raw alert stream splitting into real-time Level >= 8 SOAR case creation (46 TheHive cases) and post-simulation analyst dashboard triage (808 curated forensic records via 11 exclusion filters) ([view full asset](../06-Resources/diagrams/SOC%20Telemetry%20Dual-Pathway%20Architecture.png)).*
 
 ```
                               [ Wazuh SIEM Telemetry Ingestion ]
@@ -375,7 +379,7 @@ In a production hybrid SOC environment, security events never arrive in a perfec
 >
 > 2. **Linux Shell Telemetry (`PROMPT_COMMAND` Hook Execution):**
 >    * Linux command-line auditing (`bashcmd`) on the DVWA pivot relies on Bash's `PROMPT_COMMAND` hook. In Unix systems, `PROMPT_COMMAND` executes **only after a command terminates** and the shell redraws the next command prompt.
->    * When long-running or interactive tools execute (such as `Responder.py`, `wmiexec.py`, or interactive subshells), Suricata and target Windows machines log network traffic and remote process creations **in real-time** as packets arrive. In contrast, `bashcmd` flushes to `/var/log/bash_commands.log` only after the operator interrupts (`Ctrl+C`) or exits the process, creating an expected forensic interval between host execution start and bashcmd journal writes.
+>    * When long-running or interactive tools execute (such as `Responder.py`, `wmiexec.py`, or interactive subshells), Suricata and target Windows machines log network traffic and remote process creations **in real-time** as packets arrive. In contrast, `bashcmd` flushes to `/var/log/bashcmd.log` only after the operator interrupts (`Ctrl+C`) or exits the process, creating an expected forensic interval between host execution start and bashcmd journal writes.
 >
 > 3. **Live Campaign Multi-Attempt Iterations vs. Alert Window Anchoring:**
 >    * Because the 20 attack stages were executed live as a continuous 74-minute campaign, realistic operator retries occurred (e.g., formatting quotes in `net group "Domain Admins"`, adjusting proxy chains, or retrying commands).
@@ -390,7 +394,7 @@ All configuration files, rulesets, and detection scripts are organized in dedica
 | Directory | What's Inside | Defensive Technology | Key Highlights |
 |---|---|---|---|
 | [`Wazuh/`](Wazuh/README.md) | [`local_rules.xml`](../06-Resources/rules/wazuh/local_rules.xml)<br>[`local_decoder.xml`](../06-Resources/rules/wazuh/local_decoder.xml) | Wazuh SIEM 4.14.8 | 1,300+ line tuned ruleset, Impacket wmiexec detection, 87 suppressions |
-| [`Suricata/`](Suricata/README.md) | [`custom.rules`](../06-Resources/rules/suricata/custom.rules)<br>[`threshold.config`](../06-Resources/rules/suricata/threshold.config) | Suricata 7.x NIDS | Nmap OS detection rules, SQLi URIs, rate-limiting configuration |
+| [`Suricata/`](Suricata/README.md) | [`custom.rules`](../06-Resources/rules/suricata/custom.rules)<br>[`threshold.config`](../06-Resources/rules/suricata/threshold.config) | Suricata 8.0.6 NIDS | Nmap OS detection rules, SQLi URIs, rate-limiting configuration |
 | [`Sysmon/`](Sysmon/README.md) | [`sysmonconfig.xml`](../06-Resources/rules/sysmon/sysmonconfig.xml) | Microsoft Sysmon v15.20 | Windows process command lines (EID 1), network sockets, and registry tracking |
 | [`Auditd/`](Auditd/README.md) | [`audit.rules`](../06-Resources/rules/auditd/audit.rules) | Linux Auditd Subsystem | Kernel syscall tracing on `execve`, SUID creation, and identity file watches |
 
@@ -400,7 +404,7 @@ All configuration files, rulesets, and detection scripts are organized in dedica
 
 | Reference | Category | Description |
 |---|---|---|
-| [Lab Setup & Architecture](../01-Lab-Setup/README.md) | Architecture | Complete 8-machine network topology and WireGuard tunnel routing |
+| [Lab Setup & Architecture](../01-Lab-Setup/README.md) | Architecture | Complete 7-system network topology and WireGuard tunnel routing |
 | [Wazuh SIEM Setup](../01-Lab-Setup/Cloud/wazuh.md) | Cloud Setup | Wazuh Manager, Indexer, and Dashboard installation & CDB lists |
 | [Attack Simulation Directory](../02-Attack-Simulation/README.md) | Red Team | 20-stage adversary simulation execution, scripts, and commands |
 | [Investigation Cases](../04-Investigation/README.md) | Blue Team | Analyst triage playbooks, 3 TheHive cases, and 20 stage investigation notes |

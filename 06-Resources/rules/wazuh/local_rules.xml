@@ -326,7 +326,7 @@
       <description>Suricata: Alert - $(alert.signature)</description>
   </rule>
 
-  <!-- HTTP 2xx → Level 3 -->
+  <!-- HTTP 2xx -> Level 8 (Alert #11 elevation) -->
   <rule id="100600" level="8">
     <if_sid>86601</if_sid>
     <field name="http.status">^2\d\d$</field>
@@ -996,14 +996,14 @@
     <if_sid>86601</if_sid>
     <field name="alert.signature_id" type="pcre2">^(2210054|2210050|2225018|2225003)$</field>
     <field name="src_ip" type="pcre2">^192\.168\.56\.10$</field>
-    <description>Ignore: known-noisy Suricata protocol-anomaly sigs from DomainWin10 client</description>
+    <description>Ignore: known-noisy Suricata protocol-anomaly sigs from DC</description>
   </rule>
 
   <rule id="100252" level="0">
     <if_sid>86601</if_sid>
     <field name="alert.signature_id" type="pcre2">^(2210054|2210050|2225018|2225003)$</field>
     <field name="src_ip" type="pcre2">^192\.168\.56\.20$</field>
-    <description>Ignore: known-noisy Suricata protocol-anomaly sigs from DC</description>
+    <description>Ignore: known-noisy Suricata protocol-anomaly sigs from DomainWin10 client</description>
   </rule>
 
 </group>
