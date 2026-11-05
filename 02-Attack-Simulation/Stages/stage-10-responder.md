@@ -7,7 +7,7 @@
 
 ## Objective
 
-Capture NetNTLMv2 (NTLMv2) challenge-response hashes from domain endpoints by poisoning link-local multicast and name resolution protocols (LLMNR, NBT-NS, mDNS) on the internal subnet (`192.168.56.0/24`). Operating from the DVWA pivot, the attacker deploys Responder to intercept fallback name queries and lure Windows clients into authenticating against a rogue SMB/HTTP server.
+Steal Windows domain credentials by poisoning link-local name resolution protocols (LLMNR and mDNS) on the internal subnet (`192.168.56.0/24`) using Responder on our DVWA pivot, tricking a Windows client into handing over its NetNTLMv2 hash.
 
 ## Commands
 
@@ -46,14 +46,14 @@ win10::AD:112233***8899:b4a78***e31
 
 ## What happened
 
-1. **Service Preparation:** Responder incorporates built-in rogue authentication servers for SMB, HTTP, WPAD, MSSQL, FTP, and LDAP. Because the DVWA machine was hosting Apache on port 80, the attacker executed `sudo systemctl stop apache2` to release the port and allow Responder's rogue HTTP proxy to bind successfully.
-2. **Responder Execution:** The attacker launched Responder on interface `ens33` (`192.168.56.30/24`), enabling WPAD rogue proxy answers (`-w`) and rogue DHCP answers (`-d`): `python3 /opt/Responder/Responder.py -I ens33 -wd`.
-3. **Victim Host Query Generation:** On the Windows 10 workstation (`192.168.56.20`), an application or user attempted to access a nonexistent internal network resource (e.g., browsing to `\\nonexistent`).
-4. **Name Resolution Fallback:** When the primary DNS server (`PC-DC.ad.lab` at `192.168.56.10`) returned a name error (`NXDOMAIN`), the Windows 10 endpoint fell back to link-local multicast protocols, issuing LLMNR (UDP 5355) and mDNS (UDP 5353) broadcast queries asking: *"Who is nonexistent?"*.
-5. **Adversary-in-the-Middle Poisoning:** Responder detected the broadcast queries on `ens33` and immediately responded with spoofed authoritative answers claiming that the requested resource resided at `192.168.56.30` (the DVWA pivot).
-6. **Credential Interception:** Believing `192.168.56.30` was the target server, the Windows 10 workstation initiated an SMB session and attempted to authenticate using NTLMv2. Responder presented a server challenge, and the client responded with its NetNTLMv2 challenge-response hash containing the domain account credentials for `AD\win10`.
-7. **Hash Extraction:** Responder intercepted the handshake and stored the hash structure in `/opt/Responder/logs/SMB-NTLMv2-SSP-fe80::f1a9:528a:3cb2:fc0d.txt`.
-8. **Staging for Cracking:** The attacker confirmed the log capture with `ls /opt/Responder/logs/` and copied the hash file to `/tmp/win10.hash`, preparing it for offline dictionary cracking with Hashcat/John the Ripper in Stage 11.
+1. **Clearing port 80 for Responder:** Responder includes rogue authentication listeners for HTTP, WPAD, SMB, and LDAP. Because DVWA was running Apache on port 80, I stopped Apache (`sudo systemctl stop apache2`) so Responder's rogue HTTP proxy could bind cleanly.
+2. **Firing up Responder:** I launched Responder on the internal interface `ens33`: `python3 /opt/Responder/Responder.py -I ens33 -wd`.
+3. **The mistyped share:** Over on the Windows 10 workstation (`192.168.56.20`), someone tried to connect to a nonexistent file share (`\\nonexistent`).
+4. **Falling back to LLMNR:** When the Domain Controller's DNS server answered that `nonexistent` didn't exist, Windows did what it always does by default: it shouted across the local network using LLMNR (UDP 5355) and mDNS (UDP 5353), asking: *"Hey, does anyone know where nonexistent is?"*.
+5. **The poisoned reply:** Responder heard the shout on `ens33` and instantly replied: *"Yes, that's me at 192.168.56.30!"*.
+6. **Grabbing the password hash:** Windows believed it and immediately initiated an SMB connection to authenticate. Responder challenged the client, and Windows replied with the domain NetNTLMv2 hash for `AD\win10`.
+7. **Saving the loot:** Responder saved the full hash in `/opt/Responder/logs/`.
+8. **Staging for cracking:** I copied the captured hash to `/tmp/win10.hash` so we could crack it offline with Hashcat in Stage 11.
 
 ## Evidence
 
@@ -106,15 +106,14 @@ win10::AD:112233***8899:b4a78***e31
 
 ## Detection opportunities
 
-- **Network Multicast / Broadcast Monitoring:** Suricata and Zeek rules alerting on anomalous or conflicting LLMNR (UDP 5355), NBT-NS (UDP 137), or mDNS (UDP 5353) responses, particularly where a single non-authoritative host answers for multiple distinct hostnames.
-- **Rogue Service Port Binding:** Endpoint detection (Wazuh, Sysmon for Linux) alerting when unexpected processes or scripting runtimes (`python3`) bind to well-known infrastructure ports (TCP 80, 445, 139, UDP 137, 5355).
-- **Service Termination Correlation:** Alerting on administrative or service account activity where critical web daemons (`apache2`, `nginx`) are halted, followed immediately by python network listener activity.
-- **Windows Security Event Logs:** Event ID 4624 (Type 3 network logon) or Event ID 4625 (logon failure) pointing to unexpected or unmanaged internal IP addresses.
-- **Hardening and Prevention (GPO):** 
-  - Disable LLMNR via Active Directory Group Policy: `Administrative Templates\Network\DNS Client\Turn off multicast name resolution = Enabled`.
-  - Disable NetBIOS over TCP/IP across all network adapters via DHCP or network configuration.
+- **Watch for LLMNR/NBT-NS Poisoning:** Network sensors like Suricata can alert when multiple spoofed LLMNR (UDP 5355) or NetBIOS (UDP 137) answers originate from an unauthorized host.
+- **Rogue Port Binding Alerts:** Endpoint tools should raise an alarm when a Python script suddenly binds to well-known infrastructure ports (TCP 80, 445, 139).
+- **Service Tampering Alerts:** Stopping critical system daemons (`systemctl stop apache2`) followed right away by Python network scripts is a strong behavioral signal.
+- **Kill LLMNR & NetBIOS with GPO (The Real Fix):**
+  - Disable LLMNR via Group Policy: `Turn off multicast name resolution = Enabled`.
+  - Disable NetBIOS over TCP/IP across all network adapters. If machines can't broadcast, Responder has nothing to answer!
 
 ## Notes
 
-- **Broadcast Boundary:** LLMNR and NBT-NS are link-local broadcast protocols that do not cross layer-3 routers. Because the DVWA pivot was situated on the `192.168.56.0/24` subnet alongside the Windows 10 victim, Responder successfully received and answered the broadcast traffic.
-- **Credential Redaction:** The captured NetNTLMv2 hash has been redacted in adherence to laboratory documentation security rules (`win10::AD:112233***8899:b4a78***e31`).
+- **Why this worked:** LLMNR and NetBIOS are link-local broadcast protocols that don't cross routers. Because our DVWA pivot sat directly on the internal `192.168.56.0/24` subnet alongside Windows 10, Responder could hear and poison every broadcast.
+- **Hash Redaction:** The captured NetNTLMv2 hash has been redacted per our documentation policy (`win10::AD:112233***8899:b4a78***e31`).

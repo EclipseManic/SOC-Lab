@@ -7,7 +7,7 @@
 
 ## Objective
 
-Map the internal network infrastructure from the dual-homed DVWA pivot host (`192.168.56.30`), identify Active Directory domain targets, discover open services and operating systems across the internal lab subnet (`192.168.56.0/24`), stage offensive exploitation toolkits (Impacket, BloodHound, Responder) directly onto the pivot, and configure DNS host resolution for Active Directory exploitation.
+Map out the internal network from our dual-homed DVWA pivot (`192.168.56.30`), identify the Active Directory Domain Controller and workstations, stage our offensive tools (Impacket, BloodHound, Responder) on the box, and configure local DNS resolution so Kerberos tools work.
 
 ## Commands
 
@@ -79,15 +79,15 @@ echo "192.168.56.10 PC-DC.ad.lab ad.lab" >> /etc/hosts
 
 ## What happened
 
-1. **Host and Network Topology Discovery:** Armed with root persistence on DVWA, the attacker ran `hostname && id && ip a`. The output confirmed that the host is dual-homed: interface `ens37` operates on the management/attacker network (`192.168.232.161/24`), while interface `ens33` connects directly to the private internal corporate network (`192.168.56.30/24`).
-2. **ARP and Route Analysis:** The routing table (`ip route`) revealed default routes via the gateway. Inspecting `/proc/net/arp` immediately revealed several active IP addresses on `ens33`, including `192.168.56.10`, `192.168.56.20`, `192.168.56.150`, and gateway `192.168.56.254`.
-3. **Internal Subnet Port & Service Scan:** The attacker launched an active Nmap sweep (`nmap -sV -O 192.168.56.0/24 --open`) through `ens33`. The scan identified key domain infrastructure:
-   - **Active Directory Domain Controller (`192.168.56.10`):** Identified as `PC-DC.ad.lab` running Windows Server. Critical AD services were discovered: Port 53 (DNS), Port 88 (Kerberos), Port 135 (MSRPC), Port 139 (NetBIOS), Port 389 (LDAP), Port 445 (Microsoft-DS/SMB), Port 464 (kpasswd), Port 593 (RPC over HTTP), and Port 3268 (LDAP Global Catalog).
-   - **Windows 10 Workstation (`192.168.56.20`):** Discovered running Windows 10 with open ports including 22 (OpenSSH), 135 (MSRPC), 139 (NetBIOS), 445 (SMB), and 5357 (WSDAPI/HTTP).
-4. **Secondary Subnet Reconnaissance:** The attacker scanned the `192.168.232.0/24` subnet, identifying the Kali attacker system (`192.168.232.135`) and secondary infrastructure (`192.168.232.162`).
-5. **Offensive Tool Staging:** To weaponize the DVWA pivot as an internal attack platform, the attacker transferred an archive (`dvwa_tools.tar.gz`) containing Impacket, BloodHound Python ingestors, and Responder from Kali to `root@192.168.56.30:/tmp/` and `/opt/Responder` via SCP.
-6. **Toolchain Installation:** On DVWA, the tools were uncompressed (`tar -xzf dvwa_tools.tar.gz`), and Python dependencies were installed locally via `pip install /tmp/pkgs/*`.
-7. **Name Resolution Setup:** Because Kerberos ticket granting and LDAP authentication rely strictly on Kerberos realm names and SPNs rather than raw IP addresses, the attacker appended `192.168.56.10 PC-DC.ad.lab ad.lab` to `/etc/hosts`.
+1. **Finding out where we are:** With persistent root access on DVWA, I checked the network configuration: `hostname && id && ip a`. Sure enough, DVWA is dual-homed: `ens37` sits on the management/attacker subnet (`192.168.232.161/24`), while `ens33` reaches directly into the internal corporate network (`192.168.56.30/24`).
+2. **Checking the neighbors (ARP cache):** Running `cat /proc/net/arp` was an instant win. DVWA had already communicated with other systems on `ens33`, revealing `192.168.56.10`, `192.168.56.20`, and `192.168.56.150` sitting in the kernel ARP table without sending a single probe.
+3. **Scanning the internal subnet:** I launched an internal Nmap scan through `ens33`: `nmap -sV -O 192.168.56.0/24 --open`. The corporate crown jewels showed up right away:
+   - **Domain Controller (`192.168.56.10`):** `PC-DC.ad.lab` running Windows Server. All the classic Active Directory ports were wide open: Kerberos (port 88), LDAP (port 389), SMB (port 445), and RPC (port 135).
+   - **Workstation (`192.168.56.20`):** A Windows 10 desktop with SMB and RPC listening.
+4. **Scanning the management network:** I also scanned `192.168.232.0/24`, mapping our own Kali machine (`192.168.232.135`) and the gateway (`192.168.232.162`).
+5. **Turning DVWA into an attack box:** Rather than proxying complicated tools through multiple hops, I copied our entire offensive toolkit from Kali straight into DVWA over SCP (`dvwa_tools.tar.gz` into `/tmp/` and Responder into `/opt/`).
+6. **Setting up the tools:** On DVWA, I unpacked the archive and installed dependencies locally using pre-packaged wheels with `pip install /tmp/pkgs/*`.
+7. **Fixing domain name resolution:** Active Directory and Kerberos tools break if they can't resolve domain names to IPs. So I added `192.168.56.10 PC-DC.ad.lab ad.lab` directly into `/etc/hosts`. Now the Linux pivot was fully armed and ready to attack Active Directory.
 
 ## Evidence
 
@@ -149,12 +149,12 @@ echo "192.168.56.10 PC-DC.ad.lab ad.lab" >> /etc/hosts
 
 ## Detection opportunities
 
-- **Network Portscan Detection:** Suricata and Zeek flow analyzers detect horizontal and vertical port scanning by correlating high volumes of TCP SYN packets sent to multiple destinations or sequential ports within short time windows (`threshold: type both, track by_src, count 30, seconds 10`).
-- **Host Process Execution Telemetry:** Host monitoring agents (Sysmon for Linux, Wazuh, auditd) should alert on execution of discovery and reconnaissance binaries (`nmap`, `arp-scan`, `netstat`, `ss`, `ip route`) invoked on production server hosts.
-- **File System / Hosts Modification:** FIM rules on `/etc/hosts` to detect unauthorized modifications mapping internal domain names or redirection of Kerberos KDC endpoints.
-- **Offensive Tool Ingestion:** Monitor unexpected execution of `pip install` or staging of known offensive script frameworks (`Responder.py`, `bloodhound-python`, `impacket`) in `/tmp`, `/opt`, or `/var/tmp`.
+- **Internal Network Portscan Alerts:** Suricata caught the internal Nmap scan on `ens37` immediately, alerting on rapid TCP SYN packets across multiple internal hosts (Alerts #17, #18, #19).
+- **Flagging Discovery Commands on Servers:** Linux servers shouldn't be running `nmap`, checking routing tables, or scanning neighboring subnets. Auditd and Wazuh can easily alert on administrative and scanning binaries run on production web boxes.
+- **File Integrity Monitoring on `/etc/hosts`:** Attackers often add custom domain mappings to `/etc/hosts` to hijack name resolution or point to DCs. FIM rules on `/etc/hosts` catch this tampering in real time.
+- **Tool Staging in `/tmp`:** Watch for sudden transfers of attack frameworks (Impacket, Responder, BloodHound) and unexpected `pip install` commands run in `/tmp` or `/opt`.
 
 ## Notes
 
-- **Pivot Functionality:** The dual-homed DVWA host (`192.168.56.30` / `192.168.232.161`) serves as the gateway through which all subsequent Active Directory attacks originate.
-- **Noise vs Stealth:** The aggressive Nmap scan generated significant network noise that triggered Suricata alerts. In stealth operations, attackers typically rely solely on passive ARP inspection and slow, targeted LDAP queries.
+- **The Pivot in Action:** The dual-homed DVWA server (`192.168.56.30`) became the forward jump box for the rest of the attack chain.
+- **Noise vs. Stealth:** Firing off a full Nmap scan lit up Suricata like a flare. In a real-world stealth operation, an attacker would rely more quietly on passive ARP tables and slow LDAP queries.

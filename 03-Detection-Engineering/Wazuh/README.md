@@ -39,8 +39,10 @@ The production ruleset contains **148 total `<rule id>` definitions**:
 ### Rule 100220 — Host Shell Execution & Interactive Command Auditing (`bashcmd`)
 Captures verbatim interactive command executions on the DVWA web server (`192.168.56.30`). This custom detection pipeline provides the primary ground-truth host forensics for all post-exploitation activities conducted from the Linux pivot.
 
-#### 🛡️ The Web Server Anomaly Principle
-Production web application servers are static, headless execution environments running Apache, PHP, and database engines. Under normal operations, service accounts (`www-data`) never spawn interactive shells, and system administrators do not execute ad-hoc commands on production web servers without scheduled change windows. Therefore, **any interactive Bash command executed on the web server—whether under `www-data` following web shell exploitation or escalated to `root`—is an inherent, high-fidelity security anomaly indicating active human adversary presence.**
+#### 🛡️ Why Interactive Commands on a Web Server Are a Dead Giveaway
+A production web server is supposed to do one job: serve web pages. Apache and PHP do their work in the background. The `www-data` service account should never be opening an interactive shell, and administrators shouldn't be casually typing commands on a live box without a planned maintenance window.
+
+That means if someone is running interactive Bash commands on this machine—whether under `www-data` through a webshell or as `root` after privilege escalation—it is an immediate red flag. Someone is actively hands-on-keyboard on the server.
 
 #### ⚙️ Pipeline Architecture: From Shell Hook to Wazuh SIEM
 Standard Linux Auditd monitors `execve` system calls, but can miss shell built-ins (`export`, `cd`, `echo ... >> file`) and multi-command pipe chains without generating prohibitive log volume. The custom `bashcmd` pipeline captures every interactive command with complete execution context:

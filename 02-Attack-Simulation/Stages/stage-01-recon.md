@@ -7,7 +7,7 @@
 
 ## Objective
 
-Discover reachable network hosts, identify open TCP/UDP ports, fingerprint running network services and operating system versions, and enumerate the web application attack surface (directories, scripts, technologies, and potential misconfigurations) on the target DVWA server.
+Find out what's running on the target DVWA server: check basic reachability, scan for open ports and services, fingerprint the web technologies running on it, and map out directories and obvious misconfigurations.
 
 ## Commands
 
@@ -30,13 +30,13 @@ gobuster dir -u http://192.168.56.30/ -w /usr/share/wordlists/dirb/common.txt -x
 
 ## What happened
 
-1. **ICMP Reachability & Network Verification**: The reconnaissance phase began from the Kali Linux attacker host (`192.168.232.135`), testing basic IP connectivity against the target server at `192.168.56.30`. Three ICMP echo requests were sent and successfully received with 0% packet loss and an average round-trip time of 1.83 ms.
-2. **Full Port & Service Version Enumeration**: A full TCP port scan (`-p-`) was executed using `nmap` along with default scripts (`-sC`) and service detection (`-sV`). The scan concluded in 25.13 seconds, discovering two open ports:
-   - **Port 22/tcp**: OpenSSH 9.6p1 Ubuntu 3ubuntu13.19 (Ubuntu Linux, protocol 2.0).
-   - **Port 80/tcp**: Apache httpd 2.4.58 (Ubuntu), hosting Damn Vulnerable Web Application (DVWA). The scan uncovered missing cookie flags (`PHPSESSID` without `httponly`), an entry in `robots.txt`, and an exposed Git repository located at `http://192.168.56.30:80/.git/` referencing `https://github.com/digininja/DVWA.git`.
-3. **Web Technology Fingerprinting**: Running `whatweb` confirmed that root requests (`/`) return an HTTP 302 Found redirect to `/login.php`. The web stack consists of Apache 2.4.58, PHP, HTML5, and Ubuntu Linux.
-4. **Vulnerability Assessment**: A `nikto` scan against the HTTP service transmitted 8,102 requests and flagged 17 potential vulnerabilities and misconfigurations. Notable findings included absent anti-clickjacking (`X-Frame-Options`) and MIME-sniffing (`X-Content-Type-Options`) headers, missing `httponly` flags on session cookies, open directory indexing across `/config/`, `/database/`, `/docs/`, and `/tests/`, and complete exposure of Git metadata (`.git/index`, `.git/HEAD`, `.git/config`, `.gitignore`).
-5. **Directory & Endpoint Brute-Forcing**: Using `gobuster` with the DirB `common.txt` wordlist and `.php` extension searching, the attacker mapped out the web structure, identifying key application scripts including `/login.php` (200), `/setup.php` (200), `/about.php` (200), `/instructions.php` (200), and restricted administrative indexes.
+1. **Checking connectivity:** From our Kali attack box (`192.168.232.135`), I started with a simple ping to `192.168.56.30`. Three ICMP packets went through cleanly with ~1.8 ms latency, confirming the path across our gateway was open.
+2. **Scanning all TCP ports:** Next, I ran a full-port Nmap scan (`-p- -sC -sV`). In about 25 seconds, two ports answered:
+   - **Port 22 (SSH):** OpenSSH 9.6p1 on Ubuntu Linux.
+   - **Port 80 (HTTP):** Apache 2.4.58 running Damn Vulnerable Web Application (DVWA). Nmap also flagged missing cookie security flags (`PHPSESSID` without `httponly`), a `robots.txt` file, and an exposed `.git` directory (`http://192.168.56.30:80/.git/`).
+3. **Fingerprinting the web stack:** Running `whatweb` confirmed that hitting `/` redirects (302) straight to `/login.php`, running on Apache 2.4.58, PHP, and Ubuntu.
+4. **Running an automated web scanner:** I let `nikto` loose on port 80. Over 8,102 requests, it lit up: missing security headers (`X-Frame-Options`, `X-Content-Type-Options`), missing `httponly` cookie flags, open directory indexing across `/config/`, `/database/`, `/docs/`, and `/tests/`, and full exposure of git metadata files (`.git/index`, `.git/HEAD`, `.git/config`, `.gitignore`).
+5. **Busting directories:** Finally, `gobuster` hammered common endpoints using the DirB `common.txt` wordlist. It immediately surfaced core application scripts: `/login.php` (200), `/setup.php` (200), `/about.php` (200), `/instructions.php` (200), and administrative directories.
 
 ## Evidence
 
@@ -120,12 +120,12 @@ gobuster dir -u http://192.168.56.30/ -w /usr/share/wordlists/dirb/common.txt -x
 
 ## Detection opportunities
 
-- **Network Layer IDS/IPS Rules**: Suricata rules detecting TCP SYN scan patterns, rapid port probes across database and administrative ports, and OS fingerprint probes.
-- **Web Server Access Log Anomaly Detection**: Wazuh rules alerting on high-frequency HTTP 404/403 request bursts from a single source IP address within short time windows (>100 requests in 60s), characteristic of automated tools like Nikto and Gobuster.
-- **Scanner User-Agent Signatures**: Detection rules matching default scanner User-Agents including `nikto/2.5.0`, `gobuster/3.8`, and `WhatWeb/0.5.5`.
-- **WAF Inspection**: Web Application Firewall rules blocking requests targeting sensitive version control paths (`/.git/`, `/.git/HEAD`, `/.gitignore`) and directory enumeration behaviors.
+- **Network-Level Intrusion Detection:** Keep Suricata tuned to catch TCP SYN sweeps, OS fingerprint probes, and fast sequential port scans across database and management ports.
+- **Web Server Access Log Anomaly Detection:** Alert on sudden bursts of HTTP 404/403 errors from a single IP address (>100 bad requests in 60 seconds). Automated tools like Nikto and Gobuster throw huge volumes of errors that normal human users never produce.
+- **Scanner User-Agent Matching:** Watch for default scanner User-Agents like `nikto`, `gobuster`, and `WhatWeb`—many attackers forget to spoof them.
+- **WAF Inspection & Access Controls:** Place a Web Application Firewall or reverse proxy in front of web applications to block probes targeting sensitive version control paths (`/.git/`, `/.git/HEAD`) and prevent directory browsing.
 
 ## Notes
 
-- Reconnaissance activity was fully detected by the Suricata Network IDS, which logged detailed signature events to `eve.json`. Wazuh processed these logs via rule `86601` and forwarded them as prioritized alerts into TheHive case management.
-- The scan activity confirmed that port 80 hosts DVWA on Apache 2.4.58 with exposed `.git` metadata and accessible login interfaces, establishing the target vector for Stage 02.
+- The initial reconnaissance was fully captured by Suricata and Wazuh, feeding early warning alerts into TheHive long before any exploit was launched.
+- The scans confirmed that port 80 was running a misconfigured web app with exposed `.git` metadata and an open login portal, setting up the brute-force attack in Stage 02.

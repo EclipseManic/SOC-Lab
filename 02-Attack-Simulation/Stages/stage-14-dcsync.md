@@ -9,7 +9,7 @@
 
 ## Objective
 
-Simulate a Domain Controller to replicate and dump sensitive Active Directory account credentials directly from the Active Directory database (`NTDS.dit`) via the Microsoft Directory Replication Service Remote Protocol (MS-DRSR / DRSUAPI). Using the compromised `HANK_SHERMAN` Domain Administrator credentials, extract password hashes for all domain accounts, specifically targeting the built-in `Administrator` (RID 500) and `krbtgt` (RID 502) accounts.
+Pretend to be a Domain Controller asking for routine database replication so we can dump every password hash in Active Directory (`NTDS.dit`) over the wire. Using Hank Sherman's Domain Admin account, we'll extract the hashes for `Administrator` (RID 500) and `krbtgt` (RID 502).
 
 ---
 
@@ -30,26 +30,19 @@ head dcsync_output.ntds
 
 ## What happened
 
-Armed with valid Domain Administrator credentials for `HANK_SHERMAN` (`Passw***123`) obtained through Kerberoasting in Stage 13, the adversary launched Impacket's `secretsdump.py` from the Linux pivot host (`192.168.56.30`) targeting Domain Controller `PC-DC.ad.lab` (`192.168.56.10`).
+Armed with Hank Sherman's Domain Admin credentials (`Passw***123`) from Stage 13, I ran Impacket's `secretsdump.py` from the DVWA pivot (`192.168.56.30`) targeting Domain Controller `PC-DC.ad.lab` (`192.168.56.10`):
 
-1. **Replication Privileges & Protocol Invocation:**  
-   Because the `HANK_SHERMAN` account is a member of `Domain Admins`, it inherently holds the extended rights "Replicating Directory Changes" (`DS-Replication-Get-Changes`) and "Replicating Directory Changes All" (`DS-Replication-Get-Changes-All`). Impacket leveraged the DRSUAPI protocol to masquerade as an authentic Domain Controller requesting directory replication.
-
-2. **Dumping Remote Registry and SAM:**  
-   The script started the `RemoteRegistry` service on the target Domain Controller, retrieved the system `bootKey` (`0x4b2***b9c`), and dumped local SAM database hashes for local accounts (`Administrator:500` and `Guest:501`).
-
-3. **Active Directory NTDS Synchronization:**  
-   Using DRSUAPI calls (`DsGetNCChanges`), `secretsdump.py` synchronized the Active Directory database (`NTDS.dit`) over network RPC, extracting NTLM and LM password hashes, Kerberos keys, and cleartext history for all user and computer objects in the domain. The full output was written to `/tmp/dcsync_output.ntds` (240 KB).
-
-4. **Data Exfiltration & Hash Inspection:**  
-   The database dump was transferred to Kali via SCP. Running `head dcsync_output.ntds` revealed the extracted credentials for high-value domain identities:
+1. **Abusing replication rights:** Because Hank Sherman is in `Domain Admins`, his account has the special rights "Replicating Directory Changes" and "Replicating Directory Changes All". Impacket uses Microsoft's Directory Replication Service protocol (DRSUAPI) to ask the Domain Controller to replicate its database—just like a legitimate backup DC would.
+2. **Pulling the SAM and bootKey:** The script briefly started the `RemoteRegistry` service on the DC, grabbed the system bootKey, and dumped local SAM account hashes (`Administrator:500` and `Guest:501`).
+3. **Replicating the entire Active Directory database (NTDS.dit):** Through DRSUAPI RPC calls (`DsGetNCChanges`), `secretsdump.py` replicated the active directory database right over the network, extracting NTLM hashes, Kerberos keys, and password history for every user and machine in the domain without touching the disk directly. The output was saved to `/tmp/dcsync_output.ntds` (240 KB).
+4. **Inspecting the loot:** I transferred the dump back to Kali over SCP. Running `head dcsync_output.ntds` revealed every critical domain credential:
    - **Administrator (RID 500):** `Administrator:500:aad3b***4ee:cc814***9fb:::`
    - **Guest (RID 501):** `Guest:501:aad3b***4ee:31d6c***9c0:::`
    - **krbtgt (RID 502):** `krbtgt:502:aad3b***4ee:611a8***f60:::`
    - **win10 (RID 1105):** `ad.lab\win10:1105:aad3b***4ee:2aaa5***929:::`
-   - **Other Domain Accounts:** `SAMANTHA_ARNOLD` (`c9429***2d4`), `ALTON_HODGES` (`90846***5ec`), `WILDA_ALFORD` (`453bd***af1`), `ALDEN_ATKINSON` (`67127***4e3`), `GREGORY_TRUJILLO` (`9914b***b75`), `LILY_GRAHAM` (`b4020***181`).
+   - **Other Domain Accounts:** `SAMANTHA_ARNOLD`, `ALTON_HODGES`, `WILDA_ALFORD`, `ALDEN_ATKINSON`, `GREGORY_TRUJILLO`, `LILY_GRAHAM`.
 
-The extraction of the `Administrator` NTLM hash (`cc814***9fb`) immediately enables Pass-the-Hash remote execution in Stage 15. Crucially, the capture of the `krbtgt` account hash (`611a8***f60`) gives the attacker complete cryptographic ownership of the Kerberos ticketing system, paving the way for Golden Ticket forgery.
+Having the built-in `Administrator` NTLM hash (`cc814***9fb`) meant we could immediately log into any Windows machine using Pass-the-Hash in Stage 15. Even more dangerous, capturing the `krbtgt` hash (`611a8***f60`) gave us the master cryptographic key to forge Kerberos Golden Tickets in Stage 16.
 
 ---
 

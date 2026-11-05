@@ -7,7 +7,7 @@
 
 ## Objective
 
-Obtain valid administrative credentials for the DVWA web application via an automated dictionary brute-force attack against `/login.php`, bypassing anti-CSRF token protection mechanisms.
+Crack the admin password on DVWA's login page (`/login.php`) using an automated dictionary attack, dealing with the anti-CSRF token protection on each request.
 
 ## Commands
 
@@ -63,9 +63,9 @@ python dvwa_bruteforce.py
 
 ## What happened
 
-1. **CSRF Challenge & Script Development**: Standard dictionary brute-forcing tools (such as Hydra or basic curl loops) failed against the DVWA authentication interface because every login request requires a dynamically generated `user_token` hidden field in the HTML form. To circumvent this, the attacker authored `dvwa_bruteforce.py` on Kali Linux (`192.168.232.135`).
-2. **Session Maintenance & Dynamic Extraction**: The script maintains an active HTTP session via `requests.Session()`. Before dispatching each candidate password, it issues a GET request to `http://192.168.56.30/login.php`, extracts the active anti-CSRF token using regular expression parsing (`user_token'\s*value='([a-f0-9]+)'`), and injects it into the POST payload alongside `username=admin`.
-3. **Execution & Credential Recovery**: The attacker executed the script against the target, iterating through candidate passwords from `/usr/share/wordlists/rockyou.txt`. After trying common passwords (`123456`, `12345`, `123456789`), the script tested the password `password`. The application accepted the authentication attempt, established an authenticated session, and omitted the "Login failed" string, resulting in the output `[+] SUCCESS: admin:password`.
+1. **The CSRF obstacle:** Out-of-the-box brute-force tools like Hydra or basic curl loops fell flat here because DVWA protects its login form with an anti-CSRF token (`user_token`). Every time you request the login page, the server generates a new token that must be sent back with the credentials. To solve this, I wrote a quick Python automation script (`dvwa_bruteforce.py`).
+2. **Handling the tokens:** The script uses `requests.Session()` to keep cookies alive. For every attempt, it first sends a GET request to `/login.php`, scrapes the fresh `user_token` with regex, and bundles it into the POST body with `username=admin` and the candidate password.
+3. **Finding the password:** I ran the script against the target using common entries from `rockyou.txt`. After trying standard guesses (`123456`, `12345`, `123456789`), the script tried `password`. The server accepted it, the "Login failed" text vanished, and the script printed `[+] SUCCESS: admin:password`.
 
 ## Evidence
 
@@ -104,12 +104,12 @@ python dvwa_bruteforce.py
 
 ## Detection opportunities
 
-- **Authentication Failure Threshold Correlation**: Wazuh rules configured to monitor Apache access logs for consecutive POST requests to `/login.php` resulting in redirect responses (`302`) back to `/login.php` or HTTP 200 responses without session elevation, exceeding 5 attempts within 60 seconds.
-- **Automated Script User-Agent Flagging**: Suricata and Wazuh signatures matching programmatic default User-Agents such as `python-requests/2.32.5`.
-- **IP Reputation and Behavioral Throttling**: Implementing rate-limiting reverse proxies or tools such as Fail2ban to block IP addresses issuing high-frequency authentication attempts.
-- **Multi-Factor Authentication (MFA) & Lockout Controls**: Enforcing account lockout policies and multi-factor authentication on administrative portals to thwart password guessing attacks.
+- **Threshold-Based Login Failure Rules:** Monitor web access logs for rapid consecutive login failures from a single IP (e.g., more than 5 failed POST requests to `/login.php` within 60 seconds).
+- **Flagging Automated Script User-Agents:** Suricata and Wazuh can easily spot generic library User-Agents like `python-requests/2.32.5` hitting sensitive login endpoints.
+- **Rate Limiting & Account Lockout:** Enforce brute-force defenses like Fail2ban, CAPTCHA, or temporary account lockouts after consecutive failed attempts.
+- **Multi-Factor Authentication (MFA):** Even if an attacker guesses the password, MFA stops them at the door.
 
 ## Notes
 
-- The attack successfully extracted valid administrator credentials (`admin:password`).
-- The surrounding scanning and probing generated a cascade of alerts across both Wazuh log decoders and Suricata network signatures, creating actionable alert clusters inside TheHive.
+- We quickly uncovered valid administrative credentials (`admin:password`).
+- While this brute-force attack succeeded, the flurry of rapid login requests generated clear alerts across Suricata and Wazuh, highlighting why rate limiting and MFA are non-negotiable.
