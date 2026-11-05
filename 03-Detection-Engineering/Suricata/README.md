@@ -49,19 +49,19 @@ Analysis of the 9,567 raw alerts in [`../../06-Resources/alerts/Wazuh-Raw-Alerts
 
 | SID | Signature Message | Stage | Target Protocol | Detection Mechanism & TheHive Alert |
 |---|---|---|---|---|
-| `3400001` / `3400002` | `POSSBL PORT SCAN (NMAP -sS)` | 01 (Recon) & 09 (Internal Disc) | TCP SYN / Probe Flags | Inbound port sweep (`wzb-3a8045a03c`, Alert #01) and internal pivot sweep (`wzb-3152e3ed59`, Alert #17) |
+| `3400001` / `3400002` | `POSSBL PORT SCAN (NMAP -sS)` | 01 (Recon) & 09 (Internal Disc) | TCP SYN / Probe Flags | Inbound port sweep (`wzb-3a8045a03c`, Alert #03) and internal pivot sweep (`wzb-3152e3ed59`, Alert #17) |
 | `3400005` | `POSSBL PORT SCAN (NMAP -sX)` | 09 (Internal Disc) | TCP Xmas Flags | Internal reconnaissance sweep on `ens37` (`wzb-3152e3ed59`, Alert #17) |
-| `2018489` | `ET SCAN NMAP OS Detection Probe` | 01 (Recon) | UDP / Nmap Fingerprint | Inbound OS probe on `ens33` (`wzb-3a8045a03c`, Alert #01) |
-| `2010935` / `2010937` | `ET SCAN Suspicious inbound to MSSQL/MySQL/Oracle/PostgreSQL` | 01 & 09 (Recon) | Database Ports | Scanning across TCP 1433, 3306, 5432 (Alerts #01 and #17) |
+| `2018489` | `ET SCAN NMAP OS Detection Probe` | 01 (Recon) | UDP / Nmap Fingerprint | Inbound OS probe on `ens33` (`wzb-3a8045a03c`, Alert #03) |
+| `2010935` / `2010937` | `ET SCAN Suspicious inbound to MSSQL/MySQL/Oracle/PostgreSQL` | 01 & 09 (Recon) | Database Ports | Scanning across TCP 1433, 3306, 5432 (Alerts #02 and #17) |
 | `2001219` / `2003068` | `ET SCAN Potential SSH Scan / OUTBOUND` | 01 & 09 (Recon) | TCP Port 22 | Inbound and lateral SSH reconnaissance (24x in raw CSV; Alert #19 `wzb-de91bad685`) |
-| `2019232` | `ET EXPLOIT QNAP Shellshock CVE-2014-6271` | 01 (Nikto) | HTTP User-Agent / Headers | Inbound Nikto web vulnerability scan probe (`wzb-7fd4ba9942`, Alert #05) |
-| `2101807` | `GPL EXPLOIT unicode directory traversal attempt` | 01 (Nikto) | HTTP URI | Nikto path traversal fuzzing (`wzb-51ec6bb504`, Alert #10) |
+| `2019232` | `ET EXPLOIT QNAP Shellshock CVE-2014-6271` | 01 (Nikto) | HTTP User-Agent / Headers | Inbound Nikto web vulnerability scan probe (`wzb-30ff03b872`, Alert #06) |
+| `2101807` | `GPL EXPLOIT unicode directory traversal attempt` | 01 (Nikto) | HTTP URI | Nikto path traversal fuzzing (`wzb-df413d7c7e`, Alert #10) |
 | `2017515` | `ET INFO User-Agent (python-requests) Inbound to Webserver` | 02 (Brute Force) | HTTP User-Agent | Automated brute-force tool hitting `/login.php` (`wzb-6a22425401`, Alert #11, Custom Rule 100600) |
 | `2010960` | `ET SCAN WhatWeb Web Application Fingerprint Scanner` | 01 / 02 (Recon) | HTTP User-Agent | Automated web discovery probe hitting `/` and `/login.php` (Data Row 9057 / File Line 9058) |
 | `2010963` | `ET WEB_SERVER SELECT USER SQL Injection Attempt in URI` | 03 (SQLi) | HTTP URI | UNION SELECT SQL injection targeting `/vulnerabilities/sqli/` (Data Row 9109 / File Line 9110, Alert #11) |
 | `2014726` | `ET WEB_SERVER PHP System Command in HTTP POST` | 05 (Webshell) | HTTP POST Body | File upload containing PHP system execution syntax (`wzb-6a22425401`, Alert #11 sub-events 18–21) |
 | `2019284` | `ET ATTACK_RESPONSE Output of id command from HTTP server` | 05 (Webshell) | HTTP Server Response | Response payload containing `uid=33(www-data)` (`wzb-e9a1797ac4`, Alert #13) |
-| `3400020` | `POSSBL SCAN SHELL M-SPLOIT TCP` | 06 (RevShell) & 09 (Internal Disc) | TCP Port 4444 | Outbound reverse shell connection (`wzb-ccae331b77`, Alert #06) and internal sweep (`wzb-f87fab3eda`, Alert #18) |
+| `3400020` | `POSSBL SCAN SHELL M-SPLOIT TCP` | 06 (RevShell) & 09 (Internal Disc) | TCP Port 4444 | Outbound reverse shell connection (`wzb-81bb1f83f7`, Alert #14; Auditd Alert #15 is `wzb-ccae331b77`) and internal sweep (`wzb-f87fab3eda`, Alert #18) |
 | `2019922` | `ET EXPLOIT Possible MS14-068 GoldenPac Priv Esc in-use` | 13 (Kerberoasting) | TCP Port 88 (Kerberos) | Kerberos TGS-REQ wire frame captured on VMnet2 `ens37` (`wzb-c1e2642eb2`, Alert #23) |
 | `2043996` | `ET INFO Suspected Impacket WMIExec Activity` | 18 & 20 (WMI Lateral/Impact) | TCP / RPC SMB | Lateral WMI execution from `192.168.56.30` to `192.168.56.20` (Data Rows 9529, 9540, 9546) |
 | `2067085`–`2067087` | `ET INFO NTLM Session Setup Request - Negotiate / Challenge / Auth` | 20 (Impact / SMB Exec) | SMB / NTLM | NTLMSSP authentication negotiation over SMB (`wzb-7a4a134d1b`, Alert #43) |

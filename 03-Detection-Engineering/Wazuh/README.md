@@ -78,7 +78,7 @@ Standard Linux Auditd monitors `execve` system calls, but can miss shell built-i
 #### 🔍 Forensic Indexing vs. SOAR Integration Gate (Level 5 vs. Level $\ge 8$)
 Wazuh routes alerts with `level >= 8` to `custom-thehive` for automated ticket generation in TheHive 5 to prevent SOAR alert floods. Rule 100220 is intentionally configured at **Level 5**:
 - Every single interactive command is decoded, indexed in OpenSearch, and committed to `Wazuh-Raw-Alerts.csv`.
-- When high-severity milestone alerts trigger TheHive cases (e.g., Rule 5402 PAM sudo elevation, Rule 550 FIM `authorized_keys` modification, or Rule 5715 root SSH login), SOC analysts query `rule.id: 100220` on agent `DVWA` to retrieve the verbatim, chronological command-line history typed by the adversary.
+- When high-severity milestone alerts trigger TheHive cases (e.g., Rule 5402 PAM sudo elevation, Rule 5715 root SSH login, or Rule 100220 key injection), SOC analysts query `rule.id: 100220` on agent `DVWA` to retrieve the verbatim, chronological command-line history typed by the adversary.
 
 #### 📊 Empirical Telemetry: Verbatim Commands Captured in `Wazuh-Raw-Alerts.csv`
 During the 20-stage attack simulation, Rule 100220 fired **50 times** (CSV data rows 9138 to 9500 / file lines 9139 to 9501), capturing every key offensive tool execution.
@@ -492,7 +492,7 @@ During deep forensic audit of `local_rules.xml` against the 9,567 rows in `Wazuh
    - *Impact:* Wazuh performs substring matching on the field value, causing it to match `web_process_creation` (20 hits in the CSV), while `audit.rules` Line 27 defines `-k process_execution`. Aligning the key name ensures full fidelity with the hardened kernel ruleset.
 3. **Rules 100250 & 100252 Host Attribution Alignment:**
    - *Behavior:* The original descriptions for Rules 100250 and 100252 had swapped host labels (`192.168.56.10` labeled as client and `192.168.56.20` labeled as DC).
-   - *Resolution:* Fixed in `local_rules.xml` to correctly attribute `.10` to the Domain Controller (`PC-DC`) and `.20` to `DomainWin10` / `Win10User`.
+   - *Resolution:* Fixed in `local_rules.xml` to correctly attribute `.10` to the Domain Controller (`PC-DC` / Agent `DomainWin10`) and `.20` to the Workstation (`Win10` / Agent `Win10User`).
 4. **Rule 100340 SYSTEM WmiPrvSE Suppression Scope:**
    - *Behavior:* Rule 100340 suppresses LOLBins executing under `NT AUTHORITY\\SYSTEM` when parent is `WmiPrvSE.exe`.
    - *Insight:* Adversary WMI execution under human domain admin accounts (`AD\\Administrator`) correctly bypasses this suppression and triggers Rule `100613`. However, if an adversary executes remote WMI as `SYSTEM`, Rule 100340 would suppress `100274`. Production recommendation: ensure Rule `100613` evaluates prior to `100340` regardless of account context.

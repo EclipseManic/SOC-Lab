@@ -777,7 +777,7 @@
   <rule id="100180" level="3">
     <if_sid>80700</if_sid>
     <decoded_as>auditd</decoded_as>
-    <field name="audit.key">process_creation</field>
+    <field name="audit.key" type="pcre2">process_execution|web_process_creation</field>
     <description>Auditd: process execution detected ($(audit.exe))</description>
   </rule>
 </group>
@@ -1003,7 +1003,7 @@
     <if_sid>86601</if_sid>
     <field name="alert.signature_id" type="pcre2">^(2210054|2210050|2225018|2225003)$</field>
     <field name="src_ip" type="pcre2">^192\.168\.56\.20$</field>
-    <description>Ignore: known-noisy Suricata protocol-anomaly sigs from DomainWin10 client</description>
+    <description>Ignore: known-noisy Suricata protocol-anomaly sigs from Win10 / Win10User client</description>
   </rule>
 
 </group>

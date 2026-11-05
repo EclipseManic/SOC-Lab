@@ -49,14 +49,14 @@ Host behavioral rules alerted with near-instantaneous speed:
 - Sysmon process creation tracking for Impacket WMI execution alerted in **< 2 seconds** (`18:04:47 IST`).
 - SSH administrative rate anomaly correlation caught the 6-session exfiltration burst within **570 milliseconds** (`18:17:30 IST`).
 
+### 4. Promiscuous Network Sniffing Resilience
+By configuring Suricata in AF-PACKET promiscuous mode on gateway interface `ens37`, the IDS successfully observed intra-subnet Layer 2 port sweeps and Kerberos ticket requests traversing the VMware virtual switch that never hit the router's IP forwarding layer.
+
 ### 5. Analyst-Driven Investigative Attribution for Offline Gaps
 While Stages 04 (MD5 password cracking) and 11 (NTLMv2 password cracking) generated zero telemetry on victim endpoints due to running on external adversary GPU hardware (`DG-04`, `DG-11`), the DFIR team achieved complete forensic attribution through **adversary credential lifecycle triangulation**:
 1. **Upstream Theft Corroboration:** Correlating the initial credential exfiltration (SQL injection dumping hashes in Stage 03, and Responder LLMNR harvesting in Stage 10).
 2. **Offline Elapsed Interval:** Validating GPU computation duration against dictionary keyspace feasibility (< 60 seconds).
 3. **Downstream Authentication Verification:** Verifying the subsequent successful authentication of the cracked credentials on target services (POST `/login.php` on DVWA, and Windows Security Event ID 4624 Logon Type 3 on Domain Controller).
-
-### 4. Promiscuous Network Sniffing Resilience
-By configuring Suricata in AF-PACKET promiscuous mode on gateway interface `ens37`, the IDS successfully observed intra-subnet Layer 2 port sweeps and Kerberos ticket requests traversing the VMware virtual switch that never hit the router's IP forwarding layer.
 
 ---
 
@@ -106,7 +106,7 @@ Our audit identified **two inherent offline computation gaps** plus **one wire p
 
 - **Inherent Offline Computation Gaps (2 Stages / 10.0% — `DG-04`, `DG-11`):** Computations occurring entirely on external adversary hardware (Kali GPU/CPU) producing zero victim telemetry by definition. These are verified and attributed via upstream theft detection and downstream authentication alerts.
 - **Protocol Payload Inspection Boundary (`DG-19` — Stage 19):** Stage 19 is tracked as **Detected** because the exfiltration *transport activity* triggered a direct rate anomaly alert in Wazuh (Rule 5715, Alert #37: 6 rapid SSH sessions in 0.57s). However, `DG-19` documents the architectural limit that SSH transport encryption prevented Suricata NIDS from inspecting plaintext document filenames on the wire.
-- **Online Target & Wire Coverage (18 Stages / 90.0%):** Every online attack procedure was intercepted by target host and wire sensors. Stage 09 was directly detected by Suricata promiscuous capture on `ens37` (Alert #08) and Wazuh Rule 100220; Stage 12 was directly detected on target endpoints by Custom Rule 100615 & Rule 92657 (TheHive Alert #22 `wzb-1e9fb54d94`) and Rule 100220.
+- **Online Target & Wire Coverage (18 Stages / 90.0%):** Every online attack procedure was intercepted by target host and wire sensors. Stage 09 was directly detected by Suricata promiscuous capture on `ens37` (Alerts #17–#19) and Wazuh Rule 100220; Stage 12 was directly detected on target endpoints by Custom Rule 100615 & Rule 92657 (SIEM Indexed `wzb-32`, TheHive Alert #22 `wzb-1d2d7fb4b8`) and Rule 100220.
 
 | Gap Code | Stage # | Detection Boundary | Root Cause Analysis | Defensive Counter-Strategy & Mitigation |
 |:---:|:---:|:---|:---|:---|
