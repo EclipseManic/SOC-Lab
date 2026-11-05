@@ -36,7 +36,7 @@ While the adversary achieved Tier Zero Active Directory dominance in under 55 mi
 No single defensive sensor possessed complete visibility across the hybrid environment. The intrusion was successfully reconstructed because telemetry from multiple distinct layers corroborated each phase:
 - **Wire Inspection (Suricata):** Detected external port scans, automated brute-force bursts, SQL injection payloads, web shell verification, and Kerberos TGS-REQ requests that bypassed local endpoint loggers.
 - **Kernel & Host Audit (Auditd & PAM):** Detected web shell OS command execution (`/usr/bin/id`), reverse shell socket establishment (`stty sane`), and passwordless sudo Python escalation (`Rule 5402`) within seconds.
-- **Directory & Process Behavioral Analytics (Wazuh & Sysmon):** Captured Pass-the-Hash NTLM Logon Type 3 events (EID 4624), Impacket WMI fan-out commands, rogue user creation (EID 4720), and desktop wallpaper registry modifications (EID 13).
+- **Directory & Process Behavioral Analytics (Wazuh & Sysmon):** Captured Pass-the-Hash NTLM Logon Type 3 events (EID 4624), Impacket WMI fan-out commands, rogue user creation (EID 4720), and desktop wallpaper registry modifications (Sysmon EID 1 reg.exe).
 
 ### 2. The Custom Level >= 8 SOAR Ingestion Gateway
 In a high-throughput enterprise environment, raw SIEM streams quickly overwhelm Tier 1 analysts (visible in our 9,567 raw OpenSearch baseline events). 
@@ -48,6 +48,12 @@ Host behavioral rules alerted with near-instantaneous speed:
 - PAM sudo privilege escalation alerted in **< 1 second** (`17:25:36 IST`).
 - Sysmon process creation tracking for Impacket WMI execution alerted in **< 2 seconds** (`18:04:47 IST`).
 - SSH administrative rate anomaly correlation caught the 6-session exfiltration burst within **570 milliseconds** (`18:17:30 IST`).
+
+### 5. Analyst-Driven Investigative Attribution for Offline Gaps
+While Stages 04 (MD5 password cracking) and 11 (NTLMv2 password cracking) generated zero telemetry on victim endpoints due to running on external adversary GPU hardware (`DG-04`, `DG-11`), the DFIR team achieved complete forensic attribution through **adversary credential lifecycle triangulation**:
+1. **Upstream Theft Corroboration:** Correlating the initial credential exfiltration (SQL injection dumping hashes in Stage 03, and Responder LLMNR harvesting in Stage 10).
+2. **Offline Elapsed Interval:** Validating GPU computation duration against dictionary keyspace feasibility (< 60 seconds).
+3. **Downstream Authentication Verification:** Verifying the subsequent successful authentication of the cracked credentials on target services (POST `/login.php` on DVWA, and Windows Security Event ID 4624 Logon Type 3 on Domain Controller).
 
 ### 4. Promiscuous Network Sniffing Resilience
 By configuring Suricata in AF-PACKET promiscuous mode on gateway interface `ens37`, the IDS successfully observed intra-subnet Layer 2 port sweeps and Kerberos ticket requests traversing the VMware virtual switch that never hit the router's IP forwarding layer.
@@ -88,7 +94,7 @@ flowchart TD
    - Concurrently, the same alert is written to `alerts.json`, shipped across WireGuard by Filebeat, and indexed into OpenSearch. Because Filebeat uses buffered batch flushes and OpenSearch has a refresh interval (default 1s), **TheHive alerts routinely appear in the SOAR queue 1–3 seconds before the OpenSearch dashboard indexes them**.
 2. **Linux Shell `PROMPT_COMMAND` Flushing Delays:**
    - Linux Auditd command-line logging (`bashcmd`) hooks into Bash's `PROMPT_COMMAND` environment variable. `PROMPT_COMMAND` executes **only after a running process exits and the next shell prompt is rendered**.
-   - When an attacker executes long-running, blocking, or interactive commands (`Responder.py`, interactive Python subshells, or Impacket scripts), Suricata and the target Windows DC log the network and authentication packets immediately on wire arrival. However, `bashcmd` only flushes the command string to `/var/log/bash_commands.log` after the attacker terminates the command (`Ctrl+C`) or exits the shell. This explains why bashcmd timestamps can appear offset by several seconds to minutes relative to network IDS logs.
+   - When an attacker executes long-running, blocking, or interactive commands (`Responder.py`, interactive Python subshells, or Impacket scripts), Suricata and the target Windows DC log the network and authentication packets immediately on wire arrival. However, `bashcmd` only flushes the command string to `/var/log/bashcmd.log` after the attacker terminates the command (`Ctrl+C`) or exits the shell. This explains why bashcmd timestamps can appear offset by several seconds to minutes relative to network IDS logs.
 3. **Live Multi-Attempt Sequence Clustering:**
    - In realistic intrusions, operators frequently retry commands (e.g. escaping quotes, adjusting network interface flags). TheHive clusters events matching the same rule within its 5-second sliding aggregation window into a single parent card anchored to the first timestamp, while individual OpenSearch dashboard screenshots reflect subsequent attempts within that cluster.
 

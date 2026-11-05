@@ -131,7 +131,7 @@ All containment and eradication procedures were executed through centralized ent
 ### Step 1: Adversary Anti-Forensics Audit & Network Service Restoration
 - **Target:** DVWA Server (`192.168.56.30`)
 - **Actions:**
-  - Audited root command history (`history | grep "rm"`) and Auditd execution logs, uncovering the adversary's track-covering deletion of all 9 staging files in `/tmp/` (`/tmp/win10.hash`, `/tmp/hank.hash`, `/tmp/dcsync_output.ntds`, `/tmp/Administrator.ccache`, `/tmp/domain_users.txt`, `/tmp/admin_info.txt`, `/tmp/sensitive_data.txt`, `/tmp/hacked.bmp`, `/tmp/f`).
+  - Audited root command history (`history | grep "shred"`) and Auditd execution logs, uncovering the adversary track-covering and analyst secure shredding (`shred -u -z -n 3 /tmp/*.hash /tmp/*.ccache /tmp/dcsync_output* ...`) of all 9 staging files in `/tmp/` (`/tmp/win10.hash`, `/tmp/hank.hash`, `/tmp/dcsync_output.ntds`, `/tmp/Administrator.ccache`, `/tmp/domain_users.txt`, `/tmp/admin_info.txt`, `/tmp/sensitive_data.txt`, `/tmp/hacked.bmp`, `/tmp/f`).
   - Verified clean `/tmp/` state with `ls -la /tmp/` and confirmed zero unlinked open file descriptors remain via `lsof +L1 /tmp`.
   - Recursive removal of rogue Responder installation: `rm -rf /opt/Responder /opt/impacket`.
   - Operational restoration of local DNS stub resolver: `systemctl unmask systemd-resolved && systemctl enable --now systemd-resolved`.
@@ -176,7 +176,7 @@ Production service recovery was systematically verified across all four operatin
 1. **DVWA Public Web Tier:** Verified HTTP response `HTTP 200 OK` in 14.2 ms; verified MariaDB database connectivity; tested upload execution denial returning `HTTP 403 Forbidden`.
 2. **Active Directory Domain Services:** Executed `dcdiag /test:Replication /test:Advertising /test:FSMOCheck /test:Services` (all 5 core tests passed); confirmed `repadmin /showrepl` reports 0 replication errors.
 3. **Corporate Workstation:** Confirmed domain logon functional with rotated credentials; confirmed desktop wallpaper restored to corporate default.
-4. **Wazuh Central SIEM Fabric:** Validated all 4 agents (`Suricata-GW` 001, `DVWA-Server` 002, `DomainWin10` 003, `Win10User` 004) in **Active** state with zero critical alerts during the 60-minute post-remediation monitoring window.
+4. **Wazuh Central SIEM Fabric:** Validated all 4 agents (`Suricata-GW` 001, `DVWA-Server` 002, `Win10User` 003, `DomainWin10` 004) in **Active** state with zero critical alerts during the 60-minute post-remediation monitoring window.
 - **Evidence:** [`slot_09_eradication_health_verification.png`](../06-Resources/screenshots/deep-investigation-action/slot_09_eradication_health_verification.png)
 
 ---

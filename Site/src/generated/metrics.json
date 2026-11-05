@@ -47,8 +47,6 @@
     "internalAddress": "192.168.56.150",
     "externalAddress": "192.168.232.162",
     "authoritativeSource": "01-Lab-Setup/README.md",
-    "mismatches": [
-      "05-Incident-Report/incident-report.md references 192.168.56.1"
-    ]
+    "mismatches": []
   }
 }
