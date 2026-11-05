@@ -10,7 +10,7 @@
 > [!IMPORTANT]
 > **Investigative Foundation & Lifecycle Continuum:**  
 > This operational eradication and recovery record forms the essential fourth tier of our investigation, executing directly upon the evidentiary discoveries documented across our incident suite:
-> - **[`Initial-Triage-and-Investigation.md`](Initial-Triage-and-Investigation.md)**: Triaged 46 TheHive alerts by severity, critiqued 8 detection pipeline flaws, and established the 6-window chronological baseline.
+> - **[`Initial-Triage-and-Investigation.md`](Initial-Triage-and-Investigation.md)**: Triaged 46 TheHive alerts by severity, critiqued 9 detection pipeline flaws, and established the 6-window chronological baseline.
 > - **[`Immediate-Containment-Execution.md`](Immediate-Containment-Execution.md)**: Executed 7 emergency tactical actions (firewall drops, reverse shell kills, `shell.php` quarantine, `AD\backdoor` account disabling, and `krbtgt` invalidation) to freeze the breach without destroying forensic evidence.
 > - **[`Deep-Dive-Attack-Chain-Investigation.md`](Deep-Dive-Attack-Chain-Investigation.md)**: Mapped all 7 attack phases, identified the **7 root-cause architectural vulnerabilities**, and inventoried all adversary artifacts across our 68-screenshot telemetry catalog.
 
@@ -146,9 +146,6 @@ During live response and forensic auditing of DVWA, the incident response team i
 ### Execution Script:
 
 ```bash
-# ==============================================================================
-# 1. ADVERSARY ANTI-FORENSICS AUDIT: Review root command history for rm cleanup
-# ==============================================================================
 # ==============================================================================
 # 1. ADVERSARY ARTIFACT PURGE & WIPING: Securely overwrite and unlink staged loot
 # ==============================================================================
@@ -767,9 +764,9 @@ Every alert ingested by TheHive from Wazuh was individually audited by the incid
 
 - **43 True Positive Alerts Promoted into 3 Master Cases (93.5%):**
 
-- **Case 01 (`CAS-001-WEBCOMP`):** Grouped **16 alerts** (14 True Positives promoted to incident investigation + 2 audited False Positives #01, #06) covering perimeter reconnaissance, credential brute-forcing, SQL injection credential extraction, web shell injection, reverse shell execution, and sudo root escalation.
+- **Case 01 (`CAS-001-WEBCOMP`):** Grouped **15 alerts** (13 True Positives promoted to incident investigation + 2 audited False Positives #01, #06) covering perimeter reconnaissance, credential brute-forcing, SQL injection credential extraction, web shell injection, reverse shell execution, and sudo root escalation.
 
-- **Case 02 (`CAS-002-LATMOVE`):** Grouped **8 alerts** (7 True Positives promoted to incident investigation + 1 audited False Positive #18) covering SSH root persistence, internal network discovery, LLMNR broadcast poisoning, BloodHound reconnaissance, Kerberoasting, and DCSync replication.
+- **Case 02 (`CAS-002-LATMOVE`):** Grouped **9 alerts** (8 True Positives promoted to incident investigation + 1 audited False Positive #18) covering SSH root persistence, internal network discovery, LLMNR broadcast poisoning, BloodHound reconnaissance, Kerberoasting, and DCSync replication.
 
 - **Case 03 (`CAS-003-DOMIMP`):** Grouped **22 alerts** covering Pass-the-Hash arrival on the Domain Controller, Golden Ticket forgery, `AD\backdoor` creation, Domain Admins elevation, sensitive data staging, SCP exfiltration, and dual-endpoint defacement/ransomware impact.
 

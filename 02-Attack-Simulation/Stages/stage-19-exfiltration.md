@@ -46,13 +46,13 @@ Each `scp` invocation spawned an authenticated SSH session on the DVWA host. Whi
 ### Detection & Alert Screenshots
 
 ![TheHive alert 19 showing clustered SSH authentication during exfiltration](../../06-Resources/screenshots/thehive-alert/19.png)
-*Figure 19.2: TheHive Alert 19 capturing rapid successive SSH successful authentications for root from attacker IP 192.168.232.135.*
+*Figure 19.2: TheHive Alert #37 (`wzb-34f34a857c` / screenshot `19.png`) capturing rapid successive SSH successful authentications (6 sessions in 0.57s) for root from attacker IP 192.168.232.135.*
 
 ## Alert observed
 
 | Source | Rule / Event Description | Rule ID | TheHive Alert Title | Severity | Status |
 |---|---|---|---|---|---|
-| Wazuh / Linux SSH | sshd: authentication success (6 sessions within 1 second) | 5715 | `Logon Activity — ROOT @ 192.168.232.135` | Medium (2) | Detected |
+| Wazuh / Linux SSH (`DVWA`) | sshd: authentication success (6 sessions within 0.57s) | 5715 (Level 8) | TheHive Alert #37 (`19.png` / `wzb-34f34a857c`) — `[6x] [DVWA] Logon activity: ROOT @ 192.168.232.135` | Medium (2) | **Detected (Direct Detection & SOAR Delivery)** |
 
 > [!NOTE]
 > **Detection Assessment:** The SSH transport layer successfully encrypted the payload content, meaning network intrusion signatures looking for plaintext keyword matches (e.g., "passwords", "financials") did not fire on the egress traffic. However, Wazuh's host-level monitoring on the DVWA pivot recorded the anomalous burst of 6 rapid root SSH authentications within a 574-millisecond window (`12:47:30.437` to `12:47:31.011`), immediately triggering TheHive alert grouping for investigative triage.

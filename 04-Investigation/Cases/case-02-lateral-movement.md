@@ -23,13 +23,13 @@ Following root privilege escalation on the DVWA host (`192.168.56.30`), the adve
 
 | Stage | Attack | Investigation | Detection Status |
 |---|---|---|---|
-| 08 | [SSH persistence](../../02-Attack-Simulation/Stages/stage-08-ssh-persistence.md) | [Phase 3 Deep Dive](../Deep-Dive-Attack-Chain-Investigation.md#phase-3-making-themselves-at-home-ssh-persistence--finding-windows) | **Detected** (Wazuh Rule 550 [FIM] & Rule 5715 [SSH Auth], with Rule 100220 host shell capture) |
-| 09 | [Internal discovery](../../02-Attack-Simulation/Stages/stage-09-internal-discovery.md) | [Phase 3 Deep Dive](../Deep-Dive-Attack-Chain-Investigation.md#phase-3-making-themselves-at-home-ssh-persistence--finding-windows) | **Detected** (Suricata NIDS ens37 SIDs 3400001, 3400002 & Wazuh Rule 100220) |
-| 10 | [Responder poisoning](../../02-Attack-Simulation/Stages/stage-10-responder.md) | [Phase 4 Deep Dive](../Deep-Dive-Attack-Chain-Investigation.md#phase-4-poisoning-the-well-stealing-windows-passwords-with-responder) | **Detected** (Win10User Sysmon EID 1 DavSetCookie & DVWA Rule 100220) |
-| 11 | [NTLMv2 cracking](../../02-Attack-Simulation/Stages/stage-11-ntlmv2-crack.md) | [Phase 4 Deep Dive](../Deep-Dive-Attack-Chain-Investigation.md#phase-4-poisoning-the-well-stealing-windows-passwords-with-responder) | **Detection gap** (DG-11: Inherent offline cracking) |
-| 12 | [BloodHound enumeration](../../02-Attack-Simulation/Stages/stage-12-bloodhound.md) | [Phase 4 Deep Dive](../Deep-Dive-Attack-Chain-Investigation.md#phase-4-poisoning-the-well-stealing-windows-passwords-with-responder) | **Detected** (PC-DC & Win10 Custom Rule 100615 & Rule 92657) |
-| 13 | [Kerberoasting](../../02-Attack-Simulation/Stages/stage-13-kerberoasting.md) | [Phase 5 Deep Dive](../Deep-Dive-Attack-Chain-Investigation.md#phase-5-becoming-god-in-active-directory-kerberoasting-dcsync--the-golden-ticket) | **Detected** (Suricata SID 2019922 wire alert & Wazuh Rule 5715 & Rule 100220) |
-| 14 | [DCSync](../../02-Attack-Simulation/Stages/stage-14-dcsync.md) | [Phase 5 Deep Dive](../Deep-Dive-Attack-Chain-Investigation.md#phase-5-becoming-god-in-active-directory-kerberoasting-dcsync--the-golden-ticket) | **Detected** (PC-DC Custom Rule 100603, Rule 92657 & DVWA Rule 100220) |
+| 08 | [SSH persistence](../../02-Attack-Simulation/Stages/stage-08-ssh-persistence.md) | [Phase 3 Deep Dive](../Deep-Dive-Attack-Chain-Investigation.md#phase-3-making-themselves-at-home-ssh-persistence--finding-windows) | **Detected** (Wazuh Rule 5715 [SSH Auth] & Rule 100220 [bashcmd] host shell capture) |
+| 09 | [Internal discovery](../../02-Attack-Simulation/Stages/stage-09-internal-discovery.md) | [Phase 3 Deep Dive](../Deep-Dive-Attack-Chain-Investigation.md#phase-3-making-themselves-at-home-ssh-persistence--finding-windows) | **Target Logging Gap (DG-09)** (Suricata NIDS ens37 SIDs 3400001, 3400002 & Wazuh Rule 100220 on pivot; target Windows host firewall drops unlogged) |
+| 10 | [Responder poisoning](../../02-Attack-Simulation/Stages/stage-10-responder.md) | [Phase 4 Deep Dive](../Deep-Dive-Attack-Chain-Investigation.md#phase-4-poisoning-the-well-stealing-windows-passwords-with-responder) | **Detected** (Win10User Security EID 4688 / Sysmon EID 1 DavSetCookie [Rules 100278 & 61603, `wzb-28`] & DVWA Rule 100220) |
+| 11 | [NTLMv2 cracking](../../02-Attack-Simulation/Stages/stage-11-ntlmv2-crack.md) | [Phase 4 Deep Dive](../Deep-Dive-Attack-Chain-Investigation.md#phase-4-poisoning-the-well-stealing-windows-passwords-with-responder) | **Investigatively Attributed (Offline Gap DG-11)** (Lifecycle bracketed 10 $\rightarrow$ 12) |
+| 12 | [BloodHound enumeration](../../02-Attack-Simulation/Stages/stage-12-bloodhound.md) | [Phase 4 Deep Dive](../Deep-Dive-Attack-Chain-Investigation.md#phase-4-poisoning-the-well-stealing-windows-passwords-with-responder) | **Target Logging Gap (DG-12)** (Linux pivot Wazuh Rule 100220 & Alert #22; DC EID 1644 LDAP query logging unconfigured) |
+| 13 | [Kerberoasting](../../02-Attack-Simulation/Stages/stage-13-kerberoasting.md) | [Phase 5 Deep Dive](../Deep-Dive-Attack-Chain-Investigation.md#phase-5-becoming-god-in-active-directory-kerberoasting-dcsync--the-golden-ticket) | **Detected** (Suricata SID 2019922 wire alert & Wazuh Rule 100220) |
+| 14 | [DCSync](../../02-Attack-Simulation/Stages/stage-14-dcsync.md) | [Phase 5 Deep Dive](../Deep-Dive-Attack-Chain-Investigation.md#phase-5-becoming-god-in-active-directory-kerberoasting-dcsync--the-golden-ticket) | **Pivot-Only Coverage (DG-14)** (Linux pivot Wazuh Rule 100220 & Alert #24; DC EID 4662 replication SACL unconfigured) |
 
 ---
 
@@ -92,11 +92,12 @@ Following root privilege escalation on the DVWA host (`192.168.56.30`), the adve
 | Metric | Value |
 |---|---|
 | **Stages Executed** | 7 |
-| **Verified Direct & Wire Detections** | 6 (85.7%) |
-| **Operational SOAR Alert Delivery** | 7 (100% — all 7 stages generated operational alerts in TheHive) |
+| **Verified Direct & Wire Detections** | 3 (42.9% — Stages 08, 10, 13) |
+| **Operational Pivot-Only Alerts** | 1 (14.3% — Stage 14 DCSync) |
+| **Target Logging Gaps** | 2 (28.6% — Stages 09 & 12) |
 | **Inherent Offline Gaps** | 1 (14.3% — Stage 11 Hashcat cracking) |
-| **Target Logging Gaps** | 0 (0.0%) |
-| **Rule Failures** | 0 |
+| **Operational SOAR Alert Delivery** | 6 (85.7% — 6 of 7 stages generated operational alerts in TheHive) |
+| **Rule Failures / Engine Drops** | 0 (0.0%) |
 
 ---
 

@@ -91,12 +91,11 @@ With the plaintext password of an active Domain Administrator in hand, the attac
 |---|---|---|---|---|---|
 | Suricata (Router ens37) | ET EXPLOIT Possible GoldenPac Priv Esc in-use (TGS-REQ wire frame) | Rule 86601 / SID 2019922 | TheHive Alert #23 (`13.png` / `wzb-c1e2642eb2`) | Medium (2) | **Detected (Direct Wire Detection & SOAR Delivery)** |
 | Wazuh (Host Command Audit) | Bash command by root: `python3 /usr/local/bin/GetUserSPNs.py ... -request` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9264, `wzb-33`) | High | **Detected (Verbatim Command Capture)** |
-| Wazuh (Pivot Host) | sshd: authentication success (pivot session used for Kerberoasting) | Rule 5715 (Level 8) | `[2x] [DVWA] Logon activity: ROOT @ 192.168.232.135` | Medium | **Detected (Pivot Session Attribution)** |
-| Active Directory (Domain Controller) | Kerberos service ticket requested (RC4-HMAC `0x17`) | Event ID 4769 | Local DC Security Log (`Security.evtx`) | Medium | **Detected (Local DC Telemetry)** |
+| Active Directory (Domain Controller) | Kerberos service ticket auditing (RC4-HMAC `0x17`) | Event ID 4769 | Unconfigured in DC Baseline | Medium | **Target Logging Gap (EID 4769 Unforwarded)** |
 
 > [!NOTE]
-> **Telemetry Attribution & Pipeline Execution (Rule 100220):**  
-> Impacket `GetUserSPNs.py` was executed interactively on the DVWA pivot at `18:01:18 IST` (`Wazuh-Raw-Alerts.csv` Row 9264): `python3 /usr/local/bin/GetUserSPNs.py ad.lab/win10:'Secur3Lab!' -dc-ip 192.168.56.10 -request -outputfile /tmp/hank.hash 2>/dev/null`. As a Level 5 rule, Rule 100220 recorded the command locally on DVWA and indexed into OpenSearch without SIEM-to-SOAR escalation. Concurrently, the unrouted Kerberos traffic on VMnet2 tripped Suricata signature SID `2019922` via elevated Rule 86601 (`wzb-c1e2642eb2`), and the pivot SSH session triggered Rule 5715 (`wzb-1d2d7fb4b8`), both arriving in TheHive.
+> **Telemetry Attribution & Pipeline Execution (Rule 100220 & SID 2019922):**  
+> Impacket `GetUserSPNs.py` was executed interactively on the DVWA pivot at `18:01:18 IST` (`Wazuh-Raw-Alerts.csv` Row 9264): `python3 /usr/local/bin/GetUserSPNs.py ad.lab/win10:'Secur3Lab!' -dc-ip 192.168.56.10 -request -outputfile /tmp/hank.hash 2>/dev/null`. As a Level 5 rule, Rule 100220 recorded the command locally on DVWA and indexed into OpenSearch without SIEM-to-SOAR escalation. Concurrently, the unrouted Kerberos traffic on VMnet2 tripped Suricata signature SID `2019922` via elevated Rule 86601 (`wzb-c1e2642eb2`), delivering TheHive Alert #23 directly to the SOAR. On the target Domain Controller, Kerberos Service Ticket Operations (EID 4769) remained unforwarded, highlighting the necessity of multi-sensor wire-level coverage.
 
 ---
 

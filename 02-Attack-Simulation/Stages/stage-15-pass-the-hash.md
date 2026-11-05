@@ -71,7 +71,7 @@ With full interactive command execution confirmed on `PC-DC`, the adversary esta
 |---|---|---|---|---|---|
 | Windows Security (`DomainWin10`) | Successful Remote Logon Detected - User:\Administrator - NTLM authentication, possible pass-the-hash attack | Windows Security Event ID 4624 (Logon Type 3 NTLM) / Rule 92657 | 24x in `Wazuh-Raw-Alerts.csv` & Alerts #25, #26 (`wzb-b7f91cd3ab`, `wzb-eb083a8537` / `wzb-83be61ee53`) | High (3) | **Detected (Direct Target-Side & SOAR Delivery)** |
 | Windows Sysmon (`DomainWin10`) | Impacket command execution: `cmd.exe /Q /c whoami > \\127.0.0.1\ADMIN$\__*` | Wazuh Custom Rule 100613 (Sysmon EID 1) | TheHive Alerts #25, #26 (`15.png`, `15.5.png`) | High (3) | **Detected (Process Execution Telemetry)** |
-| Wazuh (Host Command Audit) | Bash command by root: `python3 wmiexec.py -hashes :cc814... Administrator@192.168.56.10` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Rows 9300, 9304) | High | **Detected (Verbatim PtH Invocation)** |
+| Wazuh (Host Command Audit) | Bash command by root: `python3 wmiexec.py -hashes :cc814... Administrator@192.168.56.10` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Data Rows 9300, 9303) | High | **Detected (Verbatim PtH Invocation)** |
 
 ### Detection Analysis
 
