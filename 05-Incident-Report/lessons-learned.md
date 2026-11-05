@@ -53,7 +53,7 @@ Host behavioral rules alerted with near-instantaneous speed:
 By configuring Suricata in AF-PACKET promiscuous mode on gateway interface `ens37`, the IDS successfully observed intra-subnet Layer 2 port sweeps and Kerberos ticket requests traversing the VMware virtual switch that never hit the router's IP forwarding layer.
 
 ### 5. Analyst-Driven Investigative Attribution for Offline Gaps
-While Stages 04 (MD5 password cracking) and 11 (NTLMv2 password cracking) generated zero telemetry on victim endpoints due to running on external adversary GPU hardware (`DG-04`, `DG-11`), the DFIR team achieved complete forensic attribution through **adversary credential lifecycle triangulation**:
+While Stages 04 (MD5 password cracking) and 11 (NTLMv2 password cracking) generated zero telemetry on victim endpoints due to running on external adversary GPU hardware (`DG-04`, `DG-11`), the SOC team achieved complete investigative attribution through **adversary credential lifecycle triangulation**:
 1. **Upstream Theft Corroboration:** Correlating the initial credential exfiltration (SQL injection dumping hashes in Stage 03, and Responder LLMNR harvesting in Stage 10).
 2. **Offline Elapsed Interval:** Validating GPU computation duration against dictionary keyspace feasibility (< 60 seconds).
 3. **Downstream Authentication Verification:** Verifying the subsequent successful authentication of the cracked credentials on target services (POST `/login.php` on DVWA, and Windows Security Event ID 4624 Logon Type 3 on Domain Controller).

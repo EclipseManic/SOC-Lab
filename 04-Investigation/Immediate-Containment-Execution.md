@@ -10,7 +10,7 @@
 > **Investigative Basis & Threat Intelligence Context:**  
 > This tactical containment playbook is executed in direct response to the forensic findings detailed across our incident records:
 > - **[`Initial-Triage-and-Investigation.md`](Initial-Triage-and-Investigation.md)**: Master 46-alert triage table, detection pipeline critique (8 flaws), and 6-window chronological timeline.
-> - **[`Deep-Dive-Attack-Chain-Investigation.md`](Deep-Dive-Attack-Chain-Investigation.md)**: Comprehensive DFIR deep-dive of the complete 7-phase attack chain, root-cause vulnerability analysis, 68-screenshot telemetry index, and strategic enterprise hardening roadmap.
+> - **[`Deep-Dive-Attack-Chain-Investigation.md`](Deep-Dive-Attack-Chain-Investigation.md)**: Comprehensive deep-dive investigation of the complete 7-phase attack chain, root-cause vulnerability analysis, 68-screenshot telemetry index, and strategic enterprise hardening roadmap.
 > - **[Eradication-Hardening-and-Recovery.md](Eradication-Hardening-and-Recovery.md)**: Permanent elimination of all 7 root causes, adversary anti-forensics audit and staging artifact purge, Active Directory hardening, and closing cases in TheHive.
 
 ---

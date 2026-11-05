@@ -1,9 +1,9 @@
-# 🔍 Comprehensive DFIR Deep-Dive Investigation: Enterprise Network Breach, Active Directory Forest Takeover & Dual-Endpoint Ransomware/Defacement
+# 🔍 Comprehensive Incident Deep-Dive Investigation: Enterprise Network Breach, Active Directory Forest Takeover & Dual-Endpoint Ransomware/Defacement
 
 **Document ID:** `IR-2026-1018-DEEPDIVE`  
 **Incident Reference:** `INC-2026-1018-ALPHA`  
 **Classification:** True Positive — Critical Enterprise Security Incident (Severity 10.0 / Level 15)  
-**Lead Investigator:** SOC Lab Lead DFIR Analyst  
+**Lead Investigator:** SOC Lab Lead Incident Analyst  
 **Investigation Framework:** NIST SP 800-61r2 / MITRE ATT&CK Enterprise Framework  
 **Incident Scope:** DMZ Web Pivot (`DVWA`), Windows Server 2022 Domain Controller (`PC-DC`), Windows 10 Workstation (`Win10User`)  
 **Attack Dwell Time:** `2026-10-18 17:10:08 IST` – `18:24:32 IST` (**1 Hour, 14 Minutes, 24 Seconds**)  
@@ -590,7 +590,7 @@ An attacker rarely needs to invent a zero-day exploit. They simply find one smal
 By understanding the story of how this happened, removing our systemic mistakes, and following the hardening roadmap above, we can ensure this attack path is closed permanently.
 
 **Report Status:** FINAL / COMPLETED  
-**Investigated by:** SOC Lab DFIR Incident Commander  
+**Investigated by:** SOC Lab Incident Commander  
 **Companion Documents:**  
 * 📋 [Initial-Triage-and-Investigation.md](Initial-Triage-and-Investigation.md) *(How we handled the live queue)*  
 * 🛡️ [Immediate-Containment-Execution.md](Immediate-Containment-Execution.md) *(How we locked the attacker out)*  

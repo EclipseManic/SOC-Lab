@@ -271,7 +271,7 @@ This post-incident review has been compiled, audited against empirical telemetry
 
 | Role / Responsibility | Name / Title | Organization | Formal Status | Timestamp (UTC) |
 |:---|:---|:---|:---:|:---:|
-| **Lead Incident Responder** | Manichand Gupta | SOC Engineering & DFIR | **APPROVED** | `2026-11-01T15:00:00Z` |
+| **Lead Incident Responder** | Manichand Gupta | SOC Engineering & Incident Response | **APPROVED** | `2026-11-01T15:00:00Z` |
 | **Detection Engineering Lead** | SOC Automation Core | Blue Team Operations | **VALIDATED** | `2026-11-01T15:15:00Z` |
 | **Active Directory Security Admin** | Enterprise Systems Admin | Identity Infrastructure | **VERIFIED** | `2026-11-01T15:30:00Z` |
 | **Incident Commander** | Lead SOC Incident Lead | Information Security Office | **RESOLVED & CLOSED** | `2026-11-01T16:00:00Z` |

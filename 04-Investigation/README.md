@@ -1,6 +1,6 @@
-# 04 — Incident Investigation & Forensic Analysis
+# 04 — Incident Investigation & Triage Analysis
 
-Welcome to the **Incident Investigation** section of the SOC Lab repository. This directory represents the defender and DFIR (Digital Forensics and Incident Response) analyst view of the campaign. It documents the end-to-end journey from initial alert triage and queue prioritization, through live host containment and artifact collection, to forensic root-cause analysis and enterprise hardening.
+Welcome to the **Incident Investigation** section of the SOC Lab repository. This directory represents the defender and SOC analyst view of the campaign. It documents the end-to-end journey from initial alert triage and queue prioritization, through live host containment and artifact collection, to root-cause analysis and enterprise hardening.
 
 [![SOC Analyst Investigation Lifecycle](../06-Resources/diagrams/SOC%20Analyst%20Investigation%20Lifecycle.png)](../06-Resources/diagrams/SOC%20Analyst%20Investigation%20Lifecycle.png)
 *Figure 1: SOC Analyst Investigation Lifecycle from alert ingestion to case resolution and post-incident remediation.*
