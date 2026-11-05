@@ -81,7 +81,8 @@ whoami
 
 | Source | Rule / Signature | Rule ID | TheHive Alert | Severity | Status |
 |---|---|---|---|---|---|
-| Wazuh (PAM / Sudo) | Sudo command execution by service user (`www-data`) / Python root execution | Wazuh Sudo Ruleset | Alert 6 (`6.png`, `6.1.png`, `6.2.png`, `6.3.png`) | High | Detected |
+| Wazuh (Linux PAM) | PAM: Successful sudo root execution by service user (`www-data`) | Wazuh Rule 5402 (12x sudo alerts) | Alert 6 (`6.png`–`6.3.png`) | High (3) | Detected |
+| Wazuh (Host Command Audit) | Bash command by root: `sudo -l` and interactive root shell escape | Wazuh Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Data Row 9147) | Medium | Detected (Forensic Command Capture) |
 
 ## MITRE ATT&CK
 

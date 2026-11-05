@@ -88,6 +88,8 @@ win10::AD:112233***8899:b4a78***e31
 |---|---|---|---|---|---|
 | Wazuh (Host Command Audit) | Bash command by root: `python3 /opt/Responder/Responder.py -I ens33 -wd` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Rows 9233, 9242) (`9.png`–`9.3.png`) | High | **Detected (Verbatim Command Capture)** |
 | Wazuh (Host Command Audit) | Bash command by root: `cp /opt/Responder/logs/SMB-NTLMv2-SSP-... /tmp/win10.hash` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9244) | Medium | Detected (Hash Loot Staging) |
+| Windows 10 Endpoint (Win10User) | Windows Event ID 4688: Process creation with `DavSetCookie` token coercion | Wazuh Custom Rule 100278 (Level 8) | TheHive Alert #20 (`wzb-72bc2bc36e` / `wzb-28`) | High (3) | Detected (Endpoint Coercion Capture) |
+| Suricata NIDS | LLMNR / NetBIOS rogue resolution frames on `ens37` | Suricata SIDs / Wazuh Rule 86601 | TheHive Alert 9 (`9.png`–`9.2.png`) | Medium (2) | Detected (Network Wire Heuristic) |
 
 > [!NOTE]
 > **Telemetry Attribution & Pipeline Execution (Rule 100220):**  

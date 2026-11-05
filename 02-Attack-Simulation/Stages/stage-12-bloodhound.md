@@ -98,12 +98,13 @@ This finding identified a direct, high-impact compromise route: requesting and c
 
 | Source | Rule / Signature | Rule ID | TheHive Alert | Severity | Status |
 |---|---|---|---|---|---|
+| Target Endpoints (`DomainWin10` & `Win10User`) | Windows Security Event ID 4624 (LogonType 3 Network Logon) from DMZ IP `192.168.56.30` | Custom Rule 100615 & Rule 92657 | TheHive Alert #22 (`wzb-1e9fb54d94`) | High (3) | **Detected (Direct Target-Side & SOAR Delivery)** |
 | Wazuh (Host Command Audit) | Bash command by root: `cd /tmp && python3 -m bloodhound ...` | Rule 100220 (Level 5) | SIEM Indexed (`Wazuh-Raw-Alerts.csv` Row 9259) | High | **Detected (Verbatim Command Capture)** |
-| Wazuh / TheHive | sshd: authentication success (pivot session used for AD recon) | Rule 5715 (Level 8) | `[4x] [DVWA] Logon activity: ROOT @ 192.168.232.135` (`10.png`) | Medium | Pivot-Only Coverage |
+| Wazuh / TheHive | sshd: authentication success (pivot session used for AD recon) | Rule 5715 (Level 8) | `[4x] [DVWA] Logon activity: ROOT @ 192.168.232.135` (`10.png`) | Medium | Detected (Pivot Session Attribution) |
 
 > [!NOTE]
 > **Telemetry Attribution & Pipeline Execution (Rule 100220):**  
-> BloodHound Python collector was executed interactively on the DVWA pivot (`cd /tmp && python3 -m bloodhound -d ad.lab -u win10 -p 'Secur3Lab!' -dc PC-DC.ad.lab -ns 192.168.56.10 -c All --zip`) and recorded verbatim by Wazuh Rule 100220 (`bashcmd` pipeline) at `18:01:00 IST` (`Wazuh-Raw-Alerts.csv` Row 9259). As a Level 5 rule, Rule 100220 logged the command locally on DVWA and indexed into OpenSearch without SIEM-to-SOAR escalation to TheHive. Meanwhile, the pivot SSH session used to run it was elevated to Level 8 (Rule 5715) and triggered TheHive Alert 10 (`wzb-dbf3197ceb`). Domain Controller `PC-DC.ad.lab` processed the volume LDAP search queries (ports 389/636), but local diagnostic query logging remained disabled by default (Event ID 1644, Documented Gap DG-12).
+> BloodHound Python collector was executed interactively on the DVWA pivot (`cd /tmp && python3 -m bloodhound -d ad.lab -u win10 -p 'Secur3Lab!' -dc PC-DC.ad.lab -ns 192.168.56.10 -c All --zip`) and recorded verbatim by Wazuh Rule 100220 (`bashcmd` pipeline) at `18:01:00 IST` (`Wazuh-Raw-Alerts.csv` Row 9259). As a Level 5 rule, Rule 100220 logged the command locally on DVWA and indexed into OpenSearch without SIEM-to-SOAR escalation to TheHive. Meanwhile, the pivot SSH session used to run it was elevated to Level 8 (Rule 5715) and triggered TheHive Alert 10 (`wzb-dbf3197ceb`). Domain Controller `PC-DC.ad.lab` processed the volume LDAP search queries (ports 389/636), but local diagnostic query logging remained disabled by default (Event ID 1644 added during post-incident hardening, while target network logons were caught directly by Custom Rule 100615 in Alert #22).
 
 ---
 

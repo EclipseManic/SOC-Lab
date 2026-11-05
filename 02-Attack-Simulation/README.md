@@ -35,26 +35,26 @@ The 20 attack simulation stages are grouped into three distinct investigative ca
 
 | # | Stage | Case | Primary Tool / Vector | ATT&CK ID | Attack Evidence | Detection Status | Alert Source |
 |---|---|---|---|---|---|---|---|
-| **01** | [Reconnaissance](Stages/stage-01-recon.md) | Case 01 | Ping, Nmap, WhatWeb, Nikto, Gobuster | `T1595` | `1.png`–`5.png` | **Detected** | Suricata / TheHive |
-| **02** | [Brute Force](Stages/stage-02-bruteforce.md) | Case 01 | Custom Python CSRF script + RockYou | `T1110` | `6.png`, `7.png` | **Detected** | Wazuh / Suricata |
-| **03** | [SQL Injection](Stages/stage-03-sqli.md) | Case 01 | Boolean bypass & UNION extraction | `T1190` | `8.png`, `9.png` | **Detected** | Suricata |
-| **04** | [Hash Cracking](Stages/stage-04-hash-crack.md) | Case 01 | Hashcat mode 0 (MD5) | `T1110.002` | `10.png`, `11.png` | **Not Detected** | Offline Gap (`DG-04`) |
-| **05** | [Web Shell Upload](Stages/stage-05-webshell.md) | Case 01 | PHP web shell upload & RCE | `T1505.003` | `12.png`–`14.png` | **Detected** | Suricata / Wazuh |
-| **06** | [Reverse Shell](Stages/stage-06-reverse-shell.md) | Case 01 | Netcat listener + FIFO reverse shell | `T1059.004` | `15.png`–`17.png` | **Detected** | Wazuh / Suricata |
-| **07** | [Privilege Escalation](Stages/stage-07-privesc.md) | Case 01 | Sudo Python GTFOBins root escape | `T1548.003` | `17.png` | **Detected** | Wazuh |
-| **08** | [SSH Persistence](Stages/stage-08-ssh-persistence.md) | Case 02 | Ed25519 `authorized_keys` backdoor | `T1098.004` | `18.png`–`20.png` | **Detected** | Wazuh FIM / Syscheck |
-| **09** | [Internal Discovery](Stages/stage-09-internal-discovery.md) | Case 02 | Dual NIC enum, Nmap pivot scans | `T1018` | `21.png`–`27.png` | **Detected** | Suricata / Wazuh |
-| **10** | [Responder Poisoning](Stages/stage-10-responder.md) | Case 02 | LLMNR/mDNS poisoning on `ens33` | `T1557.001` | `28.png`–`30.png` | **Detected** | Suricata / Wazuh |
-| **11** | [NTLMv2 Cracking](Stages/stage-11-ntlmv2-crack.md) | Case 02 | Hashcat mode 5600 (NetNTLMv2) | `T1110.002` | `31.png`, `32.png` | **Not Detected** | Offline Gap (`DG-11`) |
-| **12** | [BloodHound Enumeration](Stages/stage-12-bloodhound.md) | Case 02 | `bloodhound.py` + Neo4j / CE Cypher | `T1087.002` | `33.png`–`40.png` | **Detected** | Wazuh / LDAP |
-| **13** | [Kerberoasting](Stages/stage-13-kerberoasting.md) | Case 02 | `GetUserSPNs.py` + Hashcat 13100 | `T1558.003` | `41.png`–`44.png` | **Detected** | Wazuh / Win Security |
-| **14** | [DCSync](Stages/stage-14-dcsync.md) | Case 02 | `secretsdump.py` DRSUAPI replication | `T1003.006` | `45.png`–`47.png` | **Detected** | Wazuh / Win Security |
-| **15** | [Pass-the-Hash](Stages/stage-15-pass-the-hash.md) | Case 03 | `wmiexec.py` with Administrator hash | `T1550.002` | `48.png` | **Detected** | Suricata / Wazuh |
-| **16** | [Golden Ticket](Stages/stage-16-golden-ticket.md) | Case 03 | `lookupsid.py`, `ticketer.py`, `wmiexec` | `T1558.001` | `49.png`–`51.png` | **Detected** | Wazuh / Win Security |
-| **17** | [DC Persistence](Stages/stage-17-dc-persistence.md) | Case 03 | Rogue `backdoor` Domain Admin user | `T1136.002` | `52.png`, `53.png` | **Detected** | Wazuh (7 Alerts) |
-| **18** | [Collection](Stages/stage-18-collection.md) | Case 03 | WMI automated staging & file harvesting | `T1005` | `54.png`, `55.png` | **Detected** | Wazuh / Win Security |
-| **19** | [Exfiltration](Stages/stage-19-exfiltration.md) | Case 03 | SCP egress from pivot to Kali | `T1041` | `56.png` | **Detected** | Wazuh Auth |
-| **20** | [Impact](Stages/stage-20-impact.md) | Case 03 | Ransomware simulation, defacement, reboot | `T1491.001` | `57.png`–`60.png` | **Detected** | Wazuh / Suricata (10 Alerts) |
+| **01** | [Reconnaissance](Stages/stage-01-recon.md) | Case 01 | Ping, Nmap, WhatWeb, Nikto, Gobuster | `T1595` | `1.png`–`5.png` | **Detected** | Suricata Gateway (SIDs `3400001`, `3400002` / `wzb-3a8045a03c`) |
+| **02** | [Brute Force](Stages/stage-02-bruteforce.md) | Case 01 | Custom Python CSRF script + RockYou | `T1110` | `6.png`, `7.png` | **Detected** | Suricata SID `2017515` + Custom Rule `100600` / Rule `100200` (`wzb-6a22425401`) |
+| **03** | [SQL Injection](Stages/stage-03-sqli.md) | Case 01 | Boolean bypass & UNION extraction | `T1190` | `8.png`, `9.png` | **Detected** | Suricata SID `2010963` + Custom Rule `100600` (`wzb-6a22425401`) |
+| **04** | [Hash Cracking](Stages/stage-04-hash-crack.md) | Case 01 | Hashcat mode 0 (MD5) | `T1110.002` | `10.png`, `11.png` | **Investigatively Attributed** | Inherent Offline Gap (`DG-04`) — Lifecycle Bracketed (03 $\rightarrow$ 05) |
+| **05** | [Web Shell Upload](Stages/stage-05-webshell.md) | Case 01 | PHP web shell upload & RCE | `T1505.003` | `12.png`–`14.png` | **Detected** | Linux Auditd Rule `100199` (`wzb-61ed72e937`) & Suricata SIDs `2014726`, `2019284` |
+| **06** | [Reverse Shell](Stages/stage-06-reverse-shell.md) | Case 01 | Netcat listener + FIFO reverse shell | `T1059.004` | `15.png`–`17.png` | **Detected** | Suricata SID `3400020` & Auditd `nc.openbsd` Rule `100199` (`wzb-ccae331b77`) |
+| **07** | [Privilege Escalation](Stages/stage-07-privesc.md) | Case 01 | Sudo Python GTFOBins root escape | `T1548.003` | `17.png` | **Detected** | Linux PAM Rule `5402` (12x sudo alerts) & Rule `100220` (`sudo -l`) |
+| **08** | [SSH Persistence](Stages/stage-08-ssh-persistence.md) | Case 02 | Ed25519 `authorized_keys` backdoor | `T1098.004` | `18.png`–`20.png` | **Detected** | Wazuh FIM Rule `550`, SSH Rule `5715`, and Rule `100220` (`wzb-1208f0ea54`) |
+| **09** | [Internal Discovery](Stages/stage-09-internal-discovery.md) | Case 02 | Dual NIC enum, Nmap pivot scans | `T1018` | `21.png`–`27.png` | **Detected** | Suricata NIDS `ens37` (SIDs `3400001`, `3400002`, `3400020`) & Rule `100220` |
+| **10** | [Responder Poisoning](Stages/stage-10-responder.md) | Case 02 | LLMNR/mDNS poisoning on `ens33` | `T1557.001` | `28.png`–`30.png` | **Detected** | Wazuh Rule `100220` (`Responder.py`) + Win10User EID 4688 `DavSetCookie` (Rule `100278`) |
+| **11** | [NTLMv2 Cracking](Stages/stage-11-ntlmv2-crack.md) | Case 02 | Hashcat mode 5600 (NetNTLMv2) | `T1110.002` | `31.png`, `32.png` | **Investigatively Attributed** | Inherent Offline Gap (`DG-11`) — Lifecycle Bracketed (10 $\rightarrow$ 12) |
+| **12** | [BloodHound Enumeration](Stages/stage-12-bloodhound.md) | Case 02 | `bloodhound.py` + Neo4j / CE Cypher | `T1087.002` | `33.png`–`40.png` | **Detected** | PC-DC & Win10 Custom Rule `100615` & `92657` + Rule `100220` (`wzb-1e9fb54d94`) |
+| **13** | [Kerberoasting](Stages/stage-13-kerberoasting.md) | Case 02 | `GetUserSPNs.py` + Hashcat 13100 | `T1558.003` | `41.png`–`44.png` | **Detected** | Suricata `ens37` (SID `2019922` / `wzb-c1e2642eb2`) & Wazuh Rule `100220` |
+| **14** | [DCSync](Stages/stage-14-dcsync.md) | Case 02 | `secretsdump.py` DRSUAPI replication | `T1003.006` | `45.png`–`47.png` | **Detected** | DomainWin10 Custom Rule `100603` (EID 4672) & `92657` + Rule `100220` (`wzb-7b08f4cbcf`) |
+| **15** | [Pass-the-Hash](Stages/stage-15-pass-the-hash.md) | Case 03 | `wmiexec.py` with Administrator hash | `T1550.002` | `48.png` | **Detected** | Windows EID `4624` (Rule `92657`) & Sysmon Custom Rule `100613` (`wzb-b7f91cd3ab`) |
+| **16** | [Golden Ticket](Stages/stage-16-golden-ticket.md) | Case 03 | `lookupsid.py`, `ticketer.py`, `wmiexec` | `T1558.001` | `49.png`–`51.png` | **Detected** | DomainWin10 Custom Rules `100615`, `100603`, `100613` + Rule `100220` (`wzb-ccff195e0c`) |
+| **17** | [DC Persistence](Stages/stage-17-dc-persistence.md) | Case 03 | Rogue `backdoor` Domain Admin user | `T1136.002` | `52.png`, `53.png` | **Detected** | Wazuh Custom Rule `100613`, Windows EID `4720` (60109), EID `4728` (60159) (7 Alerts) |
+| **18** | [Collection](Stages/stage-18-collection.md) | Case 03 | WMI automated staging & file harvesting | `T1005` | `54.png`, `55.png` | **Detected** | Sysmon EID 1 (Custom Rule `100613`, Rules `100271`, `100272`, `100275`, Alerts #35, #36) |
+| **19** | [Exfiltration](Stages/stage-19-exfiltration.md) | Case 03 | SCP egress from pivot to Kali | `T1041` | `56.png` | **Detected** | Wazuh SSH Rule `5715` (Logon burst: 6 sessions / 0.57s; Alert #37 `wzb-34f34a857c`) |
+| **20** | [Impact](Stages/stage-20-impact.md) | Case 03 | Ransomware simulation, defacement, reboot | `T1491.001` | `57.png`–`60.png` | **Detected** | Sysmon EID 1 (Rule `92041`: `reg.exe` & Custom Rule `100613`) / System EID 1074 (8 Alerts) |
 
 ---
 
@@ -74,15 +74,16 @@ The evidence sets below are published in the public repository. The attack scree
 ## Detection Engineering & Gap Analysis
 
 - **Detection Coverage:**
-  - **Verified Detections with Alerts:** 16 stages (80.0%)
-  - **Inherent Offline Gaps (Zero Telemetry):** 2 stages (10.0% - Stages 04 & 11)
-  - **Partial / Protocol Logging Gaps:** 2 stages (10.0% - Stages 09 & 12, where detection occurred on alternative layers: Stage 09 via network IDS promiscuous sweep, Stage 12 via pivot SSH session authentication)
-  - **Rule Failures:** 0 stages (0.0%)
-  - **Total Stages:** 20
+  - **Direct Target-Side & Wire Detections:** 18 stages (90.0% — Stages 01, 02, 03, 05, 06, 07, 08, 09, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20)
+  - **Operational SOAR Alert Delivery (TheHive Alerts Generated):** 18 stages (90.0%) across 46 security alerts
+  - **Inherent Offline Computation Gaps (Zero Telemetry):** 2 stages (10.0% — Stages 04 & 11)
+  - **Target Logging Gaps:** 0 stages (0.0%)
+  - **Rule Failures / Drops:** 0 stages (0.0%)
+  - **Total Stages:** 20 (100%)
 - **Offline Detection Gaps:** 
   - **Stage 04 (Hash Cracking):** Recovering plaintext credentials from extracted MD5 database hashes occurs entirely offline on the attacker's workstation (Kali). No network traffic or host-level telemetry is emitted on victim systems.
   - **Stage 11 (NTLMv2 Cracking):** Cracking captured NetNTLMv2 hashes occurs offline via Hashcat dictionary attacks on the attacker's GPU/CPU.
-  - *Mitigation & Upstream Detection:* While offline cracking itself cannot be detected directly at the endpoint, upstream actions (SQL injection in Stage 03, LLMNR poisoning in Stage 10) and downstream use of cracked credentials (SSH in Stage 08, BloodHound in Stage 12) are reliably detected. Full gap analyses are documented in [03-Detection-Engineering/README.md#challenge-3-the-honest-gap-register-why-80-detection-is-real-security](../03-Detection-Engineering/README.md#challenge-3-the-honest-gap-register-why-80-detection-is-real-security).
+  - *Mitigation & Bracketed Lifecycle Attribution:* While offline cracking itself cannot be detected directly at the endpoint, upstream actions (SQL injection in Stage 03, LLMNR poisoning in Stage 10) and downstream use of cracked credentials (web application login in Stage 05, BloodHound in Stage 12) are reliably detected. Full gap analyses are documented in [03-Detection-Engineering/README.md#detection-gap-register](../03-Detection-Engineering/README.md#detection-gap-register).
 
 ---
 

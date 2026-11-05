@@ -84,7 +84,8 @@ export TERM=xterm
 
 | Source | Rule / Signature | Rule ID | TheHive Alert | Severity | Status |
 |---|---|---|---|---|---|
-| Suricata / Wazuh | Outbound Reverse Shell Connection / Interactive Shell Spawned by Web User | Suricata IDS / Wazuh Ruleset | Alert 5 (`5.png`) | High | Detected |
+| Suricata / Wazuh | Outbound Reverse Shell Connection (TCP port 4444) | Suricata SID 3400020 / Wazuh Rule 86601 | Alert 5 (`5.png` / `wzb-ccae331b77`) | High (3) | Detected |
+| Linux Auditd | Command execution under www-data: `/usr/bin/nc.openbsd` FIFO reverse shell | Wazuh Auditd Rule 100199 (`web_process_creation`) | Alert 5 (`5.png`) / SIEM Indexed | High (3) | Detected |
 
 ## MITRE ATT&CK
 

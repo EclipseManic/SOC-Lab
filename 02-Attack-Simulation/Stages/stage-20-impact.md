@@ -187,7 +187,7 @@ Stage 20 generated a massive, high-fidelity alert burst spanning network intrusi
 
 - **Affected Systems:**
   - `PC-DC.ad.lab` — Windows Server 2022 Domain Controller (`192.168.56.10`)
-  - `Win10.ad.lab` — Windows 10 Enterprise Workstation (`192.168.56.20`)
+  - `Win10.ad.lab` — Windows 10 Pro N for Workstations (`192.168.56.20`)
 - **Staging Intermediate Host:** DVWA Linux Server (`192.168.56.30`)
 - **Impact Artifacts Created:**
   - `C:\Users\Public\hacked.bmp` (Defacement graphic)
