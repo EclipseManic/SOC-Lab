@@ -108,7 +108,7 @@ gobuster dir -u http://192.168.56.30/ -w /usr/share/wordlists/dirb/common.txt -x
 | Wazuh (Apache accesslog) | Sensitive file access attempt: `/etc/passwd` probe | Watchlist | `wzb-10160d36c2` (`2.4.png`) | Medium (2) |
 | Wazuh (Apache accesslog) | `[DVWA] Multiple common web attacks from same source ip` | 31153 | `wzb-81becfcc8d` (`2.5.png`) | Medium (2) |
 | Wazuh (Apache accesslog) | Multiple XSS attempts from same source ip | 31154 | TheHive Alert #09 (`2.6.png` / `wzb-8b2c36ea17`) | Medium (2) |
-| Suricata / Wazuh | ET WEB_SERVER Unicode Directory Traversal Attempt | 86601 / SID 2101807 | TheHive Alert #10 (`2.7.png` / `wzb-df413d7c7e`) | Medium (2) |
+| Suricata / Wazuh | GPL EXPLOIT unicode directory traversal attempt | 86601 / SID 2100982 | TheHive Alert #10 (`2.7.png` / `wzb-df413d7c7e`) | Medium (2) |
 
 ## MITRE ATT&CK
 

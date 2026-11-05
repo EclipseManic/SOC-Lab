@@ -7,7 +7,7 @@
       "techniqueId": "T1595.001",
       "attackPath": "02-Attack-Simulation/Stages/stage-01-recon.md",
       "alertObserved": "wzb-3a8045a03c, wzb-6a39ab2a3d, wzb-4de933ca95 (1.png-1.3.png & 2.png-2.7.png)",
-      "ruleAlertId": "Wazuh 100410 (Level 10) / Suricata SID 2101807 (GPL SCAN nmap XMAS), 3400001, 3400002 (via 86601)",
+      "ruleAlertId": "Wazuh 100410 (Level 10) / Suricata SID 2018489 (ET SCAN NMAP OS Detection Probe), 3400001, 3400002 (via 86601)",
       "investigationPath": "04-Investigation/Deep-Dive-Attack-Chain-Investigation.md#phase-1-rattling-the-doorknobs-reconnaissance--web-exploitation",
       "caseLabel": "Case 01",
       "evidenceStatus": "Direct Detection",

@@ -34,7 +34,7 @@
       "endOffsetSeconds": 0,
       "timestamp": "11:40:09",
       "telemetryEvent": "Inbound Nmap port scan & Nikto directory fuzzing",
-      "sourceSensor": "Suricata SID 2101807, 3400001, 3400002 / Wazuh Rule 100410",
+      "sourceSensor": "Suricata SIDs 2018489, 3400001, 3400002 / Wazuh Rule 100410",
       "evidenceReference": "TheHive Alerts #01-#03 · Wazuh Telemetry wzb-04"
     },
     {
@@ -82,7 +82,7 @@
       "endOffsetSeconds": 720,
       "timestamp": "11:51:58",
       "telemetryEvent": "Executable PHP web shell executed (id command output)",
-      "sourceSensor": "Suricata SIDs 2014726, 2019284 / Wazuh Rule 100600 / Auditd execve",
+      "sourceSensor": "Suricata SIDs 2011768, 2020102, 2019284 / Wazuh Rule 100600 / Auditd execve",
       "evidenceReference": "TheHive Alerts #12 & #13 · Wazuh Telemetry wzb-12"
     },
     {

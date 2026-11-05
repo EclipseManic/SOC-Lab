@@ -114,7 +114,7 @@ The environment is cleanly divided into four zones:
 - **Target Hosts:**
   - **Windows Server 2022 (Domain Controller — `192.168.56.10`):** Active Directory Domain Services (`ad.lab`), DNS, Kerberos KDC, Sysmon endpoint logging, Wazuh Agent (`DomainWin10`), Velociraptor client.
   - **Windows 10 Workstation (`192.168.56.20`):** Domain-joined endpoint (`AD\win10 primary user · AD\victim baseline`), Sysmon telemetry, Wazuh Agent (`Win10User`), Velociraptor client.
-  - **DVWA Web Server (`192.168.56.30`):** Single-homed Ubuntu Linux host on VMnet2 (`ens33: 192.168.56.30/24`) routed via the Suricata Gateway, acting as both the perimeter web target (Apache/MySQL) and internal adversary pivot. Monitored with Linux Auditd syscall tracking (`audit.rules`), custom Bash command execution auditing (`bashcmd`), Wazuh Agent (`DVWA`), and Velociraptor client.
+  - **DVWA Web Server (`192.168.56.30` / `192.168.232.161`):** Dual-homed Ubuntu Linux host acting as perimeter web target and internal pivot on VMnet2 (`ens33: 192.168.56.30/24`) and VMnet8 (`ens37: 192.168.232.161/24`). Monitored with Linux Auditd syscall tracking (`audit.rules`), custom Bash command execution auditing (`bashcmd`), Wazuh Agent (`DVWA`), and Velociraptor client.
 
 ### Cloud SOC Infrastructure (VM1 & VM2)
 - **Private Subnet:** `10.122.0.0/16` (peered private cloud network; zero public IP exposure).
