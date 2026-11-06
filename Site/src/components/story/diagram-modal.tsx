@@ -41,9 +41,18 @@ export function DiagramCard({ title, subtitle, src, caption }: DiagramCardProps)
             </h4>
             <p className="mt-0.5 text-xs text-muted line-clamp-2">{subtitle}</p>
           </div>
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-rule bg-paper-3 text-muted transition-all duration-300 group-hover:scale-105 group-hover:border-accent group-hover:text-accent">
-            <Maximize2 className="h-4 w-4" />
-          </span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpen(true);
+            }}
+            className="flex items-center gap-1.5 shrink-0 rounded-lg border border-accent/40 bg-accent-soft px-3 py-1.5 text-xs font-medium text-accent transition-all duration-300 group-hover:bg-accent group-hover:text-accent-ink group-hover:border-accent"
+            aria-label={`Open 4K blueprint: ${title}`}
+          >
+            <Maximize2 className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">View 4K</span>
+          </button>
         </div>
 
         {/* 2. Image Container (Clean, NO text overlay, 100% natural aspect ratio, NO cropping) */}
@@ -54,26 +63,23 @@ export function DiagramCard({ title, subtitle, src, caption }: DiagramCardProps)
             loading="lazy"
             className="w-full h-auto max-h-72 object-contain rounded transition-transform duration-300 group-hover:scale-[1.01]"
           />
-          {/* Subtle hover pill indicating click to enlarge */}
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-paper-1/40 backdrop-blur-[1px]">
-            <span className="chip border-accent/60 bg-paper-1/95 text-xs text-accent font-medium shadow-lg">
-              <Maximize2 className="h-3.5 w-3.5 mr-1.5 inline" />
-              Click to view full 4K diagram
-            </span>
-          </div>
         </div>
 
-        {/* 3. Footer Caption (Completely below image - NO overlapping) */}
-        {caption && (
-          <p className="mt-3 text-xs text-faint line-clamp-2">
-            {caption}
+        {/* 3. Footer Bar (Completely below image - NO overlapping) */}
+        <div className="mt-3.5 flex items-center justify-between gap-3 border-t border-rule/50 pt-2.5 text-xs">
+          <p className="text-faint line-clamp-1 flex-1">
+            {caption || "Authoritative forensic diagram from 06-Resources/diagrams/."}
           </p>
-        )}
+          <span className="inline-flex items-center gap-1 font-medium text-accent group-hover:text-ink transition-colors shrink-0">
+            Inspect 4K
+            <ExternalLink className="h-3 w-3" />
+          </span>
+        </div>
       </div>
 
-      {/* 4. Full-Screen Modal */}
+      {/* 4. Full-Screen Centered Lightbox Modal */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-7xl w-[96vw] max-h-[94vh] p-5 sm:p-7 bg-paper-1 border-rule-2 flex flex-col">
+        <DialogContent className="max-w-6xl w-[96vw] max-h-[92vh] p-4 sm:p-6 bg-paper-1 border-rule-2 flex flex-col">
           <DialogHeader className="pr-12 shrink-0">
             <div className="flex items-center gap-2">
               <span className="chip border-accent/40 bg-accent-soft font-mono text-[0.65rem] text-accent">
@@ -88,11 +94,11 @@ export function DiagramCard({ title, subtitle, src, caption }: DiagramCardProps)
           </DialogHeader>
 
           {/* Modal Image Area: Scrollable / Viewable without distortion */}
-          <div className="mt-4 relative flex-1 min-h-0 overflow-auto rounded-lg border border-rule bg-paper-3 p-2 flex items-center justify-center">
+          <div className="mt-4 relative flex-1 min-h-0 overflow-auto rounded-lg border border-rule bg-paper-3 p-3 flex items-center justify-center">
             <img
               src={src}
               alt={title}
-              className="max-w-full max-h-[72vh] w-auto h-auto object-contain rounded shadow-2xl mx-auto"
+              className="max-w-full max-h-[68vh] w-auto h-auto object-contain rounded-md shadow-2xl mx-auto"
             />
           </div>
 
@@ -102,10 +108,10 @@ export function DiagramCard({ title, subtitle, src, caption }: DiagramCardProps)
               href={src}
               target="_blank"
               rel="noreferrer"
-              className="btn btn-secondary text-xs py-1.5 px-3"
+              className="btn btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5"
             >
-              Open Full 4K in New Tab
-              <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
+              Open Raw 4K Image in New Tab
+              <ExternalLink className="h-3.5 w-3.5" />
             </a>
           </div>
         </DialogContent>

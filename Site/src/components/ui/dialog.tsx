@@ -13,7 +13,7 @@ export function DialogOverlay({
 }: ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>) {
   return (
     <DialogPrimitive.Overlay
-      className={cn("dialog-overlay fixed inset-0 z-50", className)}
+      className={cn("dialog-overlay fixed inset-0 z-50 bg-paper-1/80 backdrop-blur-sm", className)}
       {...props}
     />
   );
@@ -27,19 +27,21 @@ export function DialogContent({
   return (
     <DialogPrimitive.Portal>
       <DialogOverlay />
-      <DialogPrimitive.Content
-        className={cn(
-          "dialog-content fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-card border border-rule bg-paper-2 p-5 sm:p-7",
-          className,
-        )}
-        {...props}
-      >
-        {children}
-        <DialogPrimitive.Close className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-pill border border-rule bg-paper-2 text-muted transition-colors hover:border-rule-2 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
-          <X className="h-4 w-4" aria-hidden="true" />
-          <span className="sr-only">Close</span>
-        </DialogPrimitive.Close>
-      </DialogPrimitive.Content>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto pointer-events-none">
+        <DialogPrimitive.Content
+          className={cn(
+            "dialog-content pointer-events-auto relative z-50 w-full max-w-2xl rounded-card border border-rule bg-paper-2 p-5 sm:p-7 shadow-2xl focus-visible:outline-none",
+            className,
+          )}
+          {...props}
+        >
+          {children}
+          <DialogPrimitive.Close className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-pill border border-rule bg-paper-2 text-muted transition-colors hover:border-rule-2 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+            <X className="h-4 w-4" aria-hidden="true" />
+            <span className="sr-only">Close</span>
+          </DialogPrimitive.Close>
+        </DialogPrimitive.Content>
+      </div>
     </DialogPrimitive.Portal>
   );
 }
