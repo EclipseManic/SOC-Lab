@@ -204,32 +204,7 @@ Understanding where security sensors have full visibility versus where blind spo
 
 To eliminate circular networking dependencies, broken agent registrations, or tunnel handshake failures, the environment must be provisioned in the following four-phase dependency order:
 
-```mermaid
-flowchart TD
-    subgraph Phase1["Phase 1: Cloud SOC Hub"]
-        P1A["VM1: TheHive & WireGuard (10.122.0.4)"] --> P1B["VM2: Wazuh SIEM (10.122.1.4)"]
-        P1B --> P1C["Establish VNet Peering & Test Ports (9000, 1514)"]
-    end
-
-    subgraph Phase2["Phase 2: Security Gateway"]
-        P2A["Gateway VM (Dual-NIC: .232.162 / .56.150)"] --> P2B["Configure iptables FORWARD & Kernel IP Forwarding"]
-        P2B --> P2C["Connect WireGuard Client (wg0: 10.8.0.2 -> 10.8.0.1)"]
-        P2C --> P2D["Start Suricata NIDS (dual AF-PACKET capture on ens33 & ens37)"]
-    end
-
-    subgraph Phase3["Phase 3: Victim Network Infrastructure"]
-        P3A["DVWA Web Server (192.168.56.30) -> Default GW .150"] --> P3B["Install Auditd netlink rule & Wazuh Agent"]
-        P3C["Domain Controller PC-DC (192.168.56.10) -> Promote AD DS (ad.lab)"] --> P3D["Configure SPN HANK_SHERMAN, Sysmon & Wazuh Agent"]
-        P3E["Domain Workstation WIN10 (192.168.56.20) -> Join ad.lab"] --> P3F["Install Sysmon & Wazuh Agent"]
-    end
-
-    subgraph Phase4["Phase 4: Adversary Platform"]
-        P4A["Kali Linux (192.168.232.135) -> Gateway 192.168.232.2"] --> P4B["Add Static Route: 192.168.56.0/24 via 192.168.232.162"]
-        P4C["Pre-stage Wordlists (rockyou) & BloodHound 4.x GUI"]
-    end
-
-    Phase1 --> Phase2 --> Phase3 --> Phase4
-```
+![SOC Lab 4-Phase Engineering Build Sequence](../06-Resources/diagrams/Lab%204-Phase%20Build%20Sequence.png)
 
 | Phase | System / Host | Step-by-Step Build Order & Critical Tasks |
 |:---:|---|---|

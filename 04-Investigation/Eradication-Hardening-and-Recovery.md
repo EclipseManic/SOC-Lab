@@ -44,33 +44,7 @@
 
 In accordance with the **NIST SP 800-61r2 Computer Security Incident Handling Guide** and the SANS Incident Handling methodology, incident response comprises distinct operational boundaries:
 
-```mermaid
-
-flowchart LR
-
-A["<b>Phase 2: Detection & Triage</b><br>Initial-Triage (46 Alerts)<br>SIEM/SOAR Ingestion"] --> B["<b>Phase 3: Containment</b><br>Immediate-Containment<br>Freeze Footholds & Isolate"]
-
-B --> C["<b>Forensic Deep-Dive</b><br>Deep-Dive Attack Chain<br>Identify 7 Root Causes"]
-
-C --> D["<b>Phase 4: Eradication</b><br>Eradication & Hardening<br>Purge Loot & Patch Flaws"]
-
-D --> E["<b>Phase 4: Recovery</b><br>Health Diagnostics<br>Verify Production Baseline"]
-
-E --> F["<b>Phase 5: Post-Incident</b><br>Incident Report & Closure<br>Formal Case Sign-off"]
-
-style A fill:#1c2430,stroke:#58a6ff,stroke-width:2px,color:#fff
-
-style B fill:#1c2430,stroke:#d29922,stroke-width:2px,color:#fff
-
-style C fill:#1c2430,stroke:#8957e5,stroke-width:2px,color:#fff
-
-style D fill:#1c2430,stroke:#238636,stroke-width:2px,color:#fff
-
-style E fill:#1c2430,stroke:#238636,stroke-width:2px,color:#fff
-
-style F fill:#1c2430,stroke:#388bfd,stroke-width:2px,color:#fff
-
-```
+![Incident Response Lifecycle NIST SP 800-61](../06-Resources/diagrams/Incident%20Response%20Lifecycle%20NIST%20SP%20800-61.png)
 
 ### Why Containment Was Intentionally Paused Short of Eradication
 

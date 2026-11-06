@@ -34,14 +34,7 @@
 
 During an active multi-stage breach involving Linux web servers and a Windows Active Directory domain, **the order of containment execution is critical**:
 
-```mermaid
-flowchart TD
-    A["Step 1: Network Isolation<br><i>(Block 192.168.232.135 via Velociraptor)</i>"] --> B["Step 2: Sever Linux Footholds<br><i>(Kill port 4444 shell, isolate shell.php, delete root SSH key)</i>"]
-    B --> C["Step 3: Neutralize Domain Footholds<br><i>(Disable AD\backdoor, strip Domain Admins)</i>"]
-    C --> D["Step 4: Invalidate Kerberos Tickets<br><i>(Twice reset krbtgt account password)</i>"]
-    D --> E["Step 5: Endpoint Cleanup & Credential Rotation<br><i>(Quarantine staged dumps, rotate DB passwords)</i>"]
-    E --> F["Step 6: Defensive Verification<br><i>(Verify packet drop counters & alert silence)</i>"]
-```
+![Immediate Containment Playbook Flow](../06-Resources/diagrams/Immediate%20Containment%20Playbook%20Flow.png)
 
 > [!CAUTION]
 > If an analyst removes `AD\backdoor` or deletes `shell.php` **before** cutting network access, the attacker will observe their access breaking in real time and can immediately execute fallback persistence scripts, trigger immediate unrecoverable ransomware, or purge forensic log artifacts.

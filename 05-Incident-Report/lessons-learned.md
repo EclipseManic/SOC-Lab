@@ -64,29 +64,7 @@ While Stages 04 (MD5 password cracking) and 11 (NTLMv2 password cracking) genera
 
 One of the most practical takeaways from this investigation is that **in a real security operations center, raw event timestamps across different tools will often differ by a few seconds (or even a few minutes for interactive shell sessions)**. Understanding why this happens is crucial so analysts don't mistake normal pipeline mechanics for errors:
 
-```mermaid
-flowchart TD
-    subgraph S1["1. Network Wire (Suricata)"]
-        W1["Packet Hits NIC"] --> W2["AF-PACKET Ring Buffer"]
-        W2 --> W3["eve.json Written Immediately"]
-    end
-
-    subgraph S2["2. Linux Command Line (Auditd)"]
-        L1["Command Executed"] --> L2["Interactive Session Active"]
-        L2 --> L3["Session Terminates / Prompt Drawn"]
-        L3 --> L4["PROMPT_COMMAND Flushes bashcmd Log"]
-    end
-
-    subgraph S3["3. SIEM & SOAR Delivery"]
-        A1["analysisd Rule Matches (Level >= 8)"]
-        A1 -->|Fast-Path 0.2ms| B1["wazuh-integratord → TheHive Alert"]
-        A1 -->|Filebeat Transit 1-3s| B2["OpenSearch Indexing → Dashboard @timestamp"]
-    end
-
-    style S1 fill:#1c2430,stroke:#58a6ff,stroke-width:2px,color:#fff
-    style S2 fill:#1c2430,stroke:#d29922,stroke-width:2px,color:#fff
-    style S3 fill:#1c2430,stroke:#238636,stroke-width:2px,color:#fff
-```
+![Telemetry Flow and Timestamp Skew Mechanics](../06-Resources/diagrams/Telemetry%20Flow%20and%20Timestamp%20Skew%20Mechanics.png)
 
 ### Architectural Skew Mechanics Explained:
 1. **TheHive SOAR Fast-Path vs. OpenSearch Dashboard Indexing:**

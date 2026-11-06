@@ -129,47 +129,6 @@ To see how all these pieces fit together in real life, let's trace **Stage 05 (W
 [![Life of an Alert End-to-End Walkthrough](../06-Resources/diagrams/Life%20of%20an%20Alert%20End-to-End%20Walkthrough.png)](../06-Resources/diagrams/Life%20of%20an%20Alert%20End-to-End%20Walkthrough.png)
 *Figure 2: End-to-end detection pipeline tracing Stage 05 web shell execution from adversary command execution across multi-sensor capture, WireGuard transit, Wazuh decoding, SQLite WAL buffering, to TheHive 5 incident case ([view full asset](../06-Resources/diagrams/Life%20of%20an%20Alert%20End-to-End%20Walkthrough.png)).*
 
-```
-[ Step 1: Attacker Action ]
-Attacker on Kali (192.168.232.135) uploads cmd.php to DVWA and runs: "id"
-       │
-       ├────────────────────────────────────────┬────────────────────────────────────────┐
-       ▼                                        ▼                                        ▼
-[ Step 2A: The Wire Sensor ]             [ Step 2B: The Kernel Sensor ]           [ Step 2C: Web Access Log ]
-Suricata inspects HTTP response          Linux Auditd intercepts system call      Apache records HTTP 200:
-Payload contains "uid=33(www-data)"      execve(/usr/bin/id) by uid=33            POST /hackable/uploads/cmd.php
-Fires SID 2019284 into eve.json          Fires key="web_process_creation"         Saved to /var/log/apache2/access.log
-       │                                        │                                        │
-       └────────────────────────────────────────┼────────────────────────────────────────┘
-                                                ▼
-                                   [ Step 3: Wazuh Agent Forwarding ]
-                                   Wazuh Agent on DVWA ships logs over encrypted
-                                   WireGuard tunnel to Cloud SIEM (10.122.1.4:1514)
-                                                ▼
-                                   [ Step 4: Rules Engine & Decoding ]
-                                   Wazuh decodes Auditd log using native "auditd" decoder (parent rule 80700)
-                                   Matches custom Rule 100199: "Auditd: blacklisted/suspicious command executed - /usr/bin/id"
-                                   Assigns severity: LEVEL 10 (High Priority)
-                                                ▼
-                                   [ Step 5: Tier 1 Fast Ingest (0.2 ms) ]
-                                   Level 10 passes threshold (≥ 8)
-                                   Wazuh forks /var/ossec/integrations/custom-thehive
-                                   Appends alert JSON directly into SQLite WAL database
-                                   ZERO HTTP calls — engine returns instantly without lag
-                                                ▼
-                                   [ Step 6: Tier 2 Async Correlation Daemon ]
-                                   thehive-flush.service wakes up on 5-second polling loop
-                                   Bundles the Auditd process execution with the Suricata alert
-                                   Identifies tool signature: "PHP Web Shell RCE"
-                                   Sends single batched HTTP POST across private VNet to TheHive
-                                                ▼
-                                   [ Step 7: SOC Analyst Triage ]
-                                   TheHive 5 creates ONE clean incident card:
-                                   "Web Shell Backdoor & RCE Command Execution on DVWA"
-                                   Analyst sees: Attacker IP, process name, command arguments,
-                                   and Suricata payload — all organized in one place!
-```
-
 ---
 
 ## 3. The 3 Hard Engineering Problems We Solved
@@ -304,25 +263,6 @@ A critical architectural distinction in this SOC lab is understanding **how the 
 
 [![SOC Telemetry Dual-Pathway Architecture](../06-Resources/diagrams/SOC%20Telemetry%20Dual-Pathway%20Architecture.png)](../06-Resources/diagrams/SOC%20Telemetry%20Dual-Pathway%20Architecture.png)
 *Figure 5: The dual-pathway telemetry architecture showing the central 9,567 raw alert stream splitting into real-time Level >= 8 SOAR case creation (46 TheHive cases) and post-simulation analyst dashboard triage (808 curated forensic records via 11 exclusion filters) ([view full asset](../06-Resources/diagrams/SOC%20Telemetry%20Dual-Pathway%20Architecture.png)).*
-
-```
-                              [ Wazuh SIEM Telemetry Ingestion ]
-                              9,567 Total Raw Alerts Indexed in OpenSearch
-                              (DVWA: 8,114  •  Suricata: 1,168  •  DC: 168  •  Win10: 117)
-                                              │
-                    ┌─────────────────────────┴─────────────────────────┐
-                    ▼                                                   ▼
-       [ PATHWAY A: Real-Time SOAR Engine ]            [ PATHWAY B: Analyst Dashboard Triage ]
-       • Evaluated LIVE during simulation execution     • Performed in Wazuh Dashboard search UI
-       • Filter: Alert Level ≥ 8 Ingestion Gate         • Filter: 11 OpenSearch Exclusion Query Filters
-       • Engine: custom-thehive (SQLite WAL + 5s loop)    (Removes 404 fuzzing, SCA, VMware & Win services)
-       • Purpose: Instant, non-blocking incident case   • Purpose: Eliminates background noise so analyst
-         creation for human SOC analysts                  can inspect the exact attack progression
-                    │                                                   │
-                    ▼                                                   ▼
-       [ 46 Correlated Cases in TheHive 5 ]            [ 808 Curated Alerts (wazuh_alerts.csv) ]
-       (thehive_alerts.json - Actionable Incidents)     (Forensic dataset for timeline & case evidence)
-```
 
 ### Pathway A: Live Automated SOAR Pipeline (46 TheHive Cases)
 - **Evaluated In Real-Time:** When red-team attack stages executed, the Wazuh Manager's rules engine evaluated all incoming logs in real-time.
