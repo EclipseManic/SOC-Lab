@@ -37,7 +37,7 @@ On **October 18, 2026, between 17:10:09 and 18:24:18 IST** (a total span of **74
 
 The attack escalated with shocking speed: starting with an ordinary web port scan, the attacker found a vulnerable web app, jumped to `root` on Linux in 10 seconds, pivoted into our private Windows subnet, cracked Active Directory credentials, forged a Kerberos Golden Ticket, stole confidential files, and defaced desktops while dropping simulated ransomware notes.
 
-![Consolidated 4-Act Attack Chain](../06-Resources/diagrams/Consolidated%204-Act%20Attack%20Chain.png)
+![Consolidated 5-Act Attack Progression](../06-Resources/diagrams/Consolidated%205-Act%20Attack%20Progression.png)
 
 ### Real-World Business & Security Impact
 - **Confidentiality: Severe Compromise**
