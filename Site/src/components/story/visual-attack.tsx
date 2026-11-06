@@ -4,6 +4,7 @@ import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/rea
 import { repoBlob, stages } from "@/data";
 import { RepoLink, SectionHead } from "./visual-shared";
 import { Reveal } from "@/components/fx/reveal";
+import { DiagramCard } from "./diagram-modal";
 
 const acts = [
   { n: "01", name: "Break in", range: "01–07", blurb: "Kick the front door in", icon: LogIn, tone: "text-hot", bar: "bg-hot" },
@@ -196,6 +197,26 @@ export function VisualAttack() {
                 </div>
               </div>
             </div>
+          </Reveal>
+        </div>
+
+        {/* 4K Offensive Blueprints */}
+        <div className="mt-10 grid gap-4 sm:grid-cols-2">
+          <Reveal delay={0.12}>
+            <DiagramCard
+              title="Consolidated 5-Act Attack Progression"
+              subtitle="End-to-end adversary progression from perimeter break-in to Active Directory ransomware"
+              src="/diagrams/Consolidated%205-Act%20Attack%20Progression.png"
+              caption="5-Act architectural storyline linking commands, hosts, credentials, and impact."
+            />
+          </Reveal>
+          <Reveal delay={0.14}>
+            <DiagramCard
+              title="20-Stage MITRE ATT&CK Kill Chain Roadmap"
+              subtitle="Full attack campaign mapped across 11 tactics and 20 techniques"
+              src="/diagrams/Attack%20Simulation%2020-Stage%20Kill%20Chain%20Roadmap.png"
+              caption="Complete 74-minute offensive execution matrix across Linux and Windows hosts."
+            />
           </Reveal>
         </div>
 

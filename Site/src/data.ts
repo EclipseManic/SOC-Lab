@@ -109,9 +109,9 @@ const stageCopy: Stage[] = [
     attacker:
       "Sends high-frequency HTTP POST requests with wordlists to the DVWA login form until finding admin/password.",
     defender:
-      "Wazuh Rule 100213 detects 401 Unauthorized bursts; Suricata flags automated Python requests (SID 2017515/2000547); Wazuh Rule 31153 flags multi-vector web access.",
+      "Suricata flags automated Python requests (SID 2017515/2000547); Custom Wazuh Rule 100600 (TheHive Alert #11) & Rule 100200 correlate authentication brute-force activity with Apache 401 logs.",
     evidence:
-      "Python brute-force script terminal success, Apache access.log POST bursts, and TheHive alert wzb-81becfcc8d.",
+      "Python brute-force script terminal success, Apache access.log POST bursts, and TheHive alert wzb-6a22425401.",
     telemetry: "Web server access logs",
     gap: "DG-02",
     status: "Detected",
@@ -119,8 +119,8 @@ const stageCopy: Stage[] = [
     caseSlug: "case-01-web-compromise",
     attackPath: "02-Attack-Simulation/Stages/stage-02-bruteforce.md",
     investigationPath: "04-Investigation/Stages/stage-02-bruteforce.md",
-    ruleId: "Wazuh 100213 (Level 10), 31153 / SID 2017515",
-    alertRef: "wzb-81becfcc8d",
+    ruleId: "Suricata SID 2017515 / Custom Wazuh Rule 100600 & Rule 100200",
+    alertRef: "wzb-6a22425401",
   },
   {
     id: "03",
@@ -267,7 +267,7 @@ const stageCopy: Stage[] = [
     defender:
       "Wazuh Syscheck (FIM) detects unauthorized file modification to authorized_keys (Rule 550); auth.log flags root SSH login (Rule 5715).",
     evidence:
-      "SSH session banner, Wazuh Syscheck checksum diff, and TheHive alert wzb-1c8dc0ab5d.",
+      "SSH session banner, Wazuh Syscheck checksum diff, and TheHive alert wzb-1208f0ea54.",
     telemetry: "FIM / Linux auth logs",
     gap: "DG-08",
     status: "Detected",
@@ -275,8 +275,8 @@ const stageCopy: Stage[] = [
     caseSlug: "case-02-lateral-movement",
     attackPath: "02-Attack-Simulation/Stages/stage-08-ssh-persistence.md",
     investigationPath: "04-Investigation/Stages/stage-08-ssh-persistence.md",
-    ruleId: "Wazuh 550, 5715",
-    alertRef: "wzb-1c8dc0ab5d",
+    ruleId: "Wazuh 5715 / Rule 100220",
+    alertRef: "wzb-1208f0ea54",
   },
   {
     id: "09",
@@ -315,7 +315,7 @@ const stageCopy: Stage[] = [
     plain:
       "The attacker launches Responder on the DVWA pivot to poison LLMNR/NBT-NS multicast broadcasts and intercept Windows NetNTLMv2 hashes.",
     attacker:
-      "Runs Responder on interface ens33, responding to broadcast name queries from Windows 10 and capturing user NetNTLMv2 challenge responses.",
+      "Runs Responder on interface ens37, responding to broadcast name queries from Windows 10 and capturing user NetNTLMv2 challenge responses.",
     defender:
       "Wazuh bashcmd logging captures uid:0 Responder execution on the pivot host (CSV row 9231); endpoint logs record the NTLMv2 capture.",
     evidence:
@@ -365,9 +365,9 @@ const stageCopy: Stage[] = [
     technique: "Domain Account",
     techniqueId: "T1087.002",
     plain:
-      "The attacker runs BloodHound/SharpHound from the pivot host to ingest Active Directory objects and graph the fastest path to Domain Admin.",
+      "The attacker runs bloodhound-python from Kali via the pivot host to ingest Active Directory objects and graph the fastest path to Domain Admin.",
     attacker:
-      "Executes SharpHound collector via LDAP against the Domain Controller, exporting 2,493 user and group trust relationships into Neo4j.",
+      "Executes bloodhound-python via LDAP against the Domain Controller, exporting 2,493 user and group trust relationships into Neo4j.",
     defender:
       "Wazuh Rule 5715 detects repeated root SSH administrative sessions on pivot. Active Directory LDAP search filter gap documented (DG-12).",
     evidence:
@@ -473,9 +473,9 @@ const stageCopy: Stage[] = [
     attacker:
       "Forges Golden Ticket using Impacket `ticketer.py` with KRBTGT hash and requests access to domain services.",
     defender:
-      "Domain Controller EID 4769 flags anomalous Kerberos TGS request lacking preceding AS-REQ; pivot SSH flagged via Rule 5715.",
+      "Linux Pivot Wazuh Rule 100220 captures ticketer.py command execution; Custom Rule 100613 triggers TheHive Alerts #27 and #28 upon wmiexec connection.",
     evidence:
-      "Ticket ccache file metadata, DC Kerberos audit log, and TheHive alert wzb-8d45b2d236.",
+      "Ticket ccache file metadata, DC Kerberos audit log, and TheHive alerts wzb-ccff195e0c & wzb-c200f52606.",
     telemetry: "Kerberos / DC Security logs",
     gap: "DG-16",
     status: "Detected",
@@ -483,8 +483,8 @@ const stageCopy: Stage[] = [
     caseSlug: "case-03-domain-compromise",
     attackPath: "02-Attack-Simulation/Stages/stage-16-golden-ticket.md",
     investigationPath: "04-Investigation/Stages/stage-16-golden-ticket.md",
-    ruleId: "Windows 4769 / Wazuh 5715",
-    alertRef: "wzb-8d45b2d236",
+    ruleId: "Linux Pivot Wazuh Rule 100220 (ticketer.py) + Alerts #27, #28",
+    alertRef: "wzb-ccff195e0c, wzb-c200f52606",
   },
   {
     id: "17",
@@ -495,9 +495,9 @@ const stageCopy: Stage[] = [
     technique: "Domain Account",
     techniqueId: "T1136.002",
     plain:
-      "The attacker creates a rogue backdoor domain user (`backdoor_admin`) and adds it to the Domain Admins group for permanent redundancy.",
+      "The attacker creates a rogue backdoor domain user (`backdoor`) and adds it to the Domain Admins group for permanent redundancy.",
     attacker:
-      "Executes `net user backdoor_admin ... /add` and `net group \"Domain Admins\" backdoor_admin /add` on PC-DC via Impacket `wmiexec`.",
+      "Executes `net user backdoor ... /add` and `net group \"Domain Admins\" backdoor /add` on PC-DC via Impacket `wmiexec`.",
     defender:
       "Wazuh custom Rule 100613 flags Impacket wmiexec execution via WMI; Windows Security EID 4720 and 4728 alert on account creation.",
     evidence:
@@ -573,9 +573,9 @@ const stageCopy: Stage[] = [
     technique: "Internal Defacement",
     techniqueId: "T1491.001",
     plain:
-      "The attacker modifies victim desktop wallpapers and sets persistent registry run keys, completing the simulated attack campaign.",
+      "The attacker deploys defacement wallpaper, drops ransom notes, sets registry keys, and forces a system reboot, completing the intrusion.",
     attacker:
-      "Deploys defacement wallpaper (`hacked.bmp`) to Windows 10 and updates registry autostart keys via Impacket wmiexec.",
+      "Deploys defacement wallpaper (`wallpaper.bmp`), drops `README_RESTORE_FILES.txt`, modifies registry, and issues reboot via Impacket wmiexec.",
     defender:
       "Wazuh Rule 100613 flags Impacket wmiexec process fan-out; Sysmon EID 1 tracks registry modification; Suricata flags SMB NTLM session setup (SIDs 2067085-2067087).",
     evidence:
@@ -727,7 +727,7 @@ export const chapters = [
       hiring:
         "Evidence maturity is part of the work: verified, documented, draft. The labels are the proof of rigor.",
     },
-    proof: "INDEX.md · ..\../06-Resources/README.md · ..\../06-Resources/diagrams/SOC_Lab_Architecture.png",
+    proof: "INDEX.md · 06-Resources/README.md · 06-Resources/diagrams/SOC_Lab_Architecture.png",
   },
 ] as const;
 
@@ -740,7 +740,7 @@ export const cases = [
     stages: ["01", "02", "03", "04", "05", "06", "07"],
     question:
       "How did the web tier fall, and what did the attacker gain before leaving it?",
-    status: "Draft, not yet validated",
+    status: "Completed & Formally Validated",
     path: "04-Investigation/Cases/case-01-web-compromise.md",
   },
   {
@@ -751,7 +751,7 @@ export const cases = [
     stages: ["08", "09", "10", "11", "12", "13", "14"],
     question:
       "How did the attacker move from the web host into the domain, and which hops were invisible to Suricata?",
-    status: "Draft, not yet validated",
+    status: "Completed & Formally Validated",
     path: "04-Investigation/Cases/case-02-lateral-movement.md",
   },
   {
@@ -762,7 +762,7 @@ export const cases = [
     stages: ["15", "16", "17", "18", "19", "20"],
     question:
       "What domain control was obtained, what data left, and what recovery evidence is missing?",
-    status: "Draft, not yet validated",
+    status: "Completed & Formally Validated",
     path: "04-Investigation/Cases/case-03-domain-compromise.md",
   },
 ] as const;
@@ -822,15 +822,15 @@ export const evidenceItems = [
     label: "Raw Alert Exports",
     value: "Captured",
     tone: "teal",
-    note: "Authentic TheHive 5 alert JSON and Wazuh alert CSV exports preserved in ..\../06-Resources/alerts/.",
-    path: "..\../06-Resources/alerts/",
+    note: "Authentic TheHive 5 alert JSON and Wazuh alert CSV exports preserved in 06-Resources/alerts/.",
+    path: "06-Resources/alerts/",
   },
   {
     label: "Architecture diagram",
     value: "Captured",
     tone: "teal",
     note: "High-level overview. The architecture & network tables are authoritative for addresses and flows.",
-    path: "..\../06-Resources/diagrams/SOC_Lab_Architecture.png",
+    path: "06-Resources/diagrams/SOC_Lab_Architecture.png",
   },
   {
     label: "Architecture & Network",
@@ -843,15 +843,15 @@ export const evidenceItems = [
     label: "Attack screenshots",
     value: "Captured",
     tone: "teal",
-    note: "Comprehensive visual chain across all 20 stages in ..\../06-Resources/screenshots/attack-simulation/.",
-    path: "..\../06-Resources/screenshots/attack-simulation/",
+    note: "Comprehensive visual chain across all 20 stages in 06-Resources/screenshots/attack-simulation/.",
+    path: "06-Resources/screenshots/attack-simulation/",
   },
   {
     label: "Alert screenshots",
     value: "Captured",
     tone: "teal",
     note: "TheHive alert dashboard and detail captures across all detected stages.",
-    path: "..\../06-Resources/screenshots/thehive-alert/",
+    path: "06-Resources/screenshots/thehive-alert/",
   },
   {
     label: "Detection Coverage",
@@ -862,16 +862,16 @@ export const evidenceItems = [
   },
   {
     label: "Investigation cases",
-    value: "Draft",
-    tone: "blue",
-    note: "Three case records with scopes, observables, and timelines; marked as draft pending validation.",
+    value: "Validated",
+    tone: "teal",
+    note: "Three case records with scopes, observables, and timelines; formally validated against empirical telemetry.",
     path: "04-Investigation/Cases/",
   },
   {
     label: "Incident report",
-    value: "Draft",
-    tone: "rose",
-    note: "Post-incident deliverables compiled from 20-stage simulation telemetry, marked as draft.",
+    value: "Validated",
+    tone: "teal",
+    note: "Post-incident deliverables compiled and formally validated across NIST SP 800-61r2 phases.",
     path: "05-Incident-Report/incident-report.md",
   },
 ] as const;
