@@ -60,6 +60,7 @@ This directory contains the 23 master architectural, topological, pipeline, and 
 | Diagram Filename | Subject Area | Primary Focus & Description |
 |:---|:---|:---|
 | `Attack Simulation 20-Stage Kill Chain Roadmap.png` | Offensive Progression | 20-stage adversary path from external web recon to Active Directory ransomware |
+| `The Four Pillars of the SOC Lab.png` | Core Methodology | High-level 4-pillar overview across infrastructure, attack, detection, and incident response |
 | `Consolidated 5-Act Attack Progression.png` | Attack Progression | 5-act kill chain progression from perimeter break-in to Active Directory ransomware |
 | `Consolidated Incident Response 74-Minute Timeline.png` | Incident Correlation | Minute-by-minute timeline correlating attacker milestones against blue-team detection alerts |
 | `Cybersecurity Lab-to-Detection Mapping.png` | Engineering Matrix | Mapping between laboratory hosts, attack vectors, and defensive telemetry sensors |

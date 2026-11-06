@@ -34,9 +34,8 @@ On the defensive side, I wrote custom multi-sensor detection rules across Surica
 
 This project covers the complete lifecycle of both offensive and defensive cybersecurity:
 
-| 1. Infrastructure | 2. Attack Simulation | 3. Detection Engineering | 4. Incident Response |
-|---|---|---|---|
-| • Hybrid Cloud (Azure)<br>• 4 Network Segments<br>• WireGuard S2S Tunnel<br>• Active Directory Domain | • 20 MITRE ATT&CK Stages<br>• 74-Minute Attack Campaign<br>• Linux Host Compromise<br>• Full AD Forest Takeover | • Custom Wazuh XML Rules<br>• Suricata NIDS Signatures<br>• Sysmon & Auditd Baselines<br>• SQLite WAL SOAR Daemon | • 46 TheHive Alerts<br>• 3 Operational Cases<br>• Active Containment<br>• Eradication & Hardening |
+[![The Four Pillars of the SOC Lab](06-Resources/diagrams/The%20Four%20Pillars%20of%20the%20SOC%20Lab.png)](06-Resources/diagrams/The%20Four%20Pillars%20of%20the%20SOC%20Lab.png)
+*Figure 2: The four core pillars of the laboratory suite across infrastructure engineering, adversary attack simulation, multi-sensor detection engineering, and incident response triage.*
 
 1. **Hybrid Infrastructure Engineering:** Built 7 VMs across Microsoft Azure and VMware Workstation Pro. Set up an encrypted Site-to-Cloud WireGuard tunnel with kernel IP forwarding and Zero-NAT routing, so alerts retain the real victim and attacker IP addresses. The cloud perimeter has exactly one open inbound door: UDP port 51820 for WireGuard VPN, with zero management ports exposed to the public internet.  
    *(Full host setups, network configs, and scripts: [`01-Lab-Setup/README.md`](01-Lab-Setup/README.md))*
