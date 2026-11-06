@@ -96,7 +96,7 @@ Wazuh agents on `DomainWin10` and `Win10User` collect Sysmon operational events 
 </localfile>
 ```
 
-Wazuh correlates Sysmon events with custom rules in [`03-Detection-Engineering/Wazuh/local_rules.xml`](../../06-Resources/rules/wazuh/local_rules.xml):
+Wazuh correlates Sysmon events with custom rules in [`06-Resources/rules/wazuh/local_rules.xml`](../../06-Resources/rules/wazuh/local_rules.xml):
 - **Rule 100613 (Level 10):** Flags Impacket `wmiexec` commands spawning `cmd.exe /Q /c` with `ADMIN$\__<id>` output redirection (fired on both `DomainWin10` and `Win10User`).
 - **Rule 92041 (Level 5 / Sysmon Process Creation):** Belongs to Wazuh's built-in `sysmon_eid1_detections` rule group (matching Sysmon Event ID 1 process creation when `reg.exe` adds or modifies registry keys). Caught `reg.exe add "HKCU\Control Panel\Desktop" /v Wallpaper` during Stage 20 impact, elevated via `process_fanout` into TheHive Alerts #40, #41, #44, and #45. Custom rules `100100`–`100104` provide EID 13 coverage for `Run`, `Winlogon`, `IFEO`, `Shell Folders`, and `ServiceDll`; desktop wallpaper tampering was captured through process execution (`reg.exe`) rather than a dedicated EID 13 rule.
 - **Rules 100100–100102 (Level 12):** Detects `Run`/`RunOnce`, Winlogon, and IFEO Debugger autostart registry persistence.

@@ -176,7 +176,7 @@ Production service recovery was systematically verified across all four operatin
 1. **DVWA Public Web Tier:** Verified HTTP response `HTTP 200 OK` in 14.2 ms; verified MariaDB database connectivity; tested upload execution denial returning `HTTP 403 Forbidden`.
 2. **Active Directory Domain Services:** Executed `dcdiag /test:Replication /test:Advertising /test:FSMOCheck /test:Services` (all 5 core tests passed); confirmed `repadmin /showrepl` reports 0 replication errors.
 3. **Corporate Workstation:** Confirmed domain logon functional with rotated credentials; confirmed desktop wallpaper restored to corporate default.
-4. **Wazuh Central SIEM Fabric:** Validated all 4 agents (`Suricata-GW` 001, `DVWA-Server` 002, `Win10User` 003, `DomainWin10` 004) in **Active** state with zero critical alerts during the 60-minute post-remediation monitoring window.
+4. **Wazuh Central SIEM Fabric:** Validated all 4 agents (`Suricata` 001, `DVWA` 002, `Win10User` 003, `DomainWin10` 004) in **Active** state with zero critical alerts during the 60-minute post-remediation monitoring window.
 - **Evidence:** [`slot_09_eradication_health_verification.png`](../06-Resources/screenshots/deep-investigation-action/slot_09_eradication_health_verification.png)
 
 ---

