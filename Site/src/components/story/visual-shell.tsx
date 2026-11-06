@@ -10,11 +10,23 @@ const links = [
   ["Break-in", "#attack"],
   ["Detection", "#detection"],
   ["Investigation", "#investigation"],
+  ["Response", "#response"],
+  ["Post-mortem", "#post-mortem"],
   ["Score", "#score"],
   ["Go deeper", "#repo"],
 ] as const;
 
-const sectionIds = ["top", "setup", "attack", "detection", "investigation", "score", "repo"];
+const sectionIds = [
+  "top",
+  "setup",
+  "attack",
+  "detection",
+  "investigation",
+  "response",
+  "post-mortem",
+  "score",
+  "repo",
+];
 
 export function VisualNav() {
   const active = useActiveSection(sectionIds);

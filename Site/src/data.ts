@@ -895,3 +895,411 @@ export const ruleFailureCount = metrics.ruleFailureCount;
 export const untestedCount = stages.filter((stage) => stage.status === "Not tested").length;
 export const verifiedCount = operationalAlertCount;
 export const gapCount = metrics.totalGapCount;
+
+export interface ResponseAction {
+  id: string;
+  n: string;
+  title: string;
+  target: string;
+  command: string;
+  verification: string;
+  tool: string;
+  status: string;
+}
+
+export const containmentActions: ResponseAction[] = [
+  {
+    id: "M-01",
+    n: "01",
+    title: "Perimeter Firewall Isolation & Adversary Drop",
+    target: "Suricata Gateway (192.168.56.150)",
+    command: "iptables -I INPUT 1 -s 192.168.232.135 -j DROP && iptables -I FORWARD 1 -s 192.168.232.135 -j DROP",
+    verification: "Firewall drop counters actively incremented; 0 packets accepted from Kali origin.",
+    tool: "iptables / Velociraptor",
+    status: "Severed",
+  },
+  {
+    id: "M-02",
+    n: "02",
+    title: "Reverse Shell Process Termination & PHP Quarantine",
+    target: "DVWA Web Host (192.168.56.30)",
+    command: "pkill -9 -f nc.openbsd && mv /var/www/.../shell.php /root/quarantine/ && chmod 000 /root/quarantine/shell.php",
+    verification: "Netstat confirmed zero active connections on TCP 4444; backdoor isolated.",
+    tool: "Bash / Velociraptor",
+    status: "Terminated",
+  },
+  {
+    id: "M-03",
+    n: "03",
+    title: "Rogue SSH Key Revocation & Terminal Session Kill",
+    target: "DVWA Web Host (192.168.56.30)",
+    command: "sed -i '/ssh-ed25519/d' /root/.ssh/authorized_keys && pkill -9 -t pts/0",
+    verification: "Injected adversary ED25519 public key purged; rogue interactive root TTY sessions killed.",
+    tool: "Bash / Velociraptor",
+    status: "Revoked",
+  },
+  {
+    id: "M-04",
+    n: "04",
+    title: "Rogue Domain User Lockout (AD\\backdoor)",
+    target: "Domain Controller PC-DC (192.168.56.10)",
+    command: "Disable-ADAccount -Identity 'backdoor' && Remove-ADGroupMember -Identity 'Domain Admins' -Members 'backdoor'",
+    verification: "Account disabled (Enabled: False); DA privileges revoked; object SID preserved for forensic trace.",
+    tool: "PowerShell RSAT",
+    status: "Disabled",
+  },
+  {
+    id: "M-05",
+    n: "05",
+    title: "Active Directory Double krbtgt Password Reset",
+    target: "Domain Controller PC-DC (192.168.56.10)",
+    command: "Set-ADAccountPassword 'krbtgt' -Reset (x2) && klist purge",
+    verification: "Key Version Number (msDS-KeyVersionNumber) incremented to KVNO 3; all forged Golden Tickets permanently invalidated.",
+    tool: "PowerShell RSAT",
+    status: "Invalidated (KVNO 3)",
+  },
+  {
+    id: "M-06",
+    n: "06",
+    title: "Workstation Loot Quarantine & Wallpaper Restoration",
+    target: "Win10User (192.168.56.20) & PC-DC",
+    command: "Remove-Item C:\\Users\\Public\\wallpaper.bmp, Desktop\\README_RESTORE_FILES.txt && Set-ItemProperty 'HKCU:\\Control Panel\\Desktop' Wallpaper",
+    verification: "Defacement files quarantined; desktop wallpaper registry keys restored to clean baseline.",
+    tool: "PowerShell CIM",
+    status: "Restored",
+  },
+  {
+    id: "M-07",
+    n: "07",
+    title: "Web Application Database Credential Rotation",
+    target: "DVWA Web Host (192.168.56.30)",
+    command: "ALTER USER 'dvwa'@'localhost' IDENTIFIED BY '***'; updated config.inc.php",
+    verification: "Exposed database password rotated; connection validated with new secure credential.",
+    tool: "MariaDB CLI",
+    status: "Rotated",
+  },
+];
+
+export const hardeningActions: ResponseAction[] = [
+  {
+    id: "H-01",
+    n: "01",
+    title: "Secure Loot Shredding & Track-Covering Eradication",
+    target: "DVWA Web Host (192.168.56.30)",
+    command: "shred -u -z -n 3 /tmp/*.hash /tmp/*.ccache /tmp/dcsync_output* && rm -rf /opt/Responder",
+    verification: "Forensic verification confirmed all 9 staging files securely overwritten and deleted; Responder purged.",
+    tool: "Linux shred / VQL",
+    status: "Overwritten",
+  },
+  {
+    id: "H-02",
+    n: "02",
+    title: "Sudoers Misconfiguration Revocation & Web Hardening",
+    target: "DVWA Web Host (192.168.56.30)",
+    command: "rm /etc/sudoers.d/www-data && echo 'php_admin_flag engine off' > /var/www/.../uploads/.htaccess",
+    verification: "Sudo GTFOBins vector closed; PHP execution permanently disabled in upload directory.",
+    tool: "Bash / Velociraptor",
+    status: "Patched",
+  },
+  {
+    id: "H-03",
+    n: "03",
+    title: "Permanent Rogue Object Purge & Protected Users Enrollment",
+    target: "Domain Controller PC-DC (192.168.56.10)",
+    command: "Remove-ADUser 'backdoor' && Add-ADGroupMember -Identity 'Protected Users' -Members 'Administrator'",
+    verification: "Rogue user purged; LSASS memory credential caching and NTLM delegation permanently blocked for Domain Admins.",
+    tool: "PowerShell RSAT",
+    status: "Enforced",
+  },
+  {
+    id: "H-04",
+    n: "04",
+    title: "Kerberoast SPN Revocation & Account Demotion",
+    target: "Domain Controller PC-DC (192.168.56.10)",
+    command: "Set-ADUser 'HANK_SHERMAN' -Clear ServicePrincipalNames && Remove-ADGroupMember 'Domain Admins' -Members 'HANK_SHERMAN'",
+    verification: "SPN CIFS/... unregistered; administrative privileges stripped; AES Kerberos encryption enforced.",
+    tool: "PowerShell RSAT",
+    status: "Demoted",
+  },
+  {
+    id: "H-05",
+    n: "05",
+    title: "Domain-Wide LLMNR & NetBIOS Insecure Protocol Disablement",
+    target: "Active Directory Group Policy (ad.lab)",
+    command: "Set-GPRegistryValue -Name 'Enterprise Hardening' -Key 'HKLM\\Software\\Policies\\Microsoft\\Windows NT\\DNSClient' -ValueName EnableMulticast -Type DWord -Value 0",
+    verification: "LLMNR multicast and NetBIOS name resolution disabled across all domain workstations.",
+    tool: "Group Policy (GPO)",
+    status: "Disabled",
+  },
+  {
+    id: "H-06",
+    n: "06",
+    title: "Gateway DMZ Host-Isolation Firewall Rules",
+    target: "Suricata Gateway (192.168.56.150)",
+    command: "iptables -A FORWARD -s 192.168.56.30 -d 192.168.56.0/24 -p tcp -m multiport --dports 445,135,389,88 -j REJECT",
+    verification: "Web DMZ severed from Active Directory administrative ports; lateral pivot vector blocked.",
+    tool: "iptables / UFW",
+    status: "Isolated",
+  },
+  {
+    id: "H-07",
+    n: "07",
+    title: "TheHive SOAR Case Resolution & Operational Closure",
+    target: "TheHive 5 SOAR Platform (10.122.0.4)",
+    command: "Mark cases CAS-001, CAS-002, CAS-003 as Resolved / Closed with NIST SP 800-61r2 metrics",
+    verification: "All 46 alerts marked completed across TheHive cases; incident officially signed off and archived.",
+    tool: "TheHive 5 REST API",
+    status: "Closed",
+  },
+];
+
+export interface RootCause {
+  id: string;
+  num: string;
+  title: string;
+  severity: "Critical" | "High";
+  flaw: string;
+  exploit: string;
+  fix: string;
+}
+
+export const rootCauses: RootCause[] = [
+  {
+    id: "RC-01",
+    num: "01",
+    title: "Default Web Application Credentials",
+    severity: "High",
+    flaw: "DVWA portal was configured with default administrative credentials (admin/password).",
+    exploit: "Attacker used automated dictionary attack (Stage 02) to gain web portal administrative access in seconds.",
+    fix: "Mandatory password complexity policy, account lockout after 5 attempts, and multi-factor authentication (MFA).",
+  },
+  {
+    id: "RC-02",
+    num: "02",
+    title: "Unrestricted File Upload in Web Application",
+    severity: "Critical",
+    flaw: "Web tier allowed arbitrary file upload without MIME-type checking, extension blacklisting, or storage outside web root.",
+    exploit: "Attacker uploaded executable PHP web shell (shell.php) directly into public /hackable/uploads/ directory (Stage 05).",
+    fix: "Apache .htaccess rule disabling script execution in upload directory; store files outside web root with randomized names.",
+  },
+  {
+    id: "RC-03",
+    num: "03",
+    title: "Passwordless Sudoers GTFOBins Misconfiguration",
+    severity: "Critical",
+    flaw: "Service account www-data was granted NOPASSWD: /usr/bin/python3 in /etc/sudoers.",
+    exploit: "Attacker escalated instantly from web user to full root via GTFOBins Python interactive bash invocation (Stage 07).",
+    fix: "Principle of Least Privilege: completely purged sudoers privilege; web service accounts cannot invoke sudo.",
+  },
+  {
+    id: "RC-04",
+    num: "04",
+    title: "Flat, Unsegmented Internal Network",
+    severity: "High",
+    flaw: "The DMZ web server sat on the same Layer 2 /24 broadcast domain as corporate Windows workstations and Domain Controller.",
+    exploit: "Compromised web server was leveraged as a pivot host to conduct internal port sweeps and ARP discovery (Stage 09).",
+    fix: "Strict VLAN network segmentation; DMZ web server isolated from internal subnet by gateway stateful firewall rules.",
+  },
+  {
+    id: "RC-05",
+    num: "05",
+    title: "Insecure Broadcast Protocols Enabled (LLMNR / NetBIOS)",
+    severity: "High",
+    flaw: "Windows workstations had LLMNR and NetBIOS broadcast name resolution enabled by default.",
+    exploit: "Attacker launched Responder on pivot to poison multicast queries and intercept NetNTLMv2 challenge responses (Stage 10).",
+    fix: "Disabled LLMNR and NetBIOS domain-wide via Active Directory Group Policy (GPO); enforced DNS-only resolution.",
+  },
+  {
+    id: "RC-06",
+    num: "06",
+    title: "Kerberoastable Domain Admin Account",
+    severity: "Critical",
+    flaw: "User account HANK_SHERMAN was assigned a Service Principal Name (SPN) while holding Domain Admins membership.",
+    exploit: "Attacker requested RC4-HMAC encrypted Kerberos TGS ticket (Stage 13) and cracked the plaintext password offline.",
+    fix: "Demoted account to standard user, stripped SPN, rotated password to 32+ characters, and enforced AES-256 Kerberos encryption.",
+  },
+  {
+    id: "RC-07",
+    num: "07",
+    title: "Unconstrained DCSync Replication Privileges",
+    severity: "Critical",
+    flaw: "Directory Service replication privileges (DS-Replication-Get-Changes-All) were granted to compromised domain accounts.",
+    exploit: "Attacker executed Impacket secretsdump.py to trigger DRSUAPI directory replication and dump the KRBTGT master key (Stage 14).",
+    fix: "Restricted replication rights strictly to Domain Controllers; enrolled all administrative accounts into Protected Users.",
+  },
+];
+
+export interface MasterIoC {
+  id: string;
+  type: string;
+  category: "network" | "identity" | "file" | "registry" | "hash";
+  value: string;
+  host: string;
+  context: string;
+  confidence: "Confirmed" | "High";
+}
+
+export const masterIoCs: MasterIoC[] = [
+  {
+    id: "IOC-01",
+    type: "IPv4 Address",
+    category: "network",
+    value: "192.168.232.135",
+    host: "Kali Linux (Attacker)",
+    context: "Adversary host origin for reconnaissance, web exploits, reverse shell listener, and exfiltration.",
+    confidence: "Confirmed",
+  },
+  {
+    id: "IOC-02",
+    type: "IPv4 Address",
+    category: "network",
+    value: "192.168.56.30",
+    host: "DVWA Server",
+    context: "Compromised web server abused as internal pivot host for lateral movement.",
+    confidence: "Confirmed",
+  },
+  {
+    id: "IOC-03",
+    type: "TCP Port",
+    category: "network",
+    value: "TCP 4444",
+    host: "DVWA -> Kali",
+    context: "Interactive Netcat reverse shell transport established via mkfifo /tmp/f.",
+    confidence: "Confirmed",
+  },
+  {
+    id: "IOC-04",
+    type: "TCP Port",
+    category: "network",
+    value: "TCP 445 / 135",
+    host: "DVWA -> PC-DC / Win10",
+    context: "SMB & RPC ports targeted for Pass-the-Hash authentication and wmiexec execution.",
+    confidence: "Confirmed",
+  },
+  {
+    id: "IOC-05",
+    type: "UDP Port",
+    category: "network",
+    value: "UDP 5355 / 137",
+    host: "Internal Subnet (192.168.56.0/24)",
+    context: "LLMNR & NetBIOS broadcast ports poisoned by Responder to capture NetNTLMv2 hashes.",
+    confidence: "Confirmed",
+  },
+  {
+    id: "IOC-06",
+    type: "User Account",
+    category: "identity",
+    value: "AD.LAB\\backdoor",
+    host: "Active Directory (PC-DC)",
+    context: "Rogue domain account created via wmiexec and added to Domain Admins for persistence.",
+    confidence: "Confirmed",
+  },
+  {
+    id: "IOC-07",
+    type: "User Account",
+    category: "identity",
+    value: "AD.LAB\\HANK_SHERMAN",
+    host: "Active Directory (PC-DC)",
+    context: "Kerberoastable service account with Domain Admin privileges (SPN: CIFS/AWSWAPPS1000000).",
+    confidence: "Confirmed",
+  },
+  {
+    id: "IOC-08",
+    type: "User Account",
+    category: "identity",
+    value: "AD.LAB\\krbtgt",
+    host: "Active Directory (PC-DC)",
+    context: "Master KDC account whose NTLM hash was dumped via DCSync to forge Golden Tickets.",
+    confidence: "Confirmed",
+  },
+  {
+    id: "IOC-09",
+    type: "User Account",
+    category: "identity",
+    value: "AD.LAB\\win10",
+    host: "Win10 Workstation",
+    context: "Workstation user poisoned via DavSetCookie coerced auth and cracked offline.",
+    confidence: "Confirmed",
+  },
+  {
+    id: "IOC-10",
+    type: "File Path",
+    category: "file",
+    value: "/var/www/.../uploads/shell.php",
+    host: "DVWA Server",
+    context: "PHP web shell backdoor uploaded via unrestricted web upload vulnerability.",
+    confidence: "Confirmed",
+  },
+  {
+    id: "IOC-11",
+    type: "File Path",
+    category: "file",
+    value: "/root/.ssh/authorized_keys",
+    host: "DVWA Server",
+    context: "Adversary ED25519 public key implanted for root interactive SSH persistence.",
+    confidence: "Confirmed",
+  },
+  {
+    id: "IOC-12",
+    type: "File Path",
+    category: "file",
+    value: "/tmp/dcsync_output.ntds",
+    host: "DVWA Server",
+    context: "Staged NTDS directory dump containing domain hashes extracted via secretsdump.py.",
+    confidence: "Confirmed",
+  },
+  {
+    id: "IOC-13",
+    type: "File Path",
+    category: "file",
+    value: "/tmp/Administrator.ccache",
+    host: "DVWA Server",
+    context: "Forged Kerberos Ticket Granting Ticket (Golden Ticket) staged for domain elevation.",
+    confidence: "Confirmed",
+  },
+  {
+    id: "IOC-14",
+    type: "File Path",
+    category: "file",
+    value: "C:\\Users\\Public\\wallpaper.bmp",
+    host: "PC-DC & Win10",
+    context: "Simulated ransomware defacement wallpaper deployed to victims.",
+    confidence: "Confirmed",
+  },
+  {
+    id: "IOC-15",
+    type: "Registry Key",
+    category: "registry",
+    value: "HKCU\\Control Panel\\Desktop\\Wallpaper",
+    host: "PC-DC & Win10",
+    context: "Registry key updated via wmiexec to enforce defacement wallpaper across displays.",
+    confidence: "Confirmed",
+  },
+  {
+    id: "IOC-16",
+    type: "MD5 Hash",
+    category: "hash",
+    value: "5f4dcc3b5aa765d61d8327deb882cf99",
+    host: "DVWA Database",
+    context: "MD5 hash for user 'admin' extracted via UNION SELECT SQL injection.",
+    confidence: "Confirmed",
+  },
+  {
+    id: "IOC-17",
+    type: "NTLM Hash",
+    category: "hash",
+    value: "611a8cdcc21cb3fe3bf3a4c2f4e05f60",
+    host: "Active Directory (PC-DC)",
+    context: "Compromised krbtgt master NTLM hash dumped via DCSync replication.",
+    confidence: "Confirmed",
+  },
+  {
+    id: "IOC-18",
+    type: "Kerberos TGS",
+    category: "hash",
+    value: "$krb5tgs$23$*HANK_SHERMAN$AD.LAB...",
+    host: "Active Directory Wire",
+    context: "RC4-HMAC Kerberos service ticket intercepted during Stage 13 Kerberoasting.",
+    confidence: "Confirmed",
+  },
+];
