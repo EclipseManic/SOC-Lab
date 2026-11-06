@@ -39,7 +39,7 @@ The 20 attack stages are organized into three clear, sequential acts (matching o
 
 | # | Stage | Case | Primary Tool / Attack Vector | ATT&CK ID | Attack Screenshot | Detection Verdict | Alert Source |
 |:---:|---|:---:|---|---|:---:|:---:|---|
-| **01** | [Reconnaissance](Stages/stage-01-recon.md) | Case 01 | Nmap, Nikto, Dirbuster, WhatWeb | `T1595.001` | `1.png`–`5.png` | **Detected** | Suricata Gateway (SIDs `3400001`, `3400002` / `wzb-3a8045a03c`) |
+| **01** | [Reconnaissance](Stages/stage-01-recon.md) | Case 01 | Nmap, Nikto, Gobuster, WhatWeb | `T1595.001` | `1.png`–`5.png` | **Detected** | Suricata Gateway (SIDs `3400001`, `3400002` / `wzb-3a8045a03c`) |
 | **02** | [Brute Force](Stages/stage-02-bruteforce.md) | Case 01 | Custom Python script + RockYou list | `T1110.001` | `6.png`, `7.png` | **Detected** | Suricata SID `2017515` + Custom Wazuh Rule `100600` / Rule `100200` (`wzb-6a22425401`) |
 | **03** | [SQL Injection](Stages/stage-03-sqli.md) | Case 01 | UNION SELECT database extraction | `T1190` | `8.png`, `9.png` | **Detected** | Suricata SID `2010963` + Custom Wazuh Rule `100600` (`wzb-6a22425401`) |
 | **04** | [Hash Cracking](Stages/stage-04-hash-crack.md) | Case 01 | Hashcat mode 0 (MD5) | `T1110.002` | `10.png`, `11.png` | **Investigatively Attributed** | Ran offline on attacker GPU (`DG-04`) — Caught upstream in 03 & downstream in 05 |

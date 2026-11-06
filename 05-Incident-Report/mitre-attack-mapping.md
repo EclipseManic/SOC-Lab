@@ -29,7 +29,7 @@ The table below maps all 20 adversary stages across their corresponding MITRE AT
 | **10** | Credential Access | Adversary-in-the-Middle: LLMNR/NBT-NS | `T1557.001` | `python3 /opt/Responder/Responder.py -I ens33 -wd` | Win10 (`192.168.56.20`) | **Direct Detection** | Wazuh Rule `100220` (`bashcmd` uid:0 Responder) / Sysmon `rundll32` |
 | **11** | Credential Access | Brute Force: Password Cracking | `T1110.002` | `hashcat -m 5600 win10.hash rockyou.txt` | Local Kali (`192.168.232.135`) | **Investigatively Attributed (Offline Gap DG-11)** | *Inherent Offline Gap (Zero Victim Telemetry; Bracketed 10 -> 12)* |
 | **12** | Discovery | Permission Groups Discovery: Domain Groups | `T1087.002` | `bloodhound-python -u win10 -p Secur3Lab! -d ad.lab -c All` | `PC-DC` (`192.168.56.10`) | **Target Logging Gap (DG-12)** | Linux Pivot Rule `100220` + Alert #22; DC EID 1644 LDAP diagnostics unconfigured |
-| **13** | Credential Access | Steal or Forge Kerberos Tickets: Kerberoasting | `T1558.003` | `python3 GetUserSPNs.py ad.lab/win10:Secur3Lab! -request` | `PC-DC` (`192.168.56.10`) | **Direct Detection** | Suricata SID `2019922` / Wazuh Rule `100220` (`GetUserSPNs.py`) & Rule `5715` |
+| **13** | Credential Access | Steal or Forge Kerberos Tickets: Kerberoasting | `T1558.003` | `python3 GetUserSPNs.py ad.lab/win10:Secur3Lab! -request` | `PC-DC` (`192.168.56.10`) | **Direct Detection** | Suricata SID `2019922` / Wazuh Rule `100220` (`GetUserSPNs.py`) |
 | **14** | Credential Access | OS Credential Dumping: DCSync | `T1003.006` | `python3 secretsdump.py 'ad.lab/HANK_SHERMAN:Password123@...'` | `PC-DC` (`192.168.56.10`) | **Pivot-Only Coverage (DG-14)** | Linux Pivot Rule `100220` + Alert #24; DC EID 4662 replication SACL unconfigured |
 | **15** | Lateral Movement | Use Alternate Auth: Pass the Hash | `T1550.002` | `python3 wmiexec.py -hashes :... Administrator@192.168.56.10` | `PC-DC` (`192.168.56.10`) | **Direct Detection** | Windows EID `4624` / Wazuh Rule `100613` & Rule `100220` (`wmiexec.py`) |
 | **16** | Credential Access | Steal or Forge Kerberos Tickets: Golden Ticket | `T1558.001` | `python3 ticketer.py -nthash 611a8... -domain-sid S-1-5-21...` | Linux Pivot Host | **Pivot-Only Coverage (DG-16)** | Linux Pivot Rule `100220` + Alerts #27, #28 on wmiexec -k; DC EID 4769 unconfigured |
@@ -47,7 +47,7 @@ The table below maps all 20 adversary stages across their corresponding MITRE AT
 
 ```text
 Total MITRE ATT&CK Tactics Exercised:       11
-Total Unique ATT&CK Techniques Tested:      20 (including sub-techniques)
+Total Unique ATT&CK Techniques Tested:      22 (across 24 mapped behaviors; 20 Stage Primary Mappings)
 Direct Target & Wire Detections:            14 Stages (70.0%)
 Operational Pivot-Only Alerts:               2 Stages (10.0% — DG-14, DG-16)
 Documented Target Logging Gaps:              2 Stages (10.0% — DG-09, DG-12)

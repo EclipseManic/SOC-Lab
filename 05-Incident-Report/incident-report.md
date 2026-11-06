@@ -65,7 +65,7 @@ Our environment consists of an internet-facing DMZ, an internal Windows corporat
 | Machine Name | Operating System | IP Address | Role in the Lab | What Happened to It |
 |:---|:---|:---|:---|:---:|
 | **DVWA Server** | Ubuntu 24.04 LTS | `192.168.56.30` | Public Web Server (Apache / MariaDB) | **COMPROMISED** (Full Root & Used as Pivot) |
-| **Domain Workstation** | Windows 10 Enterprise | `192.168.56.20` | Corporate Workstation (`Win10User`) | **COMPROMISED** (Credentials Stolen & Defaced) |
+| **Domain Workstation** | Windows 10 Pro N for Workstations (22H2) | `192.168.56.20` | Corporate Workstation (`Win10User`) | **COMPROMISED** (Credentials Stolen & Defaced) |
 | **Domain Controller** | Windows Server 2022 | `192.168.56.10` | Active Directory DC (`ad.lab` / DNS / Kerberos) | **COMPROMISED** (DCSync, Backdoor Admin Added) |
 | **Security Gateway** | Ubuntu 24.04 LTS | `192.168.56.150` / `192.168.232.162` | Network Firewall & Suricata NIDS | **SAFE** (Recorded all wire traffic) |
 | **Cloud SIEM / SOAR** | Ubuntu 24.04 LTS | `10.122.0.4` / `10.122.1.4` | Wazuh SIEM & TheHive 5 Case Management | **SAFE** (Processed and stored all alerts) |
@@ -78,7 +78,7 @@ Our environment consists of an internet-facing DMZ, an internal Windows corporat
 Here is the play-by-play narrative of how the 74-minute attack unfolded:
 
 ### Phase 1: Rattling the Doorknobs (17:10:09 – 17:20:30 IST)
-The attacker started by probing our perimeter with an Nmap stealth port scan (`-sS`). Once they saw port 80 open, they ran automated web scanners like Nikto and Dirbuster. They spotted the DVWA application, used a quick Python script to brute-force the login page, and then entered a UNION SELECT SQL injection payload (`1' UNION SELECT user, password FROM users-- -`). The database dumped its entire user table on the screen. The attacker took the extracted MD5 hash for admin (`5f4dcc3b5aa7...`) and cracked it offline in 30 seconds using Hashcat (`DG-04`).
+The attacker started by probing our perimeter with an Nmap stealth port scan (`-sS`). Once they saw port 80 open, they ran automated web scanners like Nikto and Gobuster. They spotted the DVWA application, used a quick Python script to brute-force the login page, and then entered a UNION SELECT SQL injection payload (`1' UNION SELECT user, password FROM users-- -`). The database dumped its entire user table on the screen. The attacker took the extracted MD5 hash for admin (`5f4dcc3b5aa7...`) and cracked it offline in 30 seconds using Hashcat (`DG-04`).
 
 ### Phase 2: The 10-Second Mistake (17:21:44 – 17:25:36 IST)
 Logged in as admin, the attacker uploaded a simple one-line PHP webshell (`shell.php`) through DVWA's file upload form. They confirmed command execution by running `?cmd=id`, and then connected back to Kali using a Netcat reverse shell on port 4444. 
@@ -87,7 +87,7 @@ Once inside as low-privilege user `www-data`, they ran `sudo -l` and spotted our
 ### Phase 3: Moving in and Finding Windows (17:26:14 – 17:31:25 IST)
 Now that they were root, the attacker made sure they wouldn't lose access. They dropped their own SSH key into `/root/.ssh/authorized_keys` and logged in cleanly over SSH from Kali. Next, they realized the web server had an internal network interface. They ran an Nmap sweep across the internal `192.168.56.0/24` subnet, immediately finding our Domain Controller (`192.168.56.10`) and a Windows 10 workstation (`192.168.56.20`).
 
-### Phase 4: Poisoning the Well with Responder (17:37:10 – 18:00:57 IST)
+### Phase 4: Poisoning the Well with Responder (17:36:26 – 18:01:00 IST)
 The attacker launched Responder on the web server to listen for internal broadcast queries. When the Windows 10 workstation asked the network for a missing file share, Responder answered first. Windows sent its NetNTLMv2 password hash directly to the attacker. The hash was saved to `/tmp/win10.hash` and cracked offline in under 60 seconds (`Secur3Lab!`). With valid domain credentials in hand, the attacker ran BloodHound from the Linux box to map out every trust relationship, user, and computer in the domain.
 
 ### Phase 5: Becoming God in Active Directory (18:01:18 – 18:06:40 IST)
@@ -97,7 +97,7 @@ Now holding Domain Admin credentials, the attacker ran DCSync (`secretsdump.py`)
 ### Phase 6: Backdoors & Smuggling Data (18:08:21 – 18:17:30 IST)
 The attacker secured permanent persistence by creating a rogue user directly on the Domain Controller: `net user backdoor P@ssw0rd123! /add /domain`, and adding it to `Domain Admins`. Next, they staged sensitive files (`domain_users.txt`, `admin_info.txt`, `sensitive_data.txt`), pulled them back to the web server, and smuggled them out to Kali via SCP across 6 rapid SSH sessions in just 570 milliseconds.
 
-### Phase 7: The Final Punch (18:20:12 – 18:24:18 IST)
+### Phase 7: The Final Punch (18:20:00 – 18:24:35 IST)
 In the final minutes of the attack, the adversary executed simultaneous disruption commands against both the Domain Controller and the workstation:
 - Pushed a custom hacker wallpaper (`hacked.bmp`) to both machines and changed registry keys to lock it in.
 - Dropped fake ransomware ransom notes (`README_HACKED.txt`) and dummy encrypted files (`passwords.enc`) on user desktops.
@@ -109,24 +109,7 @@ In the final minutes of the attack, the adversary executed simultaneous disrupti
 
 This breach did not require a zero-day exploit. It succeeded because **seven everyday security oversights** stacked up like falling dominos:
 
-```
-[Insecure Web Upload] + [Passwordless Sudo Python]
-       │
-       ▼
-   Instant Root on Web Server (10 Seconds)
-       │
-       ▼
-[Flat DMZ Network] + [Enabled LLMNR / NetBIOS]
-       │
-       ▼
-   Stolen Corporate Workstation Passwords
-       │
-       ▼
-[Domain Admin Service Account] + [Weak Dictionary Passwords]
-       │
-       ▼
-   Kerberoast → DCSync → krbtgt Theft → Golden Ticket Domain Takeover
-```
+![Seven Fatal Architectural Flaws](../06-Resources/diagrams/Seven%20Fatal%20Architectural%20Flaws.png)
 
 | Mistake # | What Went Wrong | How the Attacker Abused It | How We Permanently Fixed It |
 |:---:|:---|:---|:---|

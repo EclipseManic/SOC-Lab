@@ -197,7 +197,7 @@ Get-ADPrincipalGroupMembership -Identity "backdoor" | Select-Object Name
 > 🔍 **Investigative Basis:** [Deep-Dive Phase 5: Golden Ticket Forgery](Deep-Dive-Attack-Chain-Investigation.md#phase-5-becoming-god-in-active-directory-kerberoasting-dcsync--the-golden-ticket) | Invalidate forged Kerberos Golden Tickets created via ticketer.py using DCSynced krbtgt hash.
 
 ### 🎯 Objective:
-Invalidate all forged Kerberos Ticket Granting Tickets (TGTs) generated using the compromised `krbtgt` hash dumped via DCSync (`18:02:43 IST`, Row 9274) and forged via `ticketer.py` (`18:06:40 IST`, Row 9306) by performing a double password reset on the `krbtgt` domain account.
+Invalidate all forged Kerberos Ticket Granting Tickets (TGTs) generated using the compromised `krbtgt` hash dumped via DCSync (`18:02:40 IST`, Row 9274) and forged via `ticketer.py` (`18:06:40 IST`, Row 9306) by performing a double password reset on the `krbtgt` domain account.
 
 > [!IMPORTANT]
 > A single `krbtgt` password reset only invalidates newly requested tickets; Kerberos allows tickets encrypted with the previous password to remain valid for up to 10 hours (ticket lifetime). A **second reset** after replication invalidates all previously minted Golden Tickets.

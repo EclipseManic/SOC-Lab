@@ -22,7 +22,7 @@ On the defensive side, I wrote custom multi-sensor detection rules across Surica
 
 | Category | Platforms, Tools & Frameworks |
 |---|---|
-| **Cloud & Infrastructure** | Microsoft Azure (Private VNet `10.122.0.0/16`), VMware Workstation Pro, Ubuntu 24.04/22.04 LTS, Windows Server 2022 (Active Directory), Windows 10 Enterprise, WireGuard VPN (`10.8.0.0/24`) |
+| **Cloud & Infrastructure** | Microsoft Azure (Private VNet `10.122.0.0/16`), VMware Workstation Pro, Ubuntu 24.04 LTS, Windows Server 2022 (Active Directory), Windows 10 Pro N for Workstations (22H2), WireGuard VPN (`10.8.0.0/24`) |
 | **Network & SIEM** | Wazuh SIEM 4.14.8 (Manager, Indexer, OpenSearch Dashboard), Suricata 8.0.6 NIDS (Sniffing WAN `ens33` and LAN `ens37` interfaces) |
 | **Endpoint Telemetry** | Microsoft Sysmon 15.20 (Process and Registry monitoring), Linux Auditd (`execve` syscall tracking), Custom Wazuh `bashcmd` Interactive Command Auditing (Rule `100220`) |
 | **Incident Management & SOAR** | TheHive 5.7.5-1 (Case Management), Apache Cassandra 4.x, Elasticsearch 8.x, Custom Python SOAR Gateway (`custom-thehive.py`) with SQLite WAL buffering |

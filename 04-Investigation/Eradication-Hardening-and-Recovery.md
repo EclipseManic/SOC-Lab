@@ -670,7 +670,7 @@ iptables -L OUTPUT -n -v --line-numbers
 
 4. **Wazuh Monitoring Fabric State:**
 
-- Wazuh Manager validates all 4 connected agents (`Suricata-GW` 001, `DVWA-Server` 002, `Win10User` 003, `DomainWin10` 004) in **Active** status.
+- Wazuh Manager validates all 4 connected agents (`Suricata` 001, `DVWA` 002, `Win10User` 003, `DomainWin10` 004) in **Active** status.
 
 - Zero critical alerts (`Level >= 8`) generated across the entire 60-minute post-remediation monitoring window.
 
