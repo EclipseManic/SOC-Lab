@@ -60,7 +60,7 @@ This directory contains the 23 master architectural, topological, pipeline, and 
 | Diagram Filename | Subject Area | Primary Focus & Description |
 |:---|:---|:---|
 | `Attack Simulation 20-Stage Kill Chain Roadmap.png` | Offensive Progression | 20-stage adversary path from external web recon to Active Directory ransomware |
-| `Consolidated 4-Act Attack Chain.png` | Attack Progression | 5-act kill chain progression from perimeter break-in to Active Directory ransomware |
+| `Consolidated 5-Act Attack Progression.png` | Attack Progression | 5-act kill chain progression from perimeter break-in to Active Directory ransomware |
 | `Consolidated Incident Response 74-Minute Timeline.png` | Incident Correlation | Minute-by-minute timeline correlating attacker milestones against blue-team detection alerts |
 | `Cybersecurity Lab-to-Detection Mapping.png` | Engineering Matrix | Mapping between laboratory hosts, attack vectors, and defensive telemetry sensors |
 | `Enterprise Hardening Strategic Roadmap.png` | Defense-in-Depth | 90-day prioritized hardening roadmap across 3 strategic engineering horizons (30/60/90 days) |
