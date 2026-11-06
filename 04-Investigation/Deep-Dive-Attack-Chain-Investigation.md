@@ -32,30 +32,8 @@
 
 If you only have two minutes to understand this incident, here is the whole story:
 
-```
-[Adversary: 192.168.232.135]
-       │
-       ▼ (17:10 - 17:21)
-[1. Scans Web Server & Exploits SQLi/Upload]
-       │
-       ▼ (17:21 - 17:23)
-[2. Drops Webshell ──► Exploits Sudo Python ──► Becomes ROOT in 10s!] 💥 BIGGEST MISTAKE
-       │
-       ▼ (17:24 - 17:34)
-[3. Injects Permanent SSH Key ──► Discovers Internal Windows Network]
-       │
-       ▼ (17:34 - 18:01)
-[4. Runs Responder on Web Box ──► Steals Win10 User Password Hash ──► Maps Domain with BloodHound]
-       │
-       ▼ (18:01 - 18:07)
-[5. Kerberoasts Service Account ──► Runs DCSync to Steal krbtgt ──► Forges Kerberos Golden Ticket]
-       │
-       ▼ (18:07 - 18:17)
-[6. Logs into Domain Controller as God ──► Adds 'backdoor' to Domain Admins ──► Steals Files via SCP]
-       │
-       ▼ (18:17 - 18:25)
-[7. Pushes Ransom Note & Hacker Wallpaper to DC + Workstation ──► Forces Both to Reboot]
-```
+![Consolidated 5-Act Attack Progression](../06-Resources/diagrams/Consolidated%205-Act%20Attack%20Progression.png)
+*Figure 1.1: Consolidated 5-Act adversary progression across the 74-minute campaign, from perimeter web exploit to Active Directory takeover and ransomware.*
 
 Over the course of **74 minutes**, an external attacker sitting at `192.168.232.135` completely took over our corporate Active Directory network:
 
