@@ -7,6 +7,8 @@ const loadSetup = () => import("@/components/story/visual-setup");
 const loadAttack = () => import("@/components/story/visual-attack");
 const loadDetection = () => import("@/components/story/visual-detection");
 const loadInvestigation = () => import("@/components/story/visual-investigation");
+const loadResponse = () => import("@/components/story/visual-response");
+const loadPostMortem = () => import("@/components/story/visual-postmortem");
 const loadSignal = () => import("@/components/story/visual-signal");
 const loadRecord = () => import("@/components/story/visual-record");
 
@@ -16,6 +18,8 @@ const loaders = [
   loadAttack,
   loadDetection,
   loadInvestigation,
+  loadResponse,
+  loadPostMortem,
   loadSignal,
   loadRecord,
 ];
@@ -26,6 +30,12 @@ const VisualAttack = lazy(() => loadAttack().then((m) => ({ default: m.VisualAtt
 const VisualDetection = lazy(() => loadDetection().then((m) => ({ default: m.VisualDetection })));
 const VisualInvestigation = lazy(() =>
   loadInvestigation().then((m) => ({ default: m.VisualInvestigation })),
+);
+const VisualResponse = lazy(() =>
+  loadResponse().then((m) => ({ default: m.VisualResponse })),
+);
+const VisualPostMortem = lazy(() =>
+  loadPostMortem().then((m) => ({ default: m.VisualPostMortem })),
 );
 const VisualSignal = lazy(() => loadSignal().then((m) => ({ default: m.VisualSignal })));
 const VisualRecord = lazy(() => loadRecord().then((m) => ({ default: m.VisualRecord })));
@@ -100,6 +110,8 @@ export function App() {
           <VisualAttack />
           <VisualDetection />
           <VisualInvestigation />
+          <VisualResponse />
+          <VisualPostMortem />
           <VisualSignal />
           <VisualRecord />
         </Suspense>

@@ -54,7 +54,7 @@ export function VisualRecord() {
     <section id="repo" className="section-shell">
       <div className="container-page">
         <SectionHead
-          index="06"
+          index="08"
           kicker="Where to go next"
           title="This site is the tour. The repository is the proof."
           lede="Everything you just read is a plain-language summary of work you can open, read, and rerun yourself. Pick a direction — the depth is all one click away."

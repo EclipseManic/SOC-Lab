@@ -74,7 +74,7 @@ export function VisualSignal() {
     <section id="score" className="section-shell">
       <div className="container-page">
         <SectionHead
-          index="05"
+          index="07"
           kicker="Did anyone notice?"
           title="Sixteen alarms. Four blind spots."
           lede="This is the honest part. I replayed every step against my logs and counted what my defenses really caught — and I named the four moments they could not, instead of hiding them behind a percentage."
