@@ -26,11 +26,11 @@ export function VisualHero() {
   });
 
   return (
-    <section id="top" className="relative isolate overflow-hidden pb-14 pt-10 sm:pb-20 sm:pt-14">
+    <section id="top" className="relative isolate overflow-hidden pb-10 pt-8 sm:pb-16 sm:pt-12">
       <HeroBackdrop />
 
       <div className="container-page relative">
-        <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-14">
+        <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-12">
           {/* Left — the story */}
           <div className="min-w-0">
             <motion.span
@@ -43,7 +43,7 @@ export function VisualHero() {
 
             <motion.h1
               {...enter(22, 0.06, 0.7)}
-              className="mt-6 max-w-[15ch] text-[2.7rem] leading-[1.0] text-ink sm:text-display-m"
+              className="mt-5 max-w-[15ch] text-[2.2rem] leading-[1.05] text-ink sm:text-display-m"
             >
               I built a company, broke in,{" "}
               <span className="text-glow-accent text-accent">then hunted every move.</span>
@@ -51,7 +51,7 @@ export function VisualHero() {
 
             <motion.p
               {...enter(18, 0.16, 0.7)}
-              className="mt-6 max-w-xl text-md leading-relaxed text-ink-2 sm:text-lg"
+              className="mt-5 max-w-xl text-md leading-relaxed text-ink-2 sm:text-lg"
             >
               A hacker box, three victims, and a full security stack watching. I played the
               attacker through a real {metrics.durationMinutes}-minute, {metrics.stageCount}-step

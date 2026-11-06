@@ -32,18 +32,18 @@
   --color-violet: oklch(70% 0.14 300);
   --color-violet-soft: oklch(28% 0.07 300);
 
-  --text-xs: 0.8125rem;
-  --text-sm: 0.875rem;
-  --text-md: 1rem;
-  --text-lg: 1.2rem;
-  --text-xl: 1.44rem;
-  --text-2xl: 1.728rem;
-  --text-3xl: 2.4rem;
-  --text-display: 4.75rem;
-  --text-display-m: 3.4rem;
-  --text-display-s: 2.6rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-md: 0.9375rem;
+  --text-lg: 1.0625rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+  --text-display: 3.6rem;
+  --text-display-m: 2.75rem;
+  --text-display-s: 2.125rem;
 
-  --radius-card: 14px;
+  --radius-card: 12px;
   --radius-pill: 999px;
 
   --shadow-glow-accent: 0 0 0 1px color-mix(in oklab, var(--color-accent) 30%, transparent),
@@ -57,9 +57,10 @@
   html {
     color-scheme: dark;
     scroll-behavior: smooth;
-    scroll-padding-top: 5.5rem;
+    scroll-padding-top: 5rem;
     scrollbar-color: var(--color-rule-2) var(--color-paper);
     overflow-x: clip;
+    font-size: 15px;
   }
 
   body {
@@ -99,7 +100,7 @@
 @layer components {
   .container-page {
     width: 100%;
-    max-width: 84rem;
+    max-width: 80rem;
     margin-inline: auto;
     padding-inline: 1.25rem;
   }
@@ -112,18 +113,18 @@
 
   @media (min-width: 1024px) {
     .container-page {
-      padding-inline: 3.5rem;
+      padding-inline: 3rem;
     }
   }
 
   .section-shell {
     position: relative;
-    padding-block: 5rem;
+    padding-block: 3.5rem;
   }
 
   @media (min-width: 640px) {
     .section-shell {
-      padding-block: 7rem;
+      padding-block: 5rem;
     }
   }
 
