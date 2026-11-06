@@ -37,19 +37,7 @@ On **October 18, 2026, between 17:10:09 and 18:24:18 IST** (a total span of **74
 
 The attack escalated with shocking speed: starting with an ordinary web port scan, the attacker found a vulnerable web app, jumped to `root` on Linux in 10 seconds, pivoted into our private Windows subnet, cracked Active Directory credentials, forged a Kerberos Golden Ticket, stole confidential files, and defaced desktops while dropping simulated ransomware notes.
 
-```mermaid
-flowchart LR
-    A["<b>1. Perimeter Break-In</b><br>DVWA 192.168.56.30<br>SQLi → Webshell → Root in 10s"] --> B["<b>2. Internal Pivot</b><br>Responder LLMNR<br>Win10 Hash Captured"]
-    B --> C["<b>3. Active Directory Takeover</b><br>Kerberoast HANK_SHERMAN<br>DCSync Dumps All Hashes"]
-    C --> D["<b>4. Domain Dominance</b><br>Golden Ticket (krbtgt)<br>AD\\backdoor Domain Admin"]
-    D --> E["<b>5. Data Theft & Impact</b><br>Files Stolen via SCP<br>Ransomware & Forced Reboots"]
-
-    style A fill:#7f1d1d,stroke:#ef4444,stroke-width:2px,color:#fff
-    style B fill:#78350f,stroke:#f59e0b,stroke-width:2px,color:#fff
-    style C fill:#581c87,stroke:#a855f7,stroke-width:2px,color:#fff
-    style D fill:#1e3a8a,stroke:#3b82f6,stroke-width:2px,color:#fff
-    style E fill:#831843,stroke:#ec4899,stroke-width:2px,color:#fff
-```
+![Consolidated 4-Act Attack Chain](../06-Resources/diagrams/Consolidated%204-Act%20Attack%20Chain.png)
 
 ### Real-World Business & Security Impact
 - **Confidentiality: Severe Compromise**
@@ -210,32 +198,7 @@ We handled incident response in two clean phases: first, kicking the attacker ou
 
 To make sure our defenses stay strong, we organized future improvements into three clear timeframes:
 
-```mermaid
-flowchart TD
-    subgraph P1["Priority 1: Immediate Lockdown (Next 30 Days)"]
-        A1["Enroll all Domain Admins into Protected Users Group"]
-        A2["Enforce GPO disabling LLMNR and NetBIOS"]
-        A3["Put firewall rules between DMZ and Active Directory"]
-    end
-
-    subgraph P2["Priority 2: Architecture Upgrades (30–60 Days)"]
-        B1["Block script execution in all web upload folders"]
-        B2["Audit and remove all sudoers NOPASSWD entries"]
-        B3["Migrate service accounts to Group Managed Service Accounts (gMSA)"]
-    end
-
-    subgraph P3["Priority 3: Advanced Detection Tuning (60–90 Days)"]
-        C1["Turn on Active Directory LDAP diagnostic logging (Event ID 1644)"]
-        C2["Deploy Honeypot / Canary Service Accounts for instant Kerberoast alerts"]
-        C3["Deploy File Integrity Monitoring across web roots"]
-    end
-
-    P1 --> P2 --> P3
-
-    style P1 fill:#1c2430,stroke:#ef4444,stroke-width:2px,color:#fff
-    style P2 fill:#1c2430,stroke:#f59e0b,stroke-width:2px,color:#fff
-    style P3 fill:#1c2430,stroke:#388bfd,stroke-width:2px,color:#fff
-```
+![Enterprise Hardening Strategic Roadmap](../06-Resources/diagrams/Enterprise%20Hardening%20Strategic%20Roadmap.png)
 
 ---
 

@@ -455,16 +455,7 @@ At `18:24:32`, both computers rebooted. When the screens turned back on, the des
 
 Why was an attacker able to take down an entire corporate network in just 74 minutes? Not because they were a genius, but because our defenses were full of simple, preventable mistakes:
 
-```mermaid
-graph TD
-    M1["1. Sudoers Blunder<br/>(www-data NOPASSWD Python)"] --> R1["Webshell became root in 10s"]
-    M2["2. Flat DMZ Network<br/>(No firewall between Web & Windows)"] --> R2["Linux box could talk directly to DC"]
-    M3["3. Excessive Service Rights<br/>(HANK_SHERMAN had DCSync)"] --> R3["Attacker dumped all domain hashes"]
-    M4["4. Weak Service Password<br/>(Password123)"] --> R3
-    M5["5. Ancient Protocols Enabled<br/>(LLMNR / NetBIOS)"] --> R4["Workstation gave up its hash to Responder"]
-    M6["6. Direct Root SSH Open<br/>(PermitRootLogin Yes)"] --> R5["Permanent, unmonitored backdoor"]
-    M7["7. Unrestricted WMI<br/>(No lateral movement blocks)"] --> R6["Remote reboot & defacement across all PCs"]
-```
+![Seven Fatal Architectural Flaws](../06-Resources/diagrams/Seven%20Fatal%20Architectural%20Flaws.png)
 
 ### 1. The Sudoers Blunder (`www-data` had passwordless Python)
 * **What went wrong:** Someone added `www-data ALL=(ALL) NOPASSWD: /usr/bin/python3` into `/etc/sudoers`.

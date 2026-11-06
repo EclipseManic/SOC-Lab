@@ -32,35 +32,7 @@ This post-incident review is organized into **six authoritative deliverables** a
 
 The deliverables in this directory represent the **formal analytical synthesis** of the live investigation conducted in [`04-Investigation/`](../04-Investigation/):
 
-```mermaid
-flowchart TD
-    subgraph S04["04-Investigation/ (Operational Incident Investigation)"]
-        T1["<b>Initial Triage</b><br>Initial-Triage-and-Investigation.md<br><i>46 TheHive Alerts Prioritized</i>"]
-        T2["<b>Immediate Containment</b><br>Immediate-Containment-Execution.md<br><i>7 Tactical Lockout Actions</i>"]
-        T3["<b>Deep-Dive Forensic Analysis</b><br>Deep-Dive-Attack-Chain-Investigation.md<br><i>7 Attack Phases & 7 Root Causes</i>"]
-        T4["<b>Eradication & Recovery</b><br>Eradication-Hardening-and-Recovery.md<br><i>Root Cause Elimination & 3 Cases Closed</i>"]
-        T1 --> T2 --> T3 --> T4
-    end
-
-    subgraph S05["05-Incident-Report/ (Executive Post-Mortem Deliverables)"]
-        R1["<b>Master Incident Report</b><br>incident-report.md"]
-        R2["<b>Consolidated Timeline</b><br>timeline.md"]
-        R3["<b>Master IoC Catalog</b><br>iocs.md"]
-        R4["<b>MITRE ATT&CK Matrix</b><br>mitre-attack-mapping.md"]
-        R5["<b>Response Actions Audit</b><br>response-actions.md"]
-        R6["<b>Lessons Learned & Backlog</b><br>lessons-learned.md"]
-    end
-
-    T3 ==> R1
-    T3 ==> R3
-    T1 & T3 ==> R2
-    T2 & T4 ==> R5
-    T3 ==> R4
-    T1 & T4 ==> R6
-
-    style S04 fill:#121820,stroke:#388bfd,stroke-width:2px,color:#fff
-    style S05 fill:#161b22,stroke:#238636,stroke-width:2px,color:#fff
-```
+![Incident Investigation & Reporting Suite Architecture](../06-Resources/diagrams/Incident%20Investigation%20&%20Reporting%20Suite%20Architecture.png)
 
 ---
 

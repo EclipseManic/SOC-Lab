@@ -18,7 +18,7 @@ This directory is the centralized, definitive asset and evidence repository for 
 │   └── deep-investigation-action/              # 11 host eradication, vulnerability hardening & fleet health captures
 ├── alerts/                                     # Master SIEM logs (Wazuh-Raw-Alerts.csv), curated CSV, and TheHive JSON
 ├── cases/                                      # Live database export from TheHive 5 platform (TheHive-Case-Export.json)
-├── diagrams/                                   # 15 high-resolution architectural, network topology, and IR pipeline diagrams
+├── diagrams/                                   # 23 high-resolution architectural, network topology, and IR pipeline diagrams
 ├── docs/                                       # 20-stage attack simulation master command manual (attack-chain-full.pdf)
 ├── rules/                                      # Production detection engineering rule definitions
 │   ├── auditd/                                 # Linux Auditd kernel syscall monitoring profile (audit.rules)
@@ -55,13 +55,19 @@ All 251 screenshots reside within 7 non-nested, dedicated directories. Every fil
 
 ## 🗺️ 2. Architectural & Pipeline Diagrams (`diagrams/`)
 
-This directory contains the 15 master architectural, topological, pipeline, and forensic workflow diagrams created for the laboratory:
+This directory contains the 23 master architectural, topological, pipeline, and forensic workflow diagrams created for the laboratory:
 
 | Diagram Filename | Subject Area | Primary Focus & Description |
 |:---|:---|:---|
 | `Attack Simulation 20-Stage Kill Chain Roadmap.png` | Offensive Progression | 20-stage adversary path from external web recon to Active Directory ransomware |
+| `Consolidated 4-Act Attack Chain.png` | Attack Progression | 5-act kill chain progression from perimeter break-in to Active Directory ransomware |
 | `Consolidated Incident Response 74-Minute Timeline.png` | Incident Correlation | Minute-by-minute timeline correlating attacker milestones against blue-team detection alerts |
 | `Cybersecurity Lab-to-Detection Mapping.png` | Engineering Matrix | Mapping between laboratory hosts, attack vectors, and defensive telemetry sensors |
+| `Enterprise Hardening Strategic Roadmap.png` | Defense-in-Depth | 90-day prioritized hardening roadmap across 3 strategic engineering horizons (30/60/90 days) |
+| `Immediate Containment Playbook Flow.png` | Tactical Containment | 6-step emergency containment workflow executing network isolation, process termination, and account lockout |
+| `Incident Investigation & Reporting Suite Architecture.png` | Documentation Suite | Comprehensive mapping linking operational investigation playbooks (`04/`) to executive deliverables (`05/`) |
+| `Incident Response Lifecycle NIST SP 800-61.png` | IR Lifecycle | NIST SP 800-61r2 6-phase operational incident handling lifecycle from detection to formal sign-off |
+| `Lab 4-Phase Build Sequence.png` | Deployment Sequence | 4-phase sequential provisioning order from Cloud SOC Core to Adversary VM |
 | `Life of an Alert End-to-End Walkthrough.png` | Telemetry Pipeline | End-to-end journey of an event from endpoint syscall/packet capture to TheHive alert card |
 | `Neon Cybersecurity Incident Response Pipeline.png` | Incident Lifecycle | The 4-phase incident handling cycle: Triage, Containment, Deep-Dive, and Hardening |
 | `Neon Cybersecurity Lab Network Diagram.png` | Network Topology | Dual-subnet configuration showing DMZ (`192.168.232.0/24`) and Internal AD (`192.168.56.0/24`) |
@@ -72,6 +78,8 @@ This directory contains the 15 master architectural, topological, pipeline, and 
 | `SOC Telemetry Dual-Pathway Architecture.png` | Data Architecture | Dual-path log ingestion: Host-based (Wazuh/Sysmon/Auditd) and Network-based (Suricata) |
 | `SOC_Lab_Architecture.png` | Master Architecture | Complete enterprise laboratory overview featuring all 7 systems (5 local + 2 cloud) and their roles |
 | `Secure Network Topology Infographic.png` | Visual Infographic | Detailed network layout highlighting IP assignments, open ports, and routing rules |
+| `Seven Fatal Architectural Flaws.png` | Root-Cause Analysis | Root-cause breakdown of the 7 systemic architectural flaws enabling full domain compromise |
+| `Telemetry Flow and Timestamp Skew Mechanics.png` | Telemetry Mechanics | Architectural analysis of clock drift, ring buffers, and network latency across wire, host, and SIEM |
 | `Wazuh Log Ingestion to TheHive Flow.png` | SOAR Integration | Technical data flow showing Wazuh server rule triggering and Python daemon webhook dispatch |
 | `Wazuh-TheHive Neon Alert Pipeline.png` | Pipeline Architecture | Visual schematic of Wazuh-to-TheHive automated alert forwarding and triage queues |
 
