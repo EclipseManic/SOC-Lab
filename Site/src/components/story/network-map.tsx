@@ -14,7 +14,7 @@ const NODES: Record<NodeKey, { name: string; tip: string; info: string }> = {
   dc: {
     name: "Domain controller",
     tip: "PC-DC · .10 — Windows Server 2022 domain controller.",
-    info: "192.168.56.10 — the Windows Server 2022 domain controller, with Auditd and Windows event logs shipping out.",
+    info: "192.168.56.10 — the Windows Server 2022 domain controller, with Sysmon and Windows Security event logs shipping out.",
   },
   win: {
     name: "Windows workstation",

@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { Reveal, Stagger, StaggerItem } from "@/components/fx/reveal";
 import { RepoLink, SectionHead } from "./visual-shared";
 import { PipelineFlow } from "./pipeline-flow";
+import { DiagramCard } from "./diagram-modal";
 
 const rules = [
   { id: "Suricata 3400001", title: "Nmap SYN port scan", snippet: "flags:S; threshold 25, seconds 5", tone: "text-cool" },
@@ -90,6 +91,18 @@ export function VisualDetection() {
             );
           })}
         </Stagger>
+
+        {/* 4K Telemetry Pipeline Infographic */}
+        <div className="mt-10">
+          <Reveal delay={0.14}>
+            <DiagramCard
+              title="On-Prem to Cloud Dual-Pathway Telemetry Architecture"
+              subtitle="WireGuard S2S tunnel routing with Zero-NAT preservation and sub-second SOAR SQLite daemon"
+              src="/diagrams/On-Prem%20to%20Cloud%20Telemetry%20Flow.png"
+              caption="Authoritative telemetry pipeline: Suricata + Wazuh agent ingest to Azure Cloud VM1/VM2."
+            />
+          </Reveal>
+        </div>
 
         <Reveal delay={0.12} className="mt-8 flex flex-wrap items-center gap-4">
           <RepoLink href={`${repoBlob}/03-Detection-Engineering/README.md`} note="rules, signatures, the SOAR pipeline">

@@ -15,6 +15,7 @@ import { cases, metrics, repoBlob, workflow } from "@/data";
 import { Counter } from "@/components/fx/counter";
 import { Reveal, Stagger, StaggerItem } from "@/components/fx/reveal";
 import { RepoLink, SectionHead } from "./visual-shared";
+import { DiagramCard } from "./diagram-modal";
 
 type Sensor = {
   icon: typeof Radar;
@@ -287,6 +288,26 @@ export function VisualInvestigation() {
                 </motion.div>
               </AnimatePresence>
             </div>
+          </Reveal>
+        </div>
+
+        {/* 4K Investigation & Correlation Blueprints */}
+        <div className="mt-10 grid gap-4 sm:grid-cols-2">
+          <Reveal delay={0.12}>
+            <DiagramCard
+              title="74-Minute Incident Correlation Timeline"
+              subtitle="Minute-by-minute timeline correlating attacker milestones against blue-team detection alerts"
+              src="/diagrams/Consolidated%20Incident%20Response%2074-Minute%20Timeline.png"
+              caption="Ground-truth forensic timeline cross-referencing elapsed time T0, UTC, and IST."
+            />
+          </Reveal>
+          <Reveal delay={0.14}>
+            <DiagramCard
+              title="SOC Analyst Investigation Lifecycle"
+              subtitle="Structured IR methodology: triage, containment, forensic deep-dive, and permanent hardening"
+              src="/diagrams/SOC%20Analyst%20Investigation%20Lifecycle.png"
+              caption="End-to-end incident handling framework executed across Cases 01, 02, and 03."
+            />
           </Reveal>
         </div>
 

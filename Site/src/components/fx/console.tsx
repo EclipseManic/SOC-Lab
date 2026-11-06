@@ -17,12 +17,12 @@ const feed: Row[] = [
   { sev: "high", rule: "Suricata 2010963", text: "SQL injection pattern in an HTTP request", stage: "03" },
   { sev: "high", rule: "Wazuh 5402 · PAM", text: "Privilege escalation to root on the web host", stage: "07" },
   { sev: "medium", rule: "Wazuh 86601", text: "Multi-port SYN scan from the attacker subnet", stage: "01" },
-  { sev: "high", rule: "Wazuh 5715", text: "Pivot session opened to the domain controller", stage: "12" },
+  { sev: "high", rule: "Wazuh 5715", text: "Pivot session active during bloodhound AD sweep", stage: "12" },
   { sev: "medium", rule: "Auditd 100199", text: "Shell spawned by the web service account", stage: "05" },
-  { sev: "high", rule: "Windows 4769", text: "Kerberoasting service ticket requested", stage: "13" },
+  { sev: "high", rule: "Suricata 2019922", text: "Kerberoasting service ticket requested on wire", stage: "13" },
   { sev: "critical", rule: "Wazuh 100613", text: "Backdoor domain admin account created", stage: "17" },
   { sev: "medium", rule: "Suricata 3400020", text: "Reverse shell connection to the attacker", stage: "06" },
-  { sev: "high", rule: "Wazuh 100213", text: "Web brute-force burst against the login form", stage: "02" },
+  { sev: "high", rule: "Wazuh 100600", text: "Web brute-force burst against the login form", stage: "02" },
 ];
 
 const sevTone: Record<Sev, string> = {

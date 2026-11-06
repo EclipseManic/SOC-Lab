@@ -149,12 +149,12 @@
       "order": 11,
       "stageId": "11",
       "phase": "Credential Access",
-      "elapsedLabel": "T0 + 35m (12:15:00)",
-      "offsetSeconds": 2100,
+      "elapsedLabel": "T0 + 29m-35m (12:09:46-12:15:00)",
+      "offsetSeconds": 1740,
       "endOffsetSeconds": 2100,
-      "timestamp": "12:15:00",
+      "timestamp": "12:09:46",
       "telemetryEvent": "Harvested NetNTLMv2 hash cracked on attacker GPU",
-      "sourceSensor": "Offline GPU Hashcat Execution (Zero Victim Telemetry; DG-11)",
+      "sourceSensor": "Offline GPU Hashcat Execution (Zero Victim Telemetry; DG-11) + Wazuh Rule 5715",
       "evidenceReference": "TheHive Alert #21 · Wazuh Telemetry wzb-29"
     },
     {
@@ -165,7 +165,7 @@
       "offsetSeconds": 3000,
       "endOffsetSeconds": 3000,
       "timestamp": "12:30:57",
-      "telemetryEvent": "SharpHound/BloodHound AD enumeration targeting PC-DC & Win10",
+      "telemetryEvent": "bloodhound-python AD enumeration targeting PC-DC & Win10",
       "sourceSensor": "PC-DC & Win10 Custom Rule 100615 + Rule 92657 + Rule 100220 (bloodhound.py)",
       "evidenceReference": "TheHive Alert #22 · Wazuh Telemetry wzb-31"
     },
@@ -190,7 +190,7 @@
       "endOffsetSeconds": 3180,
       "timestamp": "12:33:52",
       "telemetryEvent": "Impacket secretsdump.py DRSUAPI directory replication",
-      "sourceSensor": "PC-DC Custom Rule 100603 + Rule 92657 + Rule 100220 (secretsdump.py) + Queue Overflow",
+      "sourceSensor": "PC-DC Custom Rule 100603 + Rule 92657 + Rule 100220 (secretsdump.py) + Wazuh Rule 5715 (Alert #24)",
       "evidenceReference": "TheHive Alert #24 · Wazuh Telemetry wzb-34"
     },
     {
@@ -261,7 +261,7 @@
       "offsetSeconds": 4200,
       "endOffsetSeconds": 4440,
       "timestamp": "12:49:49",
-      "telemetryEvent": "Impacket wmiexec registry autostart & SMB execution",
+      "telemetryEvent": "Desktop wallpaper registry defacement, ransom notes & forced reboots via wmiexec",
       "sourceSensor": "Wazuh Rule 100613 / Sysmon EID 1 (Rule 92041) / Suricata SIDs 2067085-87",
       "evidenceReference": "TheHive Alerts #38-#45 · Wazuh Telemetry wzb-57"
     }

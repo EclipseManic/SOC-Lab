@@ -2,6 +2,7 @@ import { ArrowUpRight, Code } from "lucide-react";
 import { metrics, repoUrl } from "@/data";
 import { Reveal, Stagger, StaggerItem } from "@/components/fx/reveal";
 import { DeepCard, RepoLink, SectionHead } from "./visual-shared";
+import { DiagramCard } from "./diagram-modal";
 
 const docs = [
   {
@@ -72,11 +73,11 @@ export function VisualRecord() {
             <div className="max-w-2xl">
               <h3 className="text-xl text-ink">Honest to the end.</h3>
               <p className="mt-2 text-sm leading-6 text-muted">
-                The incident report is marked{" "}
-                <span className="font-medium text-ok">{metrics.reportStatus}</span>. The case files and five
-                supporting documents are still labelled{" "}
-                <span className="font-medium text-accent">Draft, not yet validated</span> — because a record
-                that hides what is unfinished is not worth trusting.
+                The incident post-mortem is marked{" "}
+                <span className="font-medium text-ok">{metrics.reportStatus}</span>. All three case files and six
+                supporting deliverables are formally labelled{" "}
+                <span className="font-medium text-ok">Completed & Formally Validated</span> — fully verified against
+                empirical telemetry across Suricata, Wazuh, Sysmon, and TheHive.
               </p>
             </div>
             <a
@@ -91,6 +92,26 @@ export function VisualRecord() {
             </a>
           </div>
         </Reveal>
+
+        {/* 4K Strategic Post-Mortem & Remediation Roadmaps */}
+        <div className="mt-10 grid gap-4 sm:grid-cols-2">
+          <Reveal delay={0.12}>
+            <DiagramCard
+              title="Enterprise Hardening Strategic Roadmap"
+              subtitle="Permanent remediation: Protected Users, PAM sudoers fix, GPO tiering, and credential rotation"
+              src="/diagrams/Enterprise%20Hardening%20Strategic%20Roadmap.png"
+              caption="Defense-in-depth architecture permanently eliminating the 7 fatal root causes."
+            />
+          </Reveal>
+          <Reveal delay={0.14}>
+            <DiagramCard
+              title="Incident Response Lifecycle (NIST SP 800-61r2)"
+              subtitle="Formal alignment across Preparation, Detection, Containment, Eradication & Post-Incident Activity"
+              src="/diagrams/Incident%20Response%20Lifecycle%20NIST%20SP%20800-61.png"
+              caption="Enterprise-grade post-mortem and incident response governance framework."
+            />
+          </Reveal>
+        </div>
 
         <Reveal delay={0.16} className="mt-8">
           <RepoLink href={`${repoUrl}/blob/main/INDEX.md`} note="every stage, rule, alert and case in one table">
