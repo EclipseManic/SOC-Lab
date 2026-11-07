@@ -73,8 +73,8 @@ const sensors: Sensor[] = [
 const funnel = [
   { icon: Radar, value: 9567, group: true, label: "raw alerts ingested", note: "everything the sensors recorded, across 4 agents" },
   { icon: SlidersHorizontal, value: 808, group: true, label: "kept for the deep read", note: "after 11 dashboard filters cut the noise" },
-  { icon: FolderOpen, value: 46, group: false, label: "live cases opened", note: "each serious alert became a ticket automatically" },
-  { icon: FolderOpen, value: 3, group: false, label: "investigations written", note: "grouped by incident boundary, not by tool" },
+  { icon: FolderOpen, value: 46, group: false, label: "TheHive alerts ingested", note: "Level ≥ 8 SIEM alerts delivered to TheHive by SOAR daemon" },
+  { icon: FolderOpen, value: 3, group: false, label: "incident cases investigated", note: "the 46 alerts consolidated across 3 formal incident cases" },
 ];
 
 const engine = [
@@ -91,7 +91,7 @@ const engine = [
   {
     icon: FolderOpen,
     title: "Three Scoped Incident Cases",
-    body: "Alerts are grouped by logical incident phases (Perimeter, Lateral Movement, Domain Dominance) rather than creating 46 disconnected tickets, preserving investigative context.",
+    body: "The 46 ingested TheHive alerts were consolidated into three formal incident cases (Perimeter Web Compromise, Lateral Movement, and Domain Takeover), ensuring analysts work within structured case boundaries rather than chasing fragmented tickets.",
   },
   {
     icon: ShieldCheck,

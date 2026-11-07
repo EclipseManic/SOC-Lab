@@ -350,7 +350,7 @@ Agent / Suricata Event
       → /var/ossec/integrations/custom-thehive (Tier 1: O(1) SQLite WAL queue - ZERO HTTP)
         → thehive-flush.service (Tier 2: Async Correlation Daemon on 5s loop)
           → HTTP POST over VNet peering (http://10.122.0.4:9000/api/v1)
-            → TheHive 5 Case Management (46 Grouped Cases)
+            → TheHive 5 Case Management (46 Ingested Alerts Consolidated into 3 Cases)
               → Analyst Triage Queue
 ```
 

@@ -14,7 +14,9 @@
 
 Many cybersecurity lab environments either demonstrate offensive tools against unmonitored targets or analyze pre-recorded log datasets disconnected from live infrastructure. This project was engineered to bridge that gap by building, attacking, detecting, and investigating an enterprise environment under realistic operational conditions.
 
-I designed and deployed an enterprise hybrid Security Operations Center (SOC) environment distributed across **seven virtual machines**, linking on-premises virtualization running in VMware Workstation Pro to Microsoft Azure cloud infrastructure through an encrypted, site-to-cloud WireGuard VPN tunnel. 
+I built a company-style network containing Windows systems, a Linux web server, a network security gateway, and cloud-hosted security tools. I then carried out a controlled attack across this environment to evaluate how effectively my security tools could identify suspicious activity.
+
+The complete enterprise infrastructure is distributed across **seven virtual machines**, linking on-premises virtualization running in VMware Workstation Pro to Microsoft Azure cloud infrastructure through an encrypted, site-to-cloud WireGuard VPN tunnel. 
 
 To rigorously test defensive visibility, I simulated a determined adversary by executing an authentic **74-minute, 20-stage attack campaign**. The intrusion progressed through every phase of the cyber kill chain:
 1. External perimeter reconnaissance and automated web vulnerability scanning against an exposed Linux web server.
@@ -25,7 +27,7 @@ To rigorously test defensive visibility, I simulated a determined adversary by e
 
 On the defensive side, I authored and calibrated multi-sensor detection logic across network inspection (Suricata NIDS), kernel-level system call tracking (Linux Auditd), interactive host command auditing (`bashcmd`), and Windows endpoint instrumentation (Microsoft Sysmon and Windows Security event logs). 
 
-To prevent alert fatigue while preserving investigative context, I engineered a custom asynchronous Security Orchestration, Automation, and Response (SOAR) pipeline (`custom-thehive.py`). The pipeline buffered incoming SIEM alerts in a local SQLite Write-Ahead Logging (WAL) queue (< 0.2 ms ingestion latency) and used an asynchronous background daemon to group related events into **46 actionable incident tickets across 3 formal cases in TheHive 5.7.5** (median end-to-end delivery latency: 4.6 seconds). 
+To prevent alert fatigue while preserving investigative context, I engineered a custom asynchronous Security Orchestration, Automation, and Response (SOAR) pipeline (`custom-thehive.py`). The pipeline buffered incoming SIEM alerts in a local SQLite Write-Ahead Logging (WAL) queue (< 0.2 ms ingestion latency) and used an asynchronous background daemon to group related events into **46 actionable alerts consolidated across 3 formal incident cases in TheHive 5.7.5** (median end-to-end delivery latency: 4.6 seconds). 
 
 Acting as the lead incident responder, I triaged the alerts, conducted root-cause investigations across raw telemetry, executed live containment playbooks (including terminating active reverse shells, quarantining artifacts, and invalidating forged Kerberos tickets through a double `krbtgt` password reset to **KVNO 3**), and implemented permanent architectural hardening.
 
@@ -73,7 +75,7 @@ Defending against a sophisticated intrusion requires layered telemetry. A single
 - **Network Layer:** Suricata inspects packet payloads and protocol handshakes on gateway interfaces (`ens33` external and `ens37` internal).
 - **Host Kernel Layer:** Linux Auditd hooks the `execve` system call to track binary executions, while custom shell auditing (`bashcmd`) logs interactive commands executed in root terminal sessions.
 - **Windows Endpoint Layer:** Microsoft Sysmon and Windows Security audit policies log process creation (Event ID 1), network connections (Event ID 3), and privileged logons (Event ID 4624 / 4672).
-- **Correlation & Automation:** Wazuh SIEM evaluates events against 148 detection rules and 87 false-positive suppressions. High-fidelity alerts ($\ge \text{Level } 8$) are routed into a custom asynchronous Python SOAR integration (`custom-thehive.py`) that uses an SQLite Write-Ahead Logging buffer (< 0.2 ms ingestion latency) and a 5-second background daemon to aggregate alert bursts into **46 actionable cases in TheHive 5.7.5**, eliminating alert fatigue.
+- **Correlation & Automation:** Wazuh SIEM evaluates events against 148 detection rules and 87 false-positive suppressions. High-fidelity alerts ($\ge \text{Level } 8$) are routed into a custom asynchronous Python SOAR integration (`custom-thehive.py`) that uses an SQLite Write-Ahead Logging buffer (< 0.2 ms ingestion latency) and a 5-second background daemon to aggregate alert bursts into **46 actionable alerts in TheHive 5.7.5**, which are then consolidated into 3 master incident cases, eliminating alert fatigue.
 *(Rule XML files, decoders, latency metrics, and daemon architecture: [`03-Detection-Engineering/README.md`](03-Detection-Engineering/README.md))*
 
 ### Pillar 4: SOC Alert Triage, Incident Response & Hardening
@@ -117,7 +119,7 @@ In authentic security operations, claiming 100% automated detection is unrealist
 | **Operational Pivot-Only Alerts** | **2** | **10.0%** | The target Domain Controller lacked specific diagnostic auditing out-of-the-box for DCSync (Stage 14) and Golden Ticket creation (Stage 16). However, the attack was intercepted on the Linux pivot host via interactive command logging (`bashcmd` Rule 100220) and SSH exfiltration alerting. |
 | **Target-Side Logging Gaps** | **2** | **10.0%** | Default Windows Server and Workstation baselines did not log dropped Layer-2 network sweep probes (`DG-09`) or LDAP search query filters (`DG-12`) without specialized diagnostic audit policies enabled. |
 | **Inherent Offline Computation Gaps** | **2** | **10.0%** | Password hash cracking ran offline on the attacker's GPU (Stages 04 and 11), generating zero victim packets or host processes. Detections relied on bracketing: catching the credential theft upstream and spotting the unauthorized login downstream. |
-| **Operational Alert Delivery Rate** | **16** | **80.0%** | Delivered 46 high-priority incident tickets to TheHive 5.7.5 across 16 different attack stages via the Level $\ge 8$ SIEM-to-SOAR threshold. |
+| **Operational Alert Delivery Rate** | **16** | **80.0%** | Delivered 46 high-priority alerts to TheHive 5.7.5 across 16 different attack stages via the Level $\ge 8$ SIEM-to-SOAR threshold, consolidated into 3 formal incident cases. |
 | **Detection Rule / Engine Crashes** | **0** | **0.0%** | Zero syntax errors, decoder crashes, or dropped events across both Wazuh and Suricata throughout the entire 74-minute execution. |
 
 > **Master Traceability Matrix:** To inspect the full technical mapping cross-referencing every attack stage against MITRE ATT&CK technique IDs, SIEM alert IDs, rule numbers, and forensic screenshots, consult [`INDEX.md`](INDEX.md).

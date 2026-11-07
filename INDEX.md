@@ -64,5 +64,5 @@ The single source of truth for the entire lab. This table connects every attack 
 | TheHive Cases Evidence | `06-Resources/screenshots/thehive-cases/` (9 case closure, task verification, and FP disposition captures) |
 | Raw Telemetry CSV (Complete) | [`06-Resources/alerts/Wazuh-Raw-Alerts.csv`](06-Resources/alerts/Wazuh-Raw-Alerts.csv) (9,567 raw baseline alerts across all 4 agents in OpenSearch) |
 | Curated Incident Analysis Set | [`06-Resources/alerts/wazuh_alerts.csv`](06-Resources/alerts/wazuh_alerts.csv) (808 curated forensic alerts filtered via 11 OpenSearch exclusion clauses) |
-| Correlated Incident Alerts | [`06-Resources/alerts/thehive_alerts.json`](06-Resources/alerts/thehive_alerts.json) (46 actionable incident cases created live in TheHive via Level >= 8 gate) |
+| Correlated Incident Alerts | [`06-Resources/alerts/thehive_alerts.json`](06-Resources/alerts/thehive_alerts.json) (46 actionable alerts ingested live into TheHive, consolidated into 3 formal incident cases) |
 | Master Attack Blueprint | [`06-Resources/docs/attack-chain-full.pdf`](06-Resources/docs/attack-chain-full.pdf) |

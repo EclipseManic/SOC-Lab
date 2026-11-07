@@ -137,7 +137,7 @@ Anyone can install security tools out of the box. Real detection engineering beg
 
 Here are the three biggest challenges we tackled:
 
-### Challenge 1: The Alert Noise Nightmare (Taming 10,000 Logs into 46 Cases)
+### Challenge 1: The Alert Noise Nightmare (Taming 10,000 Logs into 46 TheHive Alerts across 3 Cases)
 - **The Problem:** When we first ran Wazuh with default configurations, the dashboard was flooded with thousands of useless alerts every day. Analysts were buried under false positives caused by routine operating system behavior.
 - **The Culprits:**
   1. *The Syscollector Scan Loop:* Wazuh's own agent periodically executes commands like `dpkg-query`, `rpm`, `uname`, `ps`, and `netstat` to update its software inventory. Because Auditd was logging all commands, Wazuh's own scanner generated over 6,000 Rule `80792` ("Auditd: Command executed") alerts every single day!
@@ -280,12 +280,12 @@ Here is the complete traceability matrix mapping all 20 adversary stages across 
 A critical architectural distinction in this SOC lab is understanding **how the numbers 9,567, 808, and 46 actually relate to each other**. They are **not** a single linear waterfall; rather, they represent **two distinct operational pathways** originating from the same baseline telemetry stream:
 
 [![SOC Telemetry Dual-Pathway Architecture](../06-Resources/diagrams/SOC%20Telemetry%20Dual-Pathway%20Architecture.png)](../06-Resources/diagrams/SOC%20Telemetry%20Dual-Pathway%20Architecture.png)
-*Figure 5: The dual-pathway telemetry architecture showing the central 9,567 raw alert stream splitting into real-time Level >= 8 SOAR case creation (46 TheHive cases) and post-simulation analyst dashboard triage (808 curated forensic records via 11 exclusion filters) ([view full asset](../06-Resources/diagrams/SOC%20Telemetry%20Dual-Pathway%20Architecture.png)).*
+*Figure 5: The dual-pathway telemetry architecture showing the central 9,567 raw alert stream splitting into real-time Level >= 8 SOAR alert ingestion (46 TheHive alerts consolidated into 3 cases) and post-simulation analyst dashboard triage (808 curated forensic records via 11 exclusion filters) ([view full asset](../06-Resources/diagrams/SOC%20Telemetry%20Dual-Pathway%20Architecture.png)).*
 
-### Pathway A: Live Automated SOAR Pipeline (46 TheHive Cases)
+### Pathway A: Live Automated SOAR Pipeline (46 TheHive Alerts Grouped into 3 Cases)
 - **Evaluated In Real-Time:** When red-team attack stages executed, the Wazuh Manager's rules engine evaluated all incoming logs in real-time.
 - **The Level $\ge 8$ Gate:** Inside `/var/ossec/etc/ossec.conf`, the integration block specifies `<level>8</level>`. Any alert with a severity level of 8 or higher immediately triggers `/var/ossec/integrations/custom-thehive`.
-- **Why Only 46 Cases Were Created:** Instead of bombarding TheHive with 9,567 raw hits, `custom-thehive` writes each Level $\ge 8$ alert to an SQLite Write-Ahead Logging (WAL) queue in sub-millisecond time. The background daemon (`thehive-flush.service`) wakes up every 5 seconds, groups related alerts (such as rapid Nikto 4xx web fuzzing, Impacket `wmiexec` process fan-outs, and SSH logon bursts), applies tool regex fingerprints, and pushes **46 distinct, high-fidelity incident cases** to TheHive 5.
+- **Why 46 Alerts Were Ingested:** Instead of bombarding TheHive with 9,567 raw hits, `custom-thehive` writes each Level $\ge 8$ alert to an SQLite Write-Ahead Logging (WAL) queue in sub-millisecond time. The background daemon (`thehive-flush.service`) wakes up every 5 seconds, groups related alerts (such as rapid Nikto 4xx web fuzzing, Impacket `wmiexec` process fan-outs, and SSH logon bursts), applies tool regex fingerprints, and pushes **46 distinct, high-fidelity alerts** to TheHive 5, which are then triaged and consolidated into 3 formal incident cases.
 - **Result:** Analysts receive clean, organized incident cards directly from the live simulation without losing context or dropping alerts.
 
 ---
