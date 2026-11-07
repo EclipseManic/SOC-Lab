@@ -20,7 +20,11 @@
 DVWA functions as a dual-homed DMZ edge web server bridging the external management/attacker network (`192.168.232.0/24`, VMware VMnet8 NAT) and the isolated internal enterprise segment (`192.168.56.0/24`, VMware VMnet2 Host-Only):
 
 - **`ens33` (`192.168.56.30/24`):** Connects to the internal enterprise segment (VMnet2). All outbound victim traffic is routed through the Security Gateway (`192.168.56.150`), and internal name resolution is handled by the Domain Controller (`192.168.56.10`).
-- **`ens37` (`192.168.232.161/24`):** Connects to the external/NAT segment (VMnet8), allowing direct DMZ ingress and egress from the Kali Linux attacker machine (`192.168.232.135`) during initial exploitation (such as the Stage 06 reverse shell callback).
+- **`ens37` (`192.168.232.161/24`):** Connects to the external/NAT segment (VMnet8).
+
+> [!NOTE]
+> **Organizational Context & Post-Incident Decommissioning:**  
+> In the lab scenario, DVWA was inadvertently provisioned with this secondary interface (`ens37: 192.168.232.161`) during initial setup staging. The organization was unaware of this legacy dual-homed misconfiguration, which created an unintended bridge between the external network and the internal DMZ. During deep incident investigation, the DFIR team flagged this rogue network attachment, and the secondary adapter was permanently decommissioned and removed during Phase 2 Hardening to restore strict network isolation.
 
 ```yaml
 network:

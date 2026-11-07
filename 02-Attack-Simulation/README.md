@@ -31,7 +31,7 @@ The 20 attack stages are organized into three clear, sequential acts (matching o
 - **[Case 02 — Pivoting & Stealing Active Directory Credentials](../04-Investigation/Cases/case-02-lateral-movement.md) (Stages 08–14):**  
   The attacker adds an SSH backdoor key, discovers the internal Windows subnet (`192.168.56.0/24`), runs Responder on the Linux box to steal the Windows 10 password hash, maps the domain using BloodHound, Kerberoasts account `HANK_SHERMAN`, and abuses its DCSync replication rights to dump every password hash in the domain from the Domain Controller.
 - **[Case 03 — Domain Takeover, Data Theft & Impact](../04-Investigation/Cases/case-03-domain-compromise.md) (Stages 15–20):**  
-  The attacker uses Pass-the-Hash and forges a Kerberos Golden Ticket (`krbtgt`) for permanent god-mode access, creates a backdoor Domain Admin user (`AD\backdoor`), steals sensitive files over SSH, defaces user desktops with a custom wallpaper, drops simulated ransomware notes, and forcibly reboots both machines.
+  The attacker uses Pass-the-Hash and forges a Kerberos Golden Ticket (`krbtgt`) for persistent Domain Admin access, creates a backdoor Domain Admin user (`AD\backdoor`), steals sensitive files over SSH, defaces user desktops with a custom wallpaper, drops simulated ransomware notes, and forcibly reboots both machines.
 
 ---
 

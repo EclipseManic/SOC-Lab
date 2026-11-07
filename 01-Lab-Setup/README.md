@@ -55,6 +55,15 @@ To simulate an authentic enterprise boundary where the attacker and victims resi
 - **`ens33` (`192.168.232.162`):** Faces the external attack segment (`192.168.232.0/24`, VMware VMnet8 NAT).
 - **`ens37` (`192.168.56.150`):** Faces the internal enterprise victim network (`192.168.56.0/24`, VMware VMnet2 Host-Only).
 
+> [!IMPORTANT]
+> **Architectural Clarification & The DVWA Secondary Adapter Misconfiguration:**  
+> In the enterprise storyline, the web server (DVWA) was inadvertently deployed with an unmanaged second interface (`ens37: 192.168.232.161`) bridged to the external network during staging—a realistic enterprise shadow IT misconfiguration that the organization was unaware of. During the post-compromise investigation, the SOC team identified this rogue dual-homing vulnerability. As part of Phase 2 Eradication & Hardening, the secondary adapter was permanently removed, isolating the web host strictly to `192.168.56.30` behind the Security Gateway.
+> 
+> **Which traffic crosses the gateway vs. which traffic bypasses it:**
+> 1. **Crosses the Gateway (Routed Traffic):** Inbound traffic from the external attacker (`192.168.232.135`) targeting the internal victim subnet (`192.168.56.0/24`) is routed through `192.168.232.162` $\rightarrow$ `192.168.56.150`. Suricata captures full packet streams and generates network alerts on this routed boundary.
+> 2. **Bypasses the Gateway (Layer-2 Intra-Subnet Traffic):** Hosts on the same `192.168.56.0/24` subnet communicate directly at Layer-2 via the virtual switch. Direct unicast packets (such as the internal ARP sweep in Stage 09 or SMB Pass-the-Hash in Stage 15) do not route through `.150`. While Suricata's promiscuous mode on `ens37` picks up broadcast/multicast queries (like LLMNR on UDP 5355 and Kerberos TGS requests), direct unicast streams bypass the gateway.
+> 3. **How Endpoint Telemetry Compensates:** To eliminate this network blind spot, endpoint sensors—Linux Auditd, custom Bash tracking, and Windows Sysmon (EID 1 Process Creation, EID 3 Network Connect)—provide authoritative detection directly on the victim machines.
+
 #### Why Passive IDS Instead of Active Inline Blocking?
 Security teams often debate whether to run an inline IPS (which actively drops or resets suspicious packets) or a passive IDS (which sniffs and alerts without interfering).
 - **The problem:** Running Suricata inline in IPS mode (using NFQUEUE or bridge filtering) can introduce packet jitter, reset TCP handshakes during aggressive Nmap scans, or drop payload fragments during web exploits. That would break red-team tools artificially halfway through and prevent testing multi-stage lateral movement.

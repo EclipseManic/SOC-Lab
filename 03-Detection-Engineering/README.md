@@ -170,6 +170,24 @@ Here are the three biggest challenges we tackled:
   - **Tier 2 (Smart Asynchronous Daemon):** A background systemd daemon (`thehive-flush.service`) wakes up every 5 seconds. It reads pending records from SQLite, applies regex tool fingerprinting (identifying Nmap, Nikto, Hydra, sqlmap), groups related bursts into a single case, and pushes clean, organized incident batches to TheHive 5 over private VNet peering.
 - **The Payoff:** Zero dropped alerts under heavy attack bursts, zero SIEM engine lag, and 300 raw port scan alerts compressed into **one clean case** titled `Tool Campaign: Nmap Portscan from Kali`.
 
+#### Precision Latency Metric Definitions
+To prevent confusing local database performance with end-to-end incident dispatching, latencies across the pipeline are separated into distinct measurement tiers:
+
+| Measurement Tier | What It Measures | Empirical Latency |
+|---|---|:---:|
+| **Queue Ingestion Latency** | Time required for `wazuh-integratord` to append an alert JSON payload into the local SQLite WAL queue | **< 0.2 ms** |
+| **Processing Latency** | Time spent deserializing, normalizing fields, evaluating tool regex fingerprints, and updating correlation state | **< 5.0 ms** |
+| **Delivery Latency** | Network transit and API response time when transmitting an alert batch to TheHive 5 REST endpoint (`/api/v1/alert`) | **150 – 300 ms** |
+| **End-to-End Latency** | Total elapsed duration from adversary action on endpoint, through sensor capture and WireGuard transit, to created TheHive ticket | **Median: 4.6 s** (Fastest: 1.4 s; bounded by 5s daemon flush interval) |
+
+> [!NOTE]
+> **Lab Security Qualification:**  
+> In this isolated cyber range, the custom integration daemon communicates with TheHive across a private, point-to-point WireGuard tunnel using HTTP and disabled certificate verification (`verify=False`). While strictly contained within private IP addressing (`10.122.1.4:9000`), enterprise production deployments require mutual TLS (mTLS) with strict certificate authority verification (`REQUESTS_CA_BUNDLE`) and dedicated secrets management.
+
+#### Pipeline Limitations & Engineering Roadmap (v2)
+1. **Alert Grouping Lifetime (Issue 4 Roadmap):** The v1 integration script implements a 30-minute rolling inactivity timeout for tool campaigns. However, an adversary executing active operations within each 30-minute interval keeps the group open indefinitely (e.g., our initial web scanner alert accumulated events over 69 minutes). For v2, we are introducing a hard 15-minute maximum campaign window and kill-chain phase boundaries to segregate reconnaissance, exploitation, and post-compromise activity into distinct incident cases.
+2. **Automated Testing Suite (Issue 5 Roadmap):** While the integration includes a self-test and synthetic ingestion benchmark for fingerprint verification, v2 expands testing into full end-to-end lifecycle verification, including SQLite crash recovery after abnormal termination, retry behavior during TheHive API 5xx/429 outages, concurrent multi-agent ingestion stress tests, and resilience against malformed alert schemas.
+
 ---
 
 <a id="4-detection-gap-register--blind-spot-analysis"></a><a id="detection-gap-register"></a>

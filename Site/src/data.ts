@@ -417,7 +417,7 @@ const stageCopy: Stage[] = [
     technique: "DCSync",
     techniqueId: "T1003.006",
     plain:
-      "Using recovered Domain Admin privileges, the attacker executes DCSync to impersonate a domain controller and extract NTDS.dit hashes.",
+      "Using recovered Domain Admin privileges, the attacker executes DCSync via DRS Remote Protocol (drsuapi) to impersonate a domain controller and extract Active Directory credential secrets.",
     attacker:
       "Executes Impacket `secretsdump.py` targeting PC-DC to trigger DRSUAPI directory replication and dump the KRBTGT and Administrator NT hashes.",
     defender:
@@ -1245,7 +1245,7 @@ export const masterIoCs: MasterIoC[] = [
     category: "file",
     value: "/tmp/dcsync_output.ntds",
     host: "DVWA Server",
-    context: "Staged NTDS directory dump containing domain hashes extracted via secretsdump.py.",
+    context: "Staged credential extraction dump containing domain hashes extracted via secretsdump.py DRS replication.",
     confidence: "Confirmed",
   },
   {

@@ -23,10 +23,7 @@ export function VisualSetup() {
             </div>
 
             <p className="relative mt-5 rounded-card border border-rule bg-paper-3/60 px-4 py-3 text-xs leading-5 text-muted">
-              <span className="font-medium text-ink-2">Why network segmentation matters:</span> In this architecture,
-              victim machines cannot communicate with external networks directly. Every inbound probe, lateral pivot
-              between subnets, and outbound connection must traverse the Suricata security gateway. This inline inspection
-              point gives defenders reliable network visibility across all monitored traffic flows.
+              <span className="font-medium text-ink-2">Segmentation & sensor boundaries:</span> All routed inter-segment traffic (external attacker to DMZ, and outbound WAN connections) crosses the Suricata gateway. While hosts on the same Layer-2 subnet (192.168.56.0/24) communicate directly, broadcast queries (LLMNR/NetBIOS) are captured by gateway promiscuous sniffing, and endpoint sensors (Sysmon, Auditd) monitor all direct host-to-host execution and network connections.
             </p>
           </div>
         </Reveal>
