@@ -75,6 +75,9 @@ Armed with domain credential secrets extracted via DCSync using the Directory Re
 
 ## Tasks
 
+![TheHive Case 03 Task Completion Checklist](../../06-Resources/screenshots/thehive-cases/thehive_case03_tasks.png)
+*Figure 2: Verified task completion checklist for CAS-003-DOMDOM tracking DC persistence purge, registry remediation, and Golden Ticket invalidation.*
+
 - [x] Isolate external adversary IP `192.168.232.135` via iptables on the Gateway
 - [x] Terminate unauthorized WMI remote execution sessions (`taskkill /F /IM cmd.exe`)
 - [x] Disable rogue domain account `AD\backdoor` during containment to preserve SID for forensic timeline

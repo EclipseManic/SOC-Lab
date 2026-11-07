@@ -45,6 +45,7 @@ The infrastructure is engineered to mirror an enterprise network where external 
 | **Network & SIEM** | Wazuh SIEM 4.14.8 (Manager, Indexer, OpenSearch Dashboard), Suricata 8.0.6 NIDS (Sniffing WAN `ens33` and LAN `ens37` interfaces) | Centralizes log ingestion, rule evaluation, compliance tracking, and wire-level signature inspection. |
 | **Endpoint Telemetry** | Microsoft Sysmon 15.20 (Process and Registry monitoring), Linux Auditd (`execve` syscall tracking), Custom Wazuh `bashcmd` Interactive Command Auditing (Rule `100220`) | Captures host-level process trees, command-line arguments, parent-child relationships, network connections, and shell executions. |
 | **Incident Management & SOAR** | TheHive 5.7.5-1 (Case Management), Apache Cassandra 4.x, Elasticsearch 8.x, Custom Python SOAR Gateway (`custom-thehive.py`) with SQLite WAL buffering | Groups related alerts into incident cases, manages forensic observables, and tracks response tasks and analyst notes. |
+| **Forensics & Incident Response** | Velociraptor (Endpoint live response, artifact acquisition, remote triage), Sysinternals Suite | Performs live endpoint triage, process memory acquisition, forensic artifact quarantine, and remote containment playbooks across Linux and Windows hosts. |
 | **Adversary Emulation Suite** | MITRE ATT&CK Framework, Impacket suite (`wmiexec.py`, `secretsdump.py`, `GetUserSPNs.py`, `ticketer.py`), BloodHound (`bloodhound-python`), Responder, Hashcat, Hydra, Nmap, Nikto | Executes standardized, repeatable attack techniques across perimeter, credential access, lateral movement, and domain takeover phases. |
 
 ---
@@ -57,7 +58,7 @@ This project encompasses four interconnected disciplines of cybersecurity engine
 *Figure 2: The four core pillars of the laboratory suite across infrastructure engineering, adversary attack simulation, multi-sensor detection engineering, and incident response triage.*
 
 ### Pillar 1: Hybrid Infrastructure & Network Engineering
-The environment operates across seven purpose-built virtual machines across on-premises virtualization and Microsoft Azure. Rather than allowing victims direct internet access or flattening the network, the environment enforces strict segmentation:
+The environment operates across seven purpose-built virtual machines across on-premises virtualization and Microsoft Azure. Rather than allowing victims direct internet access or flattening the network, the environment enforces multi-tiered zone segmentation (including an authentic enterprise staging flaw where DVWA was initially dual-homed onto `192.168.232.161`):
 - An isolated internal victim network (`192.168.56.0/24`) connects corporate endpoints (Domain Controller, Windows 10 workstation, and the internal interface of the DMZ web server).
 - A dedicated security gateway bridges the external attack segment (`192.168.232.0/24`) and internal victim network, routing inter-segment traffic and sniffing packets passively using Suricata.
 - A secure Site-to-Cloud WireGuard tunnel (`10.8.0.0/24`) links the on-premises gateway to cloud SIEM servers with Zero-NAT routing. By disabling NAT masquerading on the tunnel, the true source IP address of every victim host is preserved as logs enter Wazuh, allowing correlation rules to identify the exact host compromised.

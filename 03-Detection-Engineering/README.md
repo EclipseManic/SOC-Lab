@@ -33,7 +33,7 @@ Before examining rules and code, here are the authentic results from our 20-stag
 | **Operational Pivot-Only Alerts** | **2 (10.0%)** | Attacking session/pivot caught (`bashcmd` / SSH exfil), but target DC missed technique logging (Stages 14, 16) |
 | **Target-Side Logging Gaps** | **2 (10.0%)** | Host-level event logging unconfigured in pre-attack baseline (Stage 09 L2 drops, Stage 12 EID 1644 LDAP) |
 | **Inherent Offline Computation Gaps** | **2 (10.0%)** | Password cracking ran offline on attacker GPU (zero victim packets); bracketed by upstream theft and downstream authentication |
-| **Operational SOAR Alert Delivery** | **16 (80.0%)** | Real-time, high-priority incident tickets delivered live to TheHive 5 via Level ≥ 8 gate |
+| **Operational SOAR Alert Delivery** | **12 Technique / 16 Operational (60% / 80%)** | 12 stages generated technique-specific TheHive alerts; 4 additional stages covered by collateral SSH session alerts |
 | **Detection Engine Rule Drops** | **0 (0.0%)** | All active defensive rules and pipeline decoders executed without silent failures or syntax errors |
 | **Total Raw Telemetry Ingested** | **9,567 records** | Complete raw alert baseline indexed in Wazuh across all 4 agents (`Wazuh-Raw-Alerts.csv`) |
 | **Analyst Curated Records** | **808 records** | Focused forensic dataset created by applying 11 OpenSearch exclusion filters in Wazuh Dashboard (`wazuh_alerts.csv`) |
@@ -170,19 +170,48 @@ Here are the three biggest challenges we tackled:
   - **Tier 2 (Smart Asynchronous Daemon):** A background systemd daemon (`thehive-flush.service`) wakes up every 5 seconds. It reads pending records from SQLite, applies regex tool fingerprinting (identifying Nmap, Nikto, Hydra, sqlmap), groups related bursts into a single case, and pushes clean, organized incident batches to TheHive 5 over private VNet peering.
 - **The Payoff:** Zero dropped alerts under heavy attack bursts, zero SIEM engine lag, and 300 raw port scan alerts compressed into **one clean case** titled `Tool Campaign: Nmap Portscan from Kali`.
 
-#### Precision Latency Metric Definitions
-To prevent confusing local database performance with end-to-end incident dispatching, latencies across the pipeline are separated into distinct measurement tiers:
+#### Precision Latency Metric Definitions & Benchmark Verification
+To prevent confusing raw disk performance with end-to-end incident dispatching, latencies across the pipeline are separated into distinct measurement tiers, verified via our reproducible test harness ([`soar-benchmark-report.md`](../06-Resources/benchmarks/soar-benchmark-report.md)):
 
-| Measurement Tier | What It Measures | Empirical Latency |
-|---|---|:---:|
-| **Queue Ingestion Latency** | Time required for `wazuh-integratord` to append an alert JSON payload into the local SQLite WAL queue | **< 0.2 ms** |
-| **Processing Latency** | Time spent deserializing, normalizing fields, evaluating tool regex fingerprints, and updating correlation state | **< 5.0 ms** |
-| **Delivery Latency** | Network transit and API response time when transmitting an alert batch to TheHive 5 REST endpoint (`/api/v1/alert`) | **150 – 300 ms** |
-| **End-to-End Latency** | Total elapsed duration from adversary action on endpoint, through sensor capture and WireGuard transit, to created TheHive ticket | **Median: 4.6 s** (Fastest: 1.4 s; bounded by 5s daemon flush interval) |
+| Measurement Tier | What It Measures | Empirical Latency | Technical Implementation Details |
+|---|---|:---:|---|
+| **Raw SQLite WAL Commit** | Underlying C-level disk append duration for a single row insert in WAL mode | **< 0.2 ms** | In-memory page write appending to SQLite WAL ring buffer without synchronous disk fsync. |
+| **Python Ingest Execution** | Full execution time of `ingest_alert(a)` in Python runtime | **18.5 ms (p50)**<br>23.0 ms (p95) | Evaluates JSON deserialization, regex tool fingerprinting, deduplication query, and SQLite transaction. |
+| **Delivery Latency** | Network transit and API response time when transmitting an alert batch to TheHive 5 REST endpoint (`/api/v1/alert`) | **150 – 300 ms** | Round-trip HTTP API dispatch across Azure private VNet peering (`10.122.0.4:9000`). |
+| **End-to-End Latency** | Total elapsed duration from adversary action on endpoint, through sensor capture and WireGuard transit, to created TheHive ticket | **Median: 4.6 s**<br>(Min: 1.4 s) | Bounded by the daemon's 5.0-second flush interval (`FLUSH_INTERVAL_SECONDS`). |
+
+#### Concurrency & Generation-Counter Logic in `custom-thehive.py`
+To eliminate race conditions between incoming Wazuh alert bursts and the background flush daemon without holding global table locks during network I/O, `custom-thehive.py` implements **optimistic concurrency control via generation counters**:
+1. When an alert arrives, `ingest_alert()` updates the group row in `pending_groups`, setting `dirty = 1` and incrementing `generation = generation + 1`.
+2. When the background daemon claims a group, it records `claimed_gen = generation` and executes the external HTTP POST/PATCH request to TheHive outside any database transaction.
+3. Upon receiving HTTP 200/201 from TheHive, the daemon opens an immediate transaction and updates the record:
+   ```sql
+   UPDATE pending_groups 
+   SET dirty = CASE WHEN generation = ? THEN 0 ELSE 1 END,
+       claimed = 0, lease_until = 0 
+   WHERE group_type = ? AND thehive_id = ?
+   ```
+4. If new alerts arrived while the HTTP call was in flight (`generation > claimed_gen`), the `CASE` statement keeps `dirty = 1`, ensuring the group is automatically re-rendered and updated on the next daemon tick without dropped events.
 
 > [!NOTE]
 > **Lab Security Qualification:**  
 > In this isolated cyber range, the custom integration daemon on VM2 (Wazuh SIEM) communicates with TheHive on VM1 across Azure VNet peering using HTTP and disabled certificate verification (`verify=False`). While strictly contained within private IP addressing (`10.122.0.4:9000`), enterprise production deployments require mutual TLS (mTLS) with strict certificate authority verification (`REQUESTS_CA_BUNDLE`) and dedicated secrets management.
+
+#### Honest Operational Delivery Accounting: Technique Alerts vs. Collateral Logging
+A rigorous SOC audit requires distinguishing between **technique-specific alerting** (where the alert directly detects the attack action) and **collateral session alerting** (where background access is alerted, but the technique itself was unlogged or fell below the integration threshold):
+- **Technique-Specific Operational Alerts in TheHive: 12 of 20 Stages (60.0%)**  
+  Direct, high-fidelity alerts ($\ge \text{Level } 8$) matching the technique: Stage 01 (Nmap SIDs 3400001/3400002), Stage 02 (Hydra HTTP burst), Stage 03 (SQLi SID 2010963), Stage 05 (Web shell SID 2019284), Stage 06 (Reverse shell SID 3400020), Stage 08 (SSH key persistence logon Rule 5715), Stage 13 (Kerberoasting SID 2019922), Stage 15 (WMIExec Rule 100613), Stage 16 (Golden Ticket injection Rule 100613), Stage 17 (Backdoor user creation Rule 100613), Stage 18 (Staging/collection Rule 100613), and Stage 20 (SMB NTLM / ransomware defacement Rule 100613).
+- **Sub-Gate Telemetry (Indexed Only, Level < 8): 3 Stages (15.0%)**  
+  Indexed in OpenSearch / Wazuh Dashboard for post-incident triage, but **did not page anyone in TheHive** due to the Level $\ge 8$ threshold:
+  - *Stage 07 (Privilege Escalation):* Sudo PAM execution logged by Rule 5402 (Level 3) and command line logged by Rule 100220 (Level 5).
+  - *Stage 10 (Responder Poisoning):* Command line logged by Rule 100220 (Level 5); WebDAV coercion on Win10 logged by Rule 100278 (Level 3).
+  - *Stage 14 (DCSync):* Command line logged by Rule 100220 (Level 5) on the pivot.
+- **Collateral-Only Session Logging in TheHive: Stages 10, 11, 12, 14**  
+  In these stages, the adversary operated through the compromised Linux pivot. The only alert reaching TheHive was the generic `sshd authentication success: root` (Rule 5715, Level 10). Counting these as "operational alerts" reflects that the analyst knew a session existed, but **the specific adversary techniques (Responder poisoning, offline cracking, BloodHound queries, and DCSync replication) did not generate standalone alerts in TheHive**.
+- **Inherent Offline Computation Gaps: 2 Stages (10.0%)**  
+  Stage 04 (MD5 hash cracking) and Stage 11 (NetNTLMv2 hash cracking) occurred entirely offline on the attacker's GPU (zero host or wire packets).
+- **Target-Side Logging Gaps: 2 Stages (10.0%)**  
+  Stage 09 (intra-subnet Layer-2 scan drops unlogged on Windows firewall) and Stage 12 (Domain Controller Event ID 1644 LDAP diagnostic query auditing disabled).
 
 #### Pipeline Limitations & Engineering Roadmap (v2)
 1. **Alert Grouping Lifetime (Issue 4 Roadmap):** The v1 integration script implements a 30-minute rolling inactivity timeout for tool campaigns. However, an adversary executing active operations within each 30-minute interval keeps the group open indefinitely (e.g., our initial web scanner alert accumulated events over 69 minutes). For v2, we are introducing a hard 15-minute maximum campaign window and kill-chain phase boundaries to segregate reconnaissance, exploitation, and post-compromise activity into distinct incident cases.
@@ -190,8 +219,8 @@ To prevent confusing local database performance with end-to-end incident dispatc
 
 ---
 
-<a id="4-detection-gap-register--blind-spot-analysis"></a><a id="detection-gap-register"></a>
-### Challenge 3: The Honest Gap Register (The 14 / 2 / 2 / 2 Empirical Partition)
+<a id="detection-gap-register"></a><a id="4-detection-gap-register--blind-spot-analysis"></a>
+### Detection Gap Register: The Honest 14 / 2 / 2 / 2 Empirical Partition (Challenge 3)
 In junior cybersecurity labs, people often claim "100% detection rate." In real enterprise security, 100% detection is impossible because adversaries perform offline computations on their own hardware, and enterprise environments balance audit logging overhead against forensic depth.
 
 We achieved an empirical **70.0% direct target detection rate (14 of 20 stages caught directly on endpoints or network wire)** and an **80.0% operational alert coverage rate (16 of 20 stages delivering actionable alerts to TheHive)**, backed by verifiable sensor telemetry. More importantly, we rigorously cataloged the **2 operational pivot-only alerts (10.0%)**, **2 target-side logging gaps (10.0%)**, and **2 inherent offline computation gaps (10.0%)**:
