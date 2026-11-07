@@ -7,9 +7,9 @@ import { Reveal } from "@/components/fx/reveal";
 import { DiagramCard } from "./diagram-modal";
 
 const acts = [
-  { n: "01", name: "Break in", range: "01–07", blurb: "Kick the front door in", icon: LogIn, tone: "text-hot", bar: "bg-hot" },
-  { n: "02", name: "Spread out", range: "08–14", blurb: "Sneak around, steal passwords", icon: Network, tone: "text-violet", bar: "bg-violet" },
-  { n: "03", name: "Take over", range: "15–20", blurb: "Own the whole domain", icon: Crown, tone: "text-accent", bar: "bg-accent" },
+  { n: "01", name: "Perimeter Web Exploitation", range: "01–07", blurb: "Initial access, SQLi credential dump & Linux root privilege escalation", icon: LogIn, tone: "text-hot", bar: "bg-hot" },
+  { n: "02", name: "Internal Lateral Movement", range: "08–14", blurb: "Subnet pivoting, LLMNR poisoning, Kerberoasting & DCSync domain theft", icon: Network, tone: "text-violet", bar: "bg-violet" },
+  { n: "03", name: "Domain Takeover & Impact", range: "15–20", blurb: "Pass-the-Hash, Golden Ticket forge, rogue persistence & ransomware defacement", icon: Crown, tone: "text-accent", bar: "bg-accent" },
 ];
 
 function actOf(i: number) {
@@ -52,9 +52,9 @@ export function VisualAttack() {
       <div className="container-page" ref={ref}>
         <SectionHead
           index="02"
-          kicker="How the break-in went"
-          title="Twenty steps, from front door to total control."
-          lede="A real intrusion moves in stages: get in, spread out, take over. Press play and the chain runs — each step either lit up my defenses or slipped past, and every one links to the actual commands in the repository."
+          kicker="Adversary Attack Simulation"
+          title="A 20-stage kill chain, mapped across the MITRE ATT&CK framework."
+          lede="Real-world cyber intrusions do not happen in isolation—they follow an intentional progression from external reconnaissance to lateral movement and domain impact. In this 74-minute campaign, each offensive technique was executed with specific telemetry expectations in mind, testing whether network and host detection rules would trigger."
         />
 
         <div className="mt-12 grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-start">
@@ -76,7 +76,7 @@ export function VisualAttack() {
                       Step {index + 1} of {stages.length}
                     </div>
                     <div className="text-xs text-muted">
-                      {caught} caught · {stages.length - caught} slipped past
+                      {caught} detected · {stages.length - caught} visibility gaps
                     </div>
                   </div>
                 </div>
@@ -177,7 +177,7 @@ export function VisualAttack() {
                         }`}
                       >
                         <span className={`h-1.5 w-1.5 rounded-full ${result.dot}`} />
-                        {result.label === "Caught" ? "An alarm fired" : result.label === "Missed" ? "Nothing saw this" : "Not tested"}
+                        {result.label === "Caught" ? "Alert Generated" : result.label === "Missed" ? "Detection Gap" : "Not Tested"}
                       </span>
                       <span className="font-mono text-xs text-faint">{current.techniqueId}</span>
                     </div>

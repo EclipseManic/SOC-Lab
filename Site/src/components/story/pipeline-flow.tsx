@@ -7,54 +7,54 @@ type Tone = "neutral" | "violet" | "ok";
 
 const STEPS: Array<{ name: string; sub: string; tone: Tone; x: number; glance: string; does: string; why: string; ex: string }> = [
   {
-    name: "Telemetry",
-    sub: "Logs + EVE",
+    name: "Telemetry Ingestion",
+    sub: "Logs + EVE JSON",
     tone: "neutral",
     x: 40,
-    glance: "Everything that gets logged.",
-    does: "Windows, the domain controller, DVWA and Suricata send their logs to Wazuh.",
-    why: "Wazuh can only judge what it can actually see.",
-    ex: "Suricata notices a port scan coming from Kali.",
+    glance: "Continuous collection from all endpoints and network sensors.",
+    does: "Endpoints (Windows Server, Windows 10, Ubuntu DVWA) and the Suricata gateway stream real-time events to the Wazuh Manager.",
+    why: "Effective detection requires multi-layered visibility across both network flows and low-level host telemetry.",
+    ex: "Suricata flags an inbound TCP port scan while Sysmon logs an abnormal process execution.",
   },
   {
-    name: "Wazuh rules",
-    sub: "Level 8+",
+    name: "Wazuh Rules Engine",
+    sub: "Level 8+ Gate",
     tone: "violet",
     x: 163,
-    glance: "Only level 8 and up survives.",
-    does: "Hand-written rules score every event. Boring ones are dropped; only serious ones (Level 8 and up) move on.",
-    why: "Keeps the analyst from drowning in noise.",
-    ex: "The port scan rule scores 8, so it continues.",
+    glance: "Custom decoders and correlation rules score event severity.",
+    does: "Wazuh normalizes unstructured logs, evaluates behavioral rules, and filters out benign baseline background noise.",
+    why: "Prevents analyst fatigue by ensuring only high-severity, security-relevant anomalies (Level 8 and above) progress to incident response.",
+    ex: "A web shell upload triggers custom Wazuh Rule 100199 at Severity Level 10.",
   },
   {
-    name: "SQLite queue",
-    sub: "Local write",
+    name: "SQLite Queue",
+    sub: "Local WAL Buffer",
     tone: "violet",
     x: 286,
-    glance: "Saved to disk before anything else.",
-    does: "The alert is written to a small file on disk straight away, with no network involved.",
-    why: "Disk writes take milliseconds, so Wazuh never waits and never loses an alert during a flood.",
-    ex: "300 alerts from one scan are saved in a blink.",
+    glance: "Sub-millisecond local buffering ensures zero alert loss.",
+    does: "When Wazuh triggers an alert, the custom integration writes it immediately to a local SQLite database using Write-Ahead Logging (WAL).",
+    why: "Local disk commits execute in under a millisecond, preventing Wazuh from blocking or dropping alerts during high-volume attack bursts.",
+    ex: "Hundreds of rapid brute-force or port scan alerts are queued instantly without network latency.",
   },
   {
-    name: "Flush daemon",
-    sub: "Every 5 sec",
+    name: "Flush Daemon",
+    sub: "5-Sec Aggregation",
     tone: "violet",
     x: 409,
-    glance: "Groups repeats every 5 seconds.",
-    does: "A background service wakes every 5 seconds, reads the queue and groups related alerts.",
-    why: "Turns hundreds of noisy alerts into a few clear ones.",
-    ex: "300 nmap alerts become one “Port scan” alert.",
+    glance: "Batch processing and deduplication daemon.",
+    does: "A background systemd service wakes every 5 seconds, reads the SQLite queue, and consolidates repeated alerts by tool, target, and IP.",
+    why: "Folds repetitive noisy bursts into a single cohesive alert summary, keeping incident tracking manageable.",
+    ex: "300 individual web fuzzing hits are aggregated into one structured 'Directory Brute Force' event.",
   },
   {
-    name: "TheHive 5",
-    sub: "Alerts + cases",
+    name: "TheHive 5 Case Platform",
+    sub: "Alerts & Cases",
     tone: "ok",
     x: 532,
-    glance: "One clean alert to triage.",
-    does: "Receives the cleaned alert through its API, with tags and MITRE ATT&CK info.",
-    why: "The analyst triages it and can open a case in one click.",
-    ex: "Analyst clicks “Create case”.",
+    glance: "Actionable alert delivery with MITRE ATT&CK context.",
+    does: "Receives the deduplicated alert via REST API with pre-populated severity, tags, observables, and forensic artifacts.",
+    why: "Enables SOC analysts to immediately validate evidence, track chain of custody, and open a full investigation case in one click.",
+    ex: "The analyst reviews the consolidated alert and clicks 'Promote to Incident Case'.",
   },
 ];
 
@@ -344,8 +344,8 @@ export function PipelineFlow() {
                 model.queue.length ? "border-accent/50 bg-accent-soft/20" : "border-rule bg-paper-3/60",
               )}
             >
-              <h3 className="text-sm font-medium text-ink">2. Queue</h3>
-              <p className="mt-1 text-xs text-muted">Alerts wait here, saved instantly. Wazuh never waits.</p>
+              <h3 className="text-sm font-medium text-ink">2. Local SQLite Queue</h3>
+              <p className="mt-1 text-xs text-muted">When Wazuh generates an alert, the integration first stores it in a local SQLite queue in sub-millisecond time.</p>
               <div className="mt-3 flex min-h-[30px] flex-wrap items-center gap-1">
                 {model.queue.length === 0 ? (
                   <span className="text-[0.7rem] text-faint">empty — press an attack above</span>
@@ -357,17 +357,17 @@ export function PipelineFlow() {
               </div>
               <div className="mt-2 flex items-center gap-1.5 text-xs text-faint">
                 {model.queue.length > 0 && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />}
-                {model.queue.length} waiting
+                {model.queue.length} waiting in buffer
               </div>
             </div>
 
             <div className="rounded-card border border-rule bg-paper-3/60 p-4">
-              <h3 className="text-sm font-medium text-ink">3. Flush daemon</h3>
-              <p className="mt-1 text-xs text-muted">Every 5 seconds it groups alerts from the same tool.</p>
+              <h3 className="text-sm font-medium text-ink">3. Background Flush Daemon</h3>
+              <p className="mt-1 text-xs text-muted">A background process collects alerts in batches every 5 seconds, grouping duplicates to prevent alert fatigue.</p>
               <div className="mt-3 h-2 overflow-hidden rounded-full bg-rule/60">
                 <div className="h-2 rounded-full bg-accent transition-[width] duration-100" style={{ width: `${(model.t / FLUSH_MS) * 100}%` }} />
               </div>
-              <div className="mt-2 text-xs text-faint">Next flush in {Math.ceil((FLUSH_MS - model.t) / 1000)}s</div>
+              <div className="mt-2 text-xs text-faint">Next batch dispatch in {Math.ceil((FLUSH_MS - model.t) / 1000)}s</div>
             </div>
 
             <div
@@ -376,8 +376,8 @@ export function PipelineFlow() {
                 model.cases.length ? "border-ok/50 bg-ok-soft/20" : "border-rule bg-paper-3/60",
               )}
             >
-              <h3 className="text-sm font-medium text-ink">4. TheHive</h3>
-              <p className="mt-1 text-xs text-muted">What the analyst actually sees.</p>
+              <h3 className="text-sm font-medium text-ink">4. TheHive 5 Cases</h3>
+              <p className="mt-1 text-xs text-muted">The analyst receives clean, deduplicated incident cases enriched with MITRE ATT&CK tags and forensic artifacts.</p>
               <div className="mt-3 space-y-2">
                 {model.cases.length === 0 ? (
                   <div className="text-xs text-faint">Nothing yet. Press a button above.</div>
@@ -385,7 +385,7 @@ export function PipelineFlow() {
                   model.cases.map((c) => (
                     <div key={c.id} className="border-b border-rule/60 pb-2 last:border-0 last:pb-0">
                       <div className="text-xs font-medium text-ink">{TOOLS[c.key].title}</div>
-                      <div className="text-xs text-muted">grouped from {c.n} raw alerts</div>
+                      <div className="text-xs text-muted">consolidated from {c.n} raw alerts</div>
                     </div>
                   ))
                 )}
@@ -400,13 +400,15 @@ export function PipelineFlow() {
                 {k} alert
               </span>
             ))}
-            <span>Each square is one raw alert.</span>
+            <span>Each square represents one raw telemetry event.</span>
           </div>
 
           <p className="mt-3 rounded-card border border-rule bg-paper-3/60 px-4 py-3 text-xs leading-5 text-muted">
-            <span className="font-medium text-ink-2">Why a queue?</span> Without it, Wazuh would stop and wait for
-            TheHive on every single alert, and could time out during a scan. With it, Wazuh just writes to disk and
-            moves on.
+            <span className="font-medium text-ink-2">Why a decoupled queue architecture?</span> Directly pushing every
+            alert over the network to TheHive's API would cause high latency and risk dropped alerts during massive attack
+            bursts (like an Nmap scan or directory fuzzing). By committing alerts to local SQLite storage first, Wazuh
+            acknowledges events in sub-millisecond time. The background flush daemon then batches and forwards them reliably,
+            ensuring zero alert loss while keeping cases clean and actionable for the SOC analyst.
           </p>
         </div>
       )}

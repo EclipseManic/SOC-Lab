@@ -12,26 +12,26 @@ const gaps = [
   {
     id: "04",
     icon: Cpu,
-    title: "Cracking the passwords (at home)",
-    why: "The attacker took the stolen password hashes away and cracked them on his own graphics card. Nothing crossed my network — so there was nothing for my tools to see.",
+    title: "Offline MD5 Hash Cracking",
+    why: "The attacker exported MD5 password hashes from the compromised database and cracked them offline on an isolated GPU rig. Because computational brute forcing produces zero network traffic or endpoint system calls on victim infrastructure, it cannot be observed by SIEM or NIDS sensors.",
   },
   {
     id: "11",
     icon: Cpu,
-    title: "Cracking a Windows password (at home)",
-    why: "Same story. The captured Windows password was cracked offline. No traffic, no logs, no alarm — a gap that is physically impossible to watch.",
+    title: "Offline NetNTLMv2 Password Cracking",
+    why: "Following LLMNR broadcast poisoning, the captured Windows NetNTLMv2 authentication token was cracked offline with Hashcat. Like Stage 04, offline mathematical recovery leaves no forensic trace on monitored corporate assets.",
   },
   {
     id: "09",
     icon: Radar,
-    title: "A quiet sweep, once inside",
-    why: "Inside the network the attacker scanned for other machines. That traffic never crossed my gateway camera, and the victims' own logs were not watching for it.",
+    title: "Internal Subnet Host Discovery (East-West Gap)",
+    why: "Once established on the compromised web host, the adversary scanned the local 192.168.56.0/24 subnet. Because this traffic moved across the local virtual switch without traversing the routed security gateway interface, and local endpoint firewall logging was disabled, network inspection was blind to the sweep.",
   },
   {
     id: "12",
     icon: SearchX,
-    title: "Mapping the way to the top",
-    why: "The attacker probed the directory for a path to the crown jewels. I caught the moment he logged in from the pivot, but the directory server was not recording the queries themselves.",
+    title: "BloodHound LDAP Active Directory Reconnaissance",
+    why: "The attacker executed BloodHound to enumerate domain trusts and privilege escalation paths. While the remote session itself was authenticated, the Windows Domain Controller lacked Directory Service Access Auditing (EID 1644) and SACLs, leaving the reconnaissance queries unlogged.",
   },
 ];
 
@@ -75,9 +75,9 @@ export function VisualSignal() {
       <div className="container-page">
         <SectionHead
           index="07"
-          kicker="Did anyone notice?"
-          title="Sixteen alarms. Four blind spots."
-          lede="This is the honest part. I replayed every step against my logs and counted what my defenses really caught — and I named the four moments they could not, instead of hiding them behind a percentage."
+          kicker="Empirical Telemetry Accounting"
+          title="Sixteen alerts confirmed. Four visibility gaps documented."
+          lede="Mature detection engineering requires honest, evidence-backed evaluation. Rather than claiming 100% artificial detection coverage, I cross-examined every attack stage against raw event logs. We verified 16 actionable alerts in TheHive and thoroughly documented the 4 visibility gaps where telemetry could not be gathered."
         />
 
         <div className="mt-14 grid gap-6 lg:grid-cols-[auto_minmax(0,1fr)] lg:items-center">
@@ -89,22 +89,22 @@ export function VisualSignal() {
 
           <Stagger className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             <StaggerItem>
-              <Stat value={metrics.directDetectionCount} of={metrics.stageCount} tone="text-cool" label="caught directly on the victim" />
+              <Stat value={metrics.directDetectionCount} of={metrics.stageCount} tone="text-cool" label="direct endpoint detections" />
             </StaggerItem>
             <StaggerItem>
-              <Stat value={metrics.operationalAlertCount} of={metrics.stageCount} tone="text-ok" label="raised a live alert" />
+              <Stat value={metrics.operationalAlertCount} of={metrics.stageCount} tone="text-ok" label="operational live alerts raised" />
             </StaggerItem>
             <StaggerItem>
-              <Stat value={metrics.totalGapCount} tone="text-accent" label="named blind spots" />
+              <Stat value={metrics.totalGapCount} tone="text-accent" label="documented visibility gaps" />
             </StaggerItem>
             <StaggerItem>
-              <Stat value={metrics.theHiveAlertCount} tone="text-ink" label="case files opened" />
+              <Stat value={metrics.theHiveAlertCount} tone="text-ink" label="cases tracked in TheHive" />
             </StaggerItem>
             <StaggerItem>
-              <Stat value={metrics.ruleFailureCount} tone="text-ink" label="rules that failed" />
+              <Stat value={metrics.ruleFailureCount} tone="text-ink" label="rule syntax edge cases" />
             </StaggerItem>
             <StaggerItem>
-              <Stat value={metrics.durationMinutes} suffix=" min" tone="text-ink" label="from first scan to impact" />
+              <Stat value={metrics.durationMinutes} suffix=" min" tone="text-ink" label="total intrusion duration" />
             </StaggerItem>
           </Stagger>
         </div>
@@ -112,8 +112,8 @@ export function VisualSignal() {
         <Reveal delay={0.1} className="mt-14">
           <div className="flex items-center gap-3">
             <EyeOff className="h-5 w-5 text-accent" />
-            <h3 className="text-lg text-ink">The four blind spots</h3>
-            <span className="text-sm text-muted">— {missed}, told plainly</span>
+            <h3 className="text-lg text-ink">The four architectural blind spots</h3>
+            <span className="text-sm text-muted">— {missed} documented detection gaps analyzed</span>
           </div>
         </Reveal>
 

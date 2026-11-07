@@ -9,9 +9,9 @@ export function VisualSetup() {
       <div className="container-page">
         <SectionHead
           index="01"
-          kicker="What I built — and why"
-          title="A tiny company, wired around one choke point."
-          lede="You cannot trust a security tool you have never tested with a real attack. So I built one small company network from scratch — and I wired it so that every single packet has to pass through the gateway. Even the victims cannot reach each other, or the SOC, on their own."
+          kicker="Architecture & Network Segmentation"
+          title="An enterprise network engineered for total visibility."
+          lede="To evaluate security controls with real confidence, you need an environment where every malicious packet and process can be systematically tracked. I designed this hybrid infrastructure around strict network segmentation: on-premises victim systems are isolated on an internal subnet, all inter-segment traffic is routed through an inline Suricata gateway, and telemetry is securely forwarded over a site-to-site WireGuard tunnel into Azure."
         />
 
         <Reveal delay={0.1} y={34} className="mt-12">
@@ -23,9 +23,10 @@ export function VisualSetup() {
             </div>
 
             <p className="relative mt-5 rounded-card border border-rule bg-paper-3/60 px-4 py-3 text-xs leading-5 text-muted">
-              <span className="font-medium text-ink-2">One choke point:</span> the three victims are not allowed to
-              talk to each other or to the SOC directly — every packet has to cross the Suricata gateway first. That
-              is what makes the network watchable at all.
+              <span className="font-medium text-ink-2">Why network segmentation matters:</span> In this architecture,
+              victim machines cannot communicate with external networks directly. Every inbound probe, lateral pivot
+              between subnets, and outbound connection must traverse the Suricata security gateway. This inline inspection
+              point gives defenders reliable network visibility across all monitored traffic flows.
             </p>
           </div>
         </Reveal>

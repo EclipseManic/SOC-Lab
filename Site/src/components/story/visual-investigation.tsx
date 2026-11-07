@@ -30,40 +30,40 @@ type Sensor = {
 const sensors: Sensor[] = [
   {
     icon: Radar,
-    name: "The network wire",
-    where: "Suricata NIDS on the gateway",
+    name: "Network Traffic Inspection",
+    where: "Suricata NIDS on the Security Gateway",
     catches:
-      "Sniffs every packet crossing between the attacker and the victims — port scans, SQL injection, raw Kerberos tickets.",
+      "Performs deep packet inspection across all inter-subnet flows, detecting port scans, web application injection payloads, and suspicious Kerberos requests.",
     ref: "SID 2010963",
     tone: "text-cool",
     ring: "border-cool/40",
   },
   {
     icon: Cpu,
-    name: "The Linux kernel",
-    where: "Auditd on the web + pivot host",
+    name: "Linux Kernel Telemetry",
+    where: "Auditd on the DMZ Web & Pivot Host",
     catches:
-      "Hooks system calls to see every command the web account runs — even inside an encrypted session.",
+      "Hooks low-level system calls (execve) to record every binary execution spawned by the web service account, even within encrypted sessions.",
     ref: "Rule 100199",
     tone: "text-accent",
     ring: "border-accent/40",
   },
   {
     icon: Laptop,
-    name: "The Windows endpoints",
-    where: "Sysmon + Security logs on the DC and workstation",
+    name: "Windows Endpoint Auditing",
+    where: "Sysmon & Windows Security on DC & Workstation",
     catches:
-      "Records process trees, logons, and registry changes on the two machines that matter most.",
+      "Captures parent-child process relationships, interactive and network logons, and persistence registry modifications on domain endpoints.",
     ref: "Event ID 4624",
     tone: "text-accent",
     ring: "border-accent/40",
   },
   {
     icon: Server,
-    name: "The analysis brain",
-    where: "Wazuh SIEM + TheHive 5 in the cloud",
+    name: "SIEM & Case Management",
+    where: "Wazuh Manager & TheHive 5 in Azure Cloud",
     catches:
-      "Decodes every feed, matches hundreds of rules, silences the noise, and opens the case files.",
+      "Correlates cross-platform telemetry against MITRE ATT&CK rules, filters background noise, and automatically generates organized incident cases.",
     ref: "Level ≥ 8 gate",
     tone: "text-ember",
     ring: "border-ember/40",
@@ -78,10 +78,26 @@ const funnel = [
 ];
 
 const engine = [
-  { icon: Waypoints, title: "A two-tier SOAR engine", body: "A sub-millisecond queue plus a batching daemon that folds a burst of alerts into one clean case." },
-  { icon: SlidersHorizontal, title: "11 dashboard filters", body: "The same 9,567 alerts cut down to 808 worth reading carefully by hand." },
-  { icon: FolderOpen, title: "Three cases, one incident", body: "Grouped by incident boundary, so twenty stages never became twenty disconnected tickets." },
-  { icon: ShieldCheck, title: "Median 4.6s to an alert", body: "From the attacker's action on a host to a case file landing in TheHive — measured, not estimated." },
+  {
+    icon: Waypoints,
+    title: "Two-Tier SOAR Pipeline",
+    body: "When Wazuh generates an alert, the integration first stores it in a local SQLite queue. A background process then collects incoming alerts in batches and forwards them to TheHive, grouping repeated alerts to prevent analyst fatigue.",
+  },
+  {
+    icon: SlidersHorizontal,
+    title: "11 Targeted Dashboard Filters",
+    body: "Narrowed down 9,567 total raw telemetry events to 808 high-signal security records, isolating adversary indicators from routine operating system background activity.",
+  },
+  {
+    icon: FolderOpen,
+    title: "Three Scoped Incident Cases",
+    body: "Alerts are grouped by logical incident phases (Perimeter, Lateral Movement, Domain Dominance) rather than creating 46 disconnected tickets, preserving investigative context.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Median 4.6s Time-to-Alert",
+    body: "Measured end-to-end latency from adversary command execution on an endpoint, through WireGuard transport, to automated case generation in TheHive.",
+  },
 ];
 
 export function VisualInvestigation() {
@@ -93,9 +109,9 @@ export function VisualInvestigation() {
       <div className="container-page">
         <SectionHead
           index="04"
-          kicker="The defender's side"
-          title="Then I sat down and ran the investigation."
-          lede="Attacking is only half the job. The real work was the analyst's: collecting the alerts, cutting the noise, grouping them into real incidents, and writing down what each one actually proved — and where my visibility stopped."
+          kicker="Incident Investigation & Triage"
+          title="From raw SIEM telemetry to structured incident response."
+          lede="Offensive emulation is only half of the exercise. The core responsibility of the SOC analyst is making sense of the telemetry: cutting through thousands of background events, validating true positives against false positives, grouping related alerts into cohesive cases, and documenting the precise blast radius."
         />
 
         {/* Where alerts come from */}
@@ -128,7 +144,7 @@ export function VisualInvestigation() {
 
         <Reveal delay={0.1} className="mt-6">
           <div className="panel flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-4 font-mono text-[0.72rem] text-ink-2">
-            {["attacker action", "sensor fires", "encrypted tunnel", "rule match", "case file in TheHive"].map((node, i, arr) => (
+            {["adversary command", "sensor detection", "encrypted tunnel", "correlation rule", "case created in TheHive"].map((node, i, arr) => (
               <span key={node} className="flex items-center gap-3">
                 <span className="text-faint">{node}</span>
                 {i < arr.length - 1 && <ArrowRight className="h-3.5 w-3.5 text-accent" />}
@@ -140,11 +156,12 @@ export function VisualInvestigation() {
         {/* Noise to signal */}
         <Reveal delay={0.1} className="mt-16">
           <h3 className="text-lg text-ink">
-            From 9,567 alerts to three investigations <span className="text-sm text-muted">— the hard part</span>
+            From 9,567 raw alerts to three investigations <span className="text-sm text-muted">— isolating actionable signal</span>
           </h3>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">
-            Raw telemetry is not an investigation. The same stream splits two ways: a live gate that
-            opens serious cases the instant they fire, and an analyst filter that cuts the noise for the deep read.
+            Raw telemetry alone does not equal an investigation. In an enterprise environment, raw event streams
+            must be handled through two synchronized paths: an automated SOAR pipeline that immediately opens tickets for
+            high-severity threats, and targeted analyst filters that eliminate routine noise during deep-dive root-cause analysis.
           </p>
         </Reveal>
 

@@ -44,9 +44,9 @@ export function VisualPostMortem() {
       <div className="container-page">
         <SectionHead
           index="06"
-          kicker="The forensic autopsy"
-          title="The 7 fatal flaws — and the observables left behind."
-          lede="A breach is never a single event; it is a cascade of compounding exposures. Here is the forensic post-mortem isolating the 7 architectural failures that allowed perimeter exploitation to escalate into Active Directory forest compromise, accompanied by the authoritative Indicators of Compromise (IoC) register."
+          kicker="Root-Cause Analysis & Threat Intelligence"
+          title="The 7 fatal architectural flaws — and the observables left behind."
+          lede="Enterprise breaches rarely stem from a single oversight; they succeed because minor misconfigurations compound into an escalation path. This post-mortem breaks down the 7 cascading architectural flaws that allowed an external web exploit to escalate into Active Directory forest compromise, accompanied by the forensic Indicators of Compromise (IoC) catalog extracted during live triage."
         />
 
         {/* 1. Seven Fatal Architectural Flaws Grid */}
