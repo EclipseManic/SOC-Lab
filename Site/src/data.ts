@@ -282,7 +282,7 @@ const stageCopy: Stage[] = [
   {
     id: "09",
     slug: "internal-discovery",
-    title: "Internal Discovery",
+    title: "Internal Discovery (Subnet Sweep)",
     phase: "cred",
     tactic: "Discovery",
     technique: "Remote System Discovery",
@@ -292,18 +292,18 @@ const stageCopy: Stage[] = [
     attacker:
       "Scans the internal victim subnet from DVWA, identifying Domain Controller (192.168.56.10) and Windows 10 (192.168.56.20).",
     defender:
-      "Suricata promiscuous capture on ens37 detects internal reconnaissance sweep (SIDs 3400001, 3400002, 3400020). Target-side L2 logging gap documented (DG-09).",
+      "Target Logging Gap (DG-09). The target Windows endpoints dropped incoming probes silently because Windows Filtering Platform (WFP) dropped-packet auditing was unconfigured. However, Suricata in promiscuous mode on gateway ens37 observed the sweep (raising wire heuristic alert wzb-3152e3ed59 in TheHive), and Wazuh recorded the nmap command on the pivot as investigative evidence (Row 9184).",
     evidence:
-      "Pivot scan output, Suricata internal sweep alert (14 victim-to-victim alerts in CSV), and TheHive alert wzb-3152e3ed59.",
-    telemetry: "Host process / Network IDS",
+      "Suricata wire sweep alert wzb-3152e3ed59, pivot command audit (CSV row 9184), and zero target endpoint logs (DG-09 gap).",
+    telemetry: "Wire NIDS Observation (DG-09 Target Endpoint Gap)",
     gap: "DG-09",
     status: "Logging gap",
     caseLabel: "Case 02",
     caseSlug: "case-02-lateral-movement",
     attackPath: "02-Attack-Simulation/Stages/stage-09-internal-discovery.md",
     investigationPath: "04-Investigation/Stages/stage-09-internal-discovery.md",
-    ruleId: "Suricata SIDs 3400001, 3400002, 3400020 on ens37",
-    alertRef: "wzb-3152e3ed59",
+    ruleId: "Suricata SID 3400001 (Wire Heuristic) / Target Unlogged (DG-09)",
+    alertRef: "wzb-3152e3ed59 (Wire Observation)",
   },
   {
     id: "10",
@@ -363,25 +363,25 @@ const stageCopy: Stage[] = [
     title: "BloodHound Enumeration",
     phase: "cred",
     tactic: "Discovery",
-    technique: "Domain Account",
+    technique: "Domain Account Discovery",
     techniqueId: "T1087.002",
     plain:
-      "The attacker runs bloodhound-python from Kali via the pivot host to ingest Active Directory objects and graph the fastest path to Domain Admin.",
+      "The attacker runs bloodhound-python on the DVWA pivot host to ingest Active Directory domain objects via LDAP and graph attack paths to Domain Admin.",
     attacker:
       "Executes bloodhound-python via LDAP against the Domain Controller, exporting 2,493 user and group trust relationships into Neo4j.",
     defender:
-      "Wazuh Rule 5715 detects repeated root SSH administrative sessions on pivot. Active Directory LDAP search filter gap documented (DG-12).",
+      "Target Logging Gap (DG-12). The target Domain Controller logged a generic network logon (EID 4624), but the actual LDAP enumeration queries went unrecorded because Event ID 1644 diagnostic query auditing was disabled. The activity was captured purely as investigative evidence on the Linux pivot (Wazuh Rule 100220 command audit, CSV row 9259) and a generic SSH logon session alert in TheHive (Alert #22, wzb-1d2d7fb4b8).",
     evidence:
-      "BloodHound graph export, SSH logon logs on DVWA, and TheHive alert wzb-dbf3197ceb.",
-    telemetry: "Linux auth / LDAP query logs",
+      "BloodHound graph export, pivot bashcmd audit log (Row 9259), DC generic logon EID 4624, and TheHive generic SSH session alert wzb-1d2d7fb4b8.",
+    telemetry: "Pivot Shell Telemetry (DG-12 Target LDAP Gap)",
     gap: "DG-12",
-    status: "Detected",
+    status: "Logging gap",
     caseLabel: "Case 02",
     caseSlug: "case-02-lateral-movement",
     attackPath: "02-Attack-Simulation/Stages/stage-12-bloodhound.md",
     investigationPath: "04-Investigation/Stages/stage-12-bloodhound.md",
-    ruleId: "Wazuh 5715 (Pivot Session)",
-    alertRef: "wzb-dbf3197ceb",
+    ruleId: "Pivot Bashcmd Row 9259 / DC EID 1644 Unlogged (DG-12)",
+    alertRef: "wzb-1d2d7fb4b8 (Generic SSH Session)",
   },
   {
     id: "13",
