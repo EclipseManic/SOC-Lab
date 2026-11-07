@@ -1470,11 +1470,9 @@ def _ingest_txn(a):
         try: c.close()
         except Exception: pass
 def ingest_alert(a):
-    last=None
     for attempt in range(4):
         try: return _ingest_txn(a)
         except sqlite3.Error as e:
-            last=e
             if "locked" in str(e).lower() or "busy" in str(e).lower():
                 time.sleep(0.05*(2**attempt)+random.uniform(0,0.02)); continue
             # DB-level failure (FULL/CORRUPT/CANTOPEN/...): txn already rolled back, so
@@ -1599,7 +1597,7 @@ def flush_claimed_group(gt,tid):
                     try:
                         wc.execute("BEGIN IMMEDIATE")
                         if rt2=="recreate" and not rekey_ok2:
-                            st=_complete_group_retry(wc,gt,tid,claimed_gen,True); wc.execute("COMMIT")
+                            _complete_group_retry(wc,gt,tid,claimed_gen,True); wc.execute("COMMIT")
                             logging.error(f"[reconcile] PATCH {tid} 404 not confirmed (transient?); backing off, will retry (no re-key, no duplicate)")
                             try: wc.close()
                             except Exception: pass
@@ -1616,7 +1614,7 @@ def flush_claimed_group(gt,tid):
                             try: wc.close()
                             except Exception: pass
                             return True
-                        st=_complete_group_retry(wc,gt,tid,claimed_gen,rt2,retry_after=ra2); wc.execute("COMMIT")
+                        _complete_group_retry(wc,gt,tid,claimed_gen,rt2,retry_after=ra2); wc.execute("COMMIT")
                         try: wc.close()
                         except Exception: pass
                         return False
@@ -1634,7 +1632,7 @@ def flush_claimed_group(gt,tid):
             wc=_connect()
             try:
                 wc.execute("BEGIN IMMEDIATE")
-                st=_complete_group_retry(wc,gt,tid,claimed_gen,True); wc.execute("COMMIT")
+                _complete_group_retry(wc,gt,tid,claimed_gen,True); wc.execute("COMMIT")
             except Exception:
                 try: wc.execute("ROLLBACK")
                 except Exception: pass
@@ -1649,7 +1647,7 @@ def flush_claimed_group(gt,tid):
                 clean=_complete_group_success(wc,gt,tid,claimed_gen,real_id=real); _bump_in_txn(wc,"m_creates"); wc.execute("COMMIT")
                 logging.info(f"Flushed new group {gt}/{real} ({len(stages)} stages){'' if clean else ' (+new stages arrived; will PATCH next cycle)'}")
                 return True
-            st=_complete_group_retry(wc,gt,tid,claimed_gen,rt,retry_after=ra); wc.execute("COMMIT"); return False
+            _complete_group_retry(wc,gt,tid,claimed_gen,rt,retry_after=ra); wc.execute("COMMIT"); return False
         except Exception:
             try: wc.execute("ROLLBACK")
             except Exception: pass
@@ -1663,7 +1661,7 @@ def flush_claimed_group(gt,tid):
     try:
         wc.execute("BEGIN IMMEDIATE")
         if rt=="recreate" and not rekey_ok:
-            st=_complete_group_retry(wc,gt,tid,claimed_gen,True); wc.execute("COMMIT")
+            _complete_group_retry(wc,gt,tid,claimed_gen,True); wc.execute("COMMIT")
             logging.error(f"PATCH {tid} 404 not confirmed (transient/proxy?); backing off, will retry (no re-key, no duplicate)")
             try: wc.close()
             except Exception: pass
@@ -1678,7 +1676,7 @@ def flush_claimed_group(gt,tid):
             clean=_complete_group_success(wc,gt,tid,claimed_gen); _bump_in_txn(wc,"m_patches"); wc.execute("COMMIT")
             logging.info(f"Re-rendered {tid} ({len(stages)} stages){'' if clean else ' (+new stages arrived; stays dirty)'}")
             return True
-        st=_complete_group_retry(wc,gt,tid,claimed_gen,rt,retry_after=ra); wc.execute("COMMIT"); return False
+        _complete_group_retry(wc,gt,tid,claimed_gen,rt,retry_after=ra); wc.execute("COMMIT"); return False
     except Exception:
         try: wc.execute("ROLLBACK")
         except Exception: pass
@@ -1723,7 +1721,7 @@ def _record_sync_latency(ms):
             c.execute("INSERT INTO flush_meta(key,value) VALUES('m_sync_ops',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",(str(n+1),))
             c.execute("COMMIT")
         except Exception:
-            try: wc.execute("ROLLBACK")
+            try: c.execute("ROLLBACK")
             except Exception: pass
         finally: c.close()
     except Exception: pass

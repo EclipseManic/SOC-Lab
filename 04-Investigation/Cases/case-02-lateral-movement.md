@@ -75,6 +75,9 @@ After getting root on the Linux web server (`192.168.56.30`), the attacker added
 
 ## Tasks
 
+![TheHive Case 02 Task Completion Checklist](../../06-Resources/screenshots/thehive-cases/thehive_case02_tasks.png)
+*Figure 2: Verified task completion checklist for CAS-002-LATMOVE tracking containment, identity remediation, and credential rotation.*
+
 - [x] Triage SSH persistence and root authentication alerts on DVWA pivot
 - [x] Disable LLMNR and NetBIOS over TCP/IP across domain workstations via GPO
 - [x] Force immediate domain-wide password reset for `win10` and `HANK_SHERMAN`

@@ -1,0 +1,93 @@
+[
+  {
+    "name": "Nmap User-Agent signature",
+    "signature": "ET SCAN Nmap Scripting Engine User-Agent Detected",
+    "ua": "Mozilla/5.0 (compatible; Nmap Scripting Engine; https://nmap.org/book/nse.html)",
+    "expected": "Nmap"
+  },
+  {
+    "name": "sqlmap User-Agent",
+    "ua": "sqlmap/1.5.2#stable (http://sqlmap.org)",
+    "expected": "sqlmap"
+  },
+  {
+    "name": "Nikto scanner User-Agent",
+    "ua": "Mozilla/5.0 (Nikto/2.1.6)",
+    "expected": "Nikto"
+  },
+  {
+    "name": "Hydra network login cracker",
+    "signature": "ET SCAN Hydra Network Login Brute Force",
+    "expected": "Hydra"
+  },
+  {
+    "name": "ffuf spelled-out alias",
+    "ua": "Fuzz Faster U Fool v2.0.0",
+    "expected": "ffuf"
+  },
+  {
+    "name": "ffuf canonical binary name",
+    "ua": "ffuf/1.5.0",
+    "expected": "ffuf"
+  },
+  {
+    "name": "gobuster directory enumerator",
+    "ua": "gobuster/3.1.0",
+    "expected": "gobuster"
+  },
+  {
+    "name": "dirbuster directory enumerator",
+    "ua": "DirBuster-1.0-RC1",
+    "expected": "dirbuster"
+  },
+  {
+    "name": "wfuzz web fuzzer",
+    "ua": "Wfuzz/3.1.0",
+    "expected": "wfuzz"
+  },
+  {
+    "name": "masscan port scanner",
+    "ua": "masscan/1.0",
+    "expected": "masscan"
+  },
+  {
+    "name": "Nuclei vulnerability scanner",
+    "ua": "Nuclei - Open-source project (github.com/projectdiscovery/nuclei)",
+    "expected": "Nuclei"
+  },
+  {
+    "name": "WPScan WordPress security scanner",
+    "ua": "WPScan v3.8.22 (https://wpscan.com)",
+    "expected": "WPScan"
+  },
+  {
+    "name": "Generic ET SCAN signature (umbrella fallback)",
+    "signature": "ET SCAN Potential SSH Scan OUTBOUND",
+    "expected": null,
+    "expect_umbrella": true
+  },
+  {
+    "name": "Generic ET POLICY signature (umbrella fallback)",
+    "signature": "ET POLICY Suspicious inbound connection",
+    "expected": null,
+    "expect_umbrella": true
+  },
+  {
+    "name": "Generic ET WEB_SPECIFIC_APPS signature (umbrella fallback)",
+    "signature": "ET WEB_SPECIFIC_APPS PHP remote code execution",
+    "expected": null,
+    "expect_umbrella": true
+  },
+  {
+    "name": "Standard Chrome browser (benign negative)",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
+    "expected": null,
+    "expect_umbrella": false
+  },
+  {
+    "name": "Standard curl client (non-scanner negative)",
+    "ua": "curl/7.68.0",
+    "expected": null,
+    "expect_umbrella": false
+  }
+]
