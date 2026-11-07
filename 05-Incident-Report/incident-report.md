@@ -7,7 +7,7 @@
 | **Incident ID** | `INC-2026-1018-ALPHA` |
 | **Report Status** | Final / Resolved |
 | **What Happened** | Multi-stage cyber intrusion leading to full Active Directory domain compromise |
-| **Severity** | Critical (CVSS 9.8 — Full Domain Takeover) |
+| **Severity** | Critical (P1 Enterprise Incident — Full Domain Compromise) |
 | **Information Sharing** | `TLP:AMBER / PAP:AMBER` |
 | **Affected Machines** | DMZ Web Server (`192.168.56.30`), Windows 10 Workstation (`192.168.56.20`), Domain Controller (`192.168.56.10`) |
 | **Lead Investigator** | Manichand Gupta (Lead Incident Responder) |
@@ -44,12 +44,12 @@ The attack escalated with shocking speed: starting with an ordinary web port sca
   - All web application database user credentials and password hashes were dumped via SQL injection.
   - The corporate Windows 10 user hash (`AD.LAB\win10`) was stolen over the wire and cracked offline (`Secur3Lab!`).
   - An Active Directory service account ticket (`AD.LAB\HANK_SHERMAN`) was Kerberoasted and cracked (`Password123`).
-  - The entire Active Directory database (`NTDS.dit`) was stolen using DCSync, compromising password hashes for every single user, computer, and the master domain `krbtgt` secret (`611a8cdcc21cb3fe3bf3a4c2f4e05f60`).
+  - Active Directory credential secrets and Kerberos keys were extracted via DCSync using the Directory Replication Service (DRS) Remote Protocol (`drsuapi`), compromising password hashes for every user, computer, and the master domain `krbtgt` account (`611a8cdcc21cb3fe3bf3a4c2f4e05f60`).
   - Sensitive internal documents (`domain_users.txt`, `admin_info.txt`, `sensitive_data.txt`) were exfiltrated via SCP.
 - **Integrity: Full Control Lost**
   - The attacker obtained full root command execution on the Linux web server.
   - A persistent backdoor user (`AD\backdoor`) was added directly to `Domain Admins`.
-  - A Kerberos Golden Ticket was forged, giving the attacker untraceable god-mode access that survived password resets.
+  - A forged Kerberos Ticket Granting Ticket (Golden Ticket) was generated using the stolen `krbtgt` hash, granting Domain Admin privileges. Ordinary user password resets do not invalidate a forged TGT; full revocation requires a double reset of the `krbtgt` account password to advance the Key Version Number (KVNO). Detection opportunities include monitoring PAC validation discrepancies, non-existent account names in TGTs, and anomalous ticket lifetimes.
   - Desktop wallpapers on both the Domain Controller and workstation were tampered with via the registry.
 - **Availability: Systems Disrupted**
   - The web application was degraded during active exploitation.
@@ -90,9 +90,9 @@ Now that they were root, the attacker made sure they wouldn't lose access. They 
 ### Phase 4: Poisoning the Well with Responder (17:36:26 – 18:01:00 IST)
 The attacker launched Responder on the web server to listen for internal broadcast queries. When the Windows 10 workstation asked the network for a missing file share, Responder answered first. Windows sent its NetNTLMv2 password hash directly to the attacker. The hash was saved to `/tmp/win10.hash` and cracked offline in under 60 seconds (`Secur3Lab!`). With valid domain credentials in hand, the attacker ran BloodHound from the Linux box to map out every trust relationship, user, and computer in the domain.
 
-### Phase 5: Becoming God in Active Directory (18:01:18 – 18:06:40 IST)
+### Phase 5: Active Directory Takeover & Credential Extraction (18:01:18 – 18:06:40 IST)
 BloodHound revealed a critical finding: a service account named `HANK_SHERMAN` was a member of `Domain Admins` with an SPN registered. The attacker requested its Kerberos service ticket (Kerberoasting) and cracked its weak password (`Password123`) offline in 25 seconds. 
-Now holding Domain Admin credentials, the attacker ran DCSync (`secretsdump.py`), pretending to be a replicating Domain Controller. The real DC happily replicated the entire `NTDS.dit` database, giving the attacker every password hash in the domain—including the master `krbtgt` hash. With `krbtgt`, the attacker used `ticketer.py` to forge an unbreakable Kerberos Golden Ticket and logged into the Domain Controller over WMI.
+Now holding Domain Admin credentials, the attacker ran DCSync (`secretsdump.py`), invoking the Directory Replication Service Remote Protocol (`drsuapi` `DsGetNCChanges`) as an authorized domain controller. This extracted domain-wide credential secrets—including the master `krbtgt` NTLM hash and AES keys—without needing direct disk access or copying the raw `NTDS.dit` file. Using the extracted `krbtgt` key, the attacker utilized `ticketer.py` to forge a Kerberos Golden Ticket (assigning RID 500 Domain Admin rights) and authenticated to the Domain Controller over WMI.
 
 ### Phase 6: Backdoors & Smuggling Data (18:08:21 – 18:17:30 IST)
 The attacker secured permanent persistence by creating a rogue user directly on the Domain Controller: `net user backdoor P@ssw0rd123! /add /domain`, and adding it to `Domain Admins`. Next, they staged sensitive files (`domain_users.txt`, `admin_info.txt`, `sensitive_data.txt`), pulled them back to the web server, and smuggled them out to Kali via SCP across 6 rapid SSH sessions in just 570 milliseconds.
@@ -160,7 +160,7 @@ We handled incident response in two clean phases: first, kicking the attacker ou
 
 ### Phase 1: Live Containment (Locking the Attacker Out)
 1. **Blocked Attacker IP:** Dropped all traffic from `192.168.232.135` at the firewall.
-2. **Killed Shells:** Terminated the reverse shell process (`pkill -9 -f nc.openbsd`) and moved `shell.php` to quarantine with permissions `000`.
+2. **Killed Shells:** Terminated the reverse shell process (`pkill -9 -f nc.openbsd`) and moved `shell.php` to quarantine with permissions `000`. *(DFIR Operational Note: In an enterprise incident response engagement, analysts first identify the specific PID and open socket via `ss -tulpn` or `lsof -i`, triage volatile memory and process environment variables for forensic preservation, and terminate the targeted PID directly rather than relying on broad process-name matching).*
 3. **Kicked Out Backdoor SSH Keys:** Cleared the attacker's public key from `/root/.ssh/authorized_keys` and terminated active terminal sessions.
 4. **Disabled Rogue Accounts:** Disabled the `AD\backdoor` user in Active Directory while preserving the account object for forensic tracking.
 5. **Killed the Golden Ticket:** Performed an Active Directory double `krbtgt` password reset to invalidate all forged Kerberos tickets (**KVNO 3**).
@@ -182,6 +182,23 @@ We handled incident response in two clean phases: first, kicking the attacker ou
 To make sure our defenses stay strong, we organized future improvements into three clear timeframes:
 
 ![Enterprise Hardening Strategic Roadmap](../06-Resources/diagrams/Enterprise%20Hardening%20Strategic%20Roadmap.png)
+
+### 7.1 Lessons Learned & Engineering Roadmap (SOAR Pipeline v2)
+
+Beyond network and Active Directory hardening, this exercise highlighted key architectural refinements for our custom SOAR integration pipeline (`custom-thehive.py`):
+
+1. **Alert Grouping Window: Inactivity Timeout vs. Maximum Campaign Duration (Issue 4 Roadmap):**
+   - *Current Implementation:* The v1 integration groups tool alerts using a 30-minute rolling inactivity timeout. While this prevented alert storms during rapid port scans, ongoing adversary activity continuously reset the timer, causing the initial web scanner alert to accumulate events over 69 minutes—inadvertently blending early reconnaissance with post-compromise activity.
+   - *v2 Roadmap Upgrade:* Implement a hard 15-minute maximum campaign window alongside the inactivity timeout. Furthermore, introduce kill-chain phase segregation so that alerts automatically branch into separate incidents when adversary behavior transitions from perimeter scanning to lateral movement or domain compromise.
+
+2. **Automated Testing Suite Expansion (Issue 5 Roadmap):**
+   - *Current Implementation:* The script contains a built-in self-test and synthetic ingestion benchmark verifying regex fingerprinting without external database or network dependencies.
+   - *v2 Roadmap Upgrade:* Expand test coverage with an automated integration test harness that validates:
+     - End-to-end event lifecycle (Wazuh event $\rightarrow$ SQLite WAL queue $\rightarrow$ batching daemon $\rightarrow$ TheHive API mock).
+     - SQLite crash recovery after abnormal process termination during write transactions.
+     - Exponential backoff and Retry-After header handling during TheHive API outages (HTTP 429/502/503).
+     - Concurrent multi-agent queue ingestion under peak alert bursts.
+     - Resilience against malformed, partial, or unexpected JSON schemas.
 
 ---
 

@@ -23,6 +23,27 @@ FINAL ARCHITECTURE (fast durable ingest vs slow async sync):
     pattern with stable sourceRef. Crash-safe via lease timeouts; retries via
     next_retry_at with real Retry-After support; fatal 4xx dead-lettered.
 
+LATENCY MEASUREMENT DEFINITIONS:
+  - Queue Ingestion Latency: Time to append alert to local SQLite WAL (< 0.2 ms).
+  - Processing Latency: Alert normalization, fingerprinting, and grouping (< 5.0 ms).
+  - Delivery Latency: Network transit time to TheHive 5 REST API (150-300 ms).
+  - End-to-End Latency: Total time from original event occurrence to ticket creation in
+    TheHive (measured median: 4.6 s, bounded by daemon 5s flush interval).
+
+SECURITY & PRODUCTION QUALIFICATION:
+  - Lab Environment: Configured for isolated cyber range with point-to-point WireGuard
+    tunnel transport using HTTP and verify=False.
+  - Production Deployment: Requires HTTPS/mTLS with strict CA certificate validation
+    (REQUESTS_CA_BUNDLE) and dedicated credential vaulting.
+
+ENGINEERING ROADMAP & LIMITATIONS (v2):
+  - Inactivity Timeout vs. Campaign Lifetime: v1 uses a 30-min rolling inactivity timeout
+    for tool campaigns, which can keep groups alive during continuous operations. v2
+    introduces a hard 15-minute maximum campaign window and kill-chain boundary segregation.
+  - Integration Test Suite: Self-test and synthetic benchmarks validate fingerprinting;
+    v2 roadmap adds end-to-end SQLite crash recovery, concurrent multi-agent ingestion,
+    and HTTP mock fault injection.
+
 BUGS/RACES FIXED vs the first batched version:
   A. Dedup: INSERT OR IGNORE rowcount is now checked; duplicates ROLLBACK and stop.
   B. Dirty/version: pending_groups.generation + claimed_gen compare-and-clear; a group

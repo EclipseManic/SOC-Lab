@@ -495,7 +495,8 @@
   <rule id="100324" level="0">
     <if_sid>92031</if_sid>
     <field name="win.eventdata.user" type="pcre2">(?i)NT AUTHORITY\\SYSTEM</field>
-    <description>Suppress: Discovery by SYSTEM - Wazuh SCA/background activity not real user</description>
+    <field name="win.eventdata.parentImage|win.eventdata.image|win.eventdata.commandLine" type="pcre2">(?i)(wazuh-agent|wazuh|ossec)</field>
+    <description>Suppress: Discovery by SYSTEM initiated by Wazuh/OSSEC agent SCA checks - legitimate background activity</description>
   </rule>
 
 
