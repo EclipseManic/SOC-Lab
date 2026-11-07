@@ -24,8 +24,8 @@ const gaps = [
   {
     id: "09",
     icon: Radar,
-    title: "Internal Subnet Host Discovery (East-West Gap)",
-    why: "Once established on the compromised web host, the adversary scanned the local 192.168.56.0/24 subnet. Because this traffic moved across the local virtual switch without traversing the routed security gateway interface, and local endpoint firewall logging was disabled, network inspection was blind to the sweep.",
+    title: "Target Endpoint Logging Gap (Internal Nmap Sweep)",
+    why: "While Suricata's internal interface (ens37) caught the wire sweep (Alerts #17–#19) and Wazuh caught the Nmap command on DVWA (Rule 100220), the target Windows endpoints (DC and Win10) produced zero host logs. Because Windows Filtering Platform (WFP) dropped-packet auditing was disabled by default, the targets silently dropped the probes without generating an alert.",
   },
   {
     id: "12",
