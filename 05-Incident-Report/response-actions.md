@@ -51,6 +51,7 @@ All containment and eradication procedures were executed through centralized ent
 - **Target:** DVWA Server (`192.168.56.30`)
 - **Execution Command:**
   ```bash
+  # (DFIR Note: Identify specific PID via ss/lsof and preserve memory prior to targeted kill in enterprise response)
   pkill -9 -f nc.openbsd
   mkdir -p /root/forensics_quarantine/
   mv /var/www/html/dvwa/hackable/uploads/shell.php /root/forensics_quarantine/
@@ -65,6 +66,7 @@ All containment and eradication procedures were executed through centralized ent
 - **Execution Command:**
   ```bash
   sed -i '/ssh-ed25519/d' /root/.ssh/authorized_keys
+  # (DFIR Note: Identify specific pts session / socket via 'who' / 'ss' prior to killing sessions in enterprise response)
   pkill -9 -t pts/0 2>/dev/null; pkill -9 -t pts/1 2>/dev/null
   who; cat /root/.ssh/authorized_keys
   ```

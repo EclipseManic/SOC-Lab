@@ -107,5 +107,5 @@ export TERM=xterm
 
 ## Notes
 
-- **Network Interfaces:** DVWA is dual-homed: `ens37` (`192.168.232.161/24`) interfaces with the management/attacker network, while `ens33` (`192.168.56.30/24`) connects to the isolated internal Active Directory lab. The callback connected directly over the management subnet.
+- **Network Interfaces & Shadow IT Misconfiguration:** DVWA was dual-homed with `ens37` (`192.168.232.161/24`) facing the external attacker segment and `ens33` (`192.168.56.30/24`) facing the internal enterprise victim network. This unmanaged secondary interface represented a realistic enterprise staging misconfiguration that the organization was unaware of; the reverse shell exited directly across this interface. Post-incident triage permanently eradicated `ens37`, enforcing that all future web server traffic routes exclusively through the Security Gateway (`192.168.56.150`).
 - **Operational Impact:** This stage marked the transition from one-off web requests to an interactive command shell, setting up our privilege escalation to root.

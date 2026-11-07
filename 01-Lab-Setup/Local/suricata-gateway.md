@@ -31,6 +31,10 @@ The Security Gateway serves as the **single physical and logical network chokepo
 | **`ens37`** | `192.168.56.150/24` | VMware VMnet2 (Host-Only) | Isolated victim subnet (facing DC `.10`, Win10 `.20`, DVWA `.30`) |
 | **`wg0`** | `10.8.0.2/32` | WireGuard Tunnel | Cloud transit network connecting to Hub `10.8.0.1` |
 
+> [!NOTE]
+> **Boundary Note on DVWA Dual-Homing:**  
+> During initial lab staging, the DVWA web server was provisioned with an unmanaged secondary adapter (`ens37: 192.168.232.161`) bridged to VMnet8 due to an organizational staging oversight. While initial Stage 06 reverse shell traffic entered through this legacy interface, post-incident triage identified and permanently eradicated the adapter, ensuring all production traffic routes strictly through this gateway (`192.168.56.150`).
+
 ```yaml
 network:
   version: 2

@@ -9,7 +9,7 @@
 
 ## Objective
 
-Pretend to be a Domain Controller asking for routine database replication so we can dump every password hash in Active Directory (`NTDS.dit`) over the wire. Using Hank Sherman's Domain Admin account, we'll extract the hashes for `Administrator` (RID 500) and `krbtgt` (RID 502).
+Pretend to be a Domain Controller asking for routine directory replication via the Directory Replication Service Remote Protocol (DRSUAPI `drsuapi`) so we can extract Active Directory credential secrets over the wire without copying or touching the raw `NTDS.dit` file on disk. Using Hank Sherman's Domain Admin account, we'll extract the hashes for `Administrator` (RID 500) and `krbtgt` (RID 502).
 
 ---
 
@@ -34,7 +34,7 @@ Armed with Hank Sherman's Domain Admin credentials (`Passw***123`) from Stage 13
 
 1. **Abusing replication rights:** Because Hank Sherman is in `Domain Admins`, his account has the special rights "Replicating Directory Changes" and "Replicating Directory Changes All". Impacket uses Microsoft's Directory Replication Service protocol (DRSUAPI) to ask the Domain Controller to replicate its database—just like a legitimate backup DC would.
 2. **Pulling the SAM and bootKey:** The script briefly started the `RemoteRegistry` service on the DC, grabbed the system bootKey, and dumped local SAM account hashes (`Administrator:500` and `Guest:501`).
-3. **Replicating the entire Active Directory database (NTDS.dit):** Through DRSUAPI RPC calls (`DsGetNCChanges`), `secretsdump.py` replicated the active directory database right over the network, extracting NTLM hashes, Kerberos keys, and password history for every user and machine in the domain without touching the disk directly. The output was saved to `/tmp/dcsync_output.ntds` (240 KB).
+3. **Extracting Active Directory credential secrets over the wire:** Through DRSUAPI RPC calls (`DsGetNCChanges`), `secretsdump.py` replicated Active Directory password secrets right over the network, extracting NTLM hashes, Kerberos keys, and password history for every user and machine in the domain without copying or touching the raw `NTDS.dit` database file on disk. The output was saved to `/tmp/dcsync_output.ntds` (240 KB).
 4. **Inspecting the loot:** I transferred the dump back to Kali over SCP. Running `head dcsync_output.ntds` revealed every critical domain credential:
    - **Administrator (RID 500):** `Administrator:500:aad3b***4ee:cc814***9fb:::`
    - **Guest (RID 501):** `Guest:501:aad3b***4ee:31d6c***9c0:::`

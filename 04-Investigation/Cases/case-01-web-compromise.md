@@ -78,6 +78,7 @@ An external attacker at `192.168.232.135` (Kali Linux) targeted our public web s
 - [x] Inspect Apache access logs for unauthorized file upload endpoint requests
 - [x] Locate and quarantine uploaded web shell `shell.php` to `/root/forensics_quarantine/`
 - [x] Terminate reverse shell socket connection to `192.168.232.135:4444`
+- [x] Decommission unmanaged secondary network adapter (`ens37: 192.168.232.161`) to eliminate shadow DMZ bridge
 - [x] Remediate sudoers misconfiguration (remove NOPASSWD for `/usr/bin/python3`, verified via `visudo -c`)
 - [x] Deploy `.htaccess` in `/hackable/uploads/` blocking PHP/CGI script execution (verified via HTTP 403 Forbidden)
 - [x] Enforce SSH daemon hardening (`PermitRootLogin no`, `PasswordAuthentication no`)
