@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Crown, LogIn, Network, Pause, Play } from "lucide-react";
 import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/react";
-import { repoBlob, stages } from "@/data";
+import { metrics, repoBlob, stages } from "@/data";
 import { RepoLink, SectionHead } from "./visual-shared";
 import { Reveal } from "@/components/fx/reveal";
 import { DiagramCard } from "./diagram-modal";
@@ -18,11 +18,71 @@ function actOf(i: number) {
   return 2;
 }
 
-function outcome(status: string) {
-  if (status === "Detected") return { label: "Caught", tone: "text-ok", dot: "bg-ok", ring: "border-ok/50", glow: "shadow-glow-cool" };
-  if (status === "Rule failure") return { label: "Missed", tone: "text-hot", dot: "bg-hot", ring: "border-hot/50", glow: "shadow-glow-hot" };
-  if (status === "Not tested") return { label: "Not tested", tone: "text-muted", dot: "bg-muted", ring: "border-rule", glow: "" };
-  return { label: "Missed", tone: "text-accent", dot: "bg-accent", ring: "border-accent/50", glow: "shadow-glow-accent" };
+function outcome(status: string, coverageClass?: string) {
+  if (coverageClass === "direct-detection" || (status === "Detected" && coverageClass !== "operational-coverage")) {
+    return {
+      label: "Direct Detection",
+      subLabel: "Direct Target/Wire Alert",
+      tone: "text-ok",
+      dot: "bg-ok",
+      ring: "border-ok/50",
+      chip: "border-ok/40 bg-ok-soft text-ok",
+      glow: "shadow-glow-cool",
+    };
+  }
+  if (coverageClass === "operational-coverage") {
+    return {
+      label: "Pivot-Only Detection",
+      subLabel: "Pivot-Only Detection (DG Gap)",
+      tone: "text-cool",
+      dot: "bg-cool",
+      ring: "border-cool/50",
+      chip: "border-cool/40 bg-cool-soft text-cool",
+      glow: "shadow-glow-cool",
+    };
+  }
+  if (coverageClass === "target-logging-gap" || status === "Logging gap") {
+    return {
+      label: "Partial Visibility",
+      subLabel: "Target Logging Gap (Partial)",
+      tone: "text-accent",
+      dot: "bg-accent",
+      ring: "border-accent/50",
+      chip: "border-accent/40 bg-accent-soft text-accent",
+      glow: "shadow-glow-accent",
+    };
+  }
+  if (coverageClass === "offline-gap" || status === "Detection gap") {
+    return {
+      label: "Offline Activity",
+      subLabel: "Offline Activity (No Wire Telemetry)",
+      tone: "text-faint",
+      dot: "bg-faint",
+      ring: "border-rule",
+      chip: "border-rule bg-paper-3 text-muted",
+      glow: "",
+    };
+  }
+  if (status === "Rule failure") {
+    return {
+      label: "Rule Failure",
+      subLabel: "Rule Failure",
+      tone: "text-hot",
+      dot: "bg-hot",
+      ring: "border-hot/50",
+      chip: "border-hot/40 bg-hot-soft text-hot",
+      glow: "shadow-glow-hot",
+    };
+  }
+  return {
+    label: "Not tested",
+    subLabel: "Not tested",
+    tone: "text-muted",
+    dot: "bg-muted",
+    ring: "border-rule",
+    chip: "border-rule bg-paper-3 text-muted",
+    glow: "",
+  };
 }
 
 export function VisualAttack() {
@@ -44,8 +104,7 @@ export function VisualAttack() {
 
   const current = stages[index];
   const act = acts[actOf(index)];
-  const result = outcome(current.status);
-  const caught = stages.filter((s) => s.status === "Detected").length;
+  const result = outcome(current.status, current.coverageClass);
 
   return (
     <section id="attack" className="section-shell">
@@ -76,19 +135,11 @@ export function VisualAttack() {
                       Step {index + 1} of {stages.length}
                     </div>
                     <div className="text-xs text-muted">
-                      {caught} detected · {stages.length - caught} visibility gaps
+                      {metrics.directDetectionCount} direct · {metrics.operationalAlertCount - metrics.directDetectionCount} pivot-only · {metrics.totalGapCount} gaps
                     </div>
                   </div>
                 </div>
-                <div
-                  className={`chip ${
-                    result.label === "Caught"
-                      ? "border-ok/40 bg-ok-soft text-ok"
-                      : result.label === "Missed"
-                        ? "border-accent/40 bg-accent-soft text-accent"
-                        : "border-rule bg-paper-3 text-muted"
-                  }`}
-                >
+                <div className={`chip ${result.chip}`}>
                   {result.label}
                 </div>
               </div>
@@ -167,17 +218,9 @@ export function VisualAttack() {
                     <p className="mt-4 max-w-xl text-md leading-relaxed text-ink-2">{current.plain}</p>
 
                     <div className="mt-6 flex flex-wrap items-center gap-3">
-                      <span
-                        className={`chip ${
-                          result.label === "Caught"
-                            ? "border-ok/40 bg-ok-soft text-ok"
-                            : result.label === "Missed"
-                              ? "border-accent/40 bg-accent-soft text-accent"
-                              : "border-rule bg-paper-3 text-muted"
-                        }`}
-                      >
+                      <span className={`chip ${result.chip}`}>
                         <span className={`h-1.5 w-1.5 rounded-full ${result.dot}`} />
-                        {result.label === "Caught" ? "Alert Generated" : result.label === "Missed" ? "Detection Gap" : "Not Tested"}
+                        {result.subLabel}
                       </span>
                       <span className="font-mono text-xs text-faint">{current.techniqueId}</span>
                     </div>

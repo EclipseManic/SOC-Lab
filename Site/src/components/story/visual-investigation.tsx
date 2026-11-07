@@ -3,6 +3,7 @@ import {
   ArrowRight,
   Cpu,
   FolderOpen,
+  Globe,
   Laptop,
   Radar,
   Server,
@@ -31,51 +32,46 @@ const sensors: Sensor[] = [
   {
     icon: Radar,
     name: "Network Traffic Inspection",
-    where: "Suricata NIDS on the Security Gateway",
+    where: "Suricata NIDS on Security Gateway (ens33 & ens37)",
     catches:
-      "Performs deep packet inspection across all inter-subnet flows, detecting port scans, web application injection payloads, and suspicious Kerberos requests.",
-    ref: "SID 2010963",
+      "Performs deep packet inspection across all routed and perimeter traffic, detecting port scans, web injection payloads (SQLi), and Kerberos ticket-granting traffic.",
+    ref: "SID 2010963 / 2019922",
     tone: "text-cool",
     ring: "border-cool/40",
   },
   {
     icon: Cpu,
-    name: "Linux Kernel Telemetry",
-    where: "Auditd on the DMZ Web & Pivot Host",
+    name: "Linux Host & Kernel Auditing",
+    where: "Auditd & bashcmd on DMZ Web Host (.30)",
     catches:
-      "Hooks low-level system calls (execve) to record every binary execution spawned by the web service account, even within encrypted sessions.",
-    ref: "Rule 100199",
+      "Hooks execve system calls to capture webshell process execution (/usr/bin/id, nc.openbsd) and logs interactive root commands (sudo -l, secretsdump.py).",
+    ref: "Rule 100199 / 100220",
     tone: "text-accent",
     ring: "border-accent/40",
   },
   {
     icon: Laptop,
-    name: "Windows Endpoint Auditing",
-    where: "Sysmon & Windows Security on DC & Workstation",
+    name: "Windows Endpoint Instrumentation",
+    where: "Sysmon & Windows Security on DC (.10) & Win10 (.20)",
     catches:
-      "Captures parent-child process relationships, interactive and network logons, and persistence registry modifications on domain endpoints.",
-    ref: "Event ID 4624",
+      "Logs parent-child process trees (EID 1), NTLM Type 3 logons (EID 4624), administrative privilege use (EID 4672), and persistence registry keys.",
+    ref: "Sysmon EID 1 / EID 4624",
     tone: "text-accent",
     ring: "border-accent/40",
   },
   {
-    icon: Server,
-    name: "SIEM & Case Management",
-    where: "Wazuh Manager & TheHive 5 in Azure Cloud",
+    icon: Globe,
+    name: "Web Server Application Logs",
+    where: "Apache Access & Error Logs on DVWA",
     catches:
-      "Correlates cross-platform telemetry against MITRE ATT&CK rules, filters background noise, and automatically generates organized incident cases.",
-    ref: "Level ≥ 8 gate",
-    tone: "text-ember",
-    ring: "border-ember/40",
+      "Captures HTTP request methods, targeted URI paths, automated scanner user-agents (Nikto, sqlmap, custom scripts), and HTTP response status codes.",
+    ref: "access.log / Rule 31106",
+    tone: "text-ok",
+    ring: "border-ok/40",
   },
 ];
 
-const funnel = [
-  { icon: Radar, value: 9567, group: true, label: "raw alerts ingested", note: "everything the sensors recorded, across 4 agents" },
-  { icon: SlidersHorizontal, value: 808, group: true, label: "kept for the deep read", note: "after 11 dashboard filters cut the noise" },
-  { icon: FolderOpen, value: 46, group: false, label: "TheHive alerts ingested", note: "Level ≥ 8 SIEM alerts delivered to TheHive by SOAR daemon" },
-  { icon: FolderOpen, value: 3, group: false, label: "incident cases investigated", note: "the 46 alerts consolidated across 3 formal incident cases" },
-];
+
 
 const engine = [
   {
@@ -114,11 +110,19 @@ export function VisualInvestigation() {
           lede="Offensive emulation is only half of the exercise. The core responsibility of the SOC analyst is making sense of the telemetry: cutting through thousands of background events, validating true positives against false positives, grouping related alerts into cohesive cases, and documenting the precise blast radius."
         />
 
-        {/* Where alerts come from */}
+        {/* Where alerts come from: 4 Telemetry Sources */}
         <Reveal delay={0.08} className="mt-12">
-          <h3 className="text-lg text-ink">
-            Where every alert comes from <span className="text-sm text-muted">— four sensors, four layers</span>
+          <div className="flex items-center gap-2">
+            <span className="chip border-accent/40 bg-accent-soft font-mono text-[0.68rem] text-accent">
+              Telemetry Collection Layer
+            </span>
+          </div>
+          <h3 className="mt-2 text-xl text-ink sm:text-2xl">
+            Four telemetry sources feeding central security analytics
           </h3>
+          <p className="mt-1 text-sm text-muted">
+            Raw security data is gathered across four dedicated observation layers before reaching the correlation engine.
+          </p>
         </Reveal>
 
         <Stagger className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -142,9 +146,34 @@ export function VisualInvestigation() {
           })}
         </Stagger>
 
+        {/* Central SIEM & SOAR Platform Banner */}
+        <Reveal delay={0.1} className="mt-5">
+          <div className="panel relative overflow-hidden border-ember/40 bg-paper-2/90 p-5">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-ember/50 bg-paper-3 text-ember">
+                  <Server className="h-6 w-6" />
+                </span>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-md font-medium text-ink">Central Security Analytics: Wazuh SIEM 4.14.8 & TheHive 5 SOAR</h4>
+                    <span className="chip border-ember/40 bg-paper-3 font-mono text-[0.65rem] text-ember">Azure Cloud</span>
+                  </div>
+                  <p className="mt-1 text-xs text-muted max-w-2xl leading-relaxed">
+                    Ingests all 4 telemetry streams over the site-to-cloud WireGuard VPN tunnel (`10.8.0.0/24`), evaluates events against 148 detection rules and 87 suppressions, and routes high-fidelity alerts into automated case management.
+                  </p>
+                </div>
+              </div>
+              <span className="chip border-rule bg-paper-3 font-mono text-xs text-faint shrink-0">
+                Level ≥ 8 Integration Gate
+              </span>
+            </div>
+          </div>
+        </Reveal>
+
         <Reveal delay={0.1} className="mt-6">
           <div className="panel flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-4 font-mono text-[0.72rem] text-ink-2">
-            {["adversary command", "sensor detection", "encrypted tunnel", "correlation rule", "case created in TheHive"].map((node, i, arr) => (
+            {["adversary command", "telemetry sensor capture", "encrypted WireGuard tunnel", "Wazuh correlation rule", "TheHive SOAR case"].map((node, i, arr) => (
               <span key={node} className="flex items-center gap-3">
                 <span className="text-faint">{node}</span>
                 {i < arr.length - 1 && <ArrowRight className="h-3.5 w-3.5 text-accent" />}
@@ -153,40 +182,144 @@ export function VisualInvestigation() {
           </div>
         </Reveal>
 
-        {/* Noise to signal */}
+        {/* Noise to signal: The Dual-Pathway Architecture */}
         <Reveal delay={0.1} className="mt-16">
-          <h3 className="text-lg text-ink">
-            From 9,567 raw alerts to three investigations <span className="text-sm text-muted">— isolating actionable signal</span>
-          </h3>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">
-            Raw telemetry alone does not equal an investigation. In an enterprise environment, raw event streams
-            must be handled through two synchronized paths: an automated SOAR pipeline that immediately opens tickets for
-            high-severity threats, and targeted analyst filters that eliminate routine noise during deep-dive root-cause analysis.
-          </p>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <span className="chip border-accent/40 bg-accent-soft font-mono text-[0.68rem] text-accent">
+                Dual-Pathway Architecture
+              </span>
+            </div>
+            <h3 className="text-xl text-ink sm:text-2xl">
+              Two distinct operational pathways from 9,567 baseline alerts
+            </h3>
+            <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted">
+              In production detection engineering, raw telemetry does not flow through a single linear waterfall. Instead, the common telemetry stream of 9,567 events splits into two independent operational pathways: an automated, real-time SOAR pipeline for immediate incident ticketing, and a post-simulation analyst triage filter for deep-dive forensic reconstruction.
+            </p>
+          </div>
         </Reveal>
 
-        <Stagger className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {funnel.map((step, i) => {
-            const Icon = step.icon;
-            return (
-              <StaggerItem key={step.label}>
-                <div className="panel relative h-full p-5">
-                  <div className="flex items-center justify-between">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-rule bg-paper-3 text-accent">
-                      <Icon className="h-4 w-4" />
+        {/* Common Baseline Stream Card */}
+        <Reveal delay={0.12} className="mt-6">
+          <div className="panel border-rule-2 bg-paper-2/80 p-5">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-rule bg-paper-3 text-accent">
+                  <Radar className="h-5 w-5" />
+                </span>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-2xl font-bold text-ink">
+                      <Counter to={9567} group />
                     </span>
-                    <span className="font-mono text-[0.65rem] text-faint">step {i + 1}</span>
+                    <span className="text-sm font-medium text-ink-2">Raw Baseline SIEM Alerts</span>
                   </div>
-                  <div className="mt-4 font-mono text-3xl text-ink">
-                    <Counter to={step.value} group={step.group} />
-                  </div>
-                  <div className="mt-1 text-sm font-medium text-ink-2">{step.label}</div>
-                  <p className="mt-2 text-xs leading-5 text-muted">{step.note}</p>
+                  <p className="text-xs text-muted">
+                    Common event baseline indexed in OpenSearch across all 4 reporting agents (DVWA: 8,114 · Suricata: 1,168 · DC: 168 · Win10: 117)
+                  </p>
                 </div>
-              </StaggerItem>
-            );
-          })}
-        </Stagger>
+              </div>
+              <span className="chip border-accent/30 bg-accent-soft/50 font-mono text-xs text-accent shrink-0">
+                Common Telemetry Stream
+              </span>
+            </div>
+          </div>
+        </Reveal>
+
+        {/* Side-by-Side Dual Pathways */}
+        <div className="mt-4 grid gap-5 lg:grid-cols-2">
+          {/* PATH A: SOAR Automated Pipeline */}
+          <Reveal delay={0.14}>
+            <div className="panel h-full border-ok/30 bg-paper-2/90 p-5 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between border-b border-rule/60 pb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-ok animate-pulse" />
+                    <span className="font-mono text-xs font-semibold uppercase tracking-wider text-ok">Path A · Automated SOAR</span>
+                  </div>
+                  <span className="chip border-ok/40 bg-ok-soft font-mono text-[0.65rem] text-ok">
+                    Real-Time Pipeline
+                  </span>
+                </div>
+                <h4 className="mt-3 text-base font-medium text-ink">Immediate Incident Ticketing & Grouping</h4>
+                <p className="mt-1 text-xs leading-5 text-muted">
+                  Wazuh evaluates logs against the Level ≥ 8 gate. High-priority hits buffer into a local SQLite queue and are flushed every 5 seconds to TheHive 5.
+                </p>
+
+                <div className="mt-5 grid grid-cols-2 gap-3">
+                  <div className="rounded-lg border border-rule bg-paper-3/90 p-3.5">
+                    <div className="font-mono text-2xl font-bold text-ok">
+                      <Counter to={46} />
+                    </div>
+                    <div className="mt-1 text-xs font-medium text-ink-2">TheHive Alerts Ingested</div>
+                    <p className="mt-1 text-[0.7rem] text-muted">
+                      De-duplicated and grouped by tool fingerprint & source IP
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-rule bg-paper-3/90 p-3.5">
+                    <div className="font-mono text-2xl font-bold text-ink">
+                      <Counter to={3} />
+                    </div>
+                    <div className="mt-1 text-xs font-medium text-ink-2">Incident Cases Consolidated</div>
+                    <p className="mt-1 text-[0.7rem] text-muted">
+                      Scoped by kill-chain phases (Web, Lateral, Domain)
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 rounded-md border border-rule/50 bg-paper-3/50 px-3 py-2 text-[0.72rem] text-faint">
+                <span className="font-medium text-ink-2">Operational Goal:</span> Prevent alert fatigue while ensuring zero high-priority incidents are dropped.
+              </div>
+            </div>
+          </Reveal>
+
+          {/* PATH B: SOC Analyst Triage */}
+          <Reveal delay={0.16}>
+            <div className="panel h-full border-cool/30 bg-paper-2/90 p-5 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between border-b border-rule/60 pb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-cool" />
+                    <span className="font-mono text-xs font-semibold uppercase tracking-wider text-cool">Path B · Analyst Triage</span>
+                  </div>
+                  <span className="chip border-cool/40 bg-cool-soft font-mono text-[0.65rem] text-cool">
+                    Human Root-Cause Analysis
+                  </span>
+                </div>
+                <h4 className="mt-3 text-base font-medium text-ink">Dashboard Noise Elimination</h4>
+                <p className="mt-1 text-xs leading-5 text-muted">
+                  During deep-dive investigation, the analyst applies precision exclusion clauses in OpenSearch to filter benign operating system background noise.
+                </p>
+
+                <div className="mt-5 grid grid-cols-2 gap-3">
+                  <div className="rounded-lg border border-rule bg-paper-3/90 p-3.5">
+                    <div className="font-mono text-2xl font-bold text-cool">
+                      <Counter to={11} />
+                    </div>
+                    <div className="mt-1 text-xs font-medium text-ink-2">Dashboard Exclusion Filters</div>
+                    <p className="mt-1 text-[0.7rem] text-muted">
+                      Must-not clauses strip 404 floods, SCA scans & VMware polling
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-rule bg-paper-3/90 p-3.5">
+                    <div className="font-mono text-2xl font-bold text-ink">
+                      <Counter to={808} group />
+                    </div>
+                    <div className="mt-1 text-xs font-medium text-ink-2">Curated Forensic Records</div>
+                    <p className="mt-1 text-[0.7rem] text-muted">
+                      Clean event dataset analyzed for root-cause timeline reconstruction
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 rounded-md border border-rule/50 bg-paper-3/50 px-3 py-2 text-[0.72rem] text-faint">
+                <span className="font-medium text-ink-2">Analyst Goal:</span> Reconstruct complete attacker timeline without drowning in background noise.
+              </div>
+            </div>
+          </Reveal>
+        </div>
 
         <Reveal delay={0.12} className="mt-6">
           <div className="panel bg-paper-3/60 p-6 sm:p-8">

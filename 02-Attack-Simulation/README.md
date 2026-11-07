@@ -27,11 +27,11 @@ Every stage writeup includes the attacker's objective, the exact terminal comman
 The 20 attack stages are organized into three clear, sequential acts (matching our three cases in TheHive):
 
 - **[Case 01 — Web Compromise to Root](../04-Investigation/Cases/case-01-web-compromise.md) (Stages 01–07):**  
-  The attacker scans our perimeter web server (`192.168.56.30`), uses SQL injection to dump database password hashes, uploads a simple PHP webshell, pops a Netcat reverse shell back to Kali (`192.168.232.135`), and jumps to `root` in 10 seconds via a passwordless sudo Python misconfiguration.
-- **[Case 02 — Pivoting & Stealing Active Directory Credentials](../04-Investigation/Cases/case-02-lateral-movement.md) (Stages 08–14):**  
-  The attacker adds an SSH backdoor key, discovers the internal Windows subnet (`192.168.56.0/24`), runs Responder on the Linux box to steal the Windows 10 password hash, maps the domain using BloodHound, Kerberoasts account `HANK_SHERMAN`, and abuses its DCSync replication rights to dump every password hash in the domain from the Domain Controller.
-- **[Case 03 — Domain Takeover, Data Theft & Impact](../04-Investigation/Cases/case-03-domain-compromise.md) (Stages 15–20):**  
-  The attacker uses Pass-the-Hash and forges a Kerberos Golden Ticket (`krbtgt`) for persistent Domain Admin access, creates a backdoor Domain Admin user (`AD\backdoor`), steals sensitive files over SSH, defaces user desktops with a custom wallpaper, drops simulated ransomware notes, and forcibly reboots both machines.
+  The attacker probes the exposed perimeter web server (`192.168.56.30`), extracts database user credentials through SQL injection, uploads a PHP webshell to establish command execution, opens a persistent Netcat reverse shell connection back to the Kali attack machine (`192.168.232.135`), and immediately escalates privileges from the web service account (`www-data`) to full `root` access by exploiting a passwordless sudo Python misconfiguration.
+- **[Case 02 — Pivoting & Active Directory Credential Extraction](../04-Investigation/Cases/case-02-lateral-movement.md) (Stages 08–14):**  
+  Now in control of the web server, the attacker establishes persistence by injecting an authorized SSH key, surveys the internal network segment (`192.168.56.0/24`), poisons LLMNR broadcast traffic using Responder to intercept Windows user password hashes, maps Active Directory trust relationships using BloodHound, extracts Kerberos service tickets (Kerberoasting) for account `HANK_SHERMAN`, and leverages Directory Replication Service rights (DCSync) to pull all domain account hashes from the Domain Controller.
+- **[Case 03 — Domain Takeover, Data Exfiltration & Ransomware Impact](../04-Investigation/Cases/case-03-domain-compromise.md) (Stages 15–20):**  
+  Using the extracted Administrator hash, the attacker moves laterally across Windows endpoints using Pass-the-Hash, forges a Kerberos Golden Ticket to secure persistent Domain Admin rights, provisions a rogue backdoor administrative account (`AD\backdoor`), stages and exfiltrates sensitive files over an encrypted SSH channel, defaces workstation and Domain Controller desktop wallpapers, and deploys simulated ransomware with forced host reboots.
 
 ---
 

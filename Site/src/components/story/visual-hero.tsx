@@ -10,7 +10,7 @@ import { useBooted } from "@/lib/boot";
 const strip = [
   { value: metrics.stageCount, label: "attack stages executed", tone: "text-ink" },
   { value: metrics.operationalAlertCount, label: "operational alerts raised", tone: "text-ok" },
-  { value: metrics.directDetectionCount, label: "endpoint detections confirmed", tone: "text-cool" },
+  { value: metrics.directDetectionCount, label: "direct host/network detections", tone: "text-cool" },
   { value: metrics.totalGapCount, label: "documented visibility gaps", tone: "text-accent" },
 ];
 
