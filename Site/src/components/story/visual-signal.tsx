@@ -89,7 +89,7 @@ export function VisualSignal() {
 
           <Stagger className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             <StaggerItem>
-              <Stat value={metrics.directDetectionCount} of={metrics.stageCount} tone="text-cool" label="direct endpoint detections" />
+              <Stat value={metrics.directDetectionCount} of={metrics.stageCount} tone="text-cool" label="direct host/network detections" />
             </StaggerItem>
             <StaggerItem>
               <Stat value={metrics.operationalAlertCount} of={metrics.stageCount} tone="text-ok" label="operational live alerts raised" />

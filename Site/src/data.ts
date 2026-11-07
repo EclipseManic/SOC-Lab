@@ -31,6 +31,7 @@ export interface Stage {
   telemetry: string;
   gap: string;
   status: StageStatus;
+  coverageClass?: string;
   caseLabel: string;
   caseSlug: string;
   attackPath: string;
@@ -421,17 +422,17 @@ const stageCopy: Stage[] = [
     attacker:
       "Executes Impacket `secretsdump.py` targeting PC-DC to trigger DRSUAPI directory replication and dump the KRBTGT and Administrator NT hashes.",
     defender:
-      "Windows Security EID 4662 (Directory Service Access with DS-Replication-Get-Changes rights) flagged by Wazuh Rule 60144.",
+      "The target Domain Controller lacked EID 4662 SACL replication auditing (DG-14 gap). However, the attack was detected on the Linux pivot host via Wazuh Rule 100220 (bashcmd) intercepting secretsdump.py execution (TheHive Alert #24, wzb-4174e3672e).",
     evidence:
-      "Secretsdump terminal output, DC Event ID 4662 audit log, and TheHive alert wzb-4174e3672e.",
-    telemetry: "Directory Service / DRSUAPI",
+      "Secretsdump execution banner on pivot host, Wazuh bashcmd alert wzb-4174e3672e in TheHive, and DC logon EID 4624/4672 session telemetry.",
+    telemetry: "Pivot Shell Telemetry (DG-14 DC SACL Gap)",
     gap: "DG-14",
     status: "Detected",
     caseLabel: "Case 02",
     caseSlug: "case-02-lateral-movement",
     attackPath: "02-Attack-Simulation/Stages/stage-14-dcsync.md",
     investigationPath: "04-Investigation/Stages/stage-14-dcsync.md",
-    ruleId: "Windows 4662 / Wazuh 60144",
+    ruleId: "Linux Pivot Wazuh Rule 100220 (secretsdump.py) + Alert #24",
     alertRef: "wzb-4174e3672e",
   },
   {
@@ -602,6 +603,7 @@ type GeneratedStage = {
   investigationPath: string | null;
   caseLabel: string;
   status: StageStatus;
+  coverageClass: string;
 };
 
 const generatedStageById = new Map(
@@ -617,6 +619,7 @@ export const stages: Stage[] = stageCopy.map((stage) => {
     title: generated.title,
     techniqueId: generated.techniqueId,
     status: generated.status,
+    coverageClass: generated.coverageClass,
     caseLabel: generated.caseLabel,
     attackPath: generated.attackPath ?? stage.attackPath,
     investigationPath: generated.investigationPath ?? stage.investigationPath,
