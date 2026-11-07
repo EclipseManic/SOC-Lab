@@ -121,8 +121,12 @@ During **Phase 4 (Eradication & Hardening)** ([`Eradication-Hardening-and-Recove
 |:---:|:---|:---|:---:|:---:|
 | **P1** | Set registry key `15 Field Engineering` to `5` on all Domain Controllers to log Event ID 1644 LDAP search volume anomalies | Active Directory (PC-DC) | Identity Engineering | 14 Days |
 | **P1** | Implement Canary / Honeypot Service Accounts with registered SPNs in Active Directory for instant Kerberoast alert generation | Active Directory Infrastructure | SOC Detection Team | 21 Days |
+| **P1** | Upgrade SOAR alert grouping (`custom-thehive.py` v2) to enforce a hard 15-minute maximum campaign window alongside rolling inactivity timeout, segregating recon from post-compromise activity | SOAR Integration Daemon | Automation Engineering | 21 Days |
+| **P1** | Develop automated end-to-end integration test harness for SOAR pipeline covering SQLite crash recovery, concurrent multi-agent ingestion, and TheHive API 5xx/429 retry behavior | Testing & CI/CD Pipeline | SOC Engineering | 30 Days |
 | **P2** | Migrate standalone domain service accounts to Active Directory Group Managed Service Accounts (gMSA) to enforce 128-character automatic password rotations | Enterprise Windows Fleet | Systems Administration | 45 Days |
 | **P2** | Configure Windows Defender Firewall dropped packet logging and forward dropped session events to Wazuh | Windows 10 & Server 2022 | Endpoint Security | 30 Days |
+| **P2** | Validate Wazuh Rule 100324 hardening ensuring SYSTEM discovery suppression strictly requires Wazuh/OSSEC agent parent/image conditions | Wazuh Ruleset (`local_rules.xml`) | Detection Engineering | 14 Days |
+| **P2** | Formalize virtual switch interface audits to prevent shadow dual-homed network adapters (such as the decommissioned DVWA staging adapter) from bridging DMZ and external networks | Network Infrastructure | Infrastructure Team | 14 Days |
 | **P2** | Deploy File Integrity Monitoring (FIM) with real-time whitelisting on all web server upload directories and temporary paths | Wazuh Agent (`ossec.conf`) | SOC Engineering | 30 Days |
 | **P3** | Implement automated SOAR containment playbooks triggering instant Velociraptor network isolation upon detection of DCSync or Pass-the-Hash alerts | TheHive & Velociraptor | Automation Engineering | 60 Days |
 | **P3** | Conduct quarterly Purple Team adversary emulation exercises testing Active Directory attack surface against updated detection baselines | Enterprise Threat Hunting | InfoSec Leadership | 90 Days |

@@ -102,6 +102,7 @@ Terminate active interactive shells running on port `4444` and safely quarantine
 # 1. Terminate active reverse shell processes
 sudo pkill -9 -f "4444" 2>/dev/null || true
 sudo pkill -9 -f "nc.openbsd" 2>/dev/null || true
+# (DFIR Note: In enterprise triage, responders identify specific PID via ss -antp / lsof -i and preserve volatile process memory before targeted termination)
 
 # 2. Verify port 4444 is dead and not established (using modern 'ss')
 sudo ss -antp | grep 4444
@@ -148,6 +149,7 @@ sudo cp /root/.ssh/authorized_keys /root/forensics_quarantine/authorized_keys.ba
 sudo rm -f /root/.ssh/authorized_keys
 
 # 3. Terminate any active SSH connections originating from the attacker subnet
+# (DFIR Note: Identify specific pts session / socket via 'who' / 'ss' prior to killing sessions in enterprise response)
 sudo pkill -9 -u root sshd
 
 # 4. Confirm no unauthorized sessions remain logged in

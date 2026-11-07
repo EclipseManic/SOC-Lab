@@ -569,6 +569,7 @@ To enforce proper DMZ architecture, we implement dual-layer micro-segmentation:
 1. **Gateway Firewall Forward Rules:** Drop and reject all traffic originating from DVWA DMZ destined for internal Windows infrastructure ports (Kerberos 88, NetBIOS 137-139, RPC 135, LDAP 389/636, SMB 445, GC 3268/3269, RDP 3389, WinRM 5985/5986).
 
 2. **DVWA Host Output Rules:** Reject all outbound traffic directed to `192.168.56.10` and `192.168.56.20`, permitting outbound connections exclusively to the central Cloud SOC monitoring infrastructure (Wazuh Agent TCP 1514/1515 on `10.122.1.4` and Velociraptor TLS 8000 on `10.122.0.4` routed over the WireGuard tunnel gateway `192.168.56.150`).
+3. **Decommissioning Legacy Staging Adapter (`ens37: 192.168.232.161`):** An audit of network attachments revealed an unmanaged secondary interface on DVWA bridging the VMnet8 external management subnet and VMnet2 internal segment—an authentic staging misconfiguration. This secondary adapter was unplumbed and permanently purged from `/etc/netplan/`, guaranteeing that all DVWA traffic flows strictly through the internal enterprise interface (`ens33: 192.168.56.30`) behind the Security Gateway.
 
 ### Execution Script:
 

@@ -288,7 +288,7 @@ The attacker invoked `secretsdump.py` (Row 9274) pretending to be a replicating 
 * **The Master `krbtgt` Password Hash:** `611a8cdcc21cb3fe3bf3a4c2f4e05f60`
 
 ![DCSync Password Theft](../06-Resources/screenshots/wazuh-deep-investigation/wzb-34-dcsync-auditd-secretsdump-ntds.jpg)
-*Figure 11: secretsdump.py replicating the entire NTDS database directly from the Domain Controller.*
+*Figure 11: secretsdump.py extracting Active Directory credential secrets via DRSUAPI directory replication from the Domain Controller.*
 
 3. **Pass-the-Hash onto the Domain Controller (`18:04:46`):** Armed with the stolen Administrator NTLM hash, the attacker immediately moved laterally to `PC-DC` via Impacket `wmiexec.py` over SMB/WMI. Wazuh fired Rule `100613` (*Pass-the-Hash attack detected*). The Domain Controller accepted the remote logon (EID 4624 Type 3) and assigned `SeDebugPrivilege` (EID 4672).
 
@@ -488,7 +488,7 @@ Here are the exact technical indicators to search for in your environment:
 | **Compromised User** | `AD.LAB\win10` | Workstation | User credentials stolen via LLMNR poisoning |
 | **Compromised SPN** | `HANK_SHERMAN` | Active Directory | Service account Kerberoasted and abused for DCSync |
 | **Staged Hashes** | `/tmp/win10.hash`, `/tmp/hank.hash` | Linux Web Pivot | Intermediate files holding stolen password hashes |
-| **DCSync Extract** | `/tmp/dcsync_output.ntds` | Linux Web Pivot | Complete Active Directory NTDS database dump |
+| **DCSync Extract** | `/tmp/dcsync_output.ntds` | Linux Web Pivot | Active Directory credential secrets extracted via DRSUAPI replication |
 | **Staged Data** | `C:\Windows\Temp\domain_users.txt` | Domain Controller | Export of all domain user accounts |
 | **Staged Data** | `C:\Windows\Temp\admin_info.txt` | Domain Controller | Export of administrative privileges |
 | **Staged Data** | `C:\Windows\Temp\sensitive_data.txt`| Win10 Workstation | Harvested confidential documents |
