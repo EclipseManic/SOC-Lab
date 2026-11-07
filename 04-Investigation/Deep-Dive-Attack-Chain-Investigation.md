@@ -33,7 +33,6 @@
 If you only have two minutes to understand this incident, here is the whole story:
 
 ![Consolidated 5-Act Attack Progression](../06-Resources/diagrams/Consolidated%205-Act%20Attack%20Progression.png)
-*Figure 1.1: Consolidated 5-Act adversary progression across the 74-minute campaign, from perimeter web exploit to Active Directory takeover and ransomware.*
 
 Over the course of **74 minutes**, an external attacker sitting at `192.168.232.135` completely took over our corporate Active Directory network:
 

@@ -484,7 +484,7 @@ tail -f /var/ossec/logs/alerts/alerts.json | jq '{timestamp, rule: .rule.id, des
 
 ## 8. Detection Engineering Observations & Production Tuning Insights
 
-During deep forensic audit of `local_rules.xml` against the 9,567 rows in `Wazuh-Raw-Alerts.csv`, four notable rule behaviors were analyzed:
+During deep forensic audit of `local_rules.xml` against the 9,567 rows in `Wazuh-Raw-Alerts.csv`, five notable rule behaviors were analyzed:
 
 1. **Rule 100278 Severity (`level="3"` vs. Suppression):**
    - *Behavior:* Rule 100278 is titled `"user=... - Suppress: EID 4688 duplicate (Sysmon EID 1 covers it)"`, but was defined with `level="3"` instead of `level="0"`.

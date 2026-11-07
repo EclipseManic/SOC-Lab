@@ -32,7 +32,7 @@ This post-incident review is organized into **six authoritative deliverables** a
 
 The deliverables in this directory represent the **formal analytical synthesis** of the live investigation conducted in [`04-Investigation/`](../04-Investigation/):
 
-![Incident Investigation & Reporting Suite Architecture](../06-Resources/diagrams/Incident%20Investigation%20&%20Reporting%20Suite%20Architecture.png)
+![Incident Investigation & Reporting Suite Architecture](../06-Resources/diagrams/Incident%20Investigation%20%26%20Reporting%20Suite%20Architecture.png)
 
 ---
 

@@ -182,7 +182,7 @@ To prevent confusing local database performance with end-to-end incident dispatc
 
 > [!NOTE]
 > **Lab Security Qualification:**  
-> In this isolated cyber range, the custom integration daemon communicates with TheHive across a private, point-to-point WireGuard tunnel using HTTP and disabled certificate verification (`verify=False`). While strictly contained within private IP addressing (`10.122.1.4:9000`), enterprise production deployments require mutual TLS (mTLS) with strict certificate authority verification (`REQUESTS_CA_BUNDLE`) and dedicated secrets management.
+> In this isolated cyber range, the custom integration daemon on VM2 (Wazuh SIEM) communicates with TheHive on VM1 across Azure VNet peering using HTTP and disabled certificate verification (`verify=False`). While strictly contained within private IP addressing (`10.122.0.4:9000`), enterprise production deployments require mutual TLS (mTLS) with strict certificate authority verification (`REQUESTS_CA_BUNDLE`) and dedicated secrets management.
 
 #### Pipeline Limitations & Engineering Roadmap (v2)
 1. **Alert Grouping Lifetime (Issue 4 Roadmap):** The v1 integration script implements a 30-minute rolling inactivity timeout for tool campaigns. However, an adversary executing active operations within each 30-minute interval keeps the group open indefinitely (e.g., our initial web scanner alert accumulated events over 69 minutes). For v2, we are introducing a hard 15-minute maximum campaign window and kill-chain phase boundaries to segregate reconnaissance, exploitation, and post-compromise activity into distinct incident cases.
