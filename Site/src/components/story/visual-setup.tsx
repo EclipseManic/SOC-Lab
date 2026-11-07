@@ -10,8 +10,8 @@ export function VisualSetup() {
         <SectionHead
           index="01"
           kicker="Architecture & Network Segmentation"
-          title="An enterprise network engineered for total visibility."
-          lede="To evaluate security controls with real confidence, you need an environment where every malicious packet and process can be systematically tracked. I designed this hybrid infrastructure around strict network segmentation: on-premises victim systems are isolated on an internal subnet, all inter-segment traffic is routed through an inline Suricata gateway, and telemetry is securely forwarded over a site-to-site WireGuard tunnel into Azure."
+          title="An enterprise-style network designed for layered security visibility."
+          lede="To evaluate security controls with real confidence, you need an environment where malicious activity can be systematically tracked at multiple defensive layers. I designed this hybrid infrastructure around strict network segmentation: on-premises victim systems are isolated on an internal subnet, routed inter-segment traffic passes through an inline Suricata gateway, and host endpoint sensors (Sysmon, Auditd, Wazuh) capture internal activity that bypasses network inspection."
         />
 
         <Reveal delay={0.1} y={34} className="mt-12">

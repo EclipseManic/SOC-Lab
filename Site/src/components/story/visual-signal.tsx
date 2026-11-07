@@ -77,7 +77,7 @@ export function VisualSignal() {
           index="07"
           kicker="Empirical Telemetry Accounting"
           title="Sixteen alerts confirmed. Four visibility gaps documented."
-          lede="Mature detection engineering requires honest, evidence-backed evaluation. Rather than claiming 100% artificial detection coverage, I cross-examined every attack stage against raw event logs. We verified 16 actionable alerts in TheHive and thoroughly documented the 4 visibility gaps where telemetry could not be gathered."
+          lede="After completing the attack simulation, I reviewed the collected telemetry to determine which stages generated alerts and which stages remained undetected. Rather than claiming artificial 100% coverage, I cross-examined every attack stage against raw event logs, verifying 16 operational alerts in TheHive and documenting the 4 visibility gaps where telemetry was missing."
         />
 
         <div className="mt-14 grid gap-6 lg:grid-cols-[auto_minmax(0,1fr)] lg:items-center">

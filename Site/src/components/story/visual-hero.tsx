@@ -53,12 +53,19 @@ export function VisualHero() {
               {...enter(18, 0.16, 0.7)}
               className="mt-5 max-w-xl text-md leading-relaxed text-ink-2 sm:text-lg"
             >
-              To evaluate how detection rules perform against realistic adversary behavior, I built
-              an enterprise environment spanning an on-premises Active Directory network, a Linux DMZ
-              web server, an inline security gateway, and an Azure cloud SOC.
-              I executed a continuous {metrics.durationMinutes}-minute, {metrics.stageCount}-stage attack
-              campaign—advancing from initial web exploitation to domain takeover—then sat down as the SOC
-              analyst to rigorously verify every alert and document what was caught versus what slipped past.
+              I built a company-style network containing Windows systems, a Linux web server, a network
+              security gateway, and cloud-hosted security tools. I then carried out a controlled attack
+              across this environment to evaluate how effectively my security tools could identify suspicious activity.
+            </motion.p>
+
+            <motion.p
+              {...enter(18, 0.22, 0.7)}
+              className="mt-3 max-w-xl text-sm leading-relaxed text-muted"
+            >
+              The complete technical architecture links an on-premises Active Directory network and Linux DMZ to an
+              Azure cloud SOC over an encrypted WireGuard VPN tunnel. Over an authentic {metrics.durationMinutes}-minute,
+              {metrics.stageCount}-stage intrusion—from perimeter web exploitation to domain takeover—I
+              analyzed every alert, documented visibility gaps, and implemented permanent hardening.
             </motion.p>
 
             <motion.div {...enter(16, 0.26, 0.6)} className="mt-8 flex flex-wrap items-center gap-3">
