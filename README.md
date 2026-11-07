@@ -5,6 +5,9 @@
 **Core Focus:** Hybrid Cloud Architecture · Red Team Attack Simulation · Detection Engineering · Hands-On SOC Triage & Incident Response  
 **Live Interactive Dashboard:** <https://soc-lab.eclipsemanic.me/>
 
+[![SOC Lab Complete Architecture](06-Resources/diagrams/SOC_Lab_Architecture.png)](06-Resources/diagrams/SOC_Lab_Architecture.png)
+*Figure 1: Complete hybrid-cloud architecture connecting on-premise victim and attacker subnets to Azure cloud SIEM and SOAR servers over an encrypted WireGuard tunnel.*
+
 ---
 
 ## 1. Executive Overview & Purpose of the Lab
@@ -26,8 +29,7 @@ To prevent alert fatigue while preserving investigative context, I engineered a 
 
 Acting as the lead incident responder, I triaged the alerts, conducted root-cause investigations across raw telemetry, executed live containment playbooks (including terminating active reverse shells, quarantining artifacts, and invalidating forged Kerberos tickets through a double `krbtgt` password reset to **KVNO 3**), and implemented permanent architectural hardening.
 
-[![SOC Lab Complete Architecture](06-Resources/diagrams/SOC_Lab_Architecture.png)](06-Resources/diagrams/SOC_Lab_Architecture.png)
-*Figure 1: Complete hybrid-cloud architecture connecting on-premise victim and attacker subnets to Azure cloud SIEM and SOAR servers over an encrypted WireGuard tunnel.*
+
 
 ---
 
