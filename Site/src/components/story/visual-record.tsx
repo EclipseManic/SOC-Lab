@@ -8,42 +8,42 @@ const docs = [
   {
     n: "01",
     title: "Lab setup",
-    body: "Every machine, subnet, and the encrypted tunnel that ties it together — with the exact routing.",
+    body: "Comprehensive infrastructure runbook detailing IP schemes, WireGuard VPN configuration, and Azure VNet peering.",
     href: `${repoUrl}/blob/main/01-Lab-Setup/README.md`,
     tone: "cool" as const,
   },
   {
     n: "02",
     title: "Attack simulation",
-    body: "All 20 stages in their own files, each with the real terminal commands and proof screenshots.",
+    body: "Full 20-stage adversarial playbook with verbatim terminal commands, execution logs, and offensive proof captures.",
     href: `${repoUrl}/blob/main/02-Attack-Simulation/README.md`,
     tone: "accent" as const,
   },
   {
     n: "03",
     title: "Detection engineering",
-    body: "The custom rules, signatures, and the two-tier engine that turned alerts into case files.",
+    body: "Complete rule repository containing custom Suricata signatures, Wazuh XML rules, and the SOAR SQLite daemon.",
     href: `${repoUrl}/blob/main/03-Detection-Engineering/README.md`,
     tone: "violet" as const,
   },
   {
     n: "04",
     title: "Investigation",
-    body: "Analyst-style notes for all 20 stages and the three TheHive incident cases.",
+    body: "DFIR analyst investigation logs covering all 20 attack stages and the 3 operational TheHive case files.",
     href: `${repoUrl}/blob/main/04-Investigation/README.md`,
     tone: "cool" as const,
   },
   {
     n: "05",
     title: "Incident report",
-    body: "The executive write-up: scope, timeline, indicators of compromise, and lessons learned.",
+    body: "Executive-ready DFIR post-mortem detailing timeline correlation, root-cause analysis, and strategic remediation.",
     href: `${repoUrl}/blob/main/05-Incident-Report/README.md`,
     tone: "accent" as const,
   },
   {
     n: "06",
     title: "Evidence & data",
-    body: "The raw telemetry — thousands of alerts, the curated set, and the campaign blueprint.",
+    body: "Raw telemetry exports, 9,567 ingested alerts, packet captures, and 4K architectural blueprints.",
     href: `${repoUrl}/blob/main/06-Resources/README.md`,
     tone: "ok" as const,
   },
@@ -55,9 +55,9 @@ export function VisualRecord() {
       <div className="container-page">
         <SectionHead
           index="08"
-          kicker="Where to go next"
-          title="This site is the tour. The repository is the proof."
-          lede="Everything you just read is a plain-language summary of work you can open, read, and rerun yourself. Pick a direction — the depth is all one click away."
+          kicker="Repository Deliverables & Technical Proof"
+          title="Interactive summary in the browser. Full forensic proof in the repository."
+          lede="This dashboard provides a structured visual synthesis of the engineering work. Every command executed, rule written, alert received, and case investigated is backed by authoritative documentation and verifiable raw artifacts in the GitHub repository."
         />
 
         <Stagger className="mt-12 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

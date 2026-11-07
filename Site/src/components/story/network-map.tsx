@@ -7,77 +7,77 @@ type Mode = "map" | "replay";
 /** Short hover caption (shown in the floating popup) + full pinned detail (panel below). */
 const NODES: Record<NodeKey, { name: string; tip: string; info: string }> = {
   dvwa: {
-    name: "DVWA web host",
-    tip: "DVWA · .30 — the vulnerable web app I attack.",
-    info: "192.168.56.30 — a deliberately vulnerable web host. Its only way out is the gateway at .150.",
+    name: "Linux Web Server (DVWA)",
+    tip: "DVWA (192.168.56.30) · Web server hosting vulnerable PHP applications.",
+    info: "192.168.56.30 — An Ubuntu 24.04 server in the DMZ running Apache, MariaDB, and DVWA. Monitored by the Wazuh agent and Linux Auditd to capture command execution, file modifications, and web access logs.",
   },
   dc: {
-    name: "Domain controller",
-    tip: "PC-DC · .10 — Windows Server 2022 domain controller.",
-    info: "192.168.56.10 — the Windows Server 2022 domain controller, with Sysmon and Windows Security event logs shipping out.",
+    name: "Active Directory Domain Controller",
+    tip: "PC-DC (192.168.56.10) · Windows Server 2022 forest root.",
+    info: "192.168.56.10 — The central Domain Controller for the AD.LAB forest. Runs Sysmon and Windows Security Auditing to record Kerberos authentications, user management, and directory access.",
   },
   win: {
-    name: "Windows workstation",
-    tip: "Win10 · .20 — workstation with Sysmon installed.",
-    info: "192.168.56.20 — a Windows 10 workstation running Sysmon, so every process and network event is recorded.",
+    name: "Corporate Workstation",
+    tip: "Win10 (192.168.56.20) · Domain-joined Windows 10 enterprise endpoint.",
+    info: "192.168.56.20 — A Windows 10 workstation joined to AD.LAB. Configured with Sysmon to track process creation, network connections, and offline credential tampering.",
   },
   kali: {
-    name: "The attacker",
-    tip: "Kali · .232.135 — where every attack starts.",
-    info: "192.168.232.135 — the attacker. A static route sends all 192.168.56.0/24 traffic via the gateway.",
+    name: "Adversary Workstation",
+    tip: "Kali Linux (192.168.232.135) · Offensive security operations platform.",
+    info: "192.168.232.135 — The attacker host located on an external NAT segment. Configured with static routing through the gateway to emulate a realistic external intrusion.",
   },
   gw: {
-    name: "Security gateway",
-    tip: "Gateway — forwards traffic and runs Suricata IDS.",
-    info: "Ubuntu 24.04 router. Suricata 8.0.6 sniffs ens37 with the ET Open, nmap and custom rulesets. Every packet crosses here.",
+    name: "Network Security Gateway",
+    tip: "Ubuntu Gateway (192.168.56.150) · Inline Suricata NIDS & router.",
+    info: "An Ubuntu 24.04 router acting as the inline network choke point. Suricata 8.0.6 sniffs traffic across interfaces using ET Open and custom signatures, streaming alerts to the SIEM.",
   },
   az: {
-    name: "Cloud SOC",
-    tip: "Azure — two peered VNets, reached over WireGuard.",
-    info: "Two peered VNets, reached over a WireGuard tunnel (10.8.0.0/24) that keeps the original victim IPs — no NAT.",
+    name: "Azure Cloud SOC",
+    tip: "Azure VNets · Cloud-hosted SIEM, SOAR, and analytics infrastructure.",
+    info: "Two peered Microsoft Azure virtual networks connected to the on-premise lab via an encrypted WireGuard site-to-site tunnel. Preserves original host IP addresses without NAT.",
   },
   vm1: {
-    name: "TheHive hub",
-    tip: "VM1 — TheHive, where cases are worked.",
-    info: "Cloud VM1 10.122.0.4 — WireGuard server, TheHive 5, Nginx Proxy Manager and Velociraptor.",
+    name: "Incident Response Server (VM1)",
+    tip: "Cloud VM1 (10.122.0.4) · TheHive 5 case management & WireGuard hub.",
+    info: "Cloud VM1 (10.122.0.4) — Hosts TheHive 5 for case management, Nginx Proxy Manager, and Velociraptor for DFIR artifact collection across victim machines.",
   },
   vm2: {
-    name: "Detection brain",
-    tip: "VM2 — Wazuh, the detection brain.",
-    info: "Cloud VM2 10.122.1.4 — the Wazuh manager, indexer, dashboard and the SOAR flush daemon.",
+    name: "SIEM & SOAR Server (VM2)",
+    tip: "Cloud VM2 (10.122.1.4) · Wazuh Manager, Indexer, and SOAR daemon.",
+    info: "Cloud VM2 (10.122.1.4) — Hosts the Wazuh SIEM manager, OpenSearch indexer, and the automated Python/SQLite SOAR daemon that aggregates raw alerts into actionable incident cases.",
   },
 };
 
 const REPLAY: Array<{ nodes: NodeKey[]; title: string; body: string }> = [
   {
     nodes: ["kali"],
-    title: "Kali launches the attack",
-    body: "Traffic leaves 192.168.232.135 toward the victim subnet, via the gateway route.",
+    title: "Adversary launches the attack",
+    body: "Network traffic originates from Kali Linux (192.168.232.135) targeting the victim subnet, routed through the designated security gateway.",
   },
   {
     nodes: ["gw"],
-    title: "Suricata sees it first",
-    body: "The packets cross the gateway, where Suricata matches a rule and writes an alert to eve-alert.json.",
+    title: "Suricata inspects the wire",
+    body: "As packets traverse the gateway, Suricata's deep packet inspection engine matches signature rules and writes structured event records to eve-alert.json.",
   },
   {
     nodes: ["dvwa", "dc", "win"],
-    title: "The attack lands on a victim",
-    body: "The gateway forwards the packets on to DVWA, PC-DC or Win10.",
+    title: "Traffic reaches the target",
+    body: "The gateway forwards permitted packets to the target machine (DVWA, Domain Controller, or Windows 10 endpoint) where the attack payload executes.",
   },
   {
     nodes: ["dvwa", "dc", "win"],
-    title: "The victim logs what happened",
-    body: "The web log, Sysmon and auditd record the whole event — that is the raw telemetry.",
+    title: "Host sensors record endpoint telemetry",
+    body: "Local agents—including Linux Auditd, Apache logs, and Windows Sysmon—capture low-level process creation, file modifications, and authentication events.",
   },
   {
     nodes: ["az"],
-    title: "WireGuard carries it to the cloud",
-    body: "Victim telemetry and the Suricata alert travel the encrypted tunnel, original victim IPs preserved.",
+    title: "Telemetry forwarded over WireGuard",
+    body: "Both host logs and network IDS alerts are securely transmitted across the WireGuard VPN tunnel into Microsoft Azure with original IP headers intact.",
   },
   {
     nodes: ["vm2", "vm1"],
-    title: "Wazuh scores it, TheHive opens the case",
-    body: "Wazuh on VM2 analyses the event, then custom-thehive posts the alert to TheHive on VM1.",
+    title: "Wazuh correlates & TheHive opens cases",
+    body: "Wazuh analyzes the aggregated telemetry on VM2. The custom SOAR integration batches related events and creates an organized incident case in TheHive 5.",
   },
 ];
 

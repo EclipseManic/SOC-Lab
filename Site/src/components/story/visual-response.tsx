@@ -15,9 +15,9 @@ export function VisualResponse() {
       <div className="container-page">
         <SectionHead
           index="05"
-          kicker="Locking the doors & burning the keys"
-          title="How we kicked the attacker out."
-          lede="Detecting an intrusion is only half the battle. When the break-in peaked at Stage 20, we launched a two-phase incident response playbook: immediate tactical lockout to sever all footholds, followed by permanent root-cause eradication so the breach can never recur."
+          kicker="Incident Response & Strategic Hardening"
+          title="Containing the intrusion and securing the enterprise."
+          lede="Detecting an intrusion is only effective if followed by decisive containment. When the simulated campaign concluded at Stage 20, we initiated a structured, two-phase response playbook: immediate tactical lockout to sever active footholds and invalidate stolen credentials, followed by permanent architectural hardening to eliminate root-cause vulnerabilities."
         />
 
         {/* Phase Selector Tabs */}
@@ -33,7 +33,7 @@ export function VisualResponse() {
               }`}
             >
               <ShieldAlert className="h-4 w-4" />
-              <span>Phase 1: Tactical Lockout</span>
+              <span>Phase 1: Tactical Containment</span>
               <span className="chip border-hot/40 bg-hot/10 font-mono text-[0.65rem] text-hot ml-1">
                 7 Actions
               </span>
@@ -49,7 +49,7 @@ export function VisualResponse() {
               }`}
             >
               <ShieldCheck className="h-4 w-4" />
-              <span>Phase 2: Permanent Eradication & Hardening</span>
+              <span>Phase 2: Permanent Remediation & Hardening</span>
               <span className="chip border-ok/40 bg-ok/10 font-mono text-[0.65rem] text-ok ml-1">
                 7 Steps
               </span>
@@ -62,17 +62,18 @@ export function VisualResponse() {
           <div className="rounded-card border border-rule bg-paper-2 p-4 text-xs leading-relaxed text-muted">
             {phase === "containment" ? (
               <p>
-                <span className="font-medium text-hot">Emergency Lockout Objective:</span> Sever all adversary
-                command-and-control channels, terminate shells, purge rogue administrative keys, freeze backdoor Active
-                Directory accounts, and execute the Active Directory double <code className="text-ink font-mono font-medium">krbtgt</code> password
-                reset to invalidate forged Golden Tickets (<span className="text-ok font-mono">KVNO 3</span>).
+                <span className="font-medium text-hot">Emergency Containment Objective:</span> Terminate all active adversary
+                command-and-control channels, revoke injected SSH keys, disable unauthorized Active Directory accounts,
+                and perform the essential double <code className="text-ink font-mono font-medium">krbtgt</code> password
+                reset in Active Directory (incrementing <span className="text-ok font-mono font-medium">KVNO to 3</span>) to
+                invalidate forged Golden Tickets.
               </p>
             ) : (
               <p>
-                <span className="font-medium text-ok">Permanent Hardening Objective:</span> Eliminate the root-cause
-                misconfigurations: purge passwordless sudoers Python privileges, enroll Domain Admins into{" "}
-                <code className="text-ink font-mono font-medium">Protected Users</code>, disable LLMNR & NetBIOS domain-wide,
-                and enforce stateful gateway firewall isolation.
+                <span className="font-medium text-ok">Permanent Remediation Objective:</span> Eliminate the structural
+                misconfigurations exploited during the campaign: remove passwordless sudoers privileges, enroll privileged
+                domain accounts into the <code className="text-ink font-mono font-medium">Protected Users</code> group, disable
+                legacy LLMNR and NetBIOS protocols across the forest, and enforce stateful subnet isolation.
               </p>
             )}
           </div>

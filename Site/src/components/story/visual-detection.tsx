@@ -38,9 +38,9 @@ export function VisualDetection() {
       <div className="container-page">
         <SectionHead
           index="03"
-          kicker="The part that made it visible"
-          title="Without the rules, there is nothing to investigate."
-          lede="A break-in is only useful if something notices it. Detection engineering is where the lab actually earns its keep: four sensors feeding a hand-written rules engine that can turn a single suspicious command into a clean, actionable case file."
+          kicker="Detection Engineering & Pipeline Architecture"
+          title="Transforming raw adversary activity into actionable alerts."
+          lede="Raw telemetry is meaningless without purposeful detection logic. In this lab, four telemetry sources—Suricata network signatures, Linux Auditd system calls, Windows Sysmon events, and Apache access logs—feed into custom Wazuh decoders and rules. To prevent analyst alert fatigue, a custom SOAR daemon buffers alerts in a local SQLite queue and aggregates bursts into consolidated cases in TheHive."
         />
 
         <Reveal delay={0.1} y={34} className="mt-12">
@@ -108,7 +108,7 @@ export function VisualDetection() {
           <RepoLink href={`${repoBlob}/03-Detection-Engineering/README.md`} note="rules, signatures, the SOAR pipeline">
             See the detection engineering
           </RepoLink>
-          <p className="text-sm text-muted">{metrics.ruleFailureCount} rules failed during the whole campaign.</p>
+          <p className="text-sm text-muted">{metrics.ruleFailureCount} rule logic edge-cases were documented transparently during the campaign.</p>
         </Reveal>
       </div>
     </section>

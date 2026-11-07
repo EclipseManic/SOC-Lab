@@ -8,10 +8,10 @@ import { Reveal, EASE } from "@/components/fx/reveal";
 import { useBooted } from "@/lib/boot";
 
 const strip = [
-  { value: metrics.stageCount, label: "steps in the break-in", tone: "text-ink" },
-  { value: metrics.operationalAlertCount, label: "raised a live alarm", tone: "text-ok" },
-  { value: metrics.directDetectionCount, label: "caught on the victim", tone: "text-cool" },
-  { value: metrics.totalGapCount, label: "named blind spots", tone: "text-accent" },
+  { value: metrics.stageCount, label: "attack stages executed", tone: "text-ink" },
+  { value: metrics.operationalAlertCount, label: "operational alerts raised", tone: "text-ok" },
+  { value: metrics.directDetectionCount, label: "endpoint detections confirmed", tone: "text-cool" },
+  { value: metrics.totalGapCount, label: "documented visibility gaps", tone: "text-accent" },
 ];
 
 export function VisualHero() {
@@ -38,7 +38,7 @@ export function VisualHero() {
               className="chip border-rule-2 bg-paper-2/60 text-ink-2"
             >
               <span className="h-1.5 w-1.5 animate-pulse-soft rounded-full bg-accent" />
-              A self-hosted security lab · built to be tested, not trusted
+              A self-hosted hybrid SOC lab · built to test detection engineering under real attack conditions
             </motion.span>
 
             <motion.h1
@@ -53,10 +53,12 @@ export function VisualHero() {
               {...enter(18, 0.16, 0.7)}
               className="mt-5 max-w-xl text-md leading-relaxed text-ink-2 sm:text-lg"
             >
-              A hacker box, three victims, and a full security stack watching. I played the
-              attacker through a real {metrics.durationMinutes}-minute, {metrics.stageCount}-step
-              intrusion — then sat down as the analyst and worked out, alert by alert, what my
-              defenses actually caught and what slipped past.
+              To evaluate how detection rules perform against realistic adversary behavior, I built
+              an enterprise environment spanning an on-premises Active Directory network, a Linux DMZ
+              web server, an inline security gateway, and an Azure cloud SOC.
+              I executed a continuous {metrics.durationMinutes}-minute, {metrics.stageCount}-stage attack
+              campaign—advancing from initial web exploitation to domain takeover—then sat down as the SOC
+              analyst to rigorously verify every alert and document what was caught versus what slipped past.
             </motion.p>
 
             <motion.div {...enter(16, 0.26, 0.6)} className="mt-8 flex flex-wrap items-center gap-3">

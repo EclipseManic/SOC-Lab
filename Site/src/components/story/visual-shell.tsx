@@ -68,7 +68,7 @@ export function VisualNav() {
         <a href="#top" className="flex items-baseline gap-3" aria-label="SOC Lab home">
           <span className="text-lg font-medium tracking-[-0.03em] text-ink">SOC Lab</span>
           <span className="hidden text-xs font-medium text-muted sm:inline">
-            one lab · one break-in · 20 steps
+            hybrid enterprise lab · 20-stage attack simulation · empirical detection telemetry
           </span>
         </a>
 
@@ -133,8 +133,8 @@ export function VisualFooter() {
             <span className="text-xs text-muted">detection record / AD intrusion</span>
           </div>
           <p className="mt-2 max-w-md text-sm text-muted">
-            A self-built lab, attacked on purpose, and measured honestly. All simulations ran against
-            isolated machines I own.
+            A self-built hybrid security operations center, subjected to an end-to-end adversary campaign
+            and evaluated with transparent telemetry accounting. All attack simulations executed in an isolated environment.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-4 text-sm">
