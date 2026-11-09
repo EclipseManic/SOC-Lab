@@ -27,6 +27,19 @@ The entire laboratory architecture—from the isolated attacker workstation on V
 
 Building a realistic corporate detection environment on personal hardware is tricky. You want real Active Directory traffic, deep endpoint telemetry, and a cloud SIEM, but you don't want your laptop to freeze or your cloud bills to explode. 
 
+> [!IMPORTANT]
+> ### ☁️ Vendor-Agnostic Cloud Architecture: Deploy on Any Cloud Operator
+> While Microsoft Azure was used as the reference deployment environment (`10.122.0.0/16`), the entire cloud architecture is **100% provider-agnostic** and can be deployed on **any cloud platform** of your choice:
+> - **Supported & Validated Providers:** **OVHcloud, Vultr, DigitalOcean, Microsoft Azure, and Amazon Web Services (AWS)** (as well as Linode, Hetzner, or private on-prem Proxmox/ESXi hypervisors).
+> - **The Vendor Does Not Matter — But Two Core Requirements Are Strictly Mandatory:**
+>   1. **Fixed VM Sizing (Non-Negotiable Minimums):**
+>      - **VM1 (`thehive-core`):** Minimum **4 vCPU, 16 GB RAM, 100+ GB SSD**. Apache Cassandra, Elasticsearch, TheHive 5, and Velociraptor run concurrently; under-provisioned instances (< 16 GB) will trigger Linux out-of-memory (OOM) killer terminations during attack bursts.
+>      - **VM2 (`wazuh-siem`):** Minimum **2 vCPU, 8 GB RAM, 60+ GB SSD**. Dedicated to the Wazuh Manager analysis daemon and OpenSearch Indexer.
+>   2. **Fixed Firewall & Security Group Rules (The "Single Inbound Door" Principle):**
+>      - **Public Ingress:** Allow **ONLY `51820/UDP` (WireGuard)** on VM1 from `0.0.0.0/0`. Inbound ports `80`, `443`, `9000`, `9200`, `9042`, `5601`, `1514`, `1515`, and `22` MUST be strictly blocked from the public internet.
+>      - **VM2 Isolation:** VM2 should have **no public IP address** (or drop all public inbound traffic). It communicates with VM1 strictly over private VPC/VNet peering.
+>      - **Private Inter-VM Traffic:** Allow full communication between VM1 and VM2 on the private subnet (`1514/1515` agent registration, `9000/TCP` TheHive webhook, syslog, and ICMP).
+
 Here is the plain-English reasoning behind the four biggest architectural choices in this lab:
 
 ### 1. Why Split the Cloud into Two Separate VMs? (`10.122.0.4` and `10.122.1.4`)

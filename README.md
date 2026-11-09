@@ -41,12 +41,18 @@ The infrastructure is engineered to mirror an enterprise network where external 
 
 | Category | Platforms, Tools & Frameworks | Architectural Role in the Lab |
 |---|---|---|
-| **Cloud & Infrastructure** | Microsoft Azure (Private VNet `10.122.0.0/16`), VMware Workstation Pro, Ubuntu 24.04 LTS, Windows Server 2022 (Active Directory), Windows 10 Pro N for Workstations (22H2), WireGuard VPN (`10.8.0.0/24`) | Provides isolated victim subnets, simulated attacker environment, and cloud-hosted security analytics connected via site-to-site VPN. |
+| **Cloud & Infrastructure** | Cloud-Agnostic (Microsoft Azure reference; tested across OVHcloud, Vultr, DigitalOcean, AWS), VMware Workstation Pro, Ubuntu 24.04 LTS, Windows Server 2022 (Active Directory), Windows 10 Pro N for Workstations (22H2), WireGuard VPN (`10.8.0.0/24`) | Provides isolated victim subnets, simulated attacker environment, and cloud-hosted security analytics connected via site-to-site VPN. |
 | **Network & SIEM** | Wazuh SIEM 4.14.8 (Manager, Indexer, OpenSearch Dashboard), Suricata 8.0.6 NIDS (Sniffing WAN `ens33` and LAN `ens37` interfaces) | Centralizes log ingestion, rule evaluation, compliance tracking, and wire-level signature inspection. |
 | **Endpoint Telemetry** | Microsoft Sysmon 15.20 (Process and Registry monitoring), Linux Auditd (`execve` syscall tracking), Custom Wazuh `bashcmd` Interactive Command Auditing (Rule `100220`) | Captures host-level process trees, command-line arguments, parent-child relationships, network connections, and shell executions. |
 | **Incident Management & SOAR** | TheHive 5.7.5-1 (Case Management), Apache Cassandra 4.x, Elasticsearch 8.x, Custom Python SOAR Gateway (`custom-thehive.py`) with SQLite WAL buffering | Groups related alerts into incident cases, manages forensic observables, and tracks response tasks and analyst notes. |
 | **Forensics & Incident Response** | Velociraptor (Endpoint live response, artifact acquisition, remote triage), Sysinternals Suite | Performs live endpoint triage, process memory acquisition, forensic artifact quarantine, and remote containment playbooks across Linux and Windows hosts. |
 | **Adversary Emulation Suite** | MITRE ATT&CK Framework, Impacket suite (`wmiexec.py`, `secretsdump.py`, `GetUserSPNs.py`, `ticketer.py`), BloodHound (`bloodhound-python`), Responder, Hashcat, Hydra, Nmap, Nikto | Executes standardized, repeatable attack techniques across perimeter, credential access, lateral movement, and domain takeover phases. |
+
+> [!NOTE]
+> **Vendor-Agnostic Cloud Architecture (Infrastructure Flexibility):**  
+> While Microsoft Azure was chosen as the reference environment for documentation and initial subnet allocation (`10.122.0.0/16`), the entire cloud SOC architecture is **100% provider-agnostic**. The identical topology has been deployed across multiple cloud operators, including **OVHcloud, Vultr, DigitalOcean, Microsoft Azure, and AWS**. The specific cloud vendor does not matter; what is strictly required and immutable is:
+> 1. **Fixed VM Hardware Sizing:** VM1 (`thehive-core`) requires **4 vCPU / 16 GB RAM / 100+ GB SSD** to prevent out-of-memory (OOM) failures under Cassandra, Elasticsearch, and TheHive; VM2 (`wazuh-siem`) requires **2 vCPU / 8 GB RAM / 60+ GB SSD** for Wazuh Manager and the OpenSearch Indexer.
+> 2. **Strict Firewall & Security Group Rules:** Enforce a zero-trust perimeter where public internet ingress is locked down to **`51820/UDP` only** (WireGuard on VM1). All security services (TheHive, Wazuh Dashboard, Velociraptor, SSH) are completely blocked from the public internet and accessible strictly over the encrypted VPN tunnel.
 
 ---
 

@@ -1,7 +1,8 @@
 # TheHive / Automation VM — Case Management, DFIR & Cloud Gateway
 
 > Central cloud hub for security incident case management, DFIR live response, encrypted WireGuard VPN ingress, and internal reverse proxying.  
-> This host consolidates five core roles onto a single 16 GB instance (`10.122.0.4`), keeping the cloud footprint lean while preserving functional segmentation.
+> This host consolidates five core roles onto a single 16 GB instance (`10.122.0.4`), keeping the cloud footprint lean while preserving functional segmentation.  
+> **Vendor Neutrality:** Deployable on any cloud provider (**OVHcloud, Vultr, DigitalOcean, Microsoft Azure, AWS**). The mandatory requirements are allocating **4 vCPU / 16 GB RAM** (Cassandra + Elasticsearch memory demands) and restricting public firewall ingress strictly to **UDP port 51820**.
 
 ---
 

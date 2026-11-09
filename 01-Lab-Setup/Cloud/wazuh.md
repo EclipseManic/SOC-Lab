@@ -1,7 +1,8 @@
 # Wazuh SIEM VM — Detection Engine & Ingestion Pipeline
 
 > Private SIEM stack — receives real-time telemetry from all monitored endpoints, applies decoders and tuned detection rules, and feeds correlated security alerts into TheHive 5 case management pipeline.  
-> Operating on an isolated private cloud subnet (`10.122.1.0/24`) with no public IP, reachable strictly across private VNet peering from TheHive VM.
+> Operating on an isolated private cloud subnet (`10.122.1.0/24`) with no public IP, reachable strictly across private VNet peering from TheHive VM.  
+> **Vendor Neutrality:** Deployable on any cloud provider (**OVHcloud, Vultr, DigitalOcean, Microsoft Azure, AWS**). The mandatory requirements are allocating **2 vCPU / 8 GB RAM** (Wazuh Manager + OpenSearch Indexer) and maintaining **zero public ingress** (100% private subnet).
 
 ---
 
