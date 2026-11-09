@@ -32,9 +32,9 @@ const NODES: Record<NodeKey, { name: string; tip: string; info: string }> = {
     info: "An Ubuntu 24.04 router acting as the inline network choke point. Suricata 8.0.6 sniffs traffic across interfaces using ET Open and custom signatures, streaming alerts to the SIEM.",
   },
   az: {
-    name: "Azure Cloud SOC",
-    tip: "Azure VNets · Cloud-hosted SIEM, SOAR, and analytics infrastructure.",
-    info: "Two peered Microsoft Azure virtual networks connected to the on-premise lab via an encrypted WireGuard site-to-site tunnel. Preserves original host IP addresses without NAT.",
+    name: "Cloud SOC (Azure / Agnostic)",
+    tip: "Private Cloud VPC · Cloud-hosted SIEM, SOAR, and analytics infrastructure.",
+    info: "Two peered virtual networks (Microsoft Azure reference; tested across OVHcloud, Vultr, DigitalOcean, AWS) connected to the on-premise lab via an encrypted WireGuard site-to-site tunnel. Preserves original host IP addresses without NAT.",
   },
   vm1: {
     name: "Incident Response Server (VM1)",
