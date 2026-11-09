@@ -193,9 +193,13 @@ To eliminate race conditions between incoming Wazuh alert bursts and the backgro
    ```
 4. If new alerts arrived while the HTTP call was in flight (`generation > claimed_gen`), the `CASE` statement keeps `dirty = 1`, ensuring the group is automatically re-rendered and updated on the next daemon tick without dropped events.
 
-> [!NOTE]
-> **Lab Security Qualification:**  
-> In this isolated cyber range, the custom integration daemon on VM2 (Wazuh SIEM) communicates with TheHive on VM1 across Azure VNet peering using HTTP and disabled certificate verification (`verify=False`). While strictly contained within private IP addressing (`10.122.0.4:9000`), enterprise production deployments require mutual TLS (mTLS) with strict certificate authority verification (`REQUESTS_CA_BUNDLE`) and dedicated secrets management.
+> [!WARNING]
+> **Architectural Security Flag — Insecure TLS & Plain HTTP Defaults:**  
+> In `custom-thehive.py`, TLS verification is off and the token goes over plain HTTP by default. `THEHIVE_VERIFY_SSL` defaults to `0` and the URL defaults to `http://` (`http://10.122.0.4:9000/api/v1`). The script warns about this and the docs say it's lab-only (operating across private Azure VNet peering), but a default of "insecure" is risky if someone copies it to production. Over plain HTTP, the bearer API token and alert telemetry travel in cleartext. In enterprise production deployments, always enforce HTTPS (`https://`), configure valid TLS certificates, and set `THEHIVE_VERIFY_SSL=1`.
+
+> [!WARNING]
+> **Architectural Security Flag — Unauthenticated Agent Enrollment:**  
+> In `ossec.conf`, Wazuh agent enrollment is unauthenticated (`use_password` is set to `no` and `ssl_verify_host` is set to `no`). Any host that can reach port 1515 can enroll. This is fine on an isolated range (such as our private WireGuard mesh), but it should be flagged in the docs. In enterprise networks, unauthenticated enrollment introduces the risk of rogue agent registration; production setups must enforce `<use_password>yes</use_password>` with `/var/ossec/etc/authd.pass` and `<ssl_verify_host>yes</ssl_verify_host>`.
 
 #### Honest Operational Delivery Accounting: Technique Alerts vs. Collateral Logging
 A rigorous SOC audit requires distinguishing between **technique-specific alerting** (where the alert directly detects the attack action) and **collateral session alerting** (where background access is alerted, but the technique itself was unlogged or fell below the integration threshold):

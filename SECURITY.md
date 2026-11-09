@@ -53,3 +53,15 @@ Please do not open public GitHub issues containing unverified sensitive findings
 ## 5. Educational Use & Safe Practice
 
 All attack scripts, rulesets, and detection pipelines are published strictly for defensive education and security research. Run them only within an authorized, isolated environment that you own or have explicit written permission to test. See [DISCLAIMER.md](DISCLAIMER.md).
+
+---
+
+## 6. Architectural Flags & Production Hardening Disclosures
+
+This repository documents intentional laboratory architectural trade-offs that facilitate rapid simulation and automated testing within an isolated private network, but which must be hardened prior to any production deployment:
+
+1. **Insecure TLS & Plain HTTP Defaults in SOAR Integration (`custom-thehive.py`):**  
+   TLS verification is off and the token goes over plain HTTP by default. `THEHIVE_VERIFY_SSL` defaults to `0` and the URL defaults to `http://` (`http://10.122.0.4:9000/api/v1`). The script warns about this and the docs say it's lab-only (operating strictly across private cloud VNet peering between VM1 and VM2), but a default of "insecure" is risky if someone copies it to production. Over plain HTTP, the bearer API token and alert metadata travel in cleartext. In enterprise production deployments, always enforce HTTPS (`https://`), configure valid TLS certificates, and set `THEHIVE_VERIFY_SSL=1`.
+
+2. **Unauthenticated Wazuh Agent Enrollment (Port 1515):**  
+   Wazuh agent enrollment is unauthenticated. `ossec.conf` has `use_password` set to `no` and `ssl_verify_host` set to `no`. Any host that can reach port 1515 can enroll. This is fine on an isolated range (such as our private `10.8.0.0/24` WireGuard tunnel network), but it should be flagged in the docs. In enterprise production networks, unauthenticated enrollment risks rogue agent registration and key exhaustion; production setups must enforce `<use_password>yes</use_password>` backed by `/var/ossec/etc/authd.pass` and mutual TLS validation (`<ssl_verify_host>yes</ssl_verify_host>`).

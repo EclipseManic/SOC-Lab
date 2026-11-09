@@ -152,6 +152,10 @@ The definitive production configuration file is archived at [`../../06-Resources
   </auth>
 ```
 
+> [!WARNING]
+> **Architectural Security Flag — Unauthenticated Agent Enrollment (`port 1515`):**  
+> `ossec.conf` has `use_password` set to `no` and `ssl_verify_host` set to `no`. Any host that can reach port 1515 can enroll. This is fine on an isolated range (such as this laboratory's private WireGuard overlay `10.8.0.0/24`), but it should be flagged in the docs. In an enterprise production deployment, leaving port 1515 unauthenticated presents a severe risk of rogue agent registration and key exhaustion. Production environments must set `<use_password>yes</use_password>` backed by `/var/ossec/etc/authd.pass` and enforce certificate validation with `<ssl_verify_host>yes</ssl_verify_host>`.
+
 ### 2. TheHive Integration Block
 ```xml
   <!-- Tier 1 Synchronous Integration: Wazuh forks this script on every alert >= Level 8 -->
@@ -163,6 +167,10 @@ The definitive production configuration file is archived at [`../../06-Resources
     <alert_format>json</alert_format>
   </integration>
 ```
+
+> [!WARNING]
+> **Architectural Security Flag — Insecure TLS & Plain HTTP Defaults:**  
+> TLS verification is off and the token goes over plain HTTP by default. `THEHIVE_VERIFY_SSL` defaults to `0` and the URL defaults to `http://` (`http://10.122.0.4:9000/api/v1`). The script warns about this and the docs say it's lab-only (confined to private cloud VNet peering), but a default of "insecure" is risky if someone copies it to production. Over plain HTTP, the bearer API token and incident metadata travel in cleartext. Production deployments must enforce HTTPS (`https://`), configure valid TLS certificates, and set `THEHIVE_VERIFY_SSL=1`.
 
 ### 3. Ruleset, Custom Decoders, and CDB Lists
 ```xml
