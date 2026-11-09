@@ -2,6 +2,7 @@
 ### 7-Node Hybrid Network, 74-Minute Attack Campaign, Multi-Sensor Detection & Incident Investigation
 
 **Author:** Manichand Gupta ([@EclipseManic](https://github.com/EclipseManic))  
+**Project Timeline:** July 2026 – October 2026 (4-Month Full-Lifecycle Build, Attack Simulation & Investigation)  
 **Core Focus:** Hybrid Cloud Architecture · Red Team Attack Simulation · Detection Engineering · Hands-On SOC Triage & Incident Response  
 **Live Interactive Dashboard:** <https://soc-lab.eclipsemanic.me/>
 
@@ -31,7 +32,16 @@ To prevent alert fatigue while preserving investigative context, I engineered a 
 
 Acting as the lead incident responder, I triaged the alerts, conducted root-cause investigations across raw telemetry, executed live containment playbooks (including terminating active reverse shells, quarantining artifacts, and invalidating forged Kerberos tickets through a double `krbtgt` password reset to **KVNO 3**), and implemented permanent architectural hardening.
 
+### Project Engineering Lifecycle (July 2026 – October 2026)
 
+This laboratory was designed, provisioned, hardened, attacked, and forensically analyzed across an authentic **four-month engineering lifecycle (July 2026 to October 2026)**:
+
+| Phase & Month | Engineering Discipline | Core Milestones & Operational Achievements |
+|:---:|---|---|
+| **July 2026**<br>*(Phase 1)* | **Hybrid Infrastructure & Network Engineering** | • Provisioned 7 virtual machines across VMware Workstation Pro and Cloud infrastructure.<br>• Engineered the dual-homed Ubuntu Security Gateway with active Layer-3 routing and Zero-NAT forwarding.<br>• Established the site-to-cloud WireGuard VPN tunnel (`10.8.0.0/24`), preserving original victim IP headers into the cloud.<br>• Segmented 4 isolated zones: VMnet8 NAT (`.232.0/24`), VMnet2 Host-Only LAN (`.56.0/24`), WireGuard VPN (`10.8.0.0/24`), and Cloud VPC (`10.122.0.0/16`). |
+| **August 2026**<br>*(Phase 2)* | **Sensor Instrumentation & Detection Engineering** | • Deployed Active Directory Domain Controller (`ad.lab`) and Windows 10 with Microsoft Sysmon 15.20.<br>• Hardened Linux web server with Auditd (`execve` netlink syscall hooks) and custom interactive shell auditing (`bashcmd`).<br>• Configured Suricata 8.0.6 AF-PACKET promiscuous sniffing across WAN (`ens33`) and LAN (`ens37`) interfaces.<br>• Authored 148 custom Wazuh XML detection rules and 87 false-positive noise suppression filters. |
+| **September 2026**<br>*(Phase 3)* | **SOAR Automation Pipeline & Case Engineering** | • Engineered custom Python SOAR integration (`custom-thehive.py`) featuring an SQLite WAL buffer (< 0.2 ms commits).<br>• Implemented asynchronous flush daemon (`thehive-flush.service`) with regex tool fingerprinting and optimistic concurrency control.<br>• Benchmarked ingest throughput under synthetic bursts (500 & 1,000 alert stress tests; ~18 ms ingest runtime).<br>• Deployed TheHive 5.7.5, Cassandra 4.x, Elasticsearch 8.x, and Velociraptor endpoint live-response server. |
+| **October 2026**<br>*(Phase 4)* | **Adversary Attack Simulation, Triage & Incident Closure** | • Executed the authentic **20-stage, 74-minute intrusion campaign** on **October 18, 2026** ($T_0$ `11:40:09` UTC).<br>• Triaged 46 correlated alerts in TheHive and consolidated them into 3 formal scoped incident cases.<br>• Conducted live containment playbooks (terminating reverse shells, quarantining webshells, double `krbtgt` reset to KVNO 3).<br>• Completed root-cause analysis, forensic evidence cataloging (251 screenshots), MITRE ATT&CK mapping, and executive reporting. |
 
 ---
 
