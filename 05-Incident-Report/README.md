@@ -2,9 +2,10 @@
 
 > **Incident Identifier:** `INC-2026-1018-ALPHA`  
 > **Master Report ID:** `IR-2026-1018-ALPHA`  
+> **Campaign Date:** October 18, 2026 ($T_0$ `11:40:09` UTC)  
 > **Environment:** SOC-Lab Hybrid Enterprise (`192.168.56.0/24`)  
 > **Lead Incident Responder:** Manichand Gupta  
-> **Operational Status:** **Completed & Formally Validated** (NIST SP 800-61r2 Phase 5: Post-Incident Activity)
+> **Operational Status:** **Completed & Formally Validated** (NIST SP 800-61r2 Post-Incident Closure: Late October 2026)
 
 Welcome to the **Incident Reporting** section of the lab repository. This directory contains the executive-ready post-mortem documentation produced after investigating, containing, and permanently remediating our 74-minute Active Directory breach.
 

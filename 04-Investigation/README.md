@@ -1,5 +1,8 @@
 # 04 — Incident Investigation & Real-World Triage Analysis
 
+> **Operational Incident Date:** October 18, 2026 (`INC-2026-1018-ALPHA`)  
+> **Investigation Lifecycle:** Triage initiated October 18, 2026; live containment executed at $T_0 + 80\text{m}$; eradication, hardening, and case closure finalized across late October 2026.
+
 Welcome to the **Incident Investigation** section of the lab. This is the defender and SOC analyst view of the entire campaign. 
 
 Here, we document the full blue-team response journey—from sorting through a noisy alert queue and prioritizing true breaches, to executing live host containment, digging into the root causes, and permanently hardening the environment.
