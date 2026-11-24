@@ -3,3 +3,8 @@
 *.jpg binary
 *.pdf binary
 *.db binary
+
+# Site/ is the static dashboard build behind soc-lab.eclipsemanic.me.
+# It is generated output, not the lab's detection or investigation source,
+# so it must not decide this repository's primary language.
+Site/** linguist-vendored
