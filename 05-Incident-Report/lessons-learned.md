@@ -41,7 +41,7 @@ No single defensive sensor possessed complete visibility across the hybrid envir
 ### 2. The Custom Level >= 8 SOAR Ingestion Gateway
 In a high-throughput enterprise environment, raw SIEM streams quickly overwhelm Tier 1 analysts (visible in our 9,567 raw OpenSearch baseline events). 
 - Wazuh's `custom-thehive` integration acted as an intelligent operational filter: inspecting incoming events directly in analysisd memory, clustering alert bursts within a 5-second sliding window, and delivering **46 high-fidelity, actionable incident tickets** to TheHive.
-- This prevented alert fatigue, preserved analyst cognitive bandwidth, and enabled rapid triage into three clean, scope-based investigation cases.
+- This kept the alert volume manageable and let triage stay focused, which is why the campaign resolved into three scope-based investigation cases.
 
 ### 3. Sub-15-Second Host Mean Time to Detect (MTTD)
 Host behavioral rules alerted with near-instantaneous speed:

@@ -17,7 +17,7 @@ Many cybersecurity lab environments either demonstrate offensive tools against u
 
 I built a company-style network containing Windows systems, a Linux web server, a network security gateway, and cloud-hosted security tools. I then carried out a controlled attack across this environment to evaluate how effectively my security tools could identify suspicious activity.
 
-The complete enterprise infrastructure is distributed across **seven virtual machines**, linking on-premises virtualization running in VMware Workstation Pro to Microsoft Azure cloud infrastructure through an encrypted, site-to-cloud WireGuard VPN tunnel. 
+The complete lab infrastructure is distributed across **seven virtual machines**, linking on-premises virtualization running in VMware Workstation Pro to Microsoft Azure cloud infrastructure through an encrypted, site-to-cloud WireGuard VPN tunnel. 
 
 To rigorously test defensive visibility, I simulated a determined adversary by executing an authentic **74-minute, 20-stage attack campaign**. The intrusion progressed through every phase of the cyber kill chain:
 1. External perimeter reconnaissance and automated web vulnerability scanning against an exposed Linux web server.
@@ -28,7 +28,7 @@ To rigorously test defensive visibility, I simulated a determined adversary by e
 
 On the defensive side, I authored and calibrated multi-sensor detection logic across network inspection (Suricata NIDS), kernel-level system call tracking (Linux Auditd), interactive host command auditing (`bashcmd`), and Windows endpoint instrumentation (Microsoft Sysmon and Windows Security event logs). 
 
-To prevent alert fatigue while preserving investigative context, I engineered a custom asynchronous Security Orchestration, Automation, and Response (SOAR) pipeline (`custom-thehive.py`). The pipeline buffered incoming SIEM alerts in a local SQLite Write-Ahead Logging (WAL) queue (< 0.2 ms ingestion latency) and used an asynchronous background daemon to group related events into **46 actionable alerts consolidated across 3 formal incident cases in TheHive 5.7.5** (median end-to-end delivery latency: 4.6 seconds). 
+To keep the alert queue workable without losing investigative context, I built a custom asynchronous Security Orchestration, Automation, and Response (SOAR) pipeline (`custom-thehive.py`). The pipeline buffered incoming SIEM alerts in a local SQLite Write-Ahead Logging (WAL) queue (< 0.2 ms ingestion latency) and used an asynchronous background daemon to group related events into **46 actionable alerts consolidated across 3 formal incident cases in TheHive 5.7.5** (median end-to-end delivery latency: 4.6 seconds). 
 
 Acting as the lead incident responder, I triaged the alerts, conducted root-cause investigations across raw telemetry, executed live containment playbooks (including terminating active reverse shells, quarantining artifacts, and invalidating forged Kerberos tickets through a double `krbtgt` password reset to **KVNO 3**), and implemented permanent architectural hardening.
 
@@ -92,7 +92,7 @@ Defending against a sophisticated intrusion requires layered telemetry. A single
 - **Network Layer:** Suricata inspects packet payloads and protocol handshakes on gateway interfaces (`ens33` external and `ens37` internal).
 - **Host Kernel Layer:** Linux Auditd hooks the `execve` system call to track binary executions, while custom shell auditing (`bashcmd`) logs interactive commands executed in root terminal sessions.
 - **Windows Endpoint Layer:** Microsoft Sysmon and Windows Security audit policies log process creation (Event ID 1), network connections (Event ID 3), and privileged logons (Event ID 4624 / 4672).
-- **Correlation & Automation:** Wazuh SIEM evaluates events against 148 detection rules and 87 false-positive suppressions. High-fidelity alerts ($\ge \text{Level } 8$) are routed into a custom asynchronous Python SOAR integration (`custom-thehive.py`) that uses an SQLite Write-Ahead Logging buffer (< 0.2 ms ingestion latency) and a 5-second background daemon to aggregate alert bursts into **46 actionable alerts in TheHive 5.7.5**, which are then consolidated into 3 master incident cases, eliminating alert fatigue.
+- **Correlation & Automation:** Wazuh SIEM evaluates events against 148 detection rules and 87 false-positive suppressions. High-fidelity alerts ($\ge \text{Level } 8$) are routed into a custom asynchronous Python SOAR integration (`custom-thehive.py`) that uses an SQLite Write-Ahead Logging buffer (< 0.2 ms ingestion latency) and a 5-second background daemon to aggregate alert bursts into **46 alerts in TheHive 5.7.5**, which are then consolidated into 3 master incident cases.
 *(Rule XML files, decoders, latency metrics, and daemon architecture: [`03-Detection-Engineering/README.md`](03-Detection-Engineering/README.md))*
 
 ### Pillar 4: SOC Alert Triage, Incident Response & Hardening

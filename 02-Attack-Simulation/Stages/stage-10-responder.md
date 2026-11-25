@@ -96,7 +96,7 @@ win10::AD:112233***8899:b4a78***e31
 
 > [!NOTE]
 > **Telemetry Attribution & Pipeline Execution (Rule 100220):**  
-> Responder was launched interactively on the DVWA pivot (`python3 /opt/Responder/Responder.py -I ens33 -wd`) and recorded by Wazuh Rule 100220 (`bashcmd` pipeline) at `17:36:26 IST` (Row 9233) and `17:37:25 IST` (Row 9242). Preceding preparatory commands—stopping Apache (`systemctl stop apache2`, Row 9226) and disabling systemd-resolved DNSStubListener (Row 9227)—and the subsequent hash copy command (`cp ... /tmp/win10.hash`, Row 9244 at `17:38:29 IST`) were all captured verbatim. As a Level 5 rule, Rule 100220 provides ground-truth SIEM indexing in OpenSearch without triggering high-volume SOAR alert fatigue.
+> Responder was launched interactively on the DVWA pivot (`python3 /opt/Responder/Responder.py -I ens33 -wd`) and recorded by Wazuh Rule 100220 (`bashcmd` pipeline) at `17:36:26 IST` (Row 9233) and `17:37:25 IST` (Row 9242). Preceding preparatory commands—stopping Apache (`systemctl stop apache2`, Row 9226) and disabling systemd-resolved DNSStubListener (Row 9227)—and the subsequent hash copy command (`cp ... /tmp/win10.hash`, Row 9244 at `17:38:29 IST`) were all captured verbatim. As a Level 5 rule, Rule 100220 provides ground-truth SIEM indexing in OpenSearch without flooding the SOAR queue.
 
 ## MITRE ATT&CK
 

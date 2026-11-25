@@ -108,7 +108,7 @@ This empirical evidence demonstrates that network sensors deployed in promiscuou
 
 ## 5. Noise Reduction & Rate Limiting (`threshold.config`)
 
-To prevent alert fatigue and pipeline saturation during high-volume scans without blinding the sensor to the attacker, [`threshold.config`](../../06-Resources/rules/suricata/threshold.config) implements rate limiting:
+To keep the alert queue and the pipeline from saturating during high-volume scans without blinding the sensor to the attacker, [`threshold.config`](../../06-Resources/rules/suricata/threshold.config) implements rate limiting:
 
 ```text
 # Rate limit secondary Nmap SYN portscan probe to 1 event per source IP per 60 seconds
