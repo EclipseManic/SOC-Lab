@@ -13,7 +13,7 @@
 
 ## 1. Executive Overview & Purpose of the Lab
 
-Many cybersecurity lab environments either demonstrate offensive tools against unmonitored targets or analyze pre-recorded log datasets disconnected from live infrastructure. This project was engineered to bridge that gap by building, attacking, detecting, and investigating an enterprise environment under realistic operational conditions.
+Many cybersecurity lab environments either demonstrate offensive tools against unmonitored targets or analyze pre-recorded log datasets disconnected from live infrastructure. This project was engineered to bridge that gap by building, attacking, detecting, and investigating a corporate environment under realistic operational conditions.
 
 I built a company-style network containing Windows systems, a Linux web server, a network security gateway, and cloud-hosted security tools. I then carried out a controlled attack across this environment to evaluate how effectively my security tools could identify suspicious activity.
 
@@ -47,7 +47,7 @@ This laboratory was designed, provisioned, hardened, attacked, and forensically 
 
 ## 2. Technical Architecture & Technology Stack
 
-The infrastructure is engineered to mirror an enterprise network where external untrusted traffic, internal corporate assets, and central security monitoring operate in dedicated, segmented zones.
+The infrastructure is engineered to mirror a segmented corporate network where external untrusted traffic, internal corporate assets, and central security monitoring operate in dedicated, segmented zones.
 
 | Category | Platforms, Tools & Frameworks | Architectural Role in the Lab |
 |---|---|---|
@@ -74,7 +74,7 @@ This project encompasses four interconnected disciplines of cybersecurity engine
 *Figure 2: The four core pillars of the laboratory suite across infrastructure engineering, adversary attack simulation, multi-sensor detection engineering, and incident response triage.*
 
 ### Pillar 1: Hybrid Infrastructure & Network Engineering
-The environment operates across seven purpose-built virtual machines across on-premises virtualization and Microsoft Azure. Rather than allowing victims direct internet access or flattening the network, the environment enforces multi-tiered zone segmentation (including an authentic enterprise staging flaw where DVWA was initially dual-homed onto `192.168.232.161`):
+The environment operates across seven purpose-built virtual machines across on-premises virtualization and Microsoft Azure. Rather than allowing victims direct internet access or flattening the network, the environment enforces multi-tiered zone segmentation (including an authentic corporate staging flaw where DVWA was initially dual-homed onto `192.168.232.161`):
 - An isolated internal victim network (`192.168.56.0/24`) connects corporate endpoints (Domain Controller, Windows 10 workstation, and the internal interface of the DMZ web server).
 - A dedicated security gateway bridges the external attack segment (`192.168.232.0/24`) and internal victim network, routing inter-segment traffic and sniffing packets passively using Suricata.
 - A secure Site-to-Cloud WireGuard tunnel (`10.8.0.0/24`) links the on-premises gateway to cloud SIEM servers with Zero-NAT routing. By disabling NAT masquerading on the tunnel, the true source IP address of every victim host is preserved as logs enter Wazuh, allowing correlation rules to identify the exact host compromised.
