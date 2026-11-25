@@ -4,7 +4,8 @@
 **Author:** Manichand Gupta ([@EclipseManic](https://github.com/EclipseManic))  
 **Project Timeline:** July 2026 – October 2026 (4-Month Full-Lifecycle Build, Attack Simulation & Investigation)  
 **Core Focus:** Hybrid Cloud Architecture · Red Team Attack Simulation · Detection Engineering · Hands-On SOC Triage & Incident Response  
-**Live Interactive Dashboard:** <https://soc-lab.eclipsemanic.me/>
+**Live Interactive Dashboard:** <https://soc-lab.eclipsemanic.me/>  
+**Portfolio:** the full map of my SOC, detection, OSINT and analyst-tooling work is on my [GitHub profile](https://github.com/EclipseManic).
 
 [![SOC Lab Complete Architecture](06-Resources/diagrams/SOC_Lab_Architecture.png)](06-Resources/diagrams/SOC_Lab_Architecture.png)
 *Figure 1: Complete hybrid-cloud architecture connecting on-premise victim and attacker subnets to Azure cloud SIEM and SOAR servers over an encrypted WireGuard tunnel.*
